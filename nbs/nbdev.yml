@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "juddges"
+  site-url: "https://laugustyniak.github.io/juddges"
+  description: ""
+  repo-branch: master
+  repo-url: "https://github.com/laugustyniak/juddges"

@@ -1,0 +1,64 @@
+version: "3"
+name: juddges
+
+services:
+  web:
+    build: .
+    volumes:
+      - ./:/app
+      - ~/.cache:/root/.cache
+      - L:\docker-configs\zsh\smartass_zsh_history:/root/.zsh_history
+    tty: true
+    shm_size: "2gb"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+      - MLFLOW_S3_ENDPOINT_URL=${MLFLOW_S3_ENDPOINT_URL}
+      - LOGNAME=${LOGNAME}
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities:
+                - gpu
+                - utility # nvidia-smi
+                - compute # CUDA. Required to avoid "CUDA version: N/A"
+                - video # NVDEC/NVENC. For instance to use a hardware accelerated ffmpeg. Skip it if you don't need it
+    networks:
+      - juddges-network
+
+  auth:
+    restart: always
+    build: ./nginx
+    ports:
+      - ${DASHBOARD_PORT}:8080
+    volumes:
+      - ./nginx/auth.conf:/etc/nginx/conf.d/auth.conf:ro
+    networks:
+      - juddges-network
+    environment:
+      - USER=${NGINX_USER}
+      - PASS=${NGINX_PASSWORD}
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres-juddges
+    ports:
+      - 3456:5432
+    environment:
+      POSTGRES_USER: llm # The PostgreSQL user (useful to connect to the database)
+      POSTGRES_PASSWORD: llm # The PostgreSQL password (useful to connect to the database)
+      POSTGRES_DB: llm # The PostgreSQL default database (automatically created at first launch)
+    volumes:
+      - postgres-juddges-db:/var/lib/postgresql/data
+    networks:
+      - juddges-network
+
+networks:
+  juddges-network:
+    driver: bridge
+
+volumes:
+  postgres-juddges-db:
