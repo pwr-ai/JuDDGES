@@ -78,3 +78,11 @@ aim of the JuDDGES project​​.
 ``` sh
 pip install juddges
 ```
+
+## Acknowledgements
+
+The universities involved in the JuDDGES project are:
+
+1.  Wroclaw University of Science and Technology (Poland)
+2.  Middlesex University London (UK)
+3.  University of Lyon 1 (France)​​.
