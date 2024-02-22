@@ -21,7 +21,7 @@ empirical legal research by adopting Open Science principles but also
 creates the most comprehensive legal research repository in Europe,
 fostering cross-disciplinary and cross-jurisdictional collaboration.
 
-![baner](images/baner.png)
+![baner](https://github.com/pwr-ai/JuDDGES/blob/bffb1d75ba7c78f101fc94bd9086499886b2c128/nbs/images/baner.png)
 
 The JuDDGES project encompasses several Work Packages (WPs) designed to
 cover all aspects of its objectives, from project management to the open
