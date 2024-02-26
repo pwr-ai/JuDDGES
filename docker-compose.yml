@@ -4,7 +4,7 @@ name: juddges
 services:
   web:
     build: .
-    command: streamlit run /app/juddges/dashboards/app.py
+    command: streamlit run /app/dashboards/app.py
     volumes:
       - ./:/app
       - ~/.cache:/root/.cache
