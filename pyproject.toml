@@ -1,6 +1,7 @@
 [tool.ruff]
 line-length = 100
 extend-include = ["*.ipynb"]
+exclude = ["_modidx.py"]
 
 [tool.mypy]
 python_version = "3.10"
