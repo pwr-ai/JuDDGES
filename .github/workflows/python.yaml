@@ -2,7 +2,7 @@ name: python-check
 on: [ pull_request, push ]
 
 jobs:
-  check:
+  python-check:
     strategy:
       fail-fast: false
       matrix:
@@ -19,9 +19,9 @@ jobs:
       - name: Check
         run: make check
 
-  test:
+  python-test:
     needs:
-      - check
+      - python-check
     strategy:
       fail-fast: false
       matrix:

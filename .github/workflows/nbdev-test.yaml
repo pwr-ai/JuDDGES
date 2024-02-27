@@ -2,6 +2,6 @@ name: nbdev-test
 on:  [workflow_dispatch, pull_request, push]
 
 jobs:
-  test:
+  nbdev-test:
     runs-on: ubuntu-latest
     steps: [uses: fastai/workflows/nbdev-ci@master]
