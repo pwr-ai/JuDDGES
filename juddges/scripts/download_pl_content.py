@@ -1,16 +1,21 @@
+import math
+from typing import Generator
+
 import typer
 from dotenv import load_dotenv
+from loguru import logger
 from mpire import WorkerPool
-from pymongo import MongoClient
+from pymongo import MongoClient, UpdateOne
+from pymongo.cursor import Cursor
+from pymongo.errors import BulkWriteError
 from pymongo.server_api import ServerApi
 from requests import HTTPError
-from loguru import logger
 from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
 
 from juddges.data.pl_court_api import PolishCourtAPI
 
-N_JOBS = 10
-BATCH_SIZE = 1_000
+N_JOBS = 8
+BATCH_SIZE = 100
 
 load_dotenv("secrets.env", verbose=True)
 
@@ -30,14 +35,14 @@ def main(
 
     cursor = collection.find(query, batch_size=batch_size)
 
-    docs_to_update = (doc["_id"] for doc in cursor)
+    docs_to_update = yield_batches(cursor, batch_size)
     download_content = ContentDownloader(mongo_uri)
     with WorkerPool(n_jobs=n_jobs) as pool:
-        pool.map(
+        pool.map_unordered(
             download_content,
             docs_to_update,
             progress_bar=True,
-            iterable_len=num_docs_without_content,
+            iterable_len=math.ceil(num_docs_without_content / batch_size),
         )
 
 
@@ -45,27 +50,50 @@ class ContentDownloader:
     def __init__(self, mongo_uri: str):
         self.mongo_uri = mongo_uri
 
+    def __call__(self, *doc_ids) -> None:
+        data_batch: list[UpdateOne] = []
+
+        for d_id in doc_ids:
+            content = self._download_content(d_id)
+            data_batch.append(UpdateOne({"_id": d_id}, {"$set": {"content": content}}))
+
+        client = MongoClient(self.mongo_uri)
+        collection = client["juddges"]["judgements"]
+
+        try:
+            collection.bulk_write(data_batch)
+        except BulkWriteError as err:
+            logger.error(err)
+
     @retry(
         wait=wait_random_exponential(multiplier=1, max=60),
         retry=retry_if_exception_type(HTTPError),
         stop=stop_after_attempt(3),
     )
-    def __call__(self, doc_id: str):
-        client = MongoClient(self.mongo_uri)
-        collection = client["juddges"]["judgements"]
-
+    def _download_content(self, doc_id: str) -> str | None:
         api = PolishCourtAPI()
-
         try:
-            content = api.get_content(doc_id)
+            return api.get_content(doc_id)
         except HTTPError as err:
             if err.response.status_code == 404:
                 logger.warning("Found no content for judgement {id}", id=doc_id)
-                content = None
+                return None
             else:
                 raise
 
-        collection.update_one({"_id": doc_id}, {"$set": {"content": content}})
+
+def yield_batches(cursor: Cursor, batch_size: int) -> Generator[list[str], None, None]:
+    """Generates batches of data from pymongo.Cursor.
+    Credit: https://stackoverflow.com/a/61809417
+    """
+
+    batch = []
+    for i, row in enumerate(cursor):
+        if i % batch_size == 0 and i > 0:
+            yield batch
+            del batch[:]
+        batch.append(str(row["_id"]))
+    yield batch
 
 
 if __name__ == "__main__":
