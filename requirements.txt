@@ -1,2 +1,6 @@
 nbdev==2.3.13
 streamlit==1.31.1
+ruff==0.2.2
+coverage==7.4.3
+pytest==8.0.2
+mypy==1.8.0
