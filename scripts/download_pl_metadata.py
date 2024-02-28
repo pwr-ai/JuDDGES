@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, Any
 
 import typer
 from dotenv import load_dotenv
-from mpire import WorkerPool
+from mpire.pool import WorkerPool
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 from pymongo.server_api import ServerApi
@@ -23,7 +23,7 @@ def main(
     batch_size: int = typer.Option(BATCH_SIZE),
     n_jobs: int = typer.Option(N_JOBS),
     limit: Optional[int] = typer.Option(None),
-):
+) -> None:
     api = PolishCourtAPI()
     total_judgements = api.get_number_of_judgements()
     logger.info(f"Total judgements found: {total_judgements}")
@@ -47,8 +47,8 @@ class MetadataDownloader:
         retry=retry_if_exception_type(HTTPError),
         stop=stop_after_attempt(3),
     )
-    def __call__(self, offset: int):
-        client = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
+    def __call__(self, offset: int) -> None:
+        client: MongoClient[dict[str, Any]] = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
         collection = client["juddges"]["judgements"]
 
         params = {

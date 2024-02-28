@@ -5,7 +5,6 @@ import xmltodict
 
 
 class PolishCourtAPI:
-
     def __init__(self) -> None:
         self.url = "https://apiorzeczenia.wroclaw.sa.gov.pl/ncourt-api"
 
@@ -26,6 +25,8 @@ class PolishCourtAPI:
         res = requests.get(endpoint, params=params)
         res.raise_for_status()
         judgements = xmltodict.parse(res.content.decode("utf-8"))["judgements"]["judgement"]
+
+        assert isinstance(judgements, list)
 
         return judgements
 

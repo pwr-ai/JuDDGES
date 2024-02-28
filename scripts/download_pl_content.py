@@ -1,10 +1,10 @@
 import math
-from typing import Generator
+from typing import Generator, Any
 
 import typer
 from dotenv import load_dotenv
 from loguru import logger
-from mpire import WorkerPool
+from mpire.pool import WorkerPool
 from pymongo import MongoClient, UpdateOne
 from pymongo.cursor import Cursor
 from pymongo.errors import BulkWriteError
@@ -24,8 +24,8 @@ def main(
     mongo_uri: str = typer.Option(..., envvar="MONGO_URI"),
     batch_size: int = typer.Option(BATCH_SIZE),
     n_jobs: int = typer.Option(N_JOBS),
-):
-    client = MongoClient(mongo_uri, server_api=ServerApi("1"))
+) -> None:
+    client: MongoClient[dict[str, Any]] = MongoClient(mongo_uri, server_api=ServerApi("1"))
     collection = client["juddges"]["judgements"]
     client.admin.command("ping")
 
@@ -50,14 +50,14 @@ class ContentDownloader:
     def __init__(self, mongo_uri: str):
         self.mongo_uri = mongo_uri
 
-    def __call__(self, *doc_ids) -> None:
+    def __call__(self, *doc_ids: str) -> None:
         data_batch: list[UpdateOne] = []
 
         for d_id in doc_ids:
             content = self._download_content(d_id)
             data_batch.append(UpdateOne({"_id": d_id}, {"$set": {"content": content}}))
 
-        client = MongoClient(self.mongo_uri)
+        client: MongoClient[dict[str, Any]] = MongoClient(self.mongo_uri)
         collection = client["juddges"]["judgements"]
 
         try:
@@ -82,12 +82,14 @@ class ContentDownloader:
                 raise
 
 
-def yield_batches(cursor: Cursor, batch_size: int) -> Generator[list[str], None, None]:
+def yield_batches(
+    cursor: Cursor[dict[str, Any]], batch_size: int
+) -> Generator[list[str], None, None]:
     """Generates batches of data from pymongo.Cursor.
     Credit: https://stackoverflow.com/a/61809417
     """
 
-    batch = []
+    batch: list[str] = []
     for i, row in enumerate(cursor):
         if i % batch_size == 0 and i > 0:
             yield batch
