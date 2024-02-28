@@ -1,3 +1,5 @@
+from typing import Optional
+
 import typer
 from dotenv import load_dotenv
 from mpire import WorkerPool
@@ -6,7 +8,7 @@ from pymongo.errors import BulkWriteError
 from pymongo.server_api import ServerApi
 from requests import HTTPError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
-from rich import print
+from loguru import logger
 
 from juddges.data.pl_court_api import PolishCourtAPI
 
@@ -20,10 +22,14 @@ def main(
     mongo_uri: str = typer.Option(..., envvar="MONGO_URI"),
     batch_size: int = typer.Option(BATCH_SIZE),
     n_jobs: int = typer.Option(N_JOBS),
+    limit: Optional[int] = typer.Option(None),
 ):
     api = PolishCourtAPI()
     total_judgements = api.get_number_of_judgements()
-    print(f"Total judgements found: {total_judgements}")
+    logger.info(f"Total judgements found: {total_judgements}")
+
+    if limit is not None:
+        total_judgements = min(total_judgements, limit)
 
     offsets = list(range(0, total_judgements, batch_size))
     download_metadata = MetadataDownloader(mongo_uri, batch_size)
@@ -62,6 +68,11 @@ class MetadataDownloader:
         except BulkWriteError as err:
             if any(x["code"] != 11000 for x in err.details["writeErrors"]):
                 raise
+            else:
+                logger.warning(
+                    "found {num_duplicated} judgements duplicated",
+                    num_duplicated=len(err.details["writeErrors"]),
+                )
 
 
 if __name__ == "__main__":

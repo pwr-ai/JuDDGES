@@ -13,3 +13,4 @@ python-dotenv==1.0.1
 rich==13.7.0
 mpire==2.10.0
 tenacity==8.2.3
+loguru==0.7.2

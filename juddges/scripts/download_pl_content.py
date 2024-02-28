@@ -4,7 +4,7 @@ from mpire import WorkerPool
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from requests import HTTPError
-from rich import print
+from loguru import logger
 from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
 
 from juddges.data.pl_court_api import PolishCourtAPI
@@ -26,7 +26,7 @@ def main(
 
     query = {"content": {"$exists": False}}
     num_docs_without_content = collection.count_documents(query)
-    print(f"There are {num_docs_without_content} documents without content")
+    logger.info(f"There are {num_docs_without_content} documents without content")
 
     cursor = collection.find(query, batch_size=batch_size)
 
@@ -60,6 +60,7 @@ class ContentDownloader:
             content = api.get_content(doc_id)
         except HTTPError as err:
             if err.response.status_code == 404:
+                logger.warning("Found no content for judgement {id}", id=doc_id)
                 content = None
             else:
                 raise
