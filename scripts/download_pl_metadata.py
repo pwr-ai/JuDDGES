@@ -43,9 +43,9 @@ class MetadataDownloader:
         self.batch_size = batch_size
 
     @retry(
-        wait=wait_random_exponential(multiplier=1, max=60),
+        wait=wait_random_exponential(multiplier=1, min=4, max=30),
         retry=retry_if_exception_type(HTTPError),
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(5),
     )
     def __call__(self, offset: int) -> None:
         client: MongoClient[dict[str, Any]] = MongoClient(self.mongo_uri, server_api=ServerApi("1"))

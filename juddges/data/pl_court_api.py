@@ -2,6 +2,7 @@ from typing import Any
 
 import requests
 import xmltodict
+from loguru import logger
 
 
 class PolishCourtAPI:
@@ -11,6 +12,8 @@ class PolishCourtAPI:
     def get_number_of_judgements(self, params: dict[str, Any] | None = None) -> int:
         if params is None:
             params = {}
+        elif "limit" in params.keys():
+            logger.warning("Setting limit to query the number of judgements has no effect!")
 
         params |= {"limit": 0}
         endpoint = f"{self.url}/judgements"

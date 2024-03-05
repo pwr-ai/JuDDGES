@@ -66,9 +66,9 @@ class ContentDownloader:
             logger.error(err)
 
     @retry(
-        wait=wait_random_exponential(multiplier=1, max=60),
+        wait=wait_random_exponential(multiplier=1, min=4, max=30),
         retry=retry_if_exception_type(HTTPError),
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(5),
     )
     def _download_content(self, doc_id: str) -> str | None:
         api = PolishCourtAPI()
