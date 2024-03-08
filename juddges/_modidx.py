@@ -5,4 +5,4 @@ d = { 'settings': { 'branch': 'master',
                 'doc_host': 'https://laugustyniak.github.io',
                 'git_url': 'https://github.com/laugustyniak/juddges',
                 'lib_path': 'juddges'},
-  'syms': {}}
+  'syms': {'juddges.data.pl_court_api': {}}}
