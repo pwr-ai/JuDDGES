@@ -4,6 +4,7 @@ extend-include = ["*.ipynb"]
 exclude = ["_modidx.py"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
+untyped_calls_exclude = ["pymongo"]
 plugins = "numpy.typing.mypy_plugin"
