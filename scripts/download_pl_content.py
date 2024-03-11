@@ -1,20 +1,20 @@
 import math
-from typing import Generator, Any
+from typing import Any
 
 import typer
 from dotenv import load_dotenv
 from loguru import logger
 from mpire.pool import WorkerPool
 from pymongo import MongoClient, UpdateOne
-from pymongo.cursor import Cursor
 from pymongo.errors import BulkWriteError
 from pymongo.server_api import ServerApi
-from requests import HTTPError
+from requests import HTTPError, ConnectionError
 from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
+from tqdm import tqdm
 
 from juddges.data.pl_court_api import PolishCourtAPI
 
-N_JOBS = 8
+N_JOBS = 6
 BATCH_SIZE = 100
 
 load_dotenv("secrets.env", verbose=True)
@@ -33,14 +33,21 @@ def main(
     num_docs_without_content = collection.count_documents(query)
     logger.info(f"There are {num_docs_without_content} documents without content")
 
-    cursor = collection.find(query, batch_size=batch_size)
+    # fetch all ids at once to avoid cursor timeout
+    cursor = collection.find(query, {"_id": 1}, batch_size=batch_size)
+    docs_to_update: list[str] = []
+    for doc in tqdm(cursor, total=num_docs_without_content, desc="Fetching doc list"):
+        docs_to_update.append(str(doc["_id"]))
 
-    docs_to_update = yield_batches(cursor, batch_size)
+    batched_docs_to_update = (
+        docs_to_update[i : i + batch_size] for i in range(0, len(docs_to_update), batch_size)
+    )
+
     download_content = ContentDownloader(mongo_uri)
     with WorkerPool(n_jobs=n_jobs) as pool:
         pool.map_unordered(
             download_content,
-            docs_to_update,
+            batched_docs_to_update,
             progress_bar=True,
             iterable_len=math.ceil(num_docs_without_content / batch_size),
         )
@@ -67,7 +74,7 @@ class ContentDownloader:
 
     @retry(
         wait=wait_random_exponential(multiplier=1, min=4, max=30),
-        retry=retry_if_exception_type(HTTPError),
+        retry=retry_if_exception_type((HTTPError, ConnectionError)),
         stop=stop_after_attempt(5),
     )
     def _download_content(self, doc_id: str) -> str | None:
@@ -80,22 +87,6 @@ class ContentDownloader:
                 return None
             else:
                 raise
-
-
-def yield_batches(
-    cursor: Cursor[dict[str, Any]], batch_size: int
-) -> Generator[list[str], None, None]:
-    """Generates batches of data from pymongo.Cursor.
-    Credit: https://stackoverflow.com/a/61809417
-    """
-
-    batch: list[str] = []
-    for i, row in enumerate(cursor):
-        if i % batch_size == 0 and i > 0:
-            yield batch
-            del batch[:]
-        batch.append(str(row["_id"]))
-    yield batch
 
 
 if __name__ == "__main__":
