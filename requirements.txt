@@ -1,11 +1,3 @@
-nbdev==2.3.13
-streamlit==1.31.1
-ruff==0.2.2
-coverage==7.4.3
-pytest==8.0.2
-mypy==1.8.0
-
-
 requests==2.31.0
 pymongo==4.3.3
 xmltodict==0.13.0
@@ -15,3 +7,12 @@ mpire==2.10.0
 tenacity==8.2.3
 loguru==0.7.2
 typer==0.9.0
+
+# dev
+nbdev==2.3.13
+streamlit==1.31.1
+ruff==0.2.2
+coverage==7.4.3
+pytest==8.0.2
+mypy==1.8.0
+dvc[s3]==3.48.3
