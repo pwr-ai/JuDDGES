@@ -37,10 +37,10 @@ def main(
 
     num_docs = collection.count_documents(query)
 
-    dumped_data = file_name.parent.glob("*.parquet")
+    dumped_data = list(file_name.parent.glob("*.parquet"))
     start_offset = 0
     if dumped_data:
-        logger.warning(f"Found {len(list(dumped_data))} files in {file_name.parent}")
+        logger.warning(f"Found {len(dumped_data)} files in {file_name.parent}")
         if typer.confirm("Do you want to continue previous dump?"):
             dataset = ParquetDataset(file_name.parent)
             start_offset = sum(p.count_rows() for p in dataset.fragments)
