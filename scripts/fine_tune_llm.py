@@ -1,53 +1,63 @@
 import torch
-from peft import LoraConfig
+from peft.tuners.lora.config import LoraConfig
 from trl import SFTTrainer
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    BitsAndBytesConfig,
+    PreTrainedTokenizer,
+    PreTrainedModel,
+    Trainer,
+)
 
-assert torch.cuda.get_device_capability()[0] >= 8, 'Hardware not supported for Flash Attention'
+from datasets import load_dataset, DatasetDict, Dataset, IterableDatasetDict, IterableDataset
 
-from datasets import load_dataset
+from transformers import TrainingArguments
 
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TrainingArguments
 
-def main():
+def main() -> None:
     dataset = get_dataset()
     model, tokenizer = get_model_and_tokenizer()
     peft_config = get_peft_config()
-    trainer = get_trainer()
+    trainer = get_trainer(model, tokenizer, peft_config, dataset)
     trainer.train()
     trainer.save_model()
 
-def get_dataset():
+
+def get_dataset() -> DatasetDict | Dataset | IterableDatasetDict | IterableDataset:
     # Load Dolly Dataset.
     dataset = load_dataset("philschmid/dolly-15k-oai-style", split="train")
     return dataset
 
-def get_model_and_tokenizer():
+
+def get_model_and_tokenizer() -> tuple[PreTrainedModel, PreTrainedTokenizer]:
     # Hugging Face model id
     model_id = "google/gemma-7b"
     tokenizer_id = "philschmid/gemma-tokenizer-chatml"
 
     # BitsAndBytesConfig int-4 config
     bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True, bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
     )
 
     # Load model and tokenizer
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         device_map="auto",
-        attn_implementation="flash_attention_2",
+        # attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
-        quantization_config=bnb_config
+        quantization_config=bnb_config,
     )
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_id)
-    tokenizer.padding_side = 'right'  # to prevent warnings
+    tokenizer.padding_side = "right"  # to prevent warnings
 
     return model, tokenizer
 
-def get_peft_config():
+
+def get_peft_config() -> LoraConfig:
     peft_config = LoraConfig(
         lora_alpha=8,
         lora_dropout=0.05,
@@ -58,7 +68,13 @@ def get_peft_config():
     )
     return peft_config
 
-def get_trainer(model, tokenizer, peft_config, dataset):
+
+def get_trainer(
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizer,
+    peft_config: LoraConfig,
+    dataset: DatasetDict | Dataset | IterableDatasetDict | IterableDataset,
+) -> Trainer:
     args = TrainingArguments(
         output_dir="gemma-7b-dolly-chatml",  # directory to save and repository id
         num_train_epochs=3,  # number of training epochs
@@ -91,7 +107,7 @@ def get_trainer(model, tokenizer, peft_config, dataset):
         dataset_kwargs={
             "add_special_tokens": False,  # We template with special tokens
             "append_concat_token": False,  # No need to add additional separator token
-        }
+        },
     )
 
     return trainer

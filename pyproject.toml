@@ -8,3 +8,11 @@ python_version = "3.11"
 strict = true
 untyped_calls_exclude = ["pymongo"]
 plugins = "numpy.typing.mypy_plugin"
+
+[[tool.mypy.overrides]]
+module = [
+    "trl",
+    "transformers",
+    "datasets",
+]
+ignore_missing_imports = true
