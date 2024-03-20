@@ -3,7 +3,7 @@ from typing import Any, Generator
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
-from juddges.data.base import DocParserBase
+from juddges.preprocessing.parser_base import DocParserBase
 
 MULTIPLE_NEWLINES = re.compile(r"(\n\s*)+\n+")
 
@@ -33,7 +33,7 @@ class SimplePlJudgementsParser(DocParserBase):
             if txt := elem_txt.strip(" "):
                 text += txt
 
-        text = re.sub(MULTIPLE_NEWLINES, "\n\n", text)
+        text = re.sub(MULTIPLE_NEWLINES, "\n\n", text).strip()
 
         return text
 

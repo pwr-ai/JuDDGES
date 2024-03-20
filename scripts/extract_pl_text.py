@@ -4,7 +4,7 @@ from typing import Optional
 import typer
 from datasets import load_dataset
 
-from juddges.data.pl_court_parser import SimplePlJudgementsParser
+from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
 
 
 def main(
