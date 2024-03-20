@@ -12,13 +12,15 @@ def main(
     target_dir: Path = typer.Option(..., help="Path to the target directory"),
     num_proc: Optional[int] = typer.Option(None, help="Number of processes to use"),
 ) -> None:
-    target_dir.mkdir(exist_ok=True, parents=True)
-    ds = load_dataset("parquet", data_dir=dataset_dir)
+    target_dir.parent.mkdir(exist_ok=True, parents=True)
+    ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
     num_shards = len(ds["train"].info.splits["train"].shard_lengths)
     text_extractor = SimplePlJudgementsParser()
     ds = (
         ds["train"]
-        .select_columns(["_id", "content"])
+        .select_columns(
+            ["_id", "date", "type", "excerpt", "content"]
+        )  # leave only most important columns
         .filter(lambda x: x["content"] is not None)
         .map(text_extractor, input_columns="content", num_proc=num_proc)
     )
