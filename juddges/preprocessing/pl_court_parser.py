@@ -15,6 +15,10 @@ class SimplePlJudgementsParser(DocParserBase):
 
     """
 
+    @property
+    def schema(self) -> list[str]:
+        return ["num_pages", "vol_number", "vol_type", "text"]
+
     def parse(self, document: str) -> dict[str, Any]:
         et = ElementTree.fromstring(document)
 
@@ -22,7 +26,12 @@ class SimplePlJudgementsParser(DocParserBase):
         assert len(xblock_elements) == 1, "There should be only one xBlock element"
         content_root, *_ = xblock_elements
 
-        return {"content": self.extract_text(content_root)}
+        return {
+            "num_pages": int(et.attrib["xToPage"]),
+            "vol_number": int(et.attrib["xVolNmbr"]),
+            "vol_type": et.attrib["xVolType"],
+            "text": self.extract_text(content_root),
+        }
 
     @staticmethod
     def extract_text(element: Element) -> str:
