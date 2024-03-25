@@ -14,6 +14,8 @@ pandas==2.2.1
 polars==0.20.15
 torch==2.2.1
 transformers==4.38.2
+langchain==0.1.13
+sentence-transformers==2.5.1
 
 # dev
 nbdev==2.3.13
