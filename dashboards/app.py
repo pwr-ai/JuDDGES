@@ -7,7 +7,15 @@ from juddges.settings import prepare_langchain_cache, prepare_mlflow
 prepare_langchain_cache()
 prepare_mlflow()
 
-st.title("JuDDGES Dashboard")
+TITLE = "⚖️ JuDDGES Information Extraction from Court Decisions ⚖️"
+
+st.set_page_config(page_title=TITLE, page_icon="⚖️", layout="wide")
+
+st.title(TITLE)
+
+st.info(
+    "You can provide an URL to court decision, describe in written form schema of the information that will be extracted, choose model and language and start extraction."
+)
 
 api = PolishCourtAPI()
 
@@ -19,7 +27,7 @@ judgement_url = st.text_input(
 judgement_id = judgement_url.strip().split("/")[-1]
 judgement_text = api.get_content(id=judgement_id)
 
-schema_text = st.text_area("Enter the schema text here:", SCHEMA)
+schema_text = st.text_area("Enter the schema text here:", SCHEMA, height=500)
 LLM_model = st.selectbox(
     "Select the LLM model", ["gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-3.5-turbo-1106"]
 )
