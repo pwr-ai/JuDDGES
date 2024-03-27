@@ -2,8 +2,6 @@ from langchain.chat_models import ChatOpenAI
 from langchain.output_parsers.json import parse_json_markdown
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 
-LANGUAGE = "Polish"
-
 PROMPT_TEMPLATE = """Act as a legal document tool that extracts information and answer questions based on judgements. 
 
 Instruction for extracting information from judgements:

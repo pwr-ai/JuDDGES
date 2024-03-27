@@ -60,5 +60,5 @@ def prepare_langchain_cache():
 def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url="http://host.docker.internal"):
     import mlflow
 
-    mlflow.set_tracking_uri()
+    mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)
