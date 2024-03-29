@@ -21,10 +21,10 @@ from transformers import TrainingArguments
 
 def main(
     model_name: str = typer.Option(
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0", help="Model ID to fine-tune"
+        "mistralai/Mistral-7B-Instruct-v0.2", help="Model ID to fine-tune"
     ),
     tokenizer_name: str = typer.Option(
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0", help="Tokenizer ID to fine-tune"
+        "mistralai/Mistral-7B-Instruct-v0.2", help="Tokenizer ID to fine-tune"
     ),
     dataset_name: str = typer.Option(
         "philschmid/dolly-15k-oai-style", help="Dataset ID to fine-tune"
@@ -69,7 +69,7 @@ def get_model_and_tokenizer(
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         device_map="auto",
-        attn_implementation="flash_attention_2",
+        # attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
         quantization_config=bnb_config,
     )
