@@ -47,7 +47,7 @@ def main(
 
 def get_dataset(dataset) -> DatasetDict | Dataset | IterableDatasetDict | IterableDataset:
     if dataset == "dummy":
-        data = {"text": ["text"] * 1_000}
+        data = {"text": ["text "*100] * 50000}
         dataset = Dataset.from_dict(data)
     else:
         dataset = load_dataset(dataset, split="train")
@@ -75,6 +75,8 @@ def get_model_and_tokenizer(
     )
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
     tokenizer.padding_side = "right"  # to prevent warnings
+    tokenizer.pad_token = tokenizer.eos_token
+    model.resize_token_embeddings(len(tokenizer))
 
     return model, tokenizer
 
@@ -120,7 +122,7 @@ def get_trainer(
         report_to="wandb",  # report metrics to tensorboard
     )
 
-    # max_seq_length = 1512  # max sequence length for model and packing of the dataset
+    max_seq_length = 1000  # max sequence length for model and packing of the dataset
 
     trainer = SFTTrainer(
         model=model,
@@ -128,7 +130,7 @@ def get_trainer(
         train_dataset=dataset,
         dataset_text_field=dataset_text_field,
         peft_config=peft_config,
-        # max_seq_length=max_seq_length,
+        max_seq_length=max_seq_length,
         tokenizer=tokenizer,
         packing=True,
         dataset_kwargs={
