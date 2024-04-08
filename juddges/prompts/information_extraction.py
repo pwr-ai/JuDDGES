@@ -1,8 +1,30 @@
-from langchain.chat_models import ChatOpenAI
+from langchain_core.messages import AIMessage
+from langchain_core.runnables import RunnableSequence, RunnableLambda, RunnablePassthrough
+from langchain_openai import ChatOpenAI
 from langchain.output_parsers.json import parse_json_markdown
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 
-PROMPT_TEMPLATE = """Act as a legal document tool that extracts information and answer questions based on judgements. 
+SCHEMA_PROMPT_TEMPLATE = """
+Act as a assistant that prepares schema for information extraction
+
+Based on the user input prepare schema containing variables with their short description and type. 
+Be precise about variable names, format names using snake_case. 
+If user asks irrelevant question always return empty JSON.
+As example:
+User: I want extract age, gender, and plea from the judgement
+Agent: 
+    age: integer
+    gender: male or female
+    plea: string
+
+====
+{SCHEMA_TEXT}
+====
+
+Format response as JSON:
+"""
+
+EXTRACTION_PROMPT_TEMPLATE = """Act as a legal document tool that extracts information and answer questions based on judgements. 
 
 Instruction for extracting information from judgements:
 - Judgements are in {LANGUAGE} language, please extract information in {LANGUAGE}.
@@ -18,7 +40,7 @@ Follow the following YAML structure to extract information and answer questions 
 Format response as JSON:
 """
 
-SCHEMA = """
+EXAMPLE_SCHEMA = """
 defendant_gender: string
 defendant_age: integer
 defendant_relationship_status: string
@@ -56,11 +78,22 @@ totality_principle_misapplication: boolean
 """
 
 
+def prepare_information_extraction_chain_from_user_prompt() -> RunnableSequence:
+    schema_chain = prepare_schema_chain()
+    inputs = {
+        "SCHEMA": schema_chain,
+        "TEXT": RunnablePassthrough(),
+        "LANGUAGE": RunnablePassthrough(),
+    }
+    return inputs | RunnableLambda(route)
+
+
 def prepare_information_extraction_chain(
-    model_name: str = "gpt-4-0125-preview", log_to_mlflow: bool = False
-):
+    model_name: str = "gpt-4-0125-preview",
+    log_to_mlflow: bool = False,
+) -> RunnableSequence:
     model = ChatOpenAI(model=model_name, temperature=0)
-    human_message_template = HumanMessagePromptTemplate.from_template(PROMPT_TEMPLATE)
+    human_message_template = HumanMessagePromptTemplate.from_template(EXTRACTION_PROMPT_TEMPLATE)
     _prompt = ChatPromptTemplate(
         messages=[human_message_template],
         input_variables=["TEXT", "LANGUAGE", "SCHEMA"],
@@ -72,3 +105,28 @@ def prepare_information_extraction_chain(
         mlflow.log_dict(_prompt.save_to_json(), "prompt.json")
 
     return _prompt | model | (lambda x: parse_json_markdown(x.content))
+
+
+def prepare_schema_chain(model_name: str = "gpt-3.5-turbo") -> RunnableSequence:
+    model = ChatOpenAI(model=model_name, temperature=0)
+    human_message_template = HumanMessagePromptTemplate.from_template(SCHEMA_PROMPT_TEMPLATE)
+    _prompt = ChatPromptTemplate(
+        messages=[human_message_template],
+        input_variables=["TEXT", "LANGUAGE", "SCHEMA"],
+    )
+
+    return _prompt | model | parse_schema
+
+
+def parse_schema(ai_message: AIMessage) -> str:
+    response_schema = parse_json_markdown(ai_message.content)
+    return "\n".join(f"{key}: {val}" for key, val in response_schema.items())
+
+
+def route(response_schema: str) -> dict[str, str]:
+    if response_schema["SCHEMA"]:
+        return prepare_information_extraction_chain()
+
+    raise ValueError(
+        "Cannot determine schema for the given input prompt. Please try different query."
+    )

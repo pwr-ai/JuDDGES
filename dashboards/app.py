@@ -1,7 +1,11 @@
 import streamlit as st
 
 from juddges.data.pl_court_api import PolishCourtAPI
-from juddges.prompts.information_extraction import SCHEMA, prepare_information_extraction_chain
+from juddges.prompts.information_extraction import (
+    EXAMPLE_SCHEMA,
+    prepare_information_extraction_chain,
+    prepare_schema_chain,
+)
 from juddges.settings import prepare_langchain_cache, prepare_mlflow
 
 prepare_langchain_cache()
@@ -27,8 +31,27 @@ judgement_url = st.text_input(
 judgement_id = judgement_url.strip().split("/")[-1]
 judgement_text = api.get_content(id=judgement_id)
 
-schema_text = st.text_area("Enter the schema text here:", SCHEMA, height=500)
-LLM_model = st.selectbox(
+schema_query = st.text_input(
+    "Ask for schema in natural language:",
+    "Extract the date, verdict, and court from  the judgement.",
+)
+llm_schema = st.selectbox(
+    "Select the LLM model (schema)",
+    ["gpt-3.5-turbo-1106", "gpt-4-0125-preview", "gpt-4-1106-preview"],
+)
+
+if st.button("Ask for schema"):
+    chain = prepare_schema_chain(model_name=llm_schema)
+    schema = chain.invoke({"SCHEMA_TEXT": schema_query})
+    if not schema:
+        st.error("Could not extract schema from the given query. Try with a different one.")
+    else:
+        st.session_state.schema = schema
+
+schema_text = st.text_area(
+    "Enter the schema text here:", st.session_state.get("schema") or EXAMPLE_SCHEMA, height=500
+)
+llm_extraction = st.selectbox(
     "Select the LLM model", ["gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-3.5-turbo-1106"]
 )
 language = st.selectbox("Enter the language of the judgement text:", ["Polish", "English"])
@@ -36,7 +59,7 @@ language = st.selectbox("Enter the language of the judgement text:", ["Polish", 
 
 if st.button("Extract information"):
     with st.spinner("Extracting information from the judgement text..."):
-        chain = prepare_information_extraction_chain(model_name=LLM_model)
+        chain = prepare_information_extraction_chain(model_name=llm_extraction)
         retrieved_informations = chain.invoke(
             {"LANGUAGE": language, "TEXT": judgement_text, "SCHEMA": schema_text}
         )
