@@ -7,5 +7,7 @@ d = { 'settings': { 'branch': 'master',
                 'lib_path': 'juddges'},
   'syms': { 'juddges.data.models': {},
             'juddges.data.pl_court_api': {},
+            'juddges.preprocessing.parser_base': {},
+            'juddges.preprocessing.pl_court_parser': {},
             'juddges.prompts.information_extraction': {},
             'juddges.settings': {}}}

@@ -1,6 +1,9 @@
 from pathlib import Path
 
+import mlflow
 import tiktoken
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 
 # get root path as ROOT_PATH as pathlib objects
 ROOT_PATH = Path(__file__).resolve().parent.parent
@@ -37,9 +40,7 @@ LLM_TO_PRICE_COMPLETION = {
 LOCAL_POSTGRES = "postgresql+psycopg2://llm:llm@postgres-juddges:5432/llm"
 
 
-def get_sqlalchemy_engine():
-    from sqlalchemy import create_engine
-
+def get_sqlalchemy_engine() -> Engine:
     return create_engine(
         LOCAL_POSTGRES,
         pool_size=10,
@@ -50,15 +51,15 @@ def get_sqlalchemy_engine():
     )
 
 
-def prepare_langchain_cache():
+def prepare_langchain_cache() -> None:
     import langchain
     from langchain.cache import SQLAlchemyMd5Cache
 
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 
 
-def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url="http://host.docker.internal"):
-    import mlflow
-
+def prepare_mlflow(
+    experiment_name: str = MLFLOW_EXP_NAME, url="http://host.docker.internal"
+) -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)
