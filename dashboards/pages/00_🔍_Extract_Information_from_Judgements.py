@@ -45,7 +45,7 @@ llm_schema = st.selectbox(
     ["gpt-3.5-turbo-1106", "gpt-4-0125-preview", "gpt-4-1106-preview"],
 )
 
-if st.button("Ask for schema"):
+if st.button("Generate schema to extract information"):
     chain = prepare_schema_chain(model_name=llm_schema)
     schema = chain.invoke({"SCHEMA_TEXT": schema_query})
     if not schema:

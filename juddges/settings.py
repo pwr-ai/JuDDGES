@@ -61,8 +61,6 @@ def prepare_langchain_cache() -> None:
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 
 
-def prepare_mlflow(
-    experiment_name: str = MLFLOW_EXP_NAME, url="http://host.docker.internal"
-) -> None:
+def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url="postgres-juddges") -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)
