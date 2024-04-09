@@ -25,6 +25,7 @@ torch==2.2.1
 transformers==4.38.2
 langchain==0.1.13
 sentence-transformers==2.5.1
+seaborn==0.13.2
 
 # dev
 nbdev==2.3.13
