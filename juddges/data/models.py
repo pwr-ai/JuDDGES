@@ -11,7 +11,7 @@ if os.environ.get("MONGO_DB_NAME", None) is None:
     raise Exception("Missing `MONGO_DB_NAME` environment variable.")
 
 
-def get_mongo_collection(collection_name: str) -> Collection:
+def get_mongo_collection(collection_name: str = "judgements") -> Collection:
     client = MongoClient(os.environ["MONGO_URI"])
     db = client[os.environ["MONGO_DB_NAME"]]
     return db[collection_name]

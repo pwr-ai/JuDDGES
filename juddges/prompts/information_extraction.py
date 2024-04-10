@@ -41,40 +41,18 @@ Format response as JSON:
 """
 
 EXAMPLE_SCHEMA = """
-defendant_gender: string
-defendant_age: integer
-defendant_relationship_status: string
-defendant_has_children: boolean
-defendant_homeless: boolean
-appellant: string
+verdict_date: date as ISO 8601
+verdict: string, text representing verdict of the judgement
+verdict_summary: string, short summary of the verdict
+verdict_id: string
+court: string
+parties: string
 appeal_against: string
-defendant_plead_or_convicted: string "guilty plea" or "convicted at trial"
-jury_unanimous: string "unanimous" or "other"
 first_trial: boolean
 drug_offence: boolean
-original_sentence: string
-tried_court_type: string "Crown" or "magistrates'"
-single_transaction_multiple_offence: boolean
-multiple_transactions_period: string "within 1 year" or "more than 1 year"
-concurrent_or_consecutive_sentence: string "concurrently" or "consecutively"
-sentence_on_top_existing: boolean
-sentence_adding_up: boolean
-sentence_leniency: string "unduly lenient" or "too excessive"
-guilty_plea_reduction_reason: string
-sentence_discount_mention: boolean
-totality_issues_similar_offences: boolean
-sentence_proportionality_mention: boolean
-sentence_type_issues_totality: boolean
-sentence_adjustment_mention: boolean
-offender_culpability_determination: boolean
-harm_caused_determination: boolean
+child_offence: boolean
 offence_seriousness: boolean
-aggravating_factors: string list of factors excluding previous convictions
-previous_convictions_similarity: string "similar" or "dissimilar"
-mitigating_factors: string list of factors
-immediate_sentence_concurrency: boolean
-totality_conflicting_guidelines: boolean
-totality_principle_misapplication: boolean
+verdict_tags: List[string]
 """
 
 
