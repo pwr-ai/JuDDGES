@@ -9,6 +9,9 @@ from sqlalchemy.engine import Engine
 ROOT_PATH = Path(__file__).resolve().parent.parent
 
 DATA_PATH = ROOT_PATH / "data"
+
+SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
+
 PL_JUDGEMENTS_PATH = DATA_PATH / "datasets" / "pl"
 PL_JUDGEMENTS_PATH_RAW = PL_JUDGEMENTS_PATH / "raw"
 PL_JUDGEMENTS_PATH_TEXTS = PL_JUDGEMENTS_PATH / "text"
