@@ -1,77 +1,107 @@
 from pathlib import Path
 from typing import Optional
 
-import torch
 import typer
 from peft.tuners.lora.config import LoraConfig
 from trl import SFTTrainer
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    BitsAndBytesConfig,
+    PreTrainedModel,
+    PreTrainedTokenizer,
+    Trainer,
+)
 
-assert torch.cuda.get_device_capability()[0] >= 8, 'Hardware not supported for Flash Attention'
+from juddges.data.datasets.utils import create_chat
+from juddges.defaults import FINE_TUNING_DATASETS_PATH
 
-from datasets import load_dataset
+from datasets import (
+    load_dataset,
+    DatasetDict,
+    Dataset,
+    IterableDatasetDict,
+    IterableDataset,
+    load_from_disk,
+)
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TrainingArguments
+from transformers import TrainingArguments
+
 
 def main(
     model_name: str = typer.Option(
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0", help="Model ID to fine-tune"
+        "mistralai/Mistral-7B-Instruct-v0.2", help="Model ID to fine-tune"
     ),
     tokenizer_name: str = typer.Option(
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0", help="Tokenizer ID to fine-tune"
+        "mistralai/Mistral-7B-Instruct-v0.2", help="Tokenizer ID to fine-tune"
     ),
-    dataset_name: str = typer.Option(
-        "philschmid/dolly-15k-oai-style", help="Dataset ID to fine-tune"
-    ),
-    dataset_text_field: str = typer.Option(...),
+    max_seq_length: int = typer.Option(1000, help="Maximum sequence length"),
+    dataset_name: str = typer.Option("dummy", help="Dataset ID to fine-tune"),
+    dataset_prompt_field: str = typer.Option("prompt"),
+    dataset_context_field: str = typer.Option("context"),
+    dataset_output_field: str = typer.Option("output"),
     output_dir: Path = typer.Option(...),
     run_name: Optional[str] = typer.Option(None, help="Run name for the experiment"),
-):
+) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    dataset = get_dataset(dataset_name)
+    dataset = get_dataset(
+        dataset_name, dataset_prompt_field, dataset_context_field, dataset_output_field
+    )
     model, tokenizer = get_model_and_tokenizer(model_name, tokenizer_name)
+
     peft_config = get_peft_config()
     trainer = get_trainer(
-        model, tokenizer, peft_config, dataset, dataset_text_field, output_dir, run_name
+        model, tokenizer, max_seq_length, peft_config, dataset, "messages", output_dir, run_name
     )
     trainer.train()
     trainer.save_model()
 
 
-def get_dataset(dataset) -> DatasetDict | Dataset | IterableDatasetDict | IterableDataset:
-    if dataset == "dummy":
-        data = {"text": ["text"] * 1_000}
-        dataset = Dataset.from_dict(data)
+def get_dataset(
+    dataset_name: str,
+    dataset_prompt_field: str,
+    dataset_context_field: str,
+    dataset_output_field: str,
+) -> DatasetDict | Dataset | IterableDatasetDict | IterableDataset:
+    if dataset_name == "dummy":
+        dataset = load_from_disk(FINE_TUNING_DATASETS_PATH / "dummy_dataset")
     else:
-        dataset = load_dataset(dataset, split="train")
+        dataset = load_dataset(dataset_name, split="train")
+    dataset = dataset.map(
+        lambda x: create_chat(x, dataset_prompt_field, dataset_context_field, dataset_output_field),
+        remove_columns=dataset.column_names,
+    )
     return dataset
 
 
 def get_model_and_tokenizer(
-    model_name, tokenizer_name
+    model_name: str, tokenizer_name: str
 ) -> tuple[PreTrainedModel, PreTrainedTokenizer]:
     # BitsAndBytesConfig int-4 config
     bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True, bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
     )
 
     # Load model and tokenizer
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         device_map="auto",
-        attn_implementation="flash_attention_2",
+        # attn_implementation="flash_attention_2",
         torch_dtype=torch.bfloat16,
-        quantization_config=bnb_config
+        quantization_config=bnb_config,
     )
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
     tokenizer.padding_side = "right"  # to prevent warnings
 
     return model, tokenizer
 
-def get_peft_config():
+
+def get_peft_config() -> LoraConfig:
     peft_config = LoraConfig(
         lora_alpha=8,
         lora_dropout=0.05,
@@ -86,6 +116,7 @@ def get_peft_config():
 def get_trainer(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
+    max_seq_length: int,
     peft_config: LoraConfig,
     dataset: DatasetDict | Dataset | IterableDatasetDict | IterableDataset,
     dataset_text_field: str,
@@ -112,21 +143,19 @@ def get_trainer(
         report_to="wandb",  # report metrics to tensorboard
     )
 
-    # max_seq_length = 1512  # max sequence length for model and packing of the dataset
-
     trainer = SFTTrainer(
         model=model,
         args=args,
         train_dataset=dataset,
         dataset_text_field=dataset_text_field,
         peft_config=peft_config,
-        # max_seq_length=max_seq_length,
+        max_seq_length=max_seq_length,
         tokenizer=tokenizer,
         packing=True,
         dataset_kwargs={
             "add_special_tokens": False,  # We template with special tokens
             "append_concat_token": False,  # No need to add additional separator token
-        }
+        },
     )
 
     return trainer
