@@ -10,12 +10,6 @@ untyped_calls_exclude = ["pymongo"]
 plugins = "numpy.typing.mypy_plugin"
 
 [[tool.mypy.overrides]]
-module = [
-    "pyarrow.*",
-    "datasets.*",
-    "sentence_transformers.*",
-    "trl",
-    "transformers",
-    "datasets",
-]
+module = ["pyarrow.*", "datasets.*", "sentence_transformers.*"]
 ignore_missing_imports = true
+
