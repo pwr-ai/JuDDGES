@@ -1,21 +1,20 @@
-from typing import Optional, Any
+from typing import Optional
 
 import typer
 from dotenv import load_dotenv
+from loguru import logger
 from mpire.pool import WorkerPool
-from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
-from pymongo.server_api import ServerApi
 from requests import HTTPError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
-from loguru import logger
 
+from juddges.data.models import get_mongo_collection
 from juddges.data.pl_court_api import PolishCourtAPI
 
 N_JOBS = 8
 BATCH_SIZE = 1_000
 
-load_dotenv("secrets.env", verbose=True)
+load_dotenv()
 
 
 def main(
@@ -48,8 +47,7 @@ class MetadataDownloader:
         stop=stop_after_attempt(5),
     )
     def __call__(self, offset: int) -> None:
-        client: MongoClient[dict[str, Any]] = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
-        collection = client["juddges"]["judgements"]
+        collection = get_mongo_collection(mongo_uri=self.mongo_uri)
 
         params = {
             "sort": "date-asc",

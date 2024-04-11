@@ -6,15 +6,15 @@ import pandas as pd
 import typer
 from dotenv import load_dotenv
 from loguru import logger
-from pymongo import MongoClient
-from pymongo.server_api import ServerApi
-from tqdm import tqdm, trange
 from pyarrow.parquet import ParquetDataset
+from tqdm import tqdm, trange
+
+from juddges.data.models import get_mongo_collection
 
 BATCH_SIZE = 100
-CHUNK_SIZE = 50_000
+CHUNK_SIZE = 25_000
 
-load_dotenv("secrets.env", verbose=True)
+load_dotenv()
 
 
 def main(
@@ -26,9 +26,7 @@ def main(
 ) -> None:
     file_name.parent.mkdir(exist_ok=True, parents=True)
 
-    client: MongoClient[dict[str, Any]] = MongoClient(mongo_uri, server_api=ServerApi("1"))
-    collection = client["juddges"]["judgements"]
-    client.admin.command("ping")
+    collection = get_mongo_collection(mongo_uri=mongo_uri)
 
     if filter_empty_content:
         query = {"content": {"$ne": True}}

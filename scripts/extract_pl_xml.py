@@ -7,7 +7,7 @@ import typer
 from datasets import load_dataset, Dataset
 from dotenv import load_dotenv
 from loguru import logger
-from pymongo import MongoClient, UpdateOne
+from pymongo import UpdateOne
 from pymongo.errors import BulkWriteError, ConfigurationError
 from tenacity import (
     wait_random_exponential,
@@ -19,12 +19,13 @@ from tenacity import (
 )
 from tqdm import tqdm
 
+from juddges.data.models import get_mongo_collection
 from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
 
 BATCH_SIZE = 100
 INGEST_JOBS = 6
 
-load_dotenv("secrets.env", verbose=True)
+load_dotenv()
 
 
 def main(
@@ -87,8 +88,7 @@ class IngestWorker:
         stop=stop_after_attempt(5),
     )
     def __call__(self, batch: dict[str, list[Any]]) -> None:
-        client: MongoClient[dict[str, Any]] = MongoClient(self.mongo_uri)
-        collection = client["juddges"]["judgements"]
+        collection = get_mongo_collection(mongo_uri=self.mongo_uri)
 
         ids = batch.pop("_id")
         ingest_batch = [

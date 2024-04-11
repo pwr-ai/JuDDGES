@@ -6,19 +6,19 @@ import typer
 from dotenv import load_dotenv
 from loguru import logger
 from mpire.pool import WorkerPool
-from pymongo import MongoClient, UpdateOne
+from pymongo import UpdateOne
 from pymongo.errors import BulkWriteError
-from pymongo.server_api import ServerApi
 from requests import HTTPError, ConnectionError
 from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
 from tqdm import tqdm
 
+from juddges.data.models import get_mongo_collection
 from juddges.data.pl_court_api import PolishCourtAPI, DataNotFoundError
 
 N_JOBS = 6
 BATCH_SIZE = 100
 
-load_dotenv("secrets.env", verbose=True)
+load_dotenv()
 
 
 class DataType(Enum):
@@ -32,9 +32,7 @@ def main(
     batch_size: int = typer.Option(BATCH_SIZE),
     n_jobs: int = typer.Option(N_JOBS),
 ) -> None:
-    client: MongoClient[dict[str, Any]] = MongoClient(mongo_uri, server_api=ServerApi("1"))
-    collection = client["juddges"]["judgements"]
-    client.admin.command("ping")
+    collection = get_mongo_collection()
 
     api = PolishCourtAPI()
 
@@ -77,8 +75,7 @@ class DownloadDataAndUpdateDatabase:
             fetched_data = self._download_data(d_id)
             data_batch.append(UpdateOne({"_id": d_id}, {"$set": fetched_data}))
 
-        client: MongoClient[dict[str, Any]] = MongoClient(self.mongo_uri)
-        collection = client["juddges"]["judgements"]
+        collection = get_mongo_collection(mongo_uri=self.mongo_uri)
 
         try:
             collection.bulk_write(data_batch)

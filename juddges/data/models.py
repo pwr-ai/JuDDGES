@@ -3,15 +3,17 @@ import os
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-if os.environ.get("MONGO_URI", None) is None:
-    raise Exception("Missing `MONGO_URI` environment variable.")
 
+def get_mongo_collection(
+    mongo_uri: str | None = None,
+    mongo_db: str | None = None,
+    collection_name: str = "judgements",
+) -> Collection:
+    uri = mongo_uri or os.environ.get("MONGO_URI")
+    assert uri, "Mongo URI is required"
+    db = mongo_db or os.environ.get("MONGO_DB_NAME")
+    assert db, "Mongo DB name is required"
 
-if os.environ.get("MONGO_DB_NAME", None) is None:
-    raise Exception("Missing `MONGO_DB_NAME` environment variable.")
-
-
-def get_mongo_collection(collection_name: str = "judgements") -> Collection:
-    client = MongoClient(os.environ["MONGO_URI"])
-    db = client[os.environ["MONGO_DB_NAME"]]
+    client = MongoClient(uri)
+    db = client[db]
     return db[collection_name]
