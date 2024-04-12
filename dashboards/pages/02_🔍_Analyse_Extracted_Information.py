@@ -19,6 +19,13 @@ def load_data():
 
 
 df = load_data()
+extracted_keys = [line.split(":")[0] for line in EXAMPLE_SCHEMA.split("\n") if len(line) > 3] + [
+    "signature",
+    "excerpt",
+    "text",
+    "judges",
+    "references",
+]
 
 st.info(
     "We sampled 100 random judgements from the dataset and extracted information from them. Below is the extracted information and the schema (questions) used to extract it."
@@ -29,7 +36,7 @@ st.text_area(
 )
 
 st.header("Extracted Information - tabular format")
-st.write(df)
+st.write(df[extracted_keys])
 
 
 output = io.BytesIO()
