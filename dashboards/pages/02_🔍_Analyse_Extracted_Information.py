@@ -1,3 +1,5 @@
+import io
+
 import pandas as pd
 import streamlit as st
 
@@ -22,11 +24,24 @@ st.info(
     "We sampled 100 random judgements from the dataset and extracted information from them. Below is the extracted information and the schema (questions) used to extract it."
 )
 
-st.header("Schema:")
-st.write(EXAMPLE_SCHEMA)
+st.text_area(
+    "Example schema for extracted informations: ", value=EXAMPLE_SCHEMA, height=300, disabled=True
+)
 
 st.header("Extracted Information - tabular format")
 st.write(df)
+
+
+output = io.BytesIO()
+with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    df.to_excel(writer, sheet_name="Sheet1", index=False)
+output.seek(0)
+st.download_button(
+    label="Download data as Excel",
+    data=output,
+    file_name="judgements.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+)
 
 st.header("Analyse Extracted Information")
 
@@ -56,7 +71,9 @@ drug_offences_df = df[df["child_offence"]]
 
 st.write("We can check the sentences of them")
 
-for _, row in drug_offences_df.iterrows():
+for row_id, row in drug_offences_df.iterrows():
     st.subheader(row["signature"])
-    st.markdown(row["text"])
-    st.markdown("---")  # Add a horizontal line
+    st.info(row["verdict_summary"])
+    if st.toggle(key=row, label="Show judgement's text"):
+        st.markdown(row["text"])
+        st.markdown("---")
