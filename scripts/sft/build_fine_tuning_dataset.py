@@ -4,21 +4,23 @@ from typing import Optional
 from dotenv import load_dotenv
 from loguru import logger
 import typer
-from datasets import load_dataset, Version, DatasetDict
+from datasets import load_dataset
 from datetime import datetime
 
+import yaml
+
 from juddges.settings import PL_JUDGEMENTS_PATH_INSTRUCT, PL_JUDGEMENTS_PATH_RAW
-from juddges.utils import VersionBump, bump_version
 
 load_dotenv()
 
-INSTRUCTION = "Complete the following YAML with information extracted from the court judgment {{context}}: {schema}"
-SCHEMA_TEMPLATE = """
-```yaml
-date: {date}
-judges: {judges}
-signature: {signature}
-```
+SCHEMA_TEMPLATE = "```yaml\n{schema}\n```"
+INSTRUCTION_TEMPLATE = """
+You are extracting information from the court judgment.
+Extract specified values strictly from the provided judgement. Return answer in YAML format:
+{schema}
+=====
+{{context}}
+======
 """
 
 
@@ -29,7 +31,6 @@ def main(
         PL_JUDGEMENTS_PATH_INSTRUCT, help="Path to the target directory"
     ),
     test_size: int = typer.Option(2_000, help="Size of the test set"),
-    bump: VersionBump = typer.Option(..., envvar="BUMP", help="Version bump"),
     random_seed: int = typer.Option(42, help="Random seed"),
     num_jobs: Optional[int] = typer.Option(
         None, envvar="NUM_JOBS", help="Number of parallel jobs to use"
@@ -45,7 +46,6 @@ def main(
     ]
     ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
     logger.info("Loading dataset...")
-    ds = prepare_metadata(ds, bump)
     ds = ds.select_columns(feature_cols)
 
     logger.info("Cleaning dataset...")
@@ -61,13 +61,6 @@ def main(
         ds.push_to_hub(repo_id, max_shard_size="4GB")
     else:
         ds.save_to_disk(target_dir, max_shard_size="4GB", num_proc=num_jobs)
-
-
-def prepare_metadata(ds: DatasetDict, bump: VersionBump) -> DatasetDict:
-    current_version = ds["train"].info.version.version_str
-    ds["train"].info.version = Version(bump_version(current_version, bump))
-    ds["train"].info.download_checksums = None
-    return ds
 
 
 def _pre_filter(item: dict[str, Any]) -> bool:
@@ -105,20 +98,20 @@ def _filter(item: dict[str, Any]) -> bool:
 
 
 def to_instruction_fmt(item: dict[str, Any]) -> str:
-    schema = SCHEMA_TEMPLATE.format(
-        date="date in format YYYY-MM-DD",
-        judges="list of judge names [judge_name1, judge_name2, ...]",
-        signature="string contraining the signature of the judgment",
-    )
+    schema_desc = {
+        "date": "date in format YYYY-MM-DD",
+        "judges": "list of judge full names",
+        "signature": "string contraining the signature of the judgment",
+    }
 
     output = SCHEMA_TEMPLATE.format(
-        date=item["date"],
-        judges=item["judges"],
-        signature=item["signature"],
+        schema=yaml.dump({k: item[k] for k in schema_desc.keys()}).strip()
     )
 
     return {
-        "prompt": INSTRUCTION.format(schema=schema),
+        "prompt": INSTRUCTION_TEMPLATE.format(
+            schema=SCHEMA_TEMPLATE.format(schema=yaml.dump(schema_desc).strip())
+        ),
         "context": item["text"],
         "output": output,
     }
