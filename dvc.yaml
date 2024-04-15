@@ -1,0 +1,10 @@
+stages:
+  build_fine_tuning_dataset:
+    cmd: >-
+      PYTHONPATH=. python scripts/build_fine_tuning_dataset.py
+      --dataset-dir data/datasets/pl/raw
+      --repo-id JuDDGES/pl-court-instruct
+    deps:
+      - data/datasets/pl/raw
+      - scripts/build_fine_tuning_dataset.py
+    desc: "Build synthetic instriction dataset (set BUMP and NUM_JOBS envars)"

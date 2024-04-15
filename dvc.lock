@@ -1,0 +1,15 @@
+schema: '2.0'
+stages:
+  build_fine_tuning_dataset:
+    cmd: PYTHONPATH=. python scripts/build_fine_tuning_dataset.py --dataset-dir data/datasets/pl/raw
+      --repo-id JuDDGES/pl-court-instruct
+    deps:
+    - path: data/datasets/pl/raw
+      hash: md5
+      md5: e4d8b9641d584da872e4dfd1c2e01435.dir
+      size: 10205377337
+      nfiles: 17
+    - path: scripts/build_fine_tuning_dataset.py
+      hash: md5
+      md5: dcdffb714ede30f18ef5147ddd0fa7d4
+      size: 3894
