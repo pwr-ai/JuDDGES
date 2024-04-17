@@ -1,0 +1,5 @@
+_org_name: mistralai
+_model_name: Mistral-7B-Instruct-v0.2
+model_name: ${._org_name}/${._model_name}
+tokenizer_name: ${._org_name}/${._model_name}
+max_seq_length: 32_000

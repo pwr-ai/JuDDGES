@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Optional
 
-import typer
+import hydra
+from omegaconf import DictConfig
 from peft.tuners.lora.config import LoraConfig
 from trl import SFTTrainer
 from transformers import (
@@ -14,7 +14,7 @@ from transformers import (
 )
 
 from juddges.data.datasets.utils import create_chat
-from juddges.defaults import FINE_TUNING_DATASETS_PATH
+from juddges.defaults import FINE_TUNING_DATASETS_PATH, ROOT_PATH
 
 from datasets import (
     load_dataset,
@@ -29,31 +29,35 @@ import torch
 from transformers import TrainingArguments
 
 
-def main(
-    model_name: str = typer.Option(
-        "mistralai/Mistral-7B-Instruct-v0.2", help="Model ID to fine-tune"
-    ),
-    tokenizer_name: str = typer.Option(
-        "mistralai/Mistral-7B-Instruct-v0.2", help="Tokenizer ID to fine-tune"
-    ),
-    max_seq_length: int = typer.Option(1000, help="Maximum sequence length"),
-    dataset_name: str = typer.Option("dummy", help="Dataset ID to fine-tune"),
-    dataset_prompt_field: str = typer.Option("prompt"),
-    dataset_context_field: str = typer.Option("context"),
-    dataset_output_field: str = typer.Option("output"),
-    output_dir: Path = typer.Option(...),
-    run_name: Optional[str] = typer.Option(None, help="Run name for the experiment"),
-) -> None:
+@hydra.main(
+    version_base="1.3", config_path=str(ROOT_PATH / "configs/fine-tune"), config_name="config.yaml"
+)
+def main(cfg: DictConfig) -> None:
+    output_dir = Path(cfg.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     dataset = get_dataset(
-        dataset_name, dataset_prompt_field, dataset_context_field, dataset_output_field
+        cfg.dataset.dataset_name,
+        cfg.dataset.prompt_field,
+        cfg.dataset.context_field,
+        cfg.dataset.output_field,
+    ).select(range(1000))
+    model, tokenizer = get_model_and_tokenizer(cfg.model.model_name, cfg.model.tokenizer_name)
+
+    dataset = dataset.map(
+        lambda x: {"messages": tokenizer.apply_chat_template(x["messages"], tokenize=False)}
     )
-    model, tokenizer = get_model_and_tokenizer(model_name, tokenizer_name)
 
     peft_config = get_peft_config()
     trainer = get_trainer(
-        model, tokenizer, max_seq_length, peft_config, dataset, "messages", output_dir, run_name
+        model,
+        tokenizer,
+        cfg.model.max_seq_length,
+        peft_config,
+        dataset,
+        "messages",
+        output_dir,
+        cfg.run_name,
     )
     trainer.train()
     trainer.save_model()
@@ -131,7 +135,7 @@ def get_trainer(
         gradient_accumulation_steps=2,  # number of steps before performing a backward/update pass
         gradient_checkpointing=True,  # use gradient checkpointing to save memory
         optim="adamw_torch_fused",  # use fused adamw optimizer
-        logging_steps=1,  # log every 10 steps
+        logging_steps=1,  # log every 1 step
         save_strategy="epoch",  # save checkpoint every epoch
         bf16=True,  # use bfloat16 precision
         tf32=True,  # use tf32 precision
@@ -161,4 +165,4 @@ def get_trainer(
     return trainer
 
 
-typer.run(main)
+main()
