@@ -11,5 +11,5 @@ stages:
       nfiles: 17
     - path: scripts/sft/build_fine_tuning_dataset.py
       hash: md5
-      md5: f9fd036845275d60cd8649a8cb75fe9c
-      size: 3541
+      md5: afe0479a11a9fa30d78781a08f189b79
+      size: 3844
