@@ -20,3 +20,16 @@ stages:
         - scripts/sft/fine_tune_llm.py
       outs:
         - data/experiments/fine-tune/${item}/pl-court-instruct
+
+  evaluate_zero_shot:
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate_zero_shot.py
+      --output-file data/results/pl/zero_shot/results_llama_3_8B.json
+      --metrics-file data/results/pl/zero_shot/metrics_llama_3_8B.json
+    deps:
+      - scripts/sft/evaluate_zero_shot.py
+    outs:
+      - data/results/pl/zero_shot/results_llama_3_8B.json
+    metrics:
+      - data/results/pl/zero_shot/metrics_llama_3_8B.json:
+          cache: false

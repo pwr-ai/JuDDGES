@@ -17,20 +17,19 @@ MAX_SHARD_SIZE = "4GB"
 
 SCHEMA_TEMPLATE = "```yaml\n{schema}\n```"
 INSTRUCTION_TEMPLATE = """
-You are extracting information from the court judgment.
-Extract specified values strictly from the provided judgement.
-If information is not provided in the judgement, leave the field with null value.
-Return answer in YAML format, without any additional information outside YAML:
+You are extracting information from the Polish court judgments.
+Extract specified values strictly from the provided judgement. If information is not provided in the judgement, leave the field with null value.
+Please return the response in the identical YAML format:
 {schema}
 =====
 {{context}}
 ======
 """
 SCHEMA_DESC = {
-    "date": "date in format YYYY-MM-DD",
-    "judges": "list of judge full names",
-    "recorder": "string containing the name of the recorder",
-    "signature": "string contraining the signature of the judgment",
+    "date": "<data, date in format YYYY-MM-DD>",
+    "judges": "<sędziowie, list of judge full names>",
+    "recorder": "<protokolant, string containing the name of the recorder>",
+    "signature": "<sygnatura, string contraining the signature of the judgment>",
 }
 PROMPT = INSTRUCTION_TEMPLATE.format(
     schema=SCHEMA_TEMPLATE.format(schema=yaml.dump(SCHEMA_DESC).strip())
