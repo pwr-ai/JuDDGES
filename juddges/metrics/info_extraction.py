@@ -1,4 +1,3 @@
-from typing import Any
 from torchmetrics.functional.text import chrf_score
 import datetime
 from collections import defaultdict
@@ -8,20 +7,27 @@ EMPTY_ANSWER = ""
 
 
 def evaluate_extraction(results: list[dict[str, str]]) -> dict[str, float]:
+    """Evaluates information extraction by computing metrics per each field."""
     res_gold, res_pred = parse_results(results)
+    full_text_chrf = full_text_chrf_score(results)
     per_field_chrf_score = extraction_chrf_score(preds=res_pred, gold=res_gold)
-    return per_field_chrf_score
+    return {"full_text_chrf": full_text_chrf, "field_chrf": per_field_chrf_score}
+
+
+def full_text_chrf_score(results: list[dict[str, str]]) -> float:
+    preds, golds = [r["answer"] for r in results], [r["gold"] for r in results]
+    return chrf_score(preds=preds, target=golds, n_word_order=0).item()
 
 
 def extraction_chrf_score(
     preds: dict[str, list[str]],
     gold: dict[str, list[str]],
-) -> dict[str, Any]:
+) -> dict[str, float]:
     per_field_chrf_score = {
         key: chrf_score(preds=preds[key], target=gold[key], n_word_order=0).item()
         for key in gold.keys()
     }
-    return {"metric": "chrf", "field_scores": per_field_chrf_score}
+    return per_field_chrf_score
 
 
 def parse_results(
@@ -45,6 +51,13 @@ def parse_results(
 
 
 def _parse_item(item: str) -> dict[str, str] | None:
+    """Parses yaml model output to a dictionary.
+    The following format is applied:
+        - dates -> strings
+        - lists -> comma-separated sorted strings
+        - None  -> EMPTY_ANSWER
+        - If the input cannot be parsed, returns None.
+    """
     try:
         data = parse_yaml(item)
     except Exception:
@@ -61,11 +74,3 @@ def _parse_item(item: str) -> dict[str, str] | None:
         assert isinstance(data[k], str)
 
     return data
-
-
-if __name__ == "__main__":
-    import json
-
-    f_name = "data/results/pl/zero_shot/results_llama_3_8B.json"
-    with open(f_name) as file:
-        res = json.load(file)

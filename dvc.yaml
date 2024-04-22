@@ -22,14 +22,21 @@ stages:
         - data/experiments/fine-tune/${item}/pl-court-instruct
 
   evaluate_zero_shot:
+    matrix:
+      config:
+        - llm: "meta-llama/Meta-Llama-3-8B-Instruct"
+          fname: "meta_llama_3_8B_instruct"
+        # - llm: "mistralai/Mistral-7B-Instruct-v0.2"
+        #   fname: "mistral_7B_instruct_v0.2"
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_zero_shot.py
-      --output-file data/results/pl/zero_shot/results_llama_3_8B.json
-      --metrics-file data/results/pl/zero_shot/metrics_llama_3_8B.json
+      --llm ${item.config.llm}
+      --output-file data/results/pl_court_instruct/zero_shot/results_${item.config.fname}.json
+      --metrics-file data/results/pl_court_instruct/zero_shot/metrics_${item.config.fname}.json
     deps:
       - scripts/sft/evaluate_zero_shot.py
     outs:
-      - data/results/pl/zero_shot/results_llama_3_8B.json
+      - data/results/pl_court_instruct/zero_shot/results_${item.config.fname}.json
     metrics:
-      - data/results/pl/zero_shot/metrics_llama_3_8B.json:
+      - data/results/pl_court_instruct/zero_shot/metrics_${item.config.fname}.json:
           cache: false

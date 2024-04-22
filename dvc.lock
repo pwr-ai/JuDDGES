@@ -30,3 +30,21 @@ stages:
       hash: md5
       md5: 93f78708a597fad33b3da43e505b9707
       size: 957343
+  evaluate_zero_shot@config0:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_zero_shot.py --llm meta-llama/Meta-Llama-3-8B-Instruct
+      --output-file data/results/pl_court_instruct/zero_shot/results_meta_llama_3_8B_instruct.json
+      --metrics-file data/results/pl_court_instruct/zero_shot/metrics_meta_llama_3_8B_instruct.json
+    deps:
+    - path: scripts/sft/evaluate_zero_shot.py
+      hash: md5
+      md5: 26555545a062ce43602a8ac11280bbde
+      size: 2714
+    outs:
+    - path: data/results/pl_court_instruct/zero_shot/metrics_meta_llama_3_8B_instruct.json
+      hash: md5
+      md5: fb665645d904d37e14a931e38fef9915
+      size: 188
+    - path: data/results/pl_court_instruct/zero_shot/results_meta_llama_3_8B_instruct.json
+      hash: md5
+      md5: 93f78708a597fad33b3da43e505b9707
+      size: 957343

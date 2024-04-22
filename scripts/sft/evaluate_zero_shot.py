@@ -7,59 +7,50 @@ from datasets import load_dataset
 from loguru import logger
 import torch
 from tqdm import tqdm
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-    PreTrainedTokenizer,
-)
 import typer
 
 from juddges.metrics.info_extraction import evaluate_extraction
-from juddges.preprocessing.context_truncator import ContextTruncator
-
+from juddges.models.factory import get_model
+from juddges.preprocessing.text_encoder import EvalEncoder
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 LLM = "meta-llama/Meta-Llama-3-8B-Instruct"
-BATCH_SIZE = 1
+BATCH_SIZE = 1  # for now llama-3 doesn't work with padding, hence with batch_size > 1 also
 MAX_NEW_TOKENS = 250
 MAX_LENGTH = 2_048
 
 
 @torch.no_grad()
 def main(
+    llm: str = typer.Option(LLM),
     output_file: Path = typer.Option(...),
     metrics_file: Path = typer.Option(...),
     batch_size: int = typer.Option(BATCH_SIZE),
+    max_length: int = typer.Option(MAX_LENGTH),
+    max_new_tokens: int = typer.Option(MAX_NEW_TOKENS),
+    device: str = typer.Option(DEVICE),
 ):
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset("JuDDGES/pl-court-instruct")
     logger.info("Loading model...")
 
-    quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=torch.bfloat16,
-    )
-    model = AutoModelForCausalLM.from_pretrained(
-        LLM,
-        quantization_config=quantization_config,
-        device_map=DEVICE,
-    )
-    model.eval()
-
-    tokenizer = AutoTokenizer.from_pretrained(LLM, padding_side="left")
-    tokenizer.pad_token = tokenizer.eos_token
-    terminators: list[int] = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
+    model_pack = get_model(llm, device=device)
+    model, tokenizer = model_pack.model, model_pack.tokenizer
 
     enable_padding = batch_size > 1
-    encoder = Encoder(tokenizer=tokenizer, max_length=MAX_LENGTH, enable_padding=enable_padding)
+    encoder = EvalEncoder(
+        tokenizer=tokenizer,
+        max_length=max_length,
+        enable_padding=enable_padding,
+    )
     encoded_ds = ds["test"].map(
         encoder,
         batched=False,
         num_proc=10,
     )
     encoded_ds.set_format("torch")
+    encoded_ds = encoded_ds.select(range(20))
 
     results = []
     num_batches = math.ceil(encoded_ds.num_rows / batch_size)
@@ -72,9 +63,8 @@ def main(
             start_time = time.time()
             generated_ids = model.generate(
                 model_inputs,
-                max_new_tokens=MAX_NEW_TOKENS,
-                pad_token_id=tokenizer.eos_token_id,
-                eos_token_id=terminators,
+                max_new_tokens=max_new_tokens,
+                **model_pack.generate_kwargs,
             )
             duration = time.time() - start_time
 
@@ -93,31 +83,6 @@ def main(
     res = evaluate_extraction(results)
     with open(metrics_file, "w") as file:
         json.dump(res, file, indent="\t")
-
-
-class Encoder:
-    def __init__(self, tokenizer: PreTrainedTokenizer, max_length: int, enable_padding: bool):
-        self.tokenizer = tokenizer
-        self.truncator = ContextTruncator(tokenizer, max_length, use_output=False)
-        self.max_length = max_length
-        self.enable_padding = enable_padding
-
-    def __call__(self, item: dict[str, str]):
-        truncated_context = self.truncator(
-            item["prompt"],
-            item["context"],
-            item["output"],
-        )
-        input_message = item["prompt"].format(context=truncated_context)
-        input_chat = [{"role": "user", "content": input_message}]
-        encoded = self.tokenizer.apply_chat_template(
-            input_chat,
-            add_generation_prompt=True,
-            padding=self.enable_padding,
-            max_length=self.max_length,
-            truncation=False,
-        )
-        return {"tokens": encoded}
 
 
 if __name__ == "__main__":
