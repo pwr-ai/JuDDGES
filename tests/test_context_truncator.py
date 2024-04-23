@@ -49,9 +49,9 @@ class TestContextTruncator(unittest.TestCase):
         ]
 
         original_tokenized = tokenizer.apply_chat_template(
-            messages, tokenize=True, return_dict=True, return_length=True
+            messages, tokenize=True, return_dict=True
         )
-        original_length = original_tokenized["length"][0]
+        original_length = len(original_tokenized.data["input_ids"])
 
         truncated_context = ContextTruncator(tokenizer, max_length)(prompt, context, output)
 
@@ -65,7 +65,7 @@ class TestContextTruncator(unittest.TestCase):
         truncated_tokenized = tokenizer.apply_chat_template(
             messages, tokenize=True, return_dict=True, return_length=True
         )
-        truncated_length = truncated_tokenized["length"][0]
+        truncated_length = len(truncated_tokenized.data["input_ids"])
 
         self.assertLess(truncated_length, original_length)
         self.assertLess(truncated_length, max_length)

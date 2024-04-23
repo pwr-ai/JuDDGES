@@ -13,9 +13,11 @@ class ContextTruncator:
             {"role": "assistant", "content": ""},
         ]
 
-        self.empty_messages_length = self.tokenizer.apply_chat_template(
-            empty_messages, tokenize=True, return_dict=True, return_length=True
-        )["length"][0]
+        self.empty_messages_length = len(
+            self.tokenizer.apply_chat_template(
+                empty_messages, tokenize=True, return_dict=True
+            ).data["input_ids"]
+        )
 
     def __call__(self, prompt: str, context: str, output: str) -> str:
         prompt_length, output_length = self.tokenizer(
