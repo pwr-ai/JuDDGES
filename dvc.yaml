@@ -8,3 +8,15 @@ stages:
       - data/datasets/pl/raw
       - scripts/sft/build_fine_tuning_dataset.py
     desc: "Build synthetic instriction dataset (set NUM_JOBS envar)"
+
+  fine_tune_sft:
+    foreach:
+      - Mistral-7B-Instruct-v0.2
+      - Meta-Llama-3-8B-Instruct
+    do:
+      cmd: >-
+        PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item}
+      deps:
+        - scripts/sft/fine_tune_llm.py
+      outs:
+        - data/experiments/fine-tune/${item}/pl-court-instruct
