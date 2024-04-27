@@ -13,8 +13,13 @@ test:
 	coverage run -m pytest
 	coverage report -mi
 
+
 all: check test
+
+nbdev: \
+	all
+	nbdev_prepare
+	nbdev_update
 
 install:
 	pip install -r requirements.txt
-
