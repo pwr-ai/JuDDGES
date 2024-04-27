@@ -7,7 +7,7 @@ from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from loguru import logger
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline  # type: ignore
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 from juddges.data.qa_pairs_json_parser import QAPairsJsonParser
 from juddges.data.synthetic.generation_prompt import JUDGEMENTS_QA_COT_PROMPT_V1
