@@ -4,19 +4,15 @@ name: juddges
 services:
   web:
     build: .
-    command: streamlit run /app/dashboards/app.py
+    command: streamlit run /app/dashboards/⚖️_Project_Information.py
     volumes:
       - ./:/app
       - ~/.cache:/root/.cache
       # - L:\docker-configs\zsh\smartass_zsh_history:/root/.zsh_history
     tty: true
     shm_size: "2gb"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
-      - MLFLOW_S3_ENDPOINT_URL=${MLFLOW_S3_ENDPOINT_URL}
-      - LOGNAME=${LOGNAME}
-      - MONGODB_URI=${MONGODB_URI}
+    env_file:
+      - secrets.env
     restart: always
     deploy:
       resources:
