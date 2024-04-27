@@ -10,6 +10,10 @@ from juddges.data.synthetic.patterns import CUSTOM_PARSE_JSON_MARKDOWN
 
 
 class QAPairsJsonParser(JsonOutputParser):
+    """JsonOutputParser for QA pairs output that handles multiple JSON strings
+    with modified `parse_json_markdown`.
+    """
+
     def parse_result(self, result: List[Generation], *, partial: bool = False) -> Any:
         text = result[0].text
         text = text.strip()
@@ -31,7 +35,7 @@ def parse_json_markdown(
 ) -> Dict[Any, Any]:
     """Modified version of `langchain_core.output_parsers.json:parse_json_markdown`
 
-    Fixes: JSONDecodeError when parsing CoT like output that contains multiple JSON strings
+    Fixes: JSONDecodeError when parsing Chain-of-thoughts like prompt/output that contains multiple JSON strings
     """
     try:
         return _parse_json(json_string, parser=parser)
