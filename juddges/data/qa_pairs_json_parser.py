@@ -1,16 +1,15 @@
-import re
-from typing import Any, List, Callable
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.output_parsers.json import parse_partial_json, _parse_json
-from langchain_core.outputs import Generation
-from langchain_core.exceptions import OutputParserException
 from json.decoder import JSONDecodeError
+from typing import Any, Callable, Dict, List
+
+from langchain_core.exceptions import OutputParserException
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.output_parsers.json import _parse_json, parse_partial_json
+from langchain_core.outputs import Generation
 
 from juddges.data.synthetic.patterns import CUSTOM_PARSE_JSON_MARKDOWN
 
 
 class QAPairsJsonParser(JsonOutputParser):
-
     def parse_result(self, result: List[Generation], *, partial: bool = False) -> Any:
         text = result[0].text
         text = text.strip()
@@ -29,10 +28,10 @@ class QAPairsJsonParser(JsonOutputParser):
 
 def parse_json_markdown(
     json_string: str, *, parser: Callable[[str], Any] = parse_partial_json
-) -> dict:
+) -> Dict[Any, Any]:
     """Modified version of `langchain_core.output_parsers.json:parse_json_markdown`
 
-        Fixes: JSONDecodeError when parsing CoT like output that contains multiple JSON strings
+    Fixes: JSONDecodeError when parsing CoT like output that contains multiple JSON strings
     """
     try:
         return _parse_json(json_string, parser=parser)

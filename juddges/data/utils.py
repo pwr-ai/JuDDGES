@@ -1,16 +1,17 @@
-from pathlib import Path
-from typing import Iterable, Generator
-from jsonlines import jsonlines
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Generator, Iterable
+
+from jsonlines import jsonlines
 
 
-def save_jsonl(records: Iterable[dict], out: Path | str):
+def save_jsonl(records: Iterable[Dict[str, Any]], out: Path | str) -> None:
     """Save a list of dictionaries to a jsonl file."""
     with jsonlines.open(out, mode="w") as writer:
         writer.write_all(records)
 
 
-def read_jsonl(path: Path | str) -> Generator[dict, None, None]:
+def read_jsonl(path: Path | str) -> Generator[Dict[str, Any], None, None]:
     """Read a jsonl file and yield dictionaries."""
     with jsonlines.open(path) as reader:
         yield from reader
