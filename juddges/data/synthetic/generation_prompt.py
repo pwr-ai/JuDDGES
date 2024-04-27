@@ -1,8 +1,17 @@
-JUDGEMENTS_QA_COT_PROMPT_V1 = """\
-You are a question-answer generator. Your goal is to generate question-answer pairs given the Context.
-Do not tranlate the Context, generate questions and answers in original language.
+"""
+QA - Question Answer
+COT - Chain of Thought
+"""
 
-Context: {context}
+
+GEN_QA_COT_PROMPT = """\
+You are a question-answer generator. Your goal is to generate question-answer pairs given the Context `document`.
+Do not tranlate the Context, generate questions and answers in original language - {language}.
+
+Context:
+```
+{context}
+```
 
 Step 1: Identify spans that are likely to be answers to questions, identify as many as possible.
 Step 2: For each identified span, generate a question.
