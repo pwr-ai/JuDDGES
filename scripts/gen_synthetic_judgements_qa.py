@@ -1,64 +1,68 @@
-import typer
-from typing import List
-from loguru import logger
-from dotenv import load_dotenv
 import json
+from typing import List
 
-from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate
+import typer
+from dotenv import load_dotenv
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from loguru import logger
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline  # type: ignore
 
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-
-from juddges.data.utils import read_jsonl
-from juddges.data.synthetic.generation_prompt import JUDGEMENTS_QA_COT_PROMPT_V1
 from juddges.data.qa_pairs_json_parser import QAPairsJsonParser
+from juddges.data.synthetic.generation_prompt import JUDGEMENTS_QA_COT_PROMPT_V1
+from juddges.data.utils import read_jsonl
 
 load_dotenv("secrets.env", verbose=True)
-
 
 
 class SyntheticLegisQAPairs(BaseModel):
     questions: List[str] = Field(description="List of generated questions")
     answers: List[str] = Field(description="List of generated answers")
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         assert len(self.questions) > 0, "At least one question should be generated"
-    
-    def test_equal_length(self):
-        assertion_msg  = "Number of questions and answers should be equal"
+
+    def test_equal_length(self) -> None:
+        assertion_msg = "Number of questions and answers should be equal"
         assert len(self.questions) == len(self.answers), assertion_msg
-    
-    def test_q_duplicates(self):
+
+    def test_q_duplicates(self) -> None:
         assertion_msg = "Questions should be unique"
         assert len(set(self.questions)) == len(self.questions), assertion_msg
-    
-    def test_a_duplicates(self):
+
+    def test_a_duplicates(self) -> None:
         assertion_msg = "Answers should be unique"
         assert len(set(self.answers)) == len(self.answers), assertion_msg
-    
-    def test_duplicates(self):
+
+    def test_duplicates(self) -> None:
         self.test_q_duplicates()
         self.test_a_duplicates()
-    
-    def test(self):
+
+    def test(self) -> None:
         self.test_empty()
         self.test_equal_length()
         self.test_duplicates()
 
 
 def main(
-    judgements_fpath: str = typer.Option(default=None, help="Dumped `judgements` collection file path"),
+    judgements_fpath: str = typer.Option(
+        default=None, help="Dumped `judgements` collection file path"
+    ),
     out: str = typer.Option(default=None, help="Output file path"),
     hf_model: str = typer.Option(
         help="Hugging Face model name or path",
-        default="TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ"
+        default="TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ",
     ),
-    max_input_length: int = typer.Option(default=3551, help="Maximum number of tokens in input text"),
-):
+    max_input_length: int = typer.Option(
+        default=3551, help="Maximum number of tokens in input text"
+    ),
+) -> None:
     if judgements_fpath is None:
         # FIXME
-        default_judgements_fpath = "/app/data/datasets/pl/judgements_sample10_20240427_094707f595590.jsonl"
+        default_judgements_fpath = (
+            "/app/data/datasets/pl/judgements_sample10_20240427_094707f595590.jsonl"
+        )
         logger.warning(
             "Dumped `judgements` collection file path not provided."
             f" Using the default `judgements` path: {default_judgements_fpath}"
@@ -80,10 +84,8 @@ def main(
     )
 
     # For example: revision="gptq-4bit-32g-actorder_True"
-    model = AutoModelForCausalLM.from_pretrained(hf_model,
-        device_map="auto",
-        trust_remote_code=True,
-        revision="main"
+    model = AutoModelForCausalLM.from_pretrained(
+        hf_model, device_map="auto", trust_remote_code=True, revision="main"
     )
     tokenizer = AutoTokenizer.from_pretrained(hf_model, use_fast=True)
     text_gen_pipeline = pipeline(
@@ -95,7 +97,7 @@ def main(
         temperature=0.7,
         top_p=0.95,
         top_k=40,
-        repetition_penalty=1.1
+        repetition_penalty=1.1,
     )
     hf_pipeline = HuggingFacePipeline(pipeline=text_gen_pipeline)
 
@@ -111,10 +113,7 @@ def main(
             )
             continue
 
-        chain_input = {
-            "context": judgement["text"],
-            "format_md_ext": "json"
-        }
+        chain_input = {"context": judgement["text"], "format_md_ext": "json"}
         qa_pairs = gen_chain.invoke(chain_input)
         logger.debug(json.dumps(qa_pairs, indent=2, ensure_ascii=False))
 

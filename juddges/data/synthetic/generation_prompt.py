@@ -1,4 +1,4 @@
-JUDGEMENTS_QA_COT_PROMPT_V1 = '''\
+JUDGEMENTS_QA_COT_PROMPT_V1 = """\
 You are a question-answer generator. Your goal is to generate question-answer pairs given the Context.
 Do not tranlate the Context, generate questions and answers in original language.
 
@@ -14,4 +14,4 @@ Ensure that you distinctly label and delineate Steps 1, 2 and 3.
 
 Output:
 ```{format_md_ext}
-'''
+"""
