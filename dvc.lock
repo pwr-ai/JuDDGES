@@ -48,3 +48,16 @@ stages:
       hash: md5
       md5: 93f78708a597fad33b3da43e505b9707
       size: 957343
+  fine_tune_sft@Mistral-7B-Instruct-v0.2:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=Mistral-7B-Instruct-v0.2
+    deps:
+    - path: scripts/sft/fine_tune_llm.py
+      hash: md5
+      md5: dd9baba0d88e09f47e70f38a2e6716cd
+      size: 6499
+    outs:
+    - path: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct
+      hash: md5
+      md5: 2078cca8b3c2fa97914dc8f1c18f48fc.dir
+      size: 1556588028
+      nfiles: 176
