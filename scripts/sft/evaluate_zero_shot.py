@@ -50,7 +50,6 @@ def main(
         num_proc=10,
     )
     encoded_ds.set_format("torch")
-    encoded_ds = encoded_ds.select(range(20))
 
     results = []
     num_batches = math.ceil(encoded_ds.num_rows / batch_size)
