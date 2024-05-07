@@ -1,5 +1,5 @@
 accelerate==0.29.3
-bitsandbytes==0.43.0
+bitsandbytes==0.43.1
 chardet==5.2.0
 datasets==2.18.0
 langchain-openai==0.1.1
