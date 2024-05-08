@@ -4,6 +4,7 @@ from typing import List
 
 import typer
 from dotenv import load_dotenv
+from tqdm import tqdm
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
@@ -12,6 +13,7 @@ from langsmith import Client
 from langsmith.schemas import DataType
 from loguru import logger
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from auto_gptq import exllama_set_max_input_length
 
 from juddges.data import LangCode
 from juddges.data.qa_pairs_json_parser import QAPairsJsonParser
@@ -53,14 +55,19 @@ def main(
     judgements_fpath: str = typer.Option(
         default=None, help="Dumped `judgements` collection file path"
     ),
-    out_smith_dataset: str = typer.Option(default=None, help="Smith dataset name"),
+    out_smith_dataset: str = typer.Option(default=None, help="LangSmith dataset name"),
     out: str = typer.Option(default=None, help="Output file path"),
     hf_model: str = typer.Option(
         help="Hugging Face model name or path",
-        default="TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ",
+        default="TheBloke/Mistral-7B-Instruct-v0.2-GPTQ",
+        # default="microsoft/Phi-3-mini-128k-instruct",
+        # default="TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ",
     ),
     max_input_length: int = typer.Option(
-        default=3551, help="Maximum number of tokens in input text"
+        default=32_000,  # TheBloke/Mistral-7B-Instruct-v0.2-GPTQ
+        # default=128_000,  # microsoft/Phi-3-mini-128k-instruct
+        # default=3551,  # TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ
+        help="Maximum number of tokens in input text",
     ),
     lang: LangCode = typer.Option(
         default=LangCode.POLISH.value,
@@ -79,27 +86,26 @@ def main(
 ) -> None:
     ts_suffix = path_safe_udate()
     if judgements_fpath is None:
-        # FIXME
-        default_judgements_fpath = (
-            "/app/data/datasets/pl/judgements_sample50_20240427_220002f908780.jsonl"
-        )
+        from juddges.settings import SAMPLE_DATA_PATH
+
+        judgements_fpath = SAMPLE_DATA_PATH / "judgements_sample50_20240427_220002f908780.jsonl"
         logger.warning(
             "Dumped `judgements` collection file path not provided."
-            f" Using the default `judgements` path: {default_judgements_fpath}"
+            f" Using the default `judgements` path: {judgements_fpath}"
         )
-        judgements_fpath = default_judgements_fpath
 
     if out is None:
-        # FIXME
-        default_out_dir = Path(f"/app/data/datasets/{lang.value}/qa/generated")
-        default_out_dir.mkdir(parents=True, exist_ok=True)
-        default_fname = f"judgements_synth_qa__{ts_suffix}.jsonl"
-        default_fpath = Path(default_out_dir) / default_fname
-        logger.warning(f"Output file path not provided. Using the default `out`: {default_fpath}")
-        out = default_fpath
+        from juddges.settings import PL_JUDGEMENTS_SYNTH_QA_PATH
 
+        default_fname = f"judgements_synth_qa__{ts_suffix}.jsonl"
+        out = PL_JUDGEMENTS_SYNTH_QA_PATH / default_fname
+        logger.warning(f"Output file path not provided. Using the default `out`: {out}")
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+
+    logger.info("Setting up LangSmith client...")
     smith = Client()
 
+    logger.info("Creating dataset...")
     dataset_default_name = f"judgements_synth_qa__{ts_suffix}"
     dataset = smith.create_dataset(
         dataset_name=out_smith_dataset if out_smith_dataset is not None else dataset_default_name,
@@ -114,10 +120,16 @@ def main(
         partial_variables={"format_instructions": qa_parser.get_format_instructions()},
     )
 
-    # For example: revision="gptq-4bit-32g-actorder_True"
+    logger.info("Loading Hugging Face model and tokenizer...")
+
     model = AutoModelForCausalLM.from_pretrained(
-        hf_model, device_map="auto", trust_remote_code=True, revision="main"
+        hf_model,
+        trust_remote_code=True,
+        device_map="auto",
     )
+    model = exllama_set_max_input_length(model, max_input_length=max_input_length)
+    logger.debug(f"{model.device=}")
+
     tokenizer = AutoTokenizer.from_pretrained(hf_model, use_fast=True)
     text_gen_pipeline = pipeline(
         "text-generation",
@@ -132,21 +144,13 @@ def main(
     )
     hf_pipeline = HuggingFacePipeline(pipeline=text_gen_pipeline)
 
+    logger.info("Setting up generation pipeline...")
     gen_chain = prompt | hf_pipeline | qa_parser
+
     logger.info("Generating QA pairs from provided collection data...")
-
     generation_raport = {k: 0 for k in ["success", "failure", "skipped"]}
-    for judgement in read_jsonl(judgements_fpath):
+    for judgement in tqdm(list(read_jsonl(judgements_fpath))):
         # FIXME: change to batch processing
-        num_text_tokens = tokenizer.encode(judgement["text"], return_tensors="pt").shape[1]
-        if num_text_tokens > 0.95 * max_input_length:
-            logger.warning(
-                f"Skipping {judgement['_id']=} due to `max_input_length`"
-                f" > {max_input_length} ({num_text_tokens})..."
-            )
-            generation_raport["skipped"] += 1
-            continue
-
         try:
             chain_input = {
                 "language": lang.value,
@@ -156,12 +160,14 @@ def main(
             qa_pairs = gen_chain.invoke(chain_input)
 
             dto = SyntheticLegisQAPairs(**qa_pairs)
+            logger.debug(f"{dto.dict()=}")
             dto.test(language=lang)
         except Exception as e:
             logger.error(f"QA unsuccessful generation for {judgement['_id']=}\n{e}")
             generation_raport["failure"] += 1
             continue
 
+        logger.debug(f"Creating example for {judgement['_id']=}...")
         smith.create_example(
             inputs=chain_input,
             outputs=dto.dict(),
