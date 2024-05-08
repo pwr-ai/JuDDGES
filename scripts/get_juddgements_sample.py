@@ -39,11 +39,10 @@ def main(
     out: str = typer.Option(default=None, help="Output file path"),
 ) -> None:
     if out is None:
-        # FIXME: data dir from settings when available, fix logger info
-        # from juddges.settings import PL_JUDGEMENTS_PATH
-        # out = PL_JUDGEMENTS_PATH / f"judgements_sample{size}_{path_safe_udate()}.jsonl"
+        from juddges.settings import SAMPLE_DATA_PATH
+
+        out = SAMPLE_DATA_PATH / f"judgements_sample{size}_{path_safe_udate()}.jsonl"
         logger.warning("Output file path not provided, using the default `out`: ./")
-        out = f"judgements_sample{size}_{path_safe_udate()}.jsonl"
 
     logger.info("Connecting to MongoDB...")
     client: MongoClient[Any] = MongoClient(mongo_uri)
