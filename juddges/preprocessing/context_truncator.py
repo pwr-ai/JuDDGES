@@ -4,15 +4,14 @@ from tokenizers.implementations import BaseTokenizer
 
 
 class ContextTruncator:
-    def __init__(self, tokenizer: BaseTokenizer, max_length: int, use_output: bool):
+    def __init__(self, tokenizer: BaseTokenizer, max_length: int):
         self.tokenizer = tokenizer
         self.max_length = max_length
 
         empty_messages = [
             {"role": "user", "content": ""},
         ]
-        if use_output:
-            empty_messages.append({"role": "assistant", "content": ""})
+        empty_messages.append({"role": "assistant", "content": ""})
 
         self.empty_messages_length = len(
             self.tokenizer.apply_chat_template(
@@ -20,10 +19,15 @@ class ContextTruncator:
             ).data["input_ids"]
         )
 
-    def __call__(self, prompt: str, context: str, output: str) -> str:
-        prompt_length, output_length = self.tokenizer(
-            [prompt, output], return_length=True, add_special_tokens=False
-        )["length"]
+    def __call__(self, prompt: str, context: str, output: str | None = None) -> str:
+        if output:
+            prompt_length, output_length = self.tokenizer(
+                [prompt, output], return_length=True, add_special_tokens=False
+            )["length"]
+        else:
+            prompt_length, output_length = self.tokenizer(
+                [prompt], return_length=True, add_special_tokens=False
+            )["length"][0], 0
 
         context_length = (
             self.max_length - prompt_length - output_length - self.empty_messages_length

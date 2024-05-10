@@ -20,10 +20,10 @@ def get_model(llm_name: str, **kwargs) -> ModelForGeneration:
         raise ValueError(f"Model: {llm_name} not yet handled or doesn't exists.")
 
 
-def get_llama_3(llm_name: str, device: str) -> ModelForGeneration:
+def get_llama_3(llm_name: str, device_map: str) -> ModelForGeneration:
     assert llm_name.startswith("meta-llama")
-    model, tokenizer = _get_model_tokenizer(llm_name, device)
-    tokenizer.padding_side = "left"
+    model, tokenizer = _get_model_tokenizer(llm_name, device_map)
+    # tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.eos_token
     terminators: list[int] = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
 
@@ -34,10 +34,10 @@ def get_llama_3(llm_name: str, device: str) -> ModelForGeneration:
     )
 
 
-def get_mistral(llm_name: str, device: str) -> ModelForGeneration:
+def get_mistral(llm_name: str, device_map: str) -> ModelForGeneration:
     assert llm_name.startswith("mistralai")
-    model, tokenizer = _get_model_tokenizer(llm_name, device)
-    tokenizer.padding_side = "left"
+    model, tokenizer = _get_model_tokenizer(llm_name, device_map)
+    # tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.eos_token
 
     return ModelForGeneration(
@@ -47,7 +47,7 @@ def get_mistral(llm_name: str, device: str) -> ModelForGeneration:
     )
 
 
-def _get_model_tokenizer(llm_name: str, device: str) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+def _get_model_tokenizer(llm_name: str, device_map: str) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.bfloat16,
@@ -55,7 +55,7 @@ def _get_model_tokenizer(llm_name: str, device: str) -> tuple[AutoModelForCausal
     model = AutoModelForCausalLM.from_pretrained(
         llm_name,
         quantization_config=quantization_config,
-        device_map=device,
+        device_map=device_map,
     )
-    tokenizer = AutoTokenizer.from_pretrained(llm_name)
+    tokenizer = AutoTokenizer.from_pretrained(llm_name, padding_side="left")
     return model, tokenizer
