@@ -1,10 +1,11 @@
 import json
+from importlib import import_module
 from pathlib import Path
 from typing import List
 
 import typer
+from auto_gptq import exllama_set_max_input_length
 from dotenv import load_dotenv
-from tqdm import tqdm
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
@@ -12,8 +13,8 @@ from langdetect import detect as lang_detect
 from langsmith import Client
 from langsmith.schemas import DataType
 from loguru import logger
+from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-from auto_gptq import exllama_set_max_input_length
 
 from juddges.data import LangCode
 from juddges.data.qa_pairs_json_parser import QAPairsJsonParser
@@ -22,6 +23,10 @@ from juddges.data.utils import path_safe_udate, read_jsonl
 from juddges.prompts.technique import PromptingTechnique
 
 load_dotenv("secrets.env", verbose=True)
+
+
+class LanguageMismatchError(Exception):
+    pass
 
 
 class SyntheticLegisQAPairs(BaseModel):
@@ -41,8 +46,12 @@ class SyntheticLegisQAPairs(BaseModel):
 
     def test_language(self, lang: LangCode) -> None:
         msg = "{smth} should match context language" + f" ({lang.name}/{lang.value})"
-        assert lang_detect("\n".join(self.questions)) == lang.value, msg.format(smth="Questions")
-        assert lang_detect("\n".join(self.answers)) == lang.value, msg.format(smth="Answers")
+        assert lang_detect("\n".join(self.questions)) == lang.value, LanguageMismatchError(
+            msg.format(smth="Questions")
+        )
+        assert lang_detect("\n".join(self.answers)) == lang.value, LanguageMismatchError(
+            msg.format(smth="Answers")
+        )
 
     def test(self, language: LangCode) -> None:
         self.test_empty()
@@ -55,18 +64,22 @@ def main(
     judgements_fpath: str = typer.Option(
         default=None, help="Dumped `judgements` collection file path"
     ),
+    prompt_template_libpath: str = typer.Option(
+        default=None,
+        help="Prompt variable module path, ex. `juddges.data.synthetic.generation_prompt.GEN_QA_BASELINE_PROMPT`",
+    ),
     out_smith_dataset: str = typer.Option(default=None, help="LangSmith dataset name"),
     out: str = typer.Option(default=None, help="Output file path"),
     hf_model: str = typer.Option(
         help="Hugging Face model name or path",
-        default="TheBloke/Mistral-7B-Instruct-v0.2-GPTQ",
+        # default="TheBloke/Mistral-7B-Instruct-v0.2-GPTQ",
         # default="microsoft/Phi-3-mini-128k-instruct",
-        # default="TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ",
+        default="TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ",
     ),
     max_input_length: int = typer.Option(
-        default=32_000,  # TheBloke/Mistral-7B-Instruct-v0.2-GPTQ
+        # default=32_000,  # TheBloke/Mistral-7B-Instruct-v0.2-GPTQ
         # default=128_000,  # microsoft/Phi-3-mini-128k-instruct
-        # default=3551,  # TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ
+        default=3551,  # TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ
         help="Maximum number of tokens in input text",
     ),
     lang: LangCode = typer.Option(
@@ -94,6 +107,20 @@ def main(
             f" Using the default `judgements` path: {judgements_fpath}"
         )
 
+    if prompt_template_libpath is None:
+        prompt_template_libpath = "juddges.data.synthetic.generation_prompt.GEN_QA_BASELINE_PROMPT"
+        logger.warning(
+            f"Prompt variable module path not provided. Using the default: `{prompt_template_libpath}`"
+        )
+    parent_module_path, prompt_template_varname = prompt_template_libpath.rsplit(".", maxsplit=1)
+    try:
+        prompt_src = import_module(parent_module_path)
+    except ImportError:
+        logger.error(f"Failed to import prompt template from `{prompt_template_libpath}`")
+        raise
+    else:
+        prompt_template = getattr(prompt_src, prompt_template_varname)
+
     if out is None:
         from juddges.settings import PL_JUDGEMENTS_SYNTH_QA_PATH
 
@@ -116,7 +143,7 @@ def main(
     logger.debug(f"{qa_parser.get_format_instructions()=}")
 
     prompt = ChatPromptTemplate.from_template(
-        template=GEN_QA_COT_PROMPT,
+        template=prompt_template,
         partial_variables={"format_instructions": qa_parser.get_format_instructions()},
     )
 
@@ -148,7 +175,7 @@ def main(
     gen_chain = prompt | hf_pipeline | qa_parser
 
     logger.info("Generating QA pairs from provided collection data...")
-    generation_raport = {k: 0 for k in ["success", "failure", "skipped"]}
+    generation_raport = {k: 0 for k in ["success", "failure", "warning"]}
     for judgement in tqdm(list(read_jsonl(judgements_fpath))):
         # FIXME: change to batch processing
         try:
@@ -162,6 +189,9 @@ def main(
             dto = SyntheticLegisQAPairs(**qa_pairs)
             logger.debug(f"{dto.dict()=}")
             dto.test(language=lang)
+        except LanguageMismatchError as e:
+            logger.warning(f"Language mismatch for {judgement['_id']=}\n{e}")
+            generation_raport["warning"] += 1
         except Exception as e:
             logger.error(f"QA unsuccessful generation for {judgement['_id']=}\n{e}")
             generation_raport["failure"] += 1

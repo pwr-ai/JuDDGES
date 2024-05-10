@@ -24,3 +24,18 @@ Ensure that you distinctly label and delineate Steps 1, 2 and 3.
 Output:
 ```{format_md_ext}
 """
+
+GEN_QA_BASELINE_PROMPT = """\
+You are a question-answer generator. Your goal is to generate question-answer pairs given the Context `document`.
+Do not tranlate the Context, generate questions and answers in original language - {language}.
+
+Context:
+```
+{context}
+```
+
+{format_instructions}
+
+Output:
+```{format_md_ext}
+"""
