@@ -1,6 +1,9 @@
 """
 QA - Question Answer
 COT - Chain of Thought
+FEW - Few-Shot
+ZERO - Zero-Shot
+CHN - Prompt Chaining
 """
 
 
