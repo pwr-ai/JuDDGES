@@ -1,63 +1,25 @@
 import json
 from importlib import import_module
 from pathlib import Path
-from typing import List
 
 import typer
 from auto_gptq import exllama_set_max_input_length
 from dotenv import load_dotenv
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.pydantic_v1 import BaseModel, Field
-from langdetect import detect as lang_detect
 from langsmith import Client
 from langsmith.schemas import DataType
 from loguru import logger
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
-from juddges.data import LangCode
+from juddges.data.models import LangCode, SyntheticLegisQAPairs
 from juddges.data.qa_pairs_json_parser import QAPairsJsonParser
-from juddges.data.synthetic.generation_prompt import GEN_QA_COT_PROMPT
 from juddges.data.utils import path_safe_udate, read_jsonl
+from juddges.exception import LanguageMismatchError
 from juddges.prompts.technique import PromptingTechnique
 
 load_dotenv("secrets.env", verbose=True)
-
-
-class LanguageMismatchError(Exception):
-    pass
-
-
-class SyntheticLegisQAPairs(BaseModel):
-    questions: List[str] = Field(description="List of generated questions")
-    answers: List[str] = Field(description="List of generated answers")
-
-    def test_empty(self) -> None:
-        assert len(self.questions) > 0, "At least one question should be generated"
-
-    def test_equal_length(self) -> None:
-        assertion_msg = "Number of questions and answers should be equal"
-        assert len(self.questions) == len(self.answers), assertion_msg
-
-    def test_unique_questions(self) -> None:
-        assertion_msg = "Questions should be unique"
-        assert len(set(self.questions)) == len(self.questions), assertion_msg
-
-    def test_language(self, lang: LangCode) -> None:
-        msg = "{smth} should match context language" + f" ({lang.name}/{lang.value})"
-        assert lang_detect("\n".join(self.questions)) == lang.value, LanguageMismatchError(
-            msg.format(smth="Questions")
-        )
-        assert lang_detect("\n".join(self.answers)) == lang.value, LanguageMismatchError(
-            msg.format(smth="Answers")
-        )
-
-    def test(self, language: LangCode) -> None:
-        self.test_empty()
-        self.test_equal_length()
-        self.test_unique_questions()
-        self.test_language(language)
 
 
 def main(
@@ -66,7 +28,12 @@ def main(
     ),
     prompt_template_libpath: str = typer.Option(
         default=None,
-        help="Prompt variable module path, ex. `juddges.data.synthetic.generation_prompt.GEN_QA_BASELINE_PROMPT`",
+        help="Prompt variable module path, ex. `juddges.prompts.synthetic_qa.GEN_QA_BASELINE_PROMPT`",
+    ),
+    prompting_technique: PromptingTechnique = typer.Option(
+        default=PromptingTechnique.STANDARD.value,
+        show_choices=True,
+        help="Prompting technique",
     ),
     out_smith_dataset: str = typer.Option(default=None, help="LangSmith dataset name"),
     out: str = typer.Option(default=None, help="Output file path"),
@@ -80,7 +47,7 @@ def main(
         # default=32_000,  # TheBloke/Mistral-7B-Instruct-v0.2-GPTQ
         # default=128_000,  # microsoft/Phi-3-mini-128k-instruct
         default=3551,  # TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ
-        help="Maximum number of tokens in input text",
+        help="Maximum number of tokens of the prompt and the context",
     ),
     lang: LangCode = typer.Option(
         default=LangCode.POLISH.value,
@@ -101,31 +68,28 @@ def main(
     if judgements_fpath is None:
         from juddges.settings import SAMPLE_DATA_PATH
 
-        judgements_fpath = SAMPLE_DATA_PATH / "judgements_sample50_20240427_220002f908780.jsonl"
+        judgements_fpath = str(
+            SAMPLE_DATA_PATH / "judgements_sample50_20240427_220002f908780.jsonl"
+        )
         logger.warning(
             "Dumped `judgements` collection file path not provided."
             f" Using the default `judgements` path: {judgements_fpath}"
         )
 
     if prompt_template_libpath is None:
-        prompt_template_libpath = "juddges.data.synthetic.generation_prompt.GEN_QA_BASELINE_PROMPT"
+        prompt_template_libpath = "juddges.prompts.synthetic_qa.GEN_QA_BASELINE_PROMPT"
         logger.warning(
             f"Prompt variable module path not provided. Using the default: `{prompt_template_libpath}`"
         )
     parent_module_path, prompt_template_varname = prompt_template_libpath.rsplit(".", maxsplit=1)
-    try:
-        prompt_src = import_module(parent_module_path)
-    except ImportError:
-        logger.error(f"Failed to import prompt template from `{prompt_template_libpath}`")
-        raise
-    else:
-        prompt_template = getattr(prompt_src, prompt_template_varname)
+    prompt_src = import_module(parent_module_path)
+    prompt_template = getattr(prompt_src, prompt_template_varname)
 
     if out is None:
         from juddges.settings import PL_JUDGEMENTS_SYNTH_QA_PATH
 
         default_fname = f"judgements_synth_qa__{ts_suffix}.jsonl"
-        out = PL_JUDGEMENTS_SYNTH_QA_PATH / default_fname
+        out = str(PL_JUDGEMENTS_SYNTH_QA_PATH / default_fname)
         logger.warning(f"Output file path not provided. Using the default `out`: {out}")
     Path(out).parent.mkdir(parents=True, exist_ok=True)
 
@@ -204,8 +168,8 @@ def main(
             dataset_id=dataset.id,
             metadata={
                 "judgement_id": judgement["_id"],
-                "prompting_technique": PromptingTechnique.CHAIN_OF_THOUGHT.value,
-                "prompt_template": GEN_QA_COT_PROMPT,
+                "prompt_template": prompt_template,
+                "prompting_technique": prompting_technique,
                 "pairs_count": len(dto.questions),
                 "language": lang.value,
             },

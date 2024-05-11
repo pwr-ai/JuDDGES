@@ -1,13 +1,14 @@
+import re
 from json.decoder import JSONDecodeError
 from typing import Any, Callable, Dict, List
 
 from langchain_core.exceptions import OutputParserException
 from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.output_parsers.json import parse_partial_json
-from langchain_core.utils.json import _parse_json
+from langchain_core.output_parsers.json import parse_partial_json  # type: ignore
 from langchain_core.outputs import Generation
+from langchain_core.utils.json import _parse_json
 
-from juddges.data.synthetic.patterns import CUSTOM_PARSE_JSON_MARKDOWN
+CUSTOM_PARSE_JSON_MARKDOWN = re.compile(pattern=r"```(?:json)([^`]+)(?:```)?", flags=re.IGNORECASE)
 
 
 class QAPairsJsonParser(JsonOutputParser):
