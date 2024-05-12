@@ -2,15 +2,12 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import typer
-from dotenv import load_dotenv
 from loguru import logger
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.command_cursor import CommandCursor
 
 from juddges.data.utils import path_safe_udate, save_jsonl
-
-load_dotenv("secrets.env", verbose=True)
 
 
 def agg_sample(collection: Collection[Any], size: int) -> CommandCursor[Any]:
@@ -41,7 +38,7 @@ def main(
     if out is None:
         from juddges.settings import SAMPLE_DATA_PATH
 
-        out = SAMPLE_DATA_PATH / f"judgements_sample{size}_{path_safe_udate()}.jsonl"
+        out = str(SAMPLE_DATA_PATH / f"judgements_sample{size}_{path_safe_udate()}.jsonl")
         logger.warning("Output file path not provided, using the default `out`: ./")
 
     logger.info("Connecting to MongoDB...")

@@ -8,7 +8,15 @@ from langchain_core.output_parsers.json import parse_partial_json  # type: ignor
 from langchain_core.outputs import Generation
 from langchain_core.utils.json import _parse_json
 
-CUSTOM_PARSE_JSON_MARKDOWN = re.compile(pattern=r"```(?:json)([^`]+)(?:```)?", flags=re.IGNORECASE)
+CUSTOM_PARSE_JSON_MARKDOWN = re.compile(
+    r"""
+        ```(?:json)  # Start of JSON string, `json` is required
+        ([^`]+)      # JSON string content, JSON cannot contain backticks
+        (?:```)?     # Optional closing backticks. Handles scenario where LLM output is cut off
+                     # and JSON is still valid for `json` Python module
+    """,
+    flags=re.IGNORECASE + re.VERBOSE,
+)
 
 
 class QAPairsJsonParser(JsonOutputParser):
