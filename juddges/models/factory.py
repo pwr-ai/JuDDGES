@@ -14,7 +14,7 @@ class ModelForGeneration:
 def get_model(llm_name: str, **kwargs) -> ModelForGeneration:
     if llm_name.startswith("meta-llama"):
         return get_llama_3(llm_name, **kwargs)
-    elif llm_name.startswith("mistralai"):
+    elif "mistral" in llm_name.lower():
         return get_mistral(llm_name, **kwargs)
     else:
         raise ValueError(f"Model: {llm_name} not yet handled or doesn't exists.")
@@ -35,7 +35,7 @@ def get_llama_3(llm_name: str, device_map: str) -> ModelForGeneration:
 
 
 def get_mistral(llm_name: str, device_map: str) -> ModelForGeneration:
-    assert llm_name.startswith("mistralai")
+    assert "mistral" in llm_name.lower()
     model, tokenizer = _get_model_tokenizer(llm_name, device_map)
     # tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.eos_token
@@ -45,6 +45,7 @@ def get_mistral(llm_name: str, device_map: str) -> ModelForGeneration:
         tokenizer=tokenizer,
         generate_kwargs={"pad_token_id": tokenizer.eos_token_id},
     )
+
 
 
 def _get_model_tokenizer(llm_name: str, device_map: str) -> tuple[AutoModelForCausalLM, AutoTokenizer]:

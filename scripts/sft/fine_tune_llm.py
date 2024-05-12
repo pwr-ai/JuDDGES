@@ -14,7 +14,6 @@ from transformers import (
     Trainer,
 )
 
-from juddges.data.datasets.context_truncator import ContextTruncator
 from juddges.data.datasets.utils import create_chat
 from juddges.defaults import FINE_TUNING_DATASETS_PATH, ROOT_PATH
 
@@ -29,6 +28,8 @@ from datasets import (
 
 import torch
 from transformers import TrainingArguments
+
+from juddges.preprocessing.context_truncator import ContextTruncator
 
 
 @hydra.main(

@@ -85,3 +85,15 @@ stages:
       hash: md5
       md5: d4c0096bab519cab427334eb08aea2bc
       size: 924443
+  predict@Mistral-7B-Instruct-v0.2-fine-tuned:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Mistral-7B-Instruct-v0.2-fine-tuned
+    deps:
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 0dba731994921054729486b00482df1c
+      size: 2892
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/Mistral-7B-Instruct-v0.2-fine-tuned
+      hash: md5
+      md5: 6392b9aa9542c8b048041dd23a253bb6
+      size: 1817045
