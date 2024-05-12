@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 import mlflow
 import tiktoken
@@ -46,12 +47,23 @@ LLM_TO_PRICE_COMPLETION = {
     "gpt-3.5-turbo-1106": 0.002 / 1000,
 }
 
-LOCAL_POSTGRES = "postgresql+psycopg2://llm:llm@postgres-juddges:5432/llm"
+
+def get_local_postgres_url(
+    serice_name: str = "postgres-juddges",
+    port: int = 5432,
+) -> str:
+    return "postgresql+psycopg2://{user}:{password}@{serice_name}:{port}/{db_name}".format(
+        user=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        serice_name=serice_name,
+        port=port,
+        db_name=os.environ["POSTGRES_DB"],
+    )
 
 
 def get_sqlalchemy_engine() -> Engine:
     return create_engine(
-        LOCAL_POSTGRES,
+        url=get_local_postgres_url(),
         pool_size=10,
         max_overflow=2,
         pool_recycle=300,
@@ -61,10 +73,10 @@ def get_sqlalchemy_engine() -> Engine:
 
 
 def prepare_langchain_cache() -> None:
-    import langchain
     from langchain.cache import SQLAlchemyMd5Cache
+    from langchain.globals import set_llm_cache
 
-    langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
+    set_llm_cache(SQLAlchemyMd5Cache(get_sqlalchemy_engine()))
 
 
 def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url="postgres-juddges") -> None:
