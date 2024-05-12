@@ -5,9 +5,9 @@ from typing import Any, Dict, Generator, Iterable
 from jsonlines import jsonlines
 
 
-def save_jsonl(records: Iterable[Dict[str, Any]], out: Path | str) -> None:
+def save_jsonl(records: Iterable[Dict[str, Any]], out: Path | str, mode="w") -> None:
     """Save a list of dictionaries to a jsonl file."""
-    with jsonlines.open(out, mode="w") as writer:
+    with jsonlines.open(out, mode=mode) as writer:
         writer.write_all(records)
 
 

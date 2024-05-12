@@ -1,2 +1,4 @@
 /raw
 /text
+/synthetic/qa/*.jsonl
+/synthetic/qa/gen_report__*.json
