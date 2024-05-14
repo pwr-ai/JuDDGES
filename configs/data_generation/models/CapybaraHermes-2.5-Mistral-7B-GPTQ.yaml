@@ -1,0 +1,8 @@
+model: TheBloke/CapybaraHermes-2.5-Mistral-7B-GPTQ
+generate_kwargs:
+  max_new_tokens: 512
+  do_sample: true
+  temperature: 0.7
+  top_p: 0.95
+  top_k: 40
+  repetition_penalty: 1.1

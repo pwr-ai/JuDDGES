@@ -10,6 +10,7 @@ from sqlalchemy.engine import Engine
 ROOT_PATH = Path(__file__).resolve().parent.parent
 
 DATA_PATH = ROOT_PATH / "data"
+CONFIGS_DIR = ROOT_PATH / "configs"
 CACHE_DIR = DATA_PATH / "cache"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
@@ -20,6 +21,7 @@ PL_JUDGEMENTS_PATH_TEXTS = PL_JUDGEMENTS_PATH / "text"
 
 PL_JUDGEMENTS_SYNTH_PATH = PL_JUDGEMENTS_PATH / "synthetic"
 PL_JUDGEMENTS_SYNTH_QA_PATH = PL_JUDGEMENTS_SYNTH_PATH / "qa"
+DATA_GEN_MODELS_CONFIGS_DIR = CONFIGS_DIR / "data_generation" / "models"
 
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
