@@ -78,6 +78,5 @@ setuptools.setup(
         "console_scripts": cfg.get("console_scripts", "").split(),
         "nbdev": [f'{cfg.get("lib_path")}={cfg.get("lib_path")}._modidx:d'],
     },
-    setup_requires=["packaging", "setuptools", "wheel"],
     **setup_cfg,
 )
