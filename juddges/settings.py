@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 import mlflow
 import tiktoken
@@ -10,6 +10,7 @@ from sqlalchemy.engine import Engine
 ROOT_PATH = Path(__file__).resolve().parent.parent
 
 DATA_PATH = ROOT_PATH / "data"
+CACHE_DIR = DATA_PATH / "cache"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
 

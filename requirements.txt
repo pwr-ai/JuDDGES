@@ -25,9 +25,9 @@ xmltodict==0.13.0
 accelerate==0.30.0
 auto_gptq==0.7.1
 optimum==1.19.1
+deepl==1.18.0
 
 # phi-3
-packaging==23.2
 deepspeed==0.14.2
 flash-attn==2.5.8
 
