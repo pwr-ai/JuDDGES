@@ -28,7 +28,7 @@ optimum==1.19.1
 deepl==1.18.0
 
 # phi-3
-deepspeed==0.14.2
+# deepspeed==0.14.2
 # flash-attn==2.5.8  # FIXME: Occurs No module named "packaging" during python-check gh workflow
 
 # dev
