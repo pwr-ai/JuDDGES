@@ -1,9 +1,13 @@
 import json
+import os
+from collections import defaultdict
 from importlib import import_module
 from pathlib import Path
-from collections import defaultdict
+from typing import List, Tuple
 
+import deepl
 import typer
+from joblib import Memory
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.prompts import ChatPromptTemplate
 from langsmith import Client
@@ -12,14 +16,69 @@ from loguru import logger
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
-from juddges.data.models import LangCode, SyntheticQAPairs, QAGenerationJudgementMetadata
+from juddges.data.models import (
+    LangCode,
+    QAGenerationJudgementMetadata,
+    SyntheticQAPairs,
+)
 from juddges.data.qa_pairs_json_parser import QAPairsJsonParser
 from juddges.data.utils import path_safe_udate, read_jsonl, save_jsonl
 from juddges.exception import LanguageMismatchError
 from juddges.prompts.technique import PromptingTechnique
-from juddges.settings import prepare_langchain_cache, SAMPLE_DATA_PATH
+from juddges.settings import CACHE_DIR, SAMPLE_DATA_PATH, prepare_langchain_cache
 
 prepare_langchain_cache()
+deepl.http_client.user_agent = os.environ["DEEPL_USER_AGENT"]
+translator_memory = Memory(CACHE_DIR, verbose=0)  # FIXME: change to non-local; postgres?
+
+
+@translator_memory.cache(ignore=["translator"])
+def translate_text(translator: deepl.Translator, text: str, target_lang: str) -> str:
+    return translator.translate_text(text, target_lang=target_lang).text
+
+
+def translate_qa_pairs(
+    translator: deepl.Translator, qa_pairs: SyntheticQAPairs, target_lang: LangCode
+) -> SyntheticQAPairs:
+    translated_questions = [
+        translate_text(translator, question, target_lang=target_lang.value)
+        for question in qa_pairs.questions
+    ]
+    translated_answers = [
+        translate_text(translator, answer, target_lang=target_lang.value)
+        for answer in qa_pairs.answers
+    ]
+    return SyntheticQAPairs(questions=translated_questions, answers=translated_answers)
+
+
+def handle_lang_mismatch(
+    translator: deepl.Translator,
+    context_id: str,
+    qa_pairs: SyntheticQAPairs,
+    target_lang: LangCode,
+) -> Tuple[List[str], SyntheticQAPairs | None]:
+    catched_errors = []
+    try:
+        dto = translate_qa_pairs(translator, qa_pairs, target_lang=target_lang)
+    except Exception as e:
+        logger.error(f"SyntheticQAPairs translation failed for {context_id=}\n{e}")
+        catched_errors.append(e.__class__.__name__)
+        return catched_errors, None
+    else:
+        try:
+            logger.debug(f"Translated SyntheticQAPairs: {dto.dict()=}")
+            dto.test(language=target_lang)
+        except LanguageMismatchError as e:
+            logger.error(f"Language mismatch after translation for {context_id=}\n{e}")
+            catched_errors.append(e.__class__.__name__)
+            return catched_errors, None
+        except Exception as e:
+            logger.error(f"Unexpected error after translation for {context_id=}\n{e}")
+            catched_errors.append(e.__class__.__name__)
+            return catched_errors, None
+        else:
+            logger.info(f"SyntheticQAPairs translated successfully for {context_id=}")
+    return catched_errors, dto
 
 
 def main(
@@ -65,6 +124,7 @@ def main(
         default=1.1, help="Repetition penalty for text generation"
     ),
 ) -> None:
+    translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
     ts_suffix = path_safe_udate()
     parent_module_path, prompt_template_varname = prompt_template_libpath.rsplit(".", maxsplit=1)
     prompt_src = import_module(parent_module_path)
@@ -86,7 +146,7 @@ def main(
     logger.info("Creating dataset...")
     dataset_default_name = f"judgements_sample50_synth_qa__{prompting_technique.value}"
     dataset = smith.create_dataset(
-        dataset_name=out_smith_dataset if out_smith_dataset is not None else dataset_default_name,
+        dataset_name=(out_smith_dataset if out_smith_dataset is not None else dataset_default_name),
         data_type=DataType.kv,
         description=(
             f"Synthetic QA pairs generated from `{judgements_fpath}` with `{hf_model}`"
@@ -157,21 +217,39 @@ def main(
                 "context": judgement["text"],
             }
             qa_pairs = gen_chain.invoke(chain_input)
-
-            dto = SyntheticQAPairs(**qa_pairs)
-            logger.debug(f"{dto.dict()=}")
-            dto.test(language=lang)
-        except LanguageMismatchError as e:
-            logger.warning(
-                f"Language mismatch for {judgement['_id']=}\n{e}."
-                " Metadata `language` property will be set to `None`."
-            )
-            generation_raport[f"warning__{e.__class__.__name__}"] += 1
-            lang_mismatch = True
         except Exception as e:
             logger.error(f"QA unsuccessful generation for {judgement['_id']=}\n{e}")
             generation_raport[f"failure__{e.__class__.__name__}"] += 1
             continue
+
+        try:
+            dto = SyntheticQAPairs(**qa_pairs)
+            logger.debug(f"{dto.dict()=}")
+        except Exception as e:
+            logger.error(
+                f"SyntheticQAPairs data object creation failed for {judgement['_id']=}\n{e}"
+            )
+            continue
+
+        try:
+            dto.test(language=lang)
+        except LanguageMismatchError as e:
+            logger.warning(f"Language mismatch for {judgement['_id']=}\n{e}.")
+            lang_mismatch = True
+        except Exception as e:
+            logger.error(
+                f"Unexpected error during tests of generated data quality for {judgement['_id']=}\n{e}"
+            )
+            continue
+
+        if lang_mismatch:
+            lang_mismatch_errors, dto = handle_lang_mismatch(
+                translator, context_id=judgement["_id"], qa_pairs=dto, target_lang=lang
+            )
+            if dto is None:
+                for error in lang_mismatch_errors:
+                    generation_raport[f"failure__{error}"] += 1
+                continue
 
         logger.debug(f"Creating example for {judgement['_id']=}...")
         example_metadata = {
