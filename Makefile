@@ -2,7 +2,7 @@ lint_dirs := juddges scripts dashboards tests
 mypy_dirs := juddges scripts dashboards tests
 
 fix:
-	ruff check $(lint_dirs) --fix
+	ruff check $(lint_dirs) setup.py --fix
 	ruff format $(lint_dirs)
 
 check:
