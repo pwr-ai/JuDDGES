@@ -32,6 +32,9 @@ class SyntheticQAPairs(BaseModel):
     def test_empty(self) -> None:
         if not any(self.questions):
             raise GeneratedQAPairsEmptyError("At least one question should be generated")
+        else:
+            if not any(self.answers):
+                raise GeneratedQAPairsEmptyError("At least one answer should be generated")
 
     def test_equal_length(self) -> None:
         assertion_msg = "Number of questions and answers should be equal"
