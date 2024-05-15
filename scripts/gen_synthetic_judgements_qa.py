@@ -3,7 +3,7 @@ import os
 from collections import defaultdict
 from importlib import import_module
 from pathlib import Path
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import deepl
 import typer
@@ -30,7 +30,7 @@ from juddges.settings import (
 )
 
 prepare_langchain_cache()
-deepl.http_client.user_agent = os.environ["DEEPL_USER_AGENT"]
+deepl.http_client.user_agent = os.environ.get("DEEPL_USER_AGENT", None)
 translator_memory = Memory(CACHE_DIR, verbose=0)  # FIXME: change to non-local; postgres?
 
 
@@ -108,11 +108,19 @@ def main(
         show_choices=True,
         help="Language code (ISO 639-1) of the given data",
     ),
+    translate: bool = typer.Option(
+        default=True,
+        help=(
+            "Translate generated data to context language `lang`."
+            " Requires DEEPL_AUTH_KEY environment variable."
+        ),
+    ),
 ) -> None:
     ts_suffix = path_safe_udate()
     with open(model_cfg) as f:
-        model_cfg_ = yaml.safe_load(f)
-    translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
+        model_cfg_: Dict[str, Any] = yaml.safe_load(f)
+    if translate:
+        translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
     parent_module_path, prompt_template_varname = prompt_template_libpath.rsplit(".", maxsplit=1)
     prompt_src = import_module(parent_module_path)
     prompt_template = getattr(prompt_src, prompt_template_varname)
@@ -131,7 +139,12 @@ def main(
     smith = Client()
 
     logger.info("Creating dataset...")
-    dataset_default_name = f"judgements_sample50_synth_qa__{prompting_technique.value}"
+    dataset_default_name = (
+        "debug__judgements_sample50_synth_qa__{prompting_technique}__{model}".format(
+            prompting_technique=prompting_technique.value,
+            model=model_cfg_["model"].replace("/", "_"),
+        )
+    )
     dataset = smith.create_dataset(
         dataset_name=(out_smith_dataset if out_smith_dataset is not None else dataset_default_name),
         data_type=DataType.kv,
@@ -159,6 +172,8 @@ def main(
         model_cfg_["model"],
         trust_remote_code=True,
         device_map="auto",
+        torch_dtype=model_cfg_.get("torch_dtype", None),
+        **model_cfg_.get("kwargs", {}),
     )
     logger.debug(f"{model.device=}")
 
@@ -205,33 +220,36 @@ def main(
             continue
 
         try:
+            logger.debug(f"{qa_pairs=}")
             dto = SyntheticQAPairs(**qa_pairs)
-            logger.debug(f"{dto.dict()=}")
         except Exception as e:
             logger.error(
                 f"SyntheticQAPairs data object creation failed for {judgement['_id']=}\n{e}"
             )
             continue
-
-        try:
-            dto.test(language=lang)
-        except LanguageMismatchError as e:
-            logger.warning(f"Language mismatch for {judgement['_id']=}\n{e}.")
-            lang_mismatch = True
-        except Exception as e:
-            logger.error(
-                f"Unexpected error during tests of generated data quality for {judgement['_id']=}\n{e}"
-            )
-            continue
+        else:
+            try:
+                dto.test(language=lang)
+            except LanguageMismatchError as e:
+                logger.warning(f"Language mismatch for {judgement['_id']=}\n{e}.")
+                lang_mismatch = True
+            except Exception as e:
+                logger.error(f"Failed quality tests of generated data for {judgement['_id']=}\n{e}")
+                continue
 
         if lang_mismatch:
-            lang_mismatch_errors, dto = handle_lang_mismatch(
-                translator, context_id=judgement["_id"], qa_pairs=dto, target_lang=lang
-            )
-            if dto is None:
-                for error in lang_mismatch_errors:
-                    generation_raport[f"failure__{error}"] += 1
-                continue
+            if translate:
+                lang_mismatch_errors, dto = handle_lang_mismatch(
+                    translator, context_id=judgement["_id"], qa_pairs=dto, target_lang=lang
+                )
+                if dto is None:
+                    for error in lang_mismatch_errors:
+                        generation_raport[f"failure__{error}"] += 1
+                    continue
+            else:
+                logger.warning(
+                    f"Ignoring language mismatch between context and generated data for {judgement['_id']=}"
+                )
 
         logger.debug(f"Creating example for {judgement['_id']=}...")
         example_metadata = {
