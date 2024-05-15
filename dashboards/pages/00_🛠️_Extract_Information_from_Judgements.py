@@ -38,7 +38,7 @@ else:
 st.header("Schema extraction/definition")
 schema_query = st.text_input(
     "Ask for schema in natural language:",
-    "Extract the date, verdict, and court from  the judgement.",
+    "Potrzebuję informacji takich jak data wydania wyroku, sygnatura wyroku, czy wyrok dotyczy spraw dzieci, czy wyrok dotyczy narkomanii, krótkie podsumowanie wyroku, a takze sedziowie orzekajacy.",
 )
 llm_schema = st.selectbox(
     "Select the LLM model (schema)",
