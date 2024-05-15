@@ -40,8 +40,7 @@ Follow the following YAML structure to extract information and answer questions 
 Format response as JSON:
 """
 
-EXAMPLE_SCHEMA = """
-verdict_date: date as ISO 8601
+EXAMPLE_SCHEMA = """verdict_date: date as ISO 8601
 verdict: string, text representing verdict of the judgement
 verdict_summary: string, short summary of the verdict
 verdict_id: string
@@ -52,8 +51,7 @@ first_trial: boolean
 drug_offence: boolean
 child_offence: boolean
 offence_seriousness: boolean
-verdict_tags: List[string]
-"""
+verdict_tags: List[string]"""
 
 
 def prepare_information_extraction_chain_from_user_prompt() -> RunnableSequence:
