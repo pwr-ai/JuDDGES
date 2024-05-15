@@ -5,6 +5,7 @@ langchain==0.1.13
 langsmith==0.1.33
 loguru==0.7.2
 mpire==2.10.0
+openpyxl==3.1.2
 pandas==2.2.1
 polars==0.20.15
 pyarrow==15.0.0
@@ -30,6 +31,8 @@ deepl==1.18.0
 # phi-3
 # deepspeed==0.14.2
 # flash-attn==2.5.8  # FIXME: Occurs No module named "packaging" during python-check gh workflow
+
+xlsxwriter==3.2.0
 
 # dev
 coverage==7.4.3
