@@ -25,9 +25,10 @@ class ContextTruncator:
                 [prompt, output], return_length=True, add_special_tokens=False
             )["length"]
         else:
-            prompt_length, output_length = self.tokenizer(
-                [prompt], return_length=True, add_special_tokens=False
-            )["length"][0], 0
+            prompt_length, output_length = (
+                self.tokenizer([prompt], return_length=True, add_special_tokens=False)["length"][0],
+                0,
+            )
 
         context_length = (
             self.max_length - prompt_length - output_length - self.empty_messages_length

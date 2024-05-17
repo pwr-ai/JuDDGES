@@ -10,10 +10,8 @@ from loguru import logger
 import torch
 from omegaconf import DictConfig
 from tqdm import tqdm
-import typer
 
 from juddges.defaults import ROOT_PATH
-from juddges.metrics.info_extraction import evaluate_extraction
 from juddges.models.factory import get_model
 from juddges.preprocessing.text_encoder import EvalEncoder
 
@@ -40,7 +38,7 @@ def main(cfg: DictConfig) -> None:
 
     model_pack = get_model(cfg.model.model_name, device_map=cfg.device_map)
     model, tokenizer = model_pack.model, model_pack.tokenizer
-    if cfg.model.batch_size > 1 and cfg.model.padding == False:
+    if cfg.model.batch_size > 1 and cfg.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
     encoder = EvalEncoder(
         tokenizer=tokenizer,

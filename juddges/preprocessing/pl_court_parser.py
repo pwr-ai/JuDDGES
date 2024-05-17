@@ -27,11 +27,26 @@ class SimplePlJudgementsParser(DocParserBase):
         content_root, *_ = xblock_elements
 
         return {
+            "legal_bases": self.extract_legal_bases(et),
             "num_pages": int(et.attrib["xToPage"]),
             "vol_number": int(et.attrib["xVolNmbr"]),
             "vol_type": et.attrib["xVolType"],
             "text": self.extract_text(content_root),
         }
+
+    @staticmethod
+    def extract_legal_bases(element: Element) -> list[dict[str, str]]:
+        """Extracts legal bases from XML (contains text from judgement as opposed to API)."""
+        return [
+            {
+                "text": elem.text,
+                "art": elem.attrib["xArt"],
+                "isap_id": elem.attrib["xIsapId"],
+                "title": elem.attrib["xTitle"],
+                "address": elem.attrib["xAddress"],
+            }
+            for elem in element.findall(".//xLexLink")
+        ]
 
     @staticmethod
     def extract_text(element: Element) -> str:
