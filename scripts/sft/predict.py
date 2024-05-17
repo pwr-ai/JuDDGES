@@ -10,18 +10,12 @@ from loguru import logger
 import torch
 from omegaconf import DictConfig
 from tqdm import tqdm
-import typer
 
 from juddges.defaults import ROOT_PATH
-from juddges.metrics.info_extraction import evaluate_extraction
 from juddges.models.factory import get_model
 from juddges.preprocessing.text_encoder import EvalEncoder
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-# LLM = "meta-llama/Meta-Llama-3-8B-Instruct"
-# BATCH_SIZE = 1  # for now llama-3 doesn't work with padding, hence with batch_size > 1 also
-# MAX_NEW_TOKENS = 250
-# MAX_LENGTH = 2_048
 
 
 @torch.no_grad()
@@ -40,7 +34,7 @@ def main(cfg: DictConfig) -> None:
 
     model_pack = get_model(cfg.model.model_name, device_map=cfg.device_map)
     model, tokenizer = model_pack.model, model_pack.tokenizer
-    if cfg.model.batch_size > 1 and cfg.model.padding == False:
+    if cfg.model.batch_size > 1 and cfg.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
     encoder = EvalEncoder(
         tokenizer=tokenizer,
@@ -80,10 +74,6 @@ def main(cfg: DictConfig) -> None:
 
     with open(output_file, "w") as f:
         json.dump(results, f, indent="\t")
-
-    # res = evaluate_extraction(results)
-    # with open(cfg.metrics_file, "w") as file:
-    #     json.dump(res, file, indent="\t")
 
 
 if __name__ == "__main__":

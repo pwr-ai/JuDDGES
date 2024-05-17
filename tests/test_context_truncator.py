@@ -2,7 +2,7 @@ import unittest
 
 from transformers import AutoTokenizer
 
-from juddges.data.datasets.context_truncator import ContextTruncator
+from juddges.preprocessing.context_truncator import ContextTruncator
 
 
 class TestContextTruncator(unittest.TestCase):

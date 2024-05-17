@@ -47,8 +47,9 @@ def get_mistral(llm_name: str, device_map: str) -> ModelForGeneration:
     )
 
 
-
-def _get_model_tokenizer(llm_name: str, device_map: str) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+def _get_model_tokenizer(
+    llm_name: str, device_map: str
+) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.bfloat16,
