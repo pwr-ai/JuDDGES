@@ -71,8 +71,8 @@ stages:
     outs:
     - path: data/experiments/predict/pl-court-instruct/Mistral-7B-Instruct-v0.2
       hash: md5
-      md5: fe3948e50861842a76853729e54db4e9
-      size: 3760776
+      md5: 12cdd7d712f9847f9f2ca57b8961a6c8
+      size: 1103084
   predict@Meta-Llama-3-8B-Instruct:
     cmd: PYTHONPATH=. python scripts/sft/predict.py model=Meta-Llama-3-8B-Instruct
     deps:
@@ -83,8 +83,8 @@ stages:
     outs:
     - path: data/experiments/predict/pl-court-instruct/Meta-Llama-3-8B-Instruct
       hash: md5
-      md5: d4c0096bab519cab427334eb08aea2bc
-      size: 924443
+      md5: 204a485f17f75ae5aca618b8def1691f
+      size: 922893
   predict@Mistral-7B-Instruct-v0.2-fine-tuned:
     cmd: PYTHONPATH=. python scripts/sft/predict.py model=Mistral-7B-Instruct-v0.2-fine-tuned
     deps:
@@ -95,5 +95,5 @@ stages:
     outs:
     - path: data/experiments/predict/pl-court-instruct/Mistral-7B-Instruct-v0.2-fine-tuned
       hash: md5
-      md5: 6392b9aa9542c8b048041dd23a253bb6
-      size: 1817045
+      md5: 44c71b2a8ae55e621640c8d9eb58296b
+      size: 728141
