@@ -9,6 +9,9 @@ check:
 	ruff check $(lint_dirs)
 	ruff format $(lint_dirs) --check
 
+check-types:
+	mypy --install-types --non-interactive $(mypy_dirs)
+
 test:
 	coverage run -m pytest
 	coverage report -mi

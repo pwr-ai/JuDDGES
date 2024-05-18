@@ -52,7 +52,7 @@ def main(
         envvar="NUM_JOBS",
         help="Number of parallel jobs to use",
     ),
-):
+) -> None:
     feature_cols = ["_id"] + FEATURES
     ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
     logger.info("Loading dataset...")
@@ -110,7 +110,7 @@ def _filter(item: dict[str, Any]) -> bool:
     return all_judges_in_text and recorder_in_text and signature_in_text
 
 
-def to_instruction_fmt(item: dict[str, Any]) -> str:
+def to_instruction_fmt(item: dict[str, Any]) -> dict[str, str]:
     output = SCHEMA_TEMPLATE.format(
         schema=yaml.dump({k: item[k] for k in SCHEMA_DESC.keys()}).strip()
     )

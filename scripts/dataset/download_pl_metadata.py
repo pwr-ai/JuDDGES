@@ -8,7 +8,7 @@ from pymongo.errors import BulkWriteError
 from requests import HTTPError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
 
-from juddges.data.models import get_mongo_collection
+from juddges.data.database import get_mongo_collection
 from juddges.data.pl_court_api import PolishCourtAPI
 
 N_JOBS = 8

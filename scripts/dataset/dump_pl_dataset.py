@@ -9,7 +9,7 @@ from loguru import logger
 from pyarrow.parquet import ParquetDataset
 from tqdm import tqdm, trange
 
-from juddges.data.models import get_mongo_collection
+from juddges.data.database import get_mongo_collection
 
 BATCH_SIZE = 100
 CHUNK_SIZE = 25_000

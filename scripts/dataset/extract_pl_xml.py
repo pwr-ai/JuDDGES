@@ -3,7 +3,6 @@ from multiprocessing import Pool
 from pathlib import Path
 from typing import Optional, Any
 
-import pandas as pd
 import typer
 from datasets import load_dataset, Dataset
 from dotenv import load_dotenv
@@ -20,7 +19,7 @@ from tenacity import (
 )
 from tqdm import tqdm
 
-from juddges.data.models import get_mongo_collection
+from juddges.data.database import get_mongo_collection
 from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
 
 BATCH_SIZE = 100
@@ -37,7 +36,6 @@ def main(
     mongo_uri: Optional[str] = typer.Option(None, envvar="MONGO_URI"),
     mongo_batch_size: int = typer.Option(BATCH_SIZE),
     ingest_jobs: int = typer.Option(INGEST_JOBS),
-    court_id_map_file: Optional[Path] = typer.Option(None, help="Path to the court_id_map files"),
 ) -> None:
     target_dir.parent.mkdir(exist_ok=True, parents=True)
     ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
@@ -51,12 +49,6 @@ def main(
         .filter(lambda x: x["content"] is not None)
         .map(parser, input_columns="content", num_proc=num_proc)
     )
-    if court_id_map_file is not None:
-        court_id_2_name = pd.read_csv(court_id_map_file).to_dict()
-        ds = ds.map(
-            lambda item: {"court_name": court_id_2_name[item["courtId"]]}, num_proc=num_proc
-        )
-    breakpoint()
     ds.save_to_disk(target_dir, num_shards=num_shards)
 
     if ingest:
