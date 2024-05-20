@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 from typing import Any, Generator
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
@@ -34,8 +35,7 @@ class SimplePlJudgementsParser(DocParserBase):
             "text": self.extract_text(content_root),
         }
 
-    @staticmethod
-    def extract_legal_bases(element: Element) -> list[dict[str, str]]:
+    def extract_legal_bases(self, element: Element) -> list[dict[str, str]]:
         """Extracts unique legal bases from XML (contains text from judgement as opposed to API)."""
         legal_bases = [
             {
@@ -47,10 +47,23 @@ class SimplePlJudgementsParser(DocParserBase):
             }
             for elem in element.findall(".//xLexLink")
         ]
+
         legal_bases = [lb for lb in legal_bases if (lb["text"].strip() and lb["art"])]
-        unique_bases = set(lb["isap_id"] for lb in legal_bases)
-        legal_bases = [lb for lb in legal_bases if lb["isap_id"] in unique_bases]
-        return legal_bases
+        return self._get_longest_text_legal_bases(legal_bases)
+
+    @staticmethod
+    def _get_longest_text_legal_bases(legal_bases: list[dict[str, str]]) -> list[dict[str, str]]:
+        """Extracts the longest legal base from the list of legal bases."""
+        legal_bases_dict = defaultdict(list)
+        for lb in legal_bases:
+            legal_bases_dict[lb["isap_id"]].append(lb)
+
+        longest_text_legal_bases = []
+        for isap_id, lbs in legal_bases_dict.items():
+            longest_legal_base = max(lbs, key=lambda lb: len(lb["text"]))
+            longest_text_legal_bases.append(longest_legal_base)
+
+        return longest_text_legal_bases
 
     @staticmethod
     def extract_text(element: Element) -> str:

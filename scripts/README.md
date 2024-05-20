@@ -37,16 +37,14 @@ MONGO_DB_NAME="juddges"
    _Remark_: File with mapping available at `data/datasets/pl/court_id_2_name.csv` was prepared based
    on data published on: https://orzeczenia.wroclaw.sa.gov.pl/indices
 
+5. Extract raw text from XML content and details of judgments not available through API:
+    ```shell
+    PYTHONPATH=. python scripts/dataset/extract_pl_xml.py --n-jobs 10
+    ```
 
-5. For further processing prepare local dataset dump in `parquet` file, version it with dvc and push
+6. For further processing prepare local dataset dump in `parquet` file, version it with dvc and push
    to remote storage:
     ```shell
     PYTHONPATH=.  python scripts/dataset/dump_pl_dataset.py --file-name data/datasets/pl/raw/raw.parquet
     dvc add data/datasets/pl/raw/raw.parquet && dvc push 
-    ```
-
-6. Extract raw text from content XML and details of judgments not available through API, eventually
-   ingest it to the database:
-    ```shell
-    PYTHONPATH=. python scripts/dataset/extract_pl_xml.py --dataset-dir data/datasets/pl/raw/ --target-dir data/datasets/pl/text --num-proc 6 --ingest
     ```
