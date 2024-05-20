@@ -7,7 +7,7 @@ stages:
     deps:
       - data/datasets/pl/raw
       - scripts/sft/build_fine_tuning_dataset.py
-    desc: "Build synthetic instriction dataset (set NUM_JOBS envar)"
+    desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
 
   fine_tune_sft:
     foreach:

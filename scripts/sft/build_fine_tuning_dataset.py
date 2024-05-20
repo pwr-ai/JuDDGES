@@ -30,12 +30,33 @@ SCHEMA_DESC = {
     "judges": "<sędziowie, list of judge full names>",
     "recorder": "<protokolant, string containing the name of the recorder>",
     "signature": "<sygnatura, string contraining the signature of the judgment>",
+    "court_name": "<nazwa sądu, string containing the full name of the court>",
+    "department_name": "<nazwa wydziału, string containing the full name of the court's department>",
+    "legal_bases": "<podstawy prawne, list of strings containing legal bases (legal regulations)>",
 }
 PROMPT = INSTRUCTION_TEMPLATE.format(
     schema=SCHEMA_TEMPLATE.format(schema=yaml.dump(SCHEMA_DESC).strip())
 )
 
-FEATURES = ["date", "judges", "recorder", "signature", "text"]
+FEATURES = [
+    "date",
+    "judges",
+    "recorder",
+    "signature",
+    "court_name",
+    "department_name",
+    "text_legal_bases",
+    "text",
+]
+SCHEMA_2_FEATURES = {
+    "date": "date",
+    "judges": "judges",
+    "recorder": "recorder",
+    "signature": "signature",
+    "court_name": "court_name",
+    "department_name": "department_name",
+    "legal_bases": "text_legal_bases",
+}
 
 
 def main(
@@ -52,11 +73,12 @@ def main(
         envvar="NUM_JOBS",
         help="Number of parallel jobs to use",
     ),
+    branch: Optional[str] = typer.Option(None, help="Branch to push the dataset to"),
 ) -> None:
     feature_cols = ["_id"] + FEATURES
-    ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
     logger.info("Loading dataset...")
-    ds = ds.select_columns(feature_cols)
+    ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir, columns=feature_cols)
+    assert all(col in ds.column_names["train"] for col in feature_cols)
 
     logger.info("Cleaning dataset...")
     ds = ds.filter(_pre_filter)
@@ -70,7 +92,7 @@ def main(
     logger.info("Built dataset with following parameters: {ds_info}", ds_info=str(ds))
 
     if repo_id:
-        ds.push_to_hub(repo_id, max_shard_size=MAX_SHARD_SIZE)
+        ds.push_to_hub(repo_id, max_shard_size=MAX_SHARD_SIZE, revision=branch)
     else:
         ds.save_to_disk(target_dir, max_shard_size=MAX_SHARD_SIZE, num_proc=num_jobs)
 
@@ -82,6 +104,7 @@ def _pre_filter(item: dict[str, Any]) -> bool:
 def _preprocess(item: dict[str, Any]) -> dict[str, Any]:
     item = _simplify_date(item)
     item = _split_multiple_names(item)
+    item = _legal_bases_to_texts(item)
     return item
 
 
@@ -102,6 +125,11 @@ def _split_multiple_names(item: dict[str, Any]) -> dict[str, Any]:
     return item
 
 
+def _legal_bases_to_texts(item: dict[str, Any]) -> dict[str, Any]:
+    item["text_legal_bases"] = [x["text"] for x in item["text_legal_bases"]]
+    return item
+
+
 def _filter(item: dict[str, Any]) -> bool:
     all_judges_in_text = all(j in item["text"] for j in item["judges"])
     recorder_in_text = item["recorder"] in item["text"]
@@ -112,7 +140,7 @@ def _filter(item: dict[str, Any]) -> bool:
 
 def to_instruction_fmt(item: dict[str, Any]) -> dict[str, str]:
     output = SCHEMA_TEMPLATE.format(
-        schema=yaml.dump({k: item[k] for k in SCHEMA_DESC.keys()}).strip()
+        schema=yaml.dump({k: item[SCHEMA_2_FEATURES[k]] for k in SCHEMA_DESC.keys()}).strip()
     )
 
     return {"prompt": PROMPT, "context": item["text"], "output": output}

@@ -3,7 +3,7 @@
 Scripts for dataset preparation are located in `dataset` directory, and should be run from the root
 of the repository.
 
-### 1. Downloading the dataset
+## 1. Building the dataset
 
 Dataset was downloaded from open API of [Polish Court Judgements](https://orzeczenia.ms.gov.pl/).
 The following procedure will download data and store it in `MongoDB`.
@@ -47,4 +47,9 @@ MONGO_DB_NAME="juddges"
     ```shell
     PYTHONPATH=.  python scripts/dataset/dump_pl_dataset.py --file-name data/datasets/pl/raw/raw.parquet
     dvc add data/datasets/pl/raw/raw.parquet && dvc push 
+    ```
+
+7. Generate intruction dataset and upload it to huggingface
+    ```shell
+    NUM_JOBS=10 SHELL=/bin/bash dvc repro build_fine_tuning_dataset
     ```
