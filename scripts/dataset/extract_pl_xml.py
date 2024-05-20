@@ -36,6 +36,7 @@ def main(
     mongo_uri: Optional[str] = typer.Option(None, envvar="MONGO_URI"),
     mongo_batch_size: int = typer.Option(BATCH_SIZE),
     ingest_jobs: int = typer.Option(INGEST_JOBS),
+    cache: bool = typer.Option(True, help="Ignore hf datasets cache"),
 ) -> None:
     target_dir.parent.mkdir(exist_ok=True, parents=True)
     ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
@@ -47,7 +48,7 @@ def main(
             ["_id", "date", "type", "excerpt", "content"]
         )  # leave only most important columns
         .filter(lambda x: x["content"] is not None)
-        .map(parser, input_columns="content", num_proc=num_proc)
+        .map(parser, input_columns="content", num_proc=num_proc, load_from_cache_file=cache)
     )
     ds.save_to_disk(target_dir, num_shards=num_shards)
 

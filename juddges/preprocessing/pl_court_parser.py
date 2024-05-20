@@ -17,7 +17,7 @@ class SimplePlJudgementsParser(DocParserBase):
 
     @property
     def schema(self) -> list[str]:
-        return ["num_pages", "vol_number", "vol_type", "text"]
+        return ["text_legal_bases", "num_pages", "vol_number", "vol_type", "text"]
 
     def parse(self, document: str) -> dict[str, Any]:
         et = ElementTree.fromstring(document)
@@ -27,7 +27,7 @@ class SimplePlJudgementsParser(DocParserBase):
         content_root, *_ = xblock_elements
 
         return {
-            "legal_bases": self.extract_legal_bases(et),
+            "text_legal_bases": self.extract_legal_bases(et),
             "num_pages": int(et.attrib["xToPage"]),
             "vol_number": int(et.attrib["xVolNmbr"]),
             "vol_type": et.attrib["xVolType"],
@@ -36,17 +36,21 @@ class SimplePlJudgementsParser(DocParserBase):
 
     @staticmethod
     def extract_legal_bases(element: Element) -> list[dict[str, str]]:
-        """Extracts legal bases from XML (contains text from judgement as opposed to API)."""
-        return [
+        """Extracts unique legal bases from XML (contains text from judgement as opposed to API)."""
+        legal_bases = [
             {
-                "text": elem.text,
-                "art": elem.attrib["xArt"],
-                "isap_id": elem.attrib["xIsapId"],
-                "title": elem.attrib["xTitle"],
-                "address": elem.attrib["xAddress"],
+                "text": elem.text or "",
+                "art": elem.attrib["xArt"].strip(),
+                "isap_id": elem.attrib["xIsapId"].strip(),
+                "title": elem.attrib["xTitle"].strip(),
+                "address": elem.attrib["xAddress"].strip(),
             }
             for elem in element.findall(".//xLexLink")
         ]
+        legal_bases = [lb for lb in legal_bases if (lb["text"].strip() and lb["art"])]
+        unique_bases = set(lb["isap_id"] for lb in legal_bases)
+        legal_bases = [lb for lb in legal_bases if lb["isap_id"] in unique_bases]
+        return legal_bases
 
     @staticmethod
     def extract_text(element: Element) -> str:
