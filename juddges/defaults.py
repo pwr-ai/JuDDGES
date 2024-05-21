@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 ROOT_PATH = Path(os.path.dirname(__file__)).parent.absolute()
+CONFIG_PATH = ROOT_PATH / "configs"
 DATA_PATH = ROOT_PATH / "data"
 
 EXPERIMENTS_PATH = DATA_PATH / "experiments"

@@ -10,26 +10,33 @@ stages:
     desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
 
   fine_tune_sft:
-    foreach:
-      - Mistral-7B-Instruct-v0.2
-      - Meta-Llama-3-8B-Instruct
-    do:
-      cmd: >-
-        PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item}
-      deps:
-        - scripts/sft/fine_tune_llm.py
-      outs:
-        - data/experiments/fine-tune/${item}/pl-court-instruct
+    matrix:
+      model:
+        - Mistral-7B-Instruct-v0.2
+        - Meta-Llama-3-8B-Instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
+    deps:
+      - scripts/sft/fine_tune_llm.py
+      - configs/fine_tuning.yaml
+      - configs/model/${item.model}.yaml
+    outs:
+      - data/experiments/fine-tune/${item.model}/pl-court-instruct
 
   predict:
     matrix:
-      config:
-        - Mistral-7B-Instruct-v0.2
+      model:
         - Meta-Llama-3-8B-Instruct
-        - Mistral-7B-Instruct-v0.2-fine-tuned
+        # - Mistral-7B-Instruct-v0.2
+        # - Mistral-7B-Instruct-v0.2-fine-tuned
     cmd: >-
-      PYTHONPATH=. python scripts/sft/predict.py model=${item.config}
+      PYTHONPATH=. python scripts/sft/predict.py model=${item.model}
     deps:
       - scripts/sft/predict.py
+      - configs/predict.yaml
+      - configs/model/${item.model}.yaml
     outs:
-      - data/experiments/predict/pl-court-instruct/${item.config}
+      - data/experiments/predict/pl-court-instruct/${item.model}.json
+    metrics:
+      - data/experiments/predict/pl-court-instruct/${item.model}_metrics.json:
+          cache: false

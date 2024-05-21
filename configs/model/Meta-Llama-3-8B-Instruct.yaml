@@ -1,7 +1,8 @@
-_org_name: mistralai
-_model_name: Mistral-7B-Instruct-v0.2
+_org_name: meta-llama
+_model_name: Meta-Llama-3-8B-Instruct
 model_name: ${._org_name}/${._model_name}
 tokenizer_name: ${._org_name}/${._model_name}
-max_seq_length: 20_000
+
+max_seq_length: 8100
 batch_size: 1
-padding: false
+padding: longest

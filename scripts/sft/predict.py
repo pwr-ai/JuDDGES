@@ -1,5 +1,5 @@
 import json
-import math
+import os
 from pathlib import Path
 import time
 
@@ -10,22 +10,19 @@ from loguru import logger
 import torch
 from omegaconf import DictConfig
 from tqdm import tqdm
+from torch.utils.data import DataLoader
 
-from juddges.defaults import ROOT_PATH
+from juddges.defaults import CONFIG_PATH
+from juddges.metrics.info_extraction import evaluate_extraction
 from juddges.models.factory import get_model
-from juddges.preprocessing.text_encoder import EvalEncoder
+from juddges.preprocessing.text_encoder import TextEncoderForEval
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-# LLM = "meta-llama/Meta-Llama-3-8B-Instruct"
-# BATCH_SIZE = 1  # for now llama-3 doesn't work with padding, hence with batch_size > 1 also
-# MAX_NEW_TOKENS = 250
-# MAX_LENGTH = 2_048
+NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
 
 @torch.no_grad()
-@hydra.main(
-    version_base="1.3", config_path=str(ROOT_PATH / "configs/predict"), config_name="config.yaml"
-)
+@hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
 def main(cfg: DictConfig) -> None:
     logger.info(f"config:\n{cfg}")
     device = cfg.device if cfg.device else DEVICE
@@ -40,23 +37,30 @@ def main(cfg: DictConfig) -> None:
     model, tokenizer = model_pack.model, model_pack.tokenizer
     if cfg.model.batch_size > 1 and cfg.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
-    encoder = EvalEncoder(
+
+    ds = ds["test"]
+
+    gold_output = [item["output"] for item in ds]
+
+    encoder = TextEncoderForEval(
         tokenizer=tokenizer,
         max_length=cfg.model.max_seq_length,
         padding=cfg.model.padding,
     )
-    encoded_ds = ds["test"].map(
-        encoder,
-        batched=False,
-        num_proc=cfg.num_proc,
+    ds.set_transform(encoder, columns=["prompt", "context"])
+    dataloader = DataLoader(
+        ds,
+        batch_size=cfg.model.batch_size,
+        num_workers=NUM_PROC,
+        pin_memory=(NUM_PROC > 1),
+        shuffle=False,
     )
-    encoded_ds.set_format("torch")
-    results = []
-    num_batches = math.ceil(encoded_ds.num_rows / cfg.model.batch_size)
 
-    with tqdm(encoded_ds.iter(batch_size=cfg.model.batch_size), total=num_batches) as pbar:
-        for item in pbar:
-            model_inputs = item["tokens"].view(cfg.model.batch_size, -1).to(device)
+    model_output = []
+
+    with tqdm(dataloader) as pbar:
+        for batch in pbar:
+            model_inputs = batch["input_ids"].view(cfg.model.batch_size, -1).to(device)
             input_length = model_inputs.size(1)
 
             start_time = time.time()
@@ -68,20 +72,23 @@ def main(cfg: DictConfig) -> None:
             duration = time.time() - start_time
 
             decoded = tokenizer.batch_decode(
-                generated_ids[:, input_length:], skip_special_tokens=True
+                generated_ids[:, input_length:],
+                skip_special_tokens=True,
             )
-            results.extend(
-                [{"answer": ans, "gold": gold} for ans, gold in zip(decoded, item["output"])]
-            )
+            model_output.extend(decoded)
 
             pbar.set_postfix_str(f"{generated_ids.numel() / duration: 0.2f} tok/sec")
+
+    results = [
+        {"answer": ans, "gold": gold_ans} for ans, gold_ans in zip(model_output, gold_output)
+    ]
 
     with open(output_file, "w") as f:
         json.dump(results, f, indent="\t")
 
-    # res = evaluate_extraction(results)
-    # with open(cfg.metrics_file, "w") as file:
-    #     json.dump(res, file, indent="\t")
+    res = evaluate_extraction(results)
+    with open(cfg.metrics_file, "w") as file:
+        json.dump(res, file, indent="\t")
 
 
 if __name__ == "__main__":
