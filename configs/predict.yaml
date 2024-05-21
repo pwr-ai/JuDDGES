@@ -5,8 +5,8 @@ defaults:
 
 device: null
 device_map: 'auto'
-output_file: data/experiments/predict/${dataset._dataset_name}/${model._model_name}.json
-metrics_file: data/experiments/predict/${dataset._dataset_name}/${model._model_name}_metrics.json
+output_file: data/experiments/predict/${dataset._dataset_name}/outputs_${model._model_name}.json
+metrics_file: data/experiments/predict/${dataset._dataset_name}/metrics_${model._model_name}.json
 
 max_new_tokens: 250
 truncate_context: True

@@ -3,6 +3,6 @@ _model_name: Meta-Llama-3-8B-Instruct
 model_name: ${._org_name}/${._model_name}
 tokenizer_name: ${._org_name}/${._model_name}
 
-max_seq_length: 8100
+max_seq_length: 7_900
 batch_size: 1
 padding: longest

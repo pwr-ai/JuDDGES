@@ -153,3 +153,4 @@ checklink/cookies.txt
 
 secrets.env
 **/postgres-juddges/**
+outputs/
