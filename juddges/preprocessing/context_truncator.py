@@ -24,7 +24,7 @@ class ContextTruncator:
             )["length"]
         else:
             prompt_length, output_length = (
-                self.tokenizer(prompt, return_length=True, add_special_tokens=False)["length"][0],
+                self.tokenizer([prompt], return_length=True, add_special_tokens=False)["length"][0],
                 0,
             )
 
