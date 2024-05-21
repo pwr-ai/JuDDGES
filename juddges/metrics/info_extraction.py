@@ -44,7 +44,7 @@ def parse_results(
         assert gold is not None
 
         for k in gold.keys():
-            res_pred[k].append(ans[k])
+            res_pred[k].append(ans.get(k, EMPTY_ANSWER))
             res_gold[k].append(gold[k])
 
     return res_gold, res_pred
@@ -64,11 +64,14 @@ def _parse_item(item: str) -> dict[str, str] | None:
         return None
 
     for k, v in data.items():
-        if isinstance(v, list):
-            data[k] = ", ".join(sorted(v))
-        elif isinstance(v, datetime.date):
-            data[k] = v.strftime("%Y-%m-%d")
-        elif data[k] is None:
+        try:
+            if isinstance(v, list):
+                data[k] = ", ".join(sorted(v))
+            elif isinstance(v, datetime.date):
+                data[k] = v.strftime("%Y-%m-%d")
+            elif data[k] is None:
+                data[k] = EMPTY_ANSWER
+        except TypeError:
             data[k] = EMPTY_ANSWER
 
         assert isinstance(data[k], str)
