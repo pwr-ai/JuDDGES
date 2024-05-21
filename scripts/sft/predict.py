@@ -8,7 +8,7 @@ from datasets import load_dataset
 
 from loguru import logger
 import torch
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 
@@ -20,10 +20,14 @@ from juddges.preprocessing.text_encoder import TextEncoderForEval
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
+if NUM_PROC > 1:
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-@torch.no_grad()
+
+@torch.inference_mode()
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
 def main(cfg: DictConfig) -> None:
+    OmegaConf.resolve(cfg)
     logger.info(f"config:\n{cfg}")
     device = cfg.device if cfg.device else DEVICE
 
@@ -35,12 +39,13 @@ def main(cfg: DictConfig) -> None:
 
     model_pack = get_model(cfg.model.model_name, device_map=cfg.device_map)
     model, tokenizer = model_pack.model, model_pack.tokenizer
+    model.eval()
     if cfg.model.batch_size > 1 and cfg.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
 
     ds = ds["test"]
 
-    gold_output = [item["output"] for item in ds]
+    gold_outputs = [item["output"] for item in ds]
 
     encoder = TextEncoderForEval(
         tokenizer=tokenizer,
@@ -56,7 +61,7 @@ def main(cfg: DictConfig) -> None:
         shuffle=False,
     )
 
-    model_output = []
+    model_outputs = []
 
     with tqdm(dataloader) as pbar:
         for batch in pbar:
@@ -75,12 +80,12 @@ def main(cfg: DictConfig) -> None:
                 generated_ids[:, input_length:],
                 skip_special_tokens=True,
             )
-            model_output.extend(decoded)
+            model_outputs.extend(decoded)
 
             pbar.set_postfix_str(f"{generated_ids.numel() / duration: 0.2f} tok/sec")
 
     results = [
-        {"answer": ans, "gold": gold_ans} for ans, gold_ans in zip(model_output, gold_output)
+        {"answer": ans, "gold": gold_ans} for ans, gold_ans in zip(model_outputs, gold_outputs)
     ]
 
     with open(output_file, "w") as f:
