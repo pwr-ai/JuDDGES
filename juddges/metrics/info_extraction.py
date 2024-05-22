@@ -62,7 +62,7 @@ def _parse_item(item: str) -> dict[str, str] | None:
         data = parse_yaml(item)
     except Exception:
         return None
-    
+
     if data is None:
         return None
 

@@ -11,8 +11,8 @@ stages:
       nfiles: 17
     - path: scripts/sft/build_fine_tuning_dataset.py
       hash: md5
-      md5: 8c434fc8823f682f6b2db22bba477af4
-      size: 5397
+      md5: f07a9d106853e74be4d0e4807b33ff3d
+      size: 5393
   evaluate_zero_shot:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_zero_shot.py --output-file data/results/pl/zero_shot/results_llama_3_8B.json
       --metrics-file data/results/pl/zero_shot/metrics_llama_3_8B.json
