@@ -62,6 +62,9 @@ def _parse_item(item: str) -> dict[str, str] | None:
         data = parse_yaml(item)
     except Exception:
         return None
+    
+    if data is None:
+        return None
 
     for k, v in data.items():
         try:
@@ -71,9 +74,11 @@ def _parse_item(item: str) -> dict[str, str] | None:
                 data[k] = v.strftime("%Y-%m-%d")
             elif data[k] is None:
                 data[k] = EMPTY_ANSWER
+            else:
+                raise TypeError()
         except TypeError:
             data[k] = EMPTY_ANSWER
 
-        assert isinstance(data[k], str)
+        assert isinstance(data[k], str), f"Invalid type encountered {data[k]}"
 
     return data
