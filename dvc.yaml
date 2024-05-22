@@ -27,7 +27,7 @@ stages:
     matrix:
       model:
         - Meta-Llama-3-8B-Instruct
-        # - Mistral-7B-Instruct-v0.2
+        - Mistral-7B-Instruct-v0.2
         # - Mistral-7B-Instruct-v0.2-fine-tuned
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py model=${item.model}
@@ -36,7 +36,7 @@ stages:
       - configs/predict.yaml
       - configs/model/${item.model}.yaml
     outs:
-      - data/experiments/predict/pl-court-instruct/${item.model}.json
+      - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
     metrics:
-      - data/experiments/predict/pl-court-instruct/${item.model}_metrics.json:
+      - data/experiments/predict/pl-court-instruct/metrics_${item.model}.json:
           cache: false
