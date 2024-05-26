@@ -28,7 +28,7 @@ stages:
       model:
         - Meta-Llama-3-8B-Instruct
         - Mistral-7B-Instruct-v0.2
-        # - Mistral-7B-Instruct-v0.2-fine-tuned
+        - Mistral-7B-Instruct-v0.2-fine-tuned
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py model=${item.model}
     deps:
