@@ -10,3 +10,8 @@ metrics_file: data/experiments/predict/${dataset._dataset_name}/metrics_${model.
 
 max_new_tokens: 250
 truncate_context: True
+
+hydra:  
+  output_subdir: null  
+  run:  
+    dir: .
