@@ -15,7 +15,7 @@ from transformers import (
 )
 
 from juddges.data.datasets.utils import create_chat
-from juddges.defaults import FINE_TUNING_DATASETS_PATH, ROOT_PATH
+from juddges.defaults import FINE_TUNING_DATASETS_PATH, CONFIG_PATH
 
 from datasets import (
     load_dataset,
@@ -32,9 +32,7 @@ from transformers import TrainingArguments
 from juddges.preprocessing.context_truncator import ContextTruncator
 
 
-@hydra.main(
-    version_base="1.3", config_path=str(ROOT_PATH / "configs/fine-tune"), config_name="config.yaml"
-)
+@hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="fine_tuning.yaml")
 def main(cfg: DictConfig) -> None:
     os.environ["WANDB_ENTITY"] = cfg.wandb_entity
     os.environ["WANDB_PROJECT"] = cfg.wandb_project
