@@ -1,6 +1,0 @@
-_model_name: Mistral-7B-Instruct-v0.2-fine-tuned
-model_name: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct/checkpoint-8000
-tokenizer_name: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct/checkpoint-8000
-max_seq_length: 20_000
-batch_size: 1
-padding: false

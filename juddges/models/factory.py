@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 from typing import Any
+from peft import PeftModel
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+from juddges.config import LLMConfig
 
 
 @dataclass
@@ -11,18 +14,17 @@ class ModelForGeneration:
     generate_kwargs: dict[str, Any]
 
 
-def get_model(llm_name: str, **kwargs) -> ModelForGeneration:
-    if llm_name.startswith("meta-llama"):
-        return get_llama_3(llm_name, **kwargs)
-    elif "mistral" in llm_name.lower():
-        return get_mistral(llm_name, **kwargs)
+def get_model(llm_config: LLMConfig, **kwargs) -> ModelForGeneration:
+    if llm_config.model_name.startswith("meta-llama"):
+        return get_llama_3(llm_config, **kwargs)
+    elif "mistral" in llm_config.model_name.lower():
+        return get_mistral(llm_config, **kwargs)
     else:
-        raise ValueError(f"Model: {llm_name} not yet handled or doesn't exists.")
+        raise ValueError(f"Model: {llm_config} not yet handled or doesn't exists.")
 
 
-def get_llama_3(llm_name: str, device_map: str) -> ModelForGeneration:
-    assert llm_name.startswith("meta-llama")
-    model, tokenizer = _get_model_tokenizer(llm_name, device_map)
+def get_llama_3(llm_config: LLMConfig, device_map: str) -> ModelForGeneration:
+    model, tokenizer = _get_model_tokenizer(llm_config, device_map)
     tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.eos_token
     terminators: list[int] = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
@@ -34,9 +36,8 @@ def get_llama_3(llm_name: str, device_map: str) -> ModelForGeneration:
     )
 
 
-def get_mistral(llm_name: str, device_map: str) -> ModelForGeneration:
-    assert "mistral" in llm_name.lower()
-    model, tokenizer = _get_model_tokenizer(llm_name, device_map)
+def get_mistral(llm_config: LLMConfig, device_map: str) -> ModelForGeneration:
+    model, tokenizer = _get_model_tokenizer(llm_config, device_map)
     tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.eos_token
 
@@ -48,16 +49,21 @@ def get_mistral(llm_name: str, device_map: str) -> ModelForGeneration:
 
 
 def _get_model_tokenizer(
-    llm_name: str, device_map: str
+    llm_config: LLMConfig, device: str
 ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.bfloat16,
     )
+
     model = AutoModelForCausalLM.from_pretrained(
-        llm_name,
+        llm_config.model_name,
         quantization_config=quantization_config,
-        device_map=device_map,
+        device_map=device,
     )
-    tokenizer = AutoTokenizer.from_pretrained(llm_name, padding_side="left")
+
+    if llm_config.adapter_path is not None:
+        model = PeftModel.from_pretrained(model, llm_config.adapter_path)
+
+    tokenizer = AutoTokenizer.from_pretrained(llm_config.name)
     return model, tokenizer
