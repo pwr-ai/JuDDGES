@@ -3,7 +3,6 @@ defaults:
   - dataset: pl-court-instruct
   - _self_
 
-device: null
 device_map: 'auto'
 output_file: data/experiments/predict/${dataset._dataset_name}/outputs_${model._model_name}.json
 metrics_file: data/experiments/predict/${dataset._dataset_name}/metrics_${model._model_name}.json
