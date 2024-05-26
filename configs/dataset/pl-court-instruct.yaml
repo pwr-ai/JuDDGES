@@ -1,6 +1,6 @@
-_org_name: JuDDGES
-_dataset_name: pl-court-instruct
-dataset_name: ${._org_name}/${._dataset_name}
+org_name: JuDDGES
+name: pl-court-instruct
+dataset_name: ${.org_name}/${.name}
 prompt_field: prompt
 context_field: context
 output_field: output

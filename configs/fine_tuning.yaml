@@ -3,8 +3,8 @@ defaults:
   - dataset: pl-court-instruct
   - _self_
 
-output_dir: data/experiments/fine-tune/${model._model_name}/${dataset._dataset_name}
-run_name: ${model._model_name}_${dataset._dataset_name}_fine_tune
+output_dir: data/experiments/fine-tune/${model.name}/${dataset.name}
+run_name: ${model.name}_${dataset.name}_fine_tune
 
 wandb_entity: graph-ml-lab-wust
 wandb_project: juddges-fine-tune

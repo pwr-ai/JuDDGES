@@ -38,7 +38,7 @@ NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
 
 class FineTuningConfig(BaseModel, extra="forbid"):
-    llm: LLMConfig
+    model: LLMConfig
     dataset: DatasetConfig
     output_dir: Path
     run_name: str

@@ -27,7 +27,7 @@ if NUM_PROC > 1:
 
 
 class PredictConfig(BaseModel, extra="forbid"):
-    llm: LLMConfig
+    model: LLMConfig
     dataset: DatasetConfig
     device_map: str
     output_file: Path
@@ -49,7 +49,7 @@ def main(cfg: DictConfig) -> None:
     ds = load_dataset("JuDDGES/pl-court-instruct")
     logger.info("Loading model...")
 
-    model_pack = get_model(config.model.model_name, device_map=config.device_map)
+    model_pack = get_model(config.model, device_map=config.device_map)
     model, tokenizer = model_pack.model, model_pack.tokenizer
     model.eval()
     if config.model.batch_size > 1 and config.model.padding is False:

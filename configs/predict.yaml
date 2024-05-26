@@ -1,11 +1,11 @@
 defaults:
-  - model: Mistral-7B-Instruct-v0.2
+  - model: ???
   - dataset: pl-court-instruct
   - _self_
 
 device_map: 'auto'
-output_file: data/experiments/predict/${dataset._dataset_name}/outputs_${model._model_name}.json
-metrics_file: data/experiments/predict/${dataset._dataset_name}/metrics_${model._model_name}.json
+output_file: data/experiments/predict/${dataset.name}/outputs_${model.name}.json
+metrics_file: data/experiments/predict/${dataset.name}/metrics_${model.name}.json
 
 max_new_tokens: 250
 truncate_context: True

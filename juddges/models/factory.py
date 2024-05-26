@@ -15,9 +15,9 @@ class ModelForGeneration:
 
 
 def get_model(llm_config: LLMConfig, **kwargs) -> ModelForGeneration:
-    if llm_config.model_name.startswith("meta-llama"):
+    if llm_config.llm.startswith("meta-llama"):
         return get_llama_3(llm_config, **kwargs)
-    elif "mistral" in llm_config.model_name.lower():
+    elif "mistral" in llm_config.llm.lower():
         return get_mistral(llm_config, **kwargs)
     else:
         raise ValueError(f"Model: {llm_config} not yet handled or doesn't exists.")
@@ -57,7 +57,7 @@ def _get_model_tokenizer(
     )
 
     model = AutoModelForCausalLM.from_pretrained(
-        llm_config.model_name,
+        llm_config.llm,
         quantization_config=quantization_config,
         device_map=device,
     )
@@ -65,5 +65,5 @@ def _get_model_tokenizer(
     if llm_config.adapter_path is not None:
         model = PeftModel.from_pretrained(model, llm_config.adapter_path)
 
-    tokenizer = AutoTokenizer.from_pretrained(llm_config.name)
+    tokenizer = AutoTokenizer.from_pretrained(llm_config.llm)
     return model, tokenizer

@@ -3,9 +3,9 @@ from pydantic import BaseModel
 
 
 class LLMConfig(BaseModel, extra="forbid"):
-    _org_name: str
-    _model_name: str
-    model_name: str
+    org_name: str
+    name: str
+    llm: str
     tokenizer_name: str
     adapter_path: Path | None
     max_seq_length: int
@@ -14,8 +14,8 @@ class LLMConfig(BaseModel, extra="forbid"):
 
 
 class DatasetConfig(BaseModel, extra="forbid"):
-    _org_name: str
-    _dataset_name: str
+    org_name: str
+    name: str
     dataset_name: str
     prompt_field: str
     context_field: str
