@@ -11,6 +11,7 @@ class LLMConfig(BaseModel, extra="forbid"):
     max_seq_length: int
     padding: str | bool
     batch_size: int
+    use_unsloth: bool = False
 
 
 class DatasetConfig(BaseModel, extra="forbid"):

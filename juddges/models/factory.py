@@ -15,7 +15,7 @@ class ModelForGeneration:
 
 
 def get_model(llm_config: LLMConfig, **kwargs) -> ModelForGeneration:
-    if llm_config.llm.startswith("meta-llama"):
+    if llm_config.name.startswith("llama"):
         return get_llama_3(llm_config, **kwargs)
     elif "mistral" in llm_config.llm.lower():
         return get_mistral(llm_config, **kwargs)
@@ -51,19 +51,28 @@ def get_mistral(llm_config: LLMConfig, device_map: str) -> ModelForGeneration:
 def _get_model_tokenizer(
     llm_config: LLMConfig, device: str
 ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
-    quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=torch.bfloat16,
-    )
+    if llm_config.use_unsloth:
+        from unsloth import FastLanguageModel
 
-    model = AutoModelForCausalLM.from_pretrained(
-        llm_config.llm,
-        quantization_config=quantization_config,
-        device_map=device,
-    )
+        model, tokenizer = FastLanguageModel.from_pretrained(
+            model_name=llm_config.llm,
+            max_seq_length=llm_config.max_seq_length,
+            dtype=None,
+            load_in_4bit=True,
+        )
+    else:
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            llm_config.llm,
+            quantization_config=quantization_config,
+            device_map=device,
+        )
+        tokenizer = AutoTokenizer.from_pretrained(llm_config.llm)
 
     if llm_config.adapter_path is not None:
         model = PeftModel.from_pretrained(model, llm_config.adapter_path)
 
-    tokenizer = AutoTokenizer.from_pretrained(llm_config.llm)
     return model, tokenizer
