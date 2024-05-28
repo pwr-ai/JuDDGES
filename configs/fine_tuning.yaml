@@ -11,6 +11,10 @@ wandb_project: juddges-fine-tune
 
 truncate_context: True
 
+### HPARAMS ###
+epochs: 1
+batch_size: 4
+
 hydra:  
   output_subdir: null  
   run:  

@@ -23,7 +23,7 @@ install:
 	pip install flash-attn --no-build-isolation
 
 install_unsloth:
-	conda install pytorch-cuda=12.1 pytorch cudatoolkit xformers -c pytorch -c nvidia -c xformers
+	conda install --yes pytorch-cuda=12.1 pytorch cudatoolkit xformers -c pytorch -c nvidia -c xformers
 	pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
 	pip install flash-attn --no-build-isolation
 	pip install -r requirements.txt

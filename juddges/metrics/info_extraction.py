@@ -39,7 +39,7 @@ def parse_results(
     for item in results:
         gold = _parse_item(item["gold"])
         assert gold is not None
-        
+
         ans = _parse_item(item["answer"])
         if ans is None:
             ans = dict.fromkeys(gold.keys(), EMPTY_ANSWER)

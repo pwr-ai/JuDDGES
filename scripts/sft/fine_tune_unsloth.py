@@ -19,6 +19,7 @@ from transformers import (
 from juddges.config import DatasetConfig, LLMConfig
 from juddges.data.datasets.utils import create_chat
 from juddges.defaults import FINE_TUNING_DATASETS_PATH, CONFIG_PATH
+from accelerate import PartialState
 
 from datasets import (
     load_dataset,
@@ -29,7 +30,6 @@ from datasets import (
     load_from_disk,
 )
 
-import torch
 from transformers import TrainingArguments
 
 from juddges.preprocessing.context_truncator import ContextTruncator
@@ -41,6 +41,8 @@ NUM_PROC = int(os.getenv("NUM_PROC", 1))
 class FineTuningConfig(BaseModel, extra="forbid"):
     model: LLMConfig
     dataset: DatasetConfig
+    batch_size: int
+    epochs: int
     output_dir: Path
     run_name: str
     wandb_entity: str
@@ -70,17 +72,14 @@ def main(cfg: DictConfig) -> None:
         truncate_context=config.truncate_context,
         tokenizer=tokenizer,
         max_length=config.model.max_seq_length,
-        num_proc=config.num_proc,
+        num_proc=NUM_PROC,
     )
 
     trainer = get_trainer(
         model,
         tokenizer,
-        config.model.max_seq_length,
         dataset,
-        "messages",
-        output_dir,
-        config.run_name,
+        config,
         NUM_PROC,
     )
     trainer.train()
@@ -139,11 +138,13 @@ def get_model_and_tokenizer(
     model_name: str,
     max_seq_length: int,
 ) -> tuple[PreTrainedModel, PreTrainedTokenizer]:
+    device_string = PartialState().process_index
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=model_name,
         max_seq_length=max_seq_length,
         dtype=None,
         load_in_4bit=True,
+        device_map=device_string,
     )
 
     model = FastLanguageModel.get_peft_model(
@@ -173,25 +174,25 @@ def get_model_and_tokenizer(
 def get_trainer(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
-    max_seq_length: int,
     dataset: DatasetDict | Dataset | IterableDatasetDict | IterableDataset,
-    dataset_text_field: str,
-    output_dir: Path,
-    run_name: str | None,
+    config: FineTuningConfig,
     num_proc: int | None,
 ) -> Trainer:
     args = TrainingArguments(
-        run_name=run_name,  # run name for the experiment
-        output_dir=str(output_dir),  # directory to save and repository id
-        num_train_epochs=3,  # number of training epochs
-        per_device_train_batch_size=2,  # batch size per device during training
+        run_name=config.run_name,  # run name for the experiment
+        output_dir=str(config.output_dir),  # directory to save and repository id
+        num_train_epochs=config.epochs,  # number of training epochs
+        per_device_train_batch_size=config.batch_size,  # batch size per device during training
         gradient_accumulation_steps=3,  # number of steps before performing a backward/update pass
         gradient_checkpointing=True,  # use gradient checkpointing to save memory
+        gradient_checkpointing_kwargs={
+            "use_reentrant": False
+        },  # necessary when train on multiple-GPU
         optim="adamw_8bit",  # use fused adamw optimizer
         logging_steps=1,  # log every 1 step
         save_strategy="steps",  # save checkpoint every epoch
-        bf16=(not torch.cuda.is_bf16_supported()),
-        fp16=torch.cuda.is_bf16_supported(),
+        save_steps=100,
+        bf16=True,
         learning_rate=2e-4,  # learning rate, based on QLoRA paper
         max_grad_norm=0.3,  # max gradient norm based on QLoRA paper
         warmup_ratio=0.03,  # warmup ratio based on QLoRA paper
@@ -204,8 +205,8 @@ def get_trainer(
         model=model,
         args=args,
         train_dataset=dataset,
-        dataset_text_field=dataset_text_field,
-        max_seq_length=max_seq_length,
+        dataset_text_field="messages",
+        max_seq_length=config.model.max_seq_length,
         tokenizer=tokenizer,
         packing=True,
         dataset_kwargs={

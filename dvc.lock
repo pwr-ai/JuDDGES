@@ -53,8 +53,8 @@ stages:
     deps:
     - path: configs/fine_tuning.yaml
       hash: md5
-      md5: 0e3795fdecac52b79dcf4c8f335650a3
-      size: 399
+      md5: 9cd6fd320530e1c8ded7d9c369b8a082
+      size: 440
     - path: configs/model/Mistral-7B-Instruct-v0.2.yaml
       hash: md5
       md5: 68461d0ab4970d1083a2d8fe191f5cd1
@@ -181,3 +181,24 @@ stages:
       hash: md5
       md5: 051ccb01be98f323a11ec29d5a6be31b
       size: 293
+  sft@Mistral-7B-Instruct-v0.2:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=Mistral-7B-Instruct-v0.2
+    deps:
+    - path: configs/fine_tuning.yaml
+      hash: md5
+      md5: 9cd6fd320530e1c8ded7d9c369b8a082
+      size: 440
+    - path: configs/model/Mistral-7B-Instruct-v0.2.yaml
+      hash: md5
+      md5: 68461d0ab4970d1083a2d8fe191f5cd1
+      size: 141
+    - path: scripts/sft/fine_tune_llm.py
+      hash: md5
+      md5: d0c843f9066296b6654bbb0b81652da2
+      size: 7012
+    outs:
+    - path: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct
+      hash: md5
+      md5: 4962aefc4af2bf7f96c4ba1cdb2a9918.dir
+      size: 387238698
+      nfiles: 44

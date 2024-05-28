@@ -9,7 +9,7 @@ stages:
       - scripts/sft/build_fine_tuning_dataset.py
     desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
 
-  fine_tune_sft:
+  sft:
     matrix:
       model:
         - Mistral-7B-Instruct-v0.2
@@ -18,6 +18,19 @@ stages:
       PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
     deps:
       - scripts/sft/fine_tune_llm.py
+      - configs/fine_tuning.yaml
+      - configs/model/${item.model}.yaml
+    outs:
+      - data/experiments/fine-tune/${item.model}/pl-court-instruct
+
+  sft_unsloth:
+    matrix:
+      model:
+        - Unsloth-Llama-3-8B-Instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/fine_tune_unsloth.py model=${item.model}
+    deps:
+      - scripts/sft/fine_tune_unsloth.py
       - configs/fine_tuning.yaml
       - configs/model/${item.model}.yaml
     outs:
