@@ -37,6 +37,19 @@ stages:
       - configs/model/${item.model}.yaml
     outs:
       - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+
+  evaluate:
+    matrix:
+      model:
+        - Meta-Llama-3-8B-Instruct
+        - Mistral-7B-Instruct-v0.2
+        - Mistral-7B-Instruct-v0.2-fine-tuned
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate.py 
+      --output-file data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+    deps:
+      - scripts/sft/evaluate.py
+      - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
     metrics:
       - data/experiments/predict/pl-court-instruct/metrics_${item.model}.json:
           cache: false

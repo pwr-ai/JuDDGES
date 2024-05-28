@@ -15,7 +15,6 @@ from torch.utils.data import DataLoader
 
 from juddges.config import DatasetConfig, LLMConfig
 from juddges.defaults import CONFIG_PATH
-from juddges.metrics.info_extraction import evaluate_extraction
 from juddges.models.factory import get_model
 from juddges.preprocessing.text_encoder import TextEncoderForEval
 
@@ -102,10 +101,6 @@ def main(cfg: DictConfig) -> None:
 
     with open(output_file, "w") as f:
         json.dump(results, f, indent="\t")
-
-    res = evaluate_extraction(results)
-    with open(config.metrics_file, "w") as file:
-        json.dump(res, file, indent="\t")
 
 
 if __name__ == "__main__":
