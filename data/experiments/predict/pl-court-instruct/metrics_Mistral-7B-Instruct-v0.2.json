@@ -1,12 +1,12 @@
 {
 	"full_text_chrf": 0.43185508251190186,
 	"field_chrf": {
-		"court_name": 0.0,
-		"date": 0.0,
-		"department_name": 0.0,
-		"judges": 0.889216423034668,
-		"legal_bases": 0.3373923599720001,
-		"recorder": 0.0,
-		"signature": 0.0
+		"court_name": 0.8390982747077942,
+		"date": 0.9221102595329285,
+		"department_name": 0.8497400283813477,
+		"judges": 0.8794581294059753,
+		"legal_bases": 0.3334829807281494,
+		"recorder": 0.8369705080986023,
+		"signature": 0.14467670023441315
 	}
 }

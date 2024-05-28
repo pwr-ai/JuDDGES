@@ -38,10 +38,11 @@ def parse_results(
 
     for item in results:
         gold = _parse_item(item["gold"])
+        assert gold is not None
+        
         ans = _parse_item(item["answer"])
         if ans is None:
             ans = dict.fromkeys(gold.keys(), EMPTY_ANSWER)
-        assert gold is not None
 
         for k in gold.keys():
             res_pred[k].append(ans.get(k, EMPTY_ANSWER))
@@ -67,18 +68,14 @@ def _parse_item(item: str) -> dict[str, str] | None:
         return None
 
     for k, v in data.items():
-        try:
-            if isinstance(v, list):
-                data[k] = ", ".join(sorted(v))
-            elif isinstance(v, datetime.date):
-                data[k] = v.strftime("%Y-%m-%d")
-            elif data[k] is None:
-                data[k] = EMPTY_ANSWER
-            else:
-                raise TypeError()
-        except TypeError:
+        if isinstance(v, list):
+            # list values might be None (need to cast to string)
+            data[k] = ", ".join(sorted(str(v_i) for v_i in v))
+        elif isinstance(v, datetime.date):
+            data[k] = v.strftime("%Y-%m-%d")
+        elif data[k] is None:
             data[k] = EMPTY_ANSWER
-
-        assert isinstance(data[k], str), f"Invalid type encountered {data[k]}"
+        else:
+            data[k] = str(v)
 
     return data
