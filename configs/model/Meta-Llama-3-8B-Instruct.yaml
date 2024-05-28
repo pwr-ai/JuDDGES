@@ -1,7 +1,5 @@
-org_name: meta-llama
-name: Meta-Llama-3-8B-Instruct
-llm: ${.org_name}/${.name}
-tokenizer_name: ${.llm}
+name: meta-llama/Meta-Llama-3-8B-Instruct
+tokenizer_name: ${.name}
 
 adapter_path: null
 

@@ -51,27 +51,35 @@ stages:
   fine_tune_sft@Mistral-7B-Instruct-v0.2:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=Mistral-7B-Instruct-v0.2
     deps:
+    - path: configs/fine_tuning.yaml
+      hash: md5
+      md5: 0e3795fdecac52b79dcf4c8f335650a3
+      size: 399
+    - path: configs/model/Mistral-7B-Instruct-v0.2.yaml
+      hash: md5
+      md5: 68461d0ab4970d1083a2d8fe191f5cd1
+      size: 141
     - path: scripts/sft/fine_tune_llm.py
       hash: md5
-      md5: dd9baba0d88e09f47e70f38a2e6716cd
-      size: 6499
+      md5: d0c843f9066296b6654bbb0b81652da2
+      size: 7012
     outs:
     - path: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct
       hash: md5
-      md5: 2078cca8b3c2fa97914dc8f1c18f48fc.dir
-      size: 1556588028
-      nfiles: 176
+      md5: 4962aefc4af2bf7f96c4ba1cdb2a9918.dir
+      size: 387238698
+      nfiles: 44
   predict@Mistral-7B-Instruct-v0.2:
     cmd: PYTHONPATH=. python scripts/sft/predict.py model=Mistral-7B-Instruct-v0.2
     deps:
     - path: configs/model/Mistral-7B-Instruct-v0.2.yaml
       hash: md5
-      md5: f220398e738892d5c0e831ac6aee5c1c
-      size: 177
+      md5: 68461d0ab4970d1083a2d8fe191f5cd1
+      size: 141
     - path: configs/predict.yaml
       hash: md5
-      md5: e9abd4b2398c420ac0ca6ddcb4423c8f
-      size: 382
+      md5: e6b047cf62e612a32381d6221eb99b4e
+      size: 416
     - path: scripts/sft/predict.py
       hash: md5
       md5: d0d05a225ca7d9bbf1d9ad60a4fb4663
@@ -86,12 +94,12 @@ stages:
     deps:
     - path: configs/model/Meta-Llama-3-8B-Instruct.yaml
       hash: md5
-      md5: 2283be0da4606f3a77c880397b3e39d6
-      size: 177
+      md5: eb67ce09d1c076f42ac161c36501a73e
+      size: 141
     - path: configs/predict.yaml
       hash: md5
-      md5: e9abd4b2398c420ac0ca6ddcb4423c8f
-      size: 382
+      md5: e6b047cf62e612a32381d6221eb99b4e
+      size: 416
     - path: scripts/sft/predict.py
       hash: md5
       md5: d0d05a225ca7d9bbf1d9ad60a4fb4663
@@ -106,12 +114,12 @@ stages:
     deps:
     - path: configs/model/Mistral-7B-Instruct-v0.2-fine-tuned.yaml
       hash: md5
-      md5: e10eef137d6d00057f7c7024a36d88d4
-      size: 258
+      md5: e9cdbe31c62745a86d3a0d1262bd95f6
+      size: 222
     - path: configs/predict.yaml
       hash: md5
-      md5: e9abd4b2398c420ac0ca6ddcb4423c8f
-      size: 382
+      md5: e6b047cf62e612a32381d6221eb99b4e
+      size: 416
     - path: scripts/sft/predict.py
       hash: md5
       md5: d0d05a225ca7d9bbf1d9ad60a4fb4663

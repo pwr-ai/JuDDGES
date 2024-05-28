@@ -17,7 +17,7 @@ class ModelForGeneration:
 def get_model(llm_config: LLMConfig, **kwargs) -> ModelForGeneration:
     if llm_config.name.startswith("llama"):
         return get_llama_3(llm_config, **kwargs)
-    elif "mistral" in llm_config.llm.lower():
+    elif "mistral" in llm_config.name.lower():
         return get_mistral(llm_config, **kwargs)
     else:
         raise ValueError(f"Model: {llm_config} not yet handled or doesn't exists.")
@@ -55,7 +55,7 @@ def _get_model_tokenizer(
         from unsloth import FastLanguageModel
 
         model, tokenizer = FastLanguageModel.from_pretrained(
-            model_name=llm_config.llm,
+            model_name=llm_config.name,
             max_seq_length=llm_config.max_seq_length,
             dtype=None,
             load_in_4bit=True,
@@ -66,11 +66,11 @@ def _get_model_tokenizer(
             bnb_4bit_compute_dtype=torch.bfloat16,
         )
         model = AutoModelForCausalLM.from_pretrained(
-            llm_config.llm,
+            llm_config.name,
             quantization_config=quantization_config,
             device_map=device,
         )
-        tokenizer = AutoTokenizer.from_pretrained(llm_config.llm)
+        tokenizer = AutoTokenizer.from_pretrained(llm_config.name)
 
     if llm_config.adapter_path is not None:
         model = PeftModel.from_pretrained(model, llm_config.adapter_path)

@@ -59,8 +59,8 @@ def main(cfg: DictConfig) -> None:
     output_dir = Path(config.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    dataset = get_dataset(config.dataset.dataset_name, NUM_PROC)
-    model, tokenizer = get_model_and_tokenizer(config.model.llm, config.model.max_seq_length)
+    dataset = get_dataset(config.dataset.name, NUM_PROC)
+    model, tokenizer = get_model_and_tokenizer(config.model.name, config.model.max_seq_length)
 
     dataset = prepare_dataset(
         dataset=dataset,

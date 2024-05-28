@@ -1,7 +1,5 @@
-org_name: unsloth
-name: llama-3-8b-Instruct-bnb-4bit
-llm: ${.org_name}/${.name}
-tokenizer_name: ${.llm}
+name: unsloth/llama-3-8b-Instruct-bnb-4bit
+tokenizer_name: ${.name}
 
 adapter_path: null
 
