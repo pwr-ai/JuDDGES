@@ -10,7 +10,6 @@ wandb_entity: graph-ml-lab-wust
 wandb_project: juddges-fine-tune
 
 truncate_context: True
-num_proc: 20
 
 hydra:  
   output_subdir: null  
