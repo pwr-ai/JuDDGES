@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 from datasets import Dataset
@@ -10,10 +9,14 @@ from openai import BaseModel
 import torch
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
+from transformers.utils import is_flash_attn_2_available
+import yaml
 
 from juddges.config import EmbeddingModelConfig, RawDatasetConfig
 from juddges.defaults import CONFIG_PATH
 from juddges.preprocessing.text_chunker import TextSplitter
+
+assert is_flash_attn_2_available(), "FlashAttention2 is required for this script"
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -29,6 +32,7 @@ class EmbeddingConfig(BaseModel, extra="forbid"):
     output_dir: Path
 
 
+@torch.inference_mode()
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="embedding.yaml")
 def main(cfg: DictConfig) -> None:
     OmegaConf.resolve(cfg)
@@ -52,7 +56,12 @@ def main(cfg: DictConfig) -> None:
     else:
         text_column = "text"
 
-    model = SentenceTransformer(config.embedding_model.name).to(DEVICE)
+    model = SentenceTransformer(
+        config.embedding_model.name,
+        device=DEVICE,
+        model_kwargs=dict(torch_dtype=torch.bfloat16),
+    )
+    model.compile()
 
     if config.truncation_tokens is not None:
         assert config.truncation_tokens <= config.embedding_model.max_seq_length
@@ -66,10 +75,10 @@ def main(cfg: DictConfig) -> None:
         num_proc=None,
         remove_columns=[text_column],
     )
-    ds.save_to_disk(config.dataset.output_dir)
+    ds.save_to_disk(config.output_dir)
 
-    with open(config.output_dir / "config.json", "w") as f:
-        json.dump(config.model_dump(), f)
+    with open(config.output_dir / "config.yaml", "w") as f:
+        yaml.dump(config.model_dump(), f)
 
 
 def chunk_dataset(dataset: Dataset, config: EmbeddingConfig) -> Dataset:
@@ -82,6 +91,7 @@ def chunk_dataset(dataset: Dataset, config: EmbeddingConfig) -> Dataset:
         remove_columns=["_id", "text"],
     )
     logger.info(f"Dataset split into {ds.num_rows} chunks")
+    return ds
 
 
 class Embedder:
@@ -90,7 +100,13 @@ class Embedder:
         self.text_column = text_column
 
     def __call__(self, items: dict[str, Any]) -> dict[str, Any]:
-        return {"embeddings": self.model.encode(items[self.text_column])}
+        return {
+            "embeddings": self.model.encode(
+                items[self.text_column],
+                show_progress_bar=False,
+                batch_size=len(items[self.text_column]),
+            )
+        }
 
 
 if __name__ == "__main__":

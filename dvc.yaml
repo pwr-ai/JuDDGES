@@ -9,10 +9,11 @@ stages:
       - scripts/sft/build_fine_tuning_dataset.py
     desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
 
-  embed_dataset:
+  embed:
     matrix:
       model:
-        - e5-mistral-7b-instruct
+        - mmlw-roberta-large
+        # - e5-mistral-7b-instruct
     cmd: >-
       PYTHONPATH=. python scripts/embed_text.py embedding_model=${item.model}
     deps:
@@ -56,6 +57,7 @@ stages:
         - Meta-Llama-3-8B-Instruct
         - Mistral-7B-Instruct-v0.2
         - Mistral-7B-Instruct-v0.2-fine-tuned
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py model=${item.model}
     deps:

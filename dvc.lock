@@ -202,3 +202,50 @@ stages:
       md5: 4962aefc4af2bf7f96c4ba1cdb2a9918.dir
       size: 387238698
       nfiles: 44
+  embed@mmlw-roberta-large:
+    cmd: PYTHONPATH=. python scripts/embed_text.py embedding_model=mmlw-roberta-large
+    deps:
+    - path: configs/embedding.yaml
+      hash: md5
+      md5: e7515e27e3bb7ddb3a2062a46efaa773
+      size: 408
+    - path: configs/embedding_model/mmlw-roberta-large.yaml
+      hash: md5
+      md5: 22f36cfd196c0fdc3cfd8a036d52b606
+      size: 52
+    - path: data/datasets/pl/raw
+      hash: md5
+      md5: 5dd44be2eea852bcce3d0918ff8b97da.dir
+      size: 10234880729
+      nfiles: 17
+    - path: scripts/embed_text.py
+      hash: md5
+      md5: 5813b589760b00ce693365a36c519ef0
+      size: 3384
+    outs:
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large
+      hash: md5
+      md5: b8ab133416880430c1f2d3d8357ffd7f.dir
+      size: 24368123117
+      nfiles: 53
+  predict@Unsloth-Llama-3-8B-Instruct-fine-tuned:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Llama-3-8B-Instruct-fine-tuned
+    deps:
+    - path: configs/model/Unsloth-Llama-3-8B-Instruct-fine-tuned.yaml
+      hash: md5
+      md5: c9fab7cd7a4b0159d13ba61e3c516c0a
+      size: 244
+    - path: configs/predict.yaml
+      hash: md5
+      md5: e6b047cf62e612a32381d6221eb99b4e
+      size: 416
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 69e4844a715c9c5c75e1127a06472ad4
+      size: 3148
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
+      hash: md5
+      md5: 9199da7e04fb35cc1ce2bbe9dd5cd274
+      size: 1891254

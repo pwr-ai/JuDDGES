@@ -3,9 +3,16 @@ defaults:
   - dataset: pl-court-raw
   - _self_
 
-length_adjust_mode: truncate
-truncation_tokens: 8192
-batch_size: 32
+# length_adjust_mode: truncate
+# truncation_tokens: 4096
+# batch_size: 24
+length_adjust_mode: chunk
+chunk_config:
+  chunk_size: 512
+  min_split_chars: 10
+  take_n_first_chunks: 16
+batch_size: 64
+
 output_dir: data/embeddings/${dataset.name}/${hydra:runtime.choices.embedding_model}
 
 hydra:  
