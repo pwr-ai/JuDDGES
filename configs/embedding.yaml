@@ -1,0 +1,14 @@
+defaults:
+  - embedding_model: ???
+  - dataset: pl-court-raw
+  - _self_
+
+length_adjust_mode: truncate
+truncation_tokens: 8192
+batch_size: 32
+output_dir: data/embeddings/${dataset.name}/${hydra:runtime.choices.embedding_model}
+
+hydra:  
+  output_subdir: null  
+  run:  
+    dir: .

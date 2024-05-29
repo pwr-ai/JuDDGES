@@ -9,6 +9,20 @@ stages:
       - scripts/sft/build_fine_tuning_dataset.py
     desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
 
+  embed_dataset:
+    matrix:
+      model:
+        - e5-mistral-7b-instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/embed_text.py embedding_model=${item.model}
+    deps:
+      - scripts/embed_text.py
+      - configs/embedding.yaml
+      - configs/embedding_model/${item.model}.yaml
+      - data/datasets/pl/raw
+    outs:
+      - data/embeddings/pl-court-raw/${item.model}
+
   sft:
     matrix:
       model:
@@ -31,7 +45,7 @@ stages:
       PYTHONPATH=. python scripts/sft/fine_tune_unsloth.py model=${item.model}
     deps:
       - scripts/sft/fine_tune_unsloth.py
-      - configs/fine_tuning.yaml
+      - configs/fine_tuning.yaml 
       - configs/model/${item.model}.yaml
     outs:
       - data/experiments/fine-tune/${item.model}/pl-court-instruct
