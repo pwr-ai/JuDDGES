@@ -64,7 +64,7 @@ def _parse_item(item: str) -> dict[str, str] | None:
     except Exception:
         return None
 
-    if data is None:
+    if (data is None) or (not isinstance(data, dict)):
         return None
 
     for k, v in data.items():

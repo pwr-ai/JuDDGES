@@ -15,7 +15,7 @@ class ModelForGeneration:
 
 
 def get_model(llm_config: LLMConfig, **kwargs) -> ModelForGeneration:
-    if llm_config.name.startswith("llama"):
+    if "llama" in llm_config.name.lower():
         return get_llama_3(llm_config, **kwargs)
     elif "mistral" in llm_config.name.lower():
         return get_mistral(llm_config, **kwargs)
