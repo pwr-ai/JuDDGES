@@ -1,3 +1,7 @@
+"""
+SFT script based on https://huggingface.co/blog/unsloth-trl
+"""
+
 import os
 from pathlib import Path
 
@@ -5,12 +9,8 @@ import hydra
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 from openai import BaseModel
-from peft.tuners.lora.config import LoraConfig
 from trl import SFTTrainer
 from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    BitsAndBytesConfig,
     PreTrainedModel,
     PreTrainedTokenizer,
     Trainer,
@@ -19,6 +19,7 @@ from transformers import (
 from juddges.config import DatasetConfig, LLMConfig
 from juddges.data.datasets.utils import create_chat
 from juddges.defaults import FINE_TUNING_DATASETS_PATH, CONFIG_PATH
+from accelerate import PartialState
 
 from datasets import (
     load_dataset,
@@ -29,10 +30,10 @@ from datasets import (
     load_from_disk,
 )
 
-import torch
 from transformers import TrainingArguments
 
 from juddges.preprocessing.context_truncator import ContextTruncator
+from unsloth import FastLanguageModel
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
@@ -40,6 +41,8 @@ NUM_PROC = int(os.getenv("NUM_PROC", 1))
 class FineTuningConfig(BaseModel, extra="forbid"):
     model: LLMConfig
     dataset: DatasetConfig
+    batch_size: int
+    epochs: int
     output_dir: Path
     run_name: str
     wandb_entity: str
@@ -59,7 +62,7 @@ def main(cfg: DictConfig) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     dataset = get_dataset(config.dataset.name, NUM_PROC)
-    model, tokenizer = get_model_and_tokenizer(config.model.name, config.model.tokenizer_name)
+    model, tokenizer = get_model_and_tokenizer(config.model.name, config.model.max_seq_length)
 
     dataset = prepare_dataset(
         dataset=dataset,
@@ -69,19 +72,14 @@ def main(cfg: DictConfig) -> None:
         truncate_context=config.truncate_context,
         tokenizer=tokenizer,
         max_length=config.model.max_seq_length,
-        num_proc=config.num_proc,
+        num_proc=NUM_PROC,
     )
 
-    peft_config = get_peft_config()
     trainer = get_trainer(
         model,
         tokenizer,
-        config.model.max_seq_length,
-        peft_config,
         dataset,
-        "messages",
-        output_dir,
-        config.run_name,
+        config,
         NUM_PROC,
     )
     trainer.train()
@@ -137,65 +135,64 @@ def prepare_dataset(
 
 
 def get_model_and_tokenizer(
-    model_name: str, tokenizer_name: str
+    model_name: str,
+    max_seq_length: int,
 ) -> tuple[PreTrainedModel, PreTrainedTokenizer]:
-    # BitsAndBytesConfig int-4 config
-    bnb_config = BitsAndBytesConfig(
+    device_string = PartialState().process_index
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=model_name,
+        max_seq_length=max_seq_length,
+        dtype=None,
         load_in_4bit=True,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
+        device_map=device_string,
     )
 
-    # Load model and tokenizer
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        device_map="auto",
-        attn_implementation="flash_attention_2",
-        torch_dtype=torch.bfloat16,
-        quantization_config=bnb_config,
+    model = FastLanguageModel.get_peft_model(
+        model,
+        r=16,
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+        ],
+        lora_alpha=16,
+        lora_dropout=0,  # Supports any, but = 0 is optimized
+        bias="none",  # Supports any, but = "none" is optimized
+        use_gradient_checkpointing=True,
+        random_state=3407,
+        max_seq_length=max_seq_length,
     )
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
     tokenizer.padding_side = "right"  # to prevent warnings
     tokenizer.pad_token = tokenizer.eos_token
     return model, tokenizer
 
 
-def get_peft_config() -> LoraConfig:
-    peft_config = LoraConfig(
-        lora_alpha=8,
-        lora_dropout=0.05,
-        r=6,
-        bias="none",
-        target_modules="all-linear",
-        task_type="CAUSAL_LM",
-    )
-    return peft_config
-
-
 def get_trainer(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
-    max_seq_length: int,
-    peft_config: LoraConfig,
     dataset: DatasetDict | Dataset | IterableDatasetDict | IterableDataset,
-    dataset_text_field: str,
-    output_dir: Path,
-    run_name: str | None,
+    config: FineTuningConfig,
     num_proc: int | None,
 ) -> Trainer:
     args = TrainingArguments(
-        run_name=run_name,  # run name for the experiment
-        output_dir=str(output_dir),  # directory to save and repository id
-        num_train_epochs=3,  # number of training epochs
-        per_device_train_batch_size=2,  # batch size per device during training
+        run_name=config.run_name,  # run name for the experiment
+        output_dir=str(config.output_dir),  # directory to save and repository id
+        num_train_epochs=config.epochs,  # number of training epochs
+        per_device_train_batch_size=config.batch_size,  # batch size per device during training
         gradient_accumulation_steps=3,  # number of steps before performing a backward/update pass
         gradient_checkpointing=True,  # use gradient checkpointing to save memory
-        optim="adamw_torch_fused",  # use fused adamw optimizer
+        gradient_checkpointing_kwargs={
+            "use_reentrant": False
+        },  # necessary when train on multiple-GPU
+        optim="adamw_8bit",  # use fused adamw optimizer
         logging_steps=1,  # log every 1 step
         save_strategy="steps",  # save checkpoint every epoch
-        bf16=True,  # use bfloat16 precision
-        tf32=True,  # use tf32 precision
+        save_steps=100,
+        bf16=True,
         learning_rate=2e-4,  # learning rate, based on QLoRA paper
         max_grad_norm=0.3,  # max gradient norm based on QLoRA paper
         warmup_ratio=0.03,  # warmup ratio based on QLoRA paper
@@ -208,9 +205,8 @@ def get_trainer(
         model=model,
         args=args,
         train_dataset=dataset,
-        dataset_text_field=dataset_text_field,
-        peft_config=peft_config,
-        max_seq_length=max_seq_length,
+        dataset_text_field="messages",
+        max_seq_length=config.model.max_seq_length,
         tokenizer=tokenizer,
         packing=True,
         dataset_kwargs={

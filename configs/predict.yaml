@@ -4,8 +4,8 @@ defaults:
   - _self_
 
 device_map: 'auto'
-output_file: data/experiments/predict/${dataset.name}/outputs_${hydra:runtime.choices.model}.json
-metrics_file: data/experiments/predict/${dataset.name}/metrics_${hydra:runtime.choices.model}.json
+output_file: data/experiments/predict/${hydra:runtime.choices.dataset}/outputs_${hydra:runtime.choices.model}.json
+metrics_file: data/experiments/predict/${hydra:runtime.choices.dataset}/metrics_${hydra:runtime.choices.model}.json
 
 max_new_tokens: 250
 truncate_context: True

@@ -9,16 +9,45 @@ stages:
       - scripts/sft/build_fine_tuning_dataset.py
     desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
 
-  fine_tune_sft:
+  embed:
+    matrix:
+      model:
+        - mmlw-roberta-large
+        # - e5-mistral-7b-instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/embed_text.py embedding_model=${item.model}
+    deps:
+      - scripts/embed_text.py
+      - configs/embedding.yaml
+      - configs/embedding_model/${item.model}.yaml
+      - data/datasets/pl/raw
+    outs:
+      - data/embeddings/pl-court-raw/${item.model}
+
+  sft:
     matrix:
       model:
         - Mistral-7B-Instruct-v0.2
-        - Meta-Llama-3-8B-Instruct
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
     deps:
       - scripts/sft/fine_tune_llm.py
       - configs/fine_tuning.yaml
+      - configs/model/${item.model}.yaml
+    outs:
+      - data/experiments/fine-tune/${item.model}/pl-court-instruct
+    frozen: true
+
+  sft_unsloth:
+    matrix:
+      model:
+        - Unsloth-Llama-3-8B-Instruct
+        - Unsloth-Mistral-7B-Instruct-v0.3
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/fine_tune_unsloth.py model=${item.model}
+    deps:
+      - scripts/sft/fine_tune_unsloth.py
+      - configs/fine_tuning.yaml 
       - configs/model/${item.model}.yaml
     outs:
       - data/experiments/fine-tune/${item.model}/pl-court-instruct
@@ -29,6 +58,8 @@ stages:
         - Meta-Llama-3-8B-Instruct
         - Mistral-7B-Instruct-v0.2
         - Mistral-7B-Instruct-v0.2-fine-tuned
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned
+        - Unsloth-Mistral-7B-Instruct-v0.3
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py model=${item.model}
     deps:
@@ -44,6 +75,8 @@ stages:
         - Meta-Llama-3-8B-Instruct
         - Mistral-7B-Instruct-v0.2
         - Mistral-7B-Instruct-v0.2-fine-tuned
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned
+        - Unsloth-Mistral-7B-Instruct-v0.3
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py 
       --output-file data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
@@ -52,4 +85,17 @@ stages:
       - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
     metrics:
       - data/experiments/predict/pl-court-instruct/metrics_${item.model}.json:
+          cache: false
+
+  summarize_metrics:
+    matrix:
+      dir:
+        - data/experiments/predict/pl-court-instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/summarize_metrics.py 
+      --root-dir ${item.dir}
+    deps:
+      - scripts/sft/summarize_metrics.py
+    metrics:
+      - ${item.dir}/metrics_summary.md:
           cache: false

@@ -1,0 +1,3 @@
+name: pl-court-raw
+format: parquet
+root_dir: data/datasets/pl/raw/

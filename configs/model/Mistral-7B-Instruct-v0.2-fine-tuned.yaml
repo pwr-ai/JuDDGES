@@ -1,7 +1,5 @@
-org_name: mistralai
-name: Mistral-7B-Instruct-v0.2
-llm: ${.org_name}/${.name}
-tokenizer_name: ${.llm}
+name: mistralai/Mistral-7B-Instruct-v0.2
+tokenizer_name: ${.name}
 
 adapter_path: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct/checkpoint-1000
 
