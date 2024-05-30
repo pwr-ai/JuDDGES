@@ -1,77 +1,113 @@
+import os
 from pathlib import Path
-from typing import Any
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from datasets import Dataset
+from typing import Any, Literal
+import hydra
 from loguru import logger
+from omegaconf import DictConfig, OmegaConf
+from openai import BaseModel
 import torch
-import typer
-from datasets import load_from_disk
+from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
+from transformers.utils import is_flash_attn_2_available
+import yaml
 
-MODEL = "sdadas/mmlw-roberta-large"
-MAX_CHUNK_SIZE = 500
-MIN_SPLIT_CHARS = 10
+from juddges.config import EmbeddingModelConfig, RawDatasetConfig
+from juddges.defaults import CONFIG_PATH
+from juddges.preprocessing.text_chunker import TextSplitter
+
+assert is_flash_attn_2_available(), "FlashAttention2 is required for this script"
+
+NUM_PROC = int(os.getenv("NUM_PROC", 1))
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def main(
-    dataset_dir: Path = typer.Option(..., help="Path to the dataset directory"),
-    model: str = typer.Option(MODEL, help="Name of the model from HF hub"),
-    max_chunk_size: int = typer.Option(MAX_CHUNK_SIZE, help="Maximum number of chars in a chunk"),
-    min_split_chars: int = typer.Option(
-        MIN_SPLIT_CHARS,
-        help="Minimum number of chars to keep a chunk",
-    ),
-    batch_size: int = typer.Option(..., help="Batch size for tokenization"),
-    num_jobs: int = typer.Option(..., help="Number of parallel jobs to use"),
-    device: str = typer.Option(DEVICE, help="Device to use for the model"),
-) -> None:
-    dataset = load_from_disk(dataset_dir)
+class EmbeddingConfig(BaseModel, extra="forbid"):
+    dataset: RawDatasetConfig
+    embedding_model: EmbeddingModelConfig
+    length_adjust_mode: Literal["truncate", "chunk"]
+    truncation_tokens: int | None = None
+    chunk_config: dict[str, Any] | None = None
+    batch_size: int
+    output_dir: Path
 
-    split_worker = TextSplitter(chunk_size=max_chunk_size, min_split_chars=min_split_chars)
+
+@torch.inference_mode()
+@hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="embedding.yaml")
+def main(cfg: DictConfig) -> None:
+    OmegaConf.resolve(cfg)
+    logger.info(f"config:\n{cfg}")
+    config = EmbeddingConfig(**cfg)
+
+    assert (config.chunk_config is not None) ^ (config.truncation_tokens is not None)
+
+    config.output_dir.mkdir(parents=True, exist_ok=True)
+
+    ds = load_dataset(
+        config.dataset.format,
+        data_dir=str(config.dataset.root_dir),
+        columns=["_id", "text"],
+    )
+    ds = ds.filter(lambda item: item["text"] is not None)
+
+    if config.chunk_config is not None:
+        ds = chunk_dataset(ds, config)
+        text_column = "text_chunk"
+    else:
+        text_column = "text"
+
+    model = SentenceTransformer(
+        config.embedding_model.name,
+        device=DEVICE,
+        model_kwargs=dict(torch_dtype=torch.bfloat16),
+    )
+    model.compile()
+
+    if config.truncation_tokens is not None:
+        assert config.truncation_tokens <= config.embedding_model.max_seq_length
+        model.max_seq_length = config.truncation_tokens
+
+    embedder = Embedder(model, text_column)
+    ds = ds.map(
+        embedder,
+        batched=True,
+        batch_size=config.batch_size,
+        num_proc=None,
+        remove_columns=[text_column],
+    )
+    ds.save_to_disk(config.output_dir)
+
+    with open(config.output_dir / "config.yaml", "w") as f:
+        yaml.dump(config.model_dump(), f)
+
+
+def chunk_dataset(dataset: Dataset, config: EmbeddingConfig) -> Dataset:
+    # todo: To be verified
+    split_worker = TextSplitter(**config.chunk_config)
     ds = dataset.select_columns(["_id", "text"]).map(
         split_worker,
         batched=True,
-        num_proc=num_jobs,
+        num_proc=NUM_PROC,
         remove_columns=["_id", "text"],
     )
     logger.info(f"Dataset split into {ds.num_rows} chunks")
-
-    model = SentenceTransformer(model).to(device)
-    ds = ds.map(Encoder(model), batched=True, batch_size=batch_size, num_proc=None)
-    ds.save_to_disk(dataset_dir.parent / "embeddings", num_shards=8)
+    return ds
 
 
-class TextSplitter:
-    def __init__(self, chunk_size: int, min_split_chars: int | None = None) -> None:
-        self.splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size)
-        self.min_split_chars = min_split_chars
-
-    def __call__(self, txt: dict[str, Any]) -> dict[str, Any]:
-        ids, chunks = [], []
-
-        for id_, text in zip(txt["_id"], txt["text"]):
-            current_chunks = self._split_text(text)
-            chunks.extend(current_chunks)
-            ids.extend([id_] * len(current_chunks))
-
-        return {"_id": ids, "text_chunk": chunks}
-
-    def _split_text(self, text: str) -> list[str]:
-        chunks = self.splitter.split_text(text)
-
-        if self.min_split_chars:
-            chunks = [split for split in chunks if len(split) >= self.min_split_chars]
-
-        return chunks
-
-
-class Encoder:
-    def __init__(self, model: SentenceTransformer) -> None:
+class Embedder:
+    def __init__(self, model: SentenceTransformer, text_column: str) -> None:
         self.model = model
+        self.text_column = text_column
 
-    def __call__(self, items: dict[str, Any]) -> Any:
-        return {"embeddings": self.model.encode(items["text_chunk"])}
+    def __call__(self, items: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "embeddings": self.model.encode(
+                items[self.text_column],
+                show_progress_bar=False,
+                batch_size=len(items[self.text_column]),
+            )
+        }
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    main()

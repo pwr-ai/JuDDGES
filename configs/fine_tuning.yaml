@@ -1,15 +1,19 @@
 defaults:
-  - model: Mistral-7B-Instruct-v0.2
+  - model: ???
   - dataset: pl-court-instruct
   - _self_
 
-output_dir: data/experiments/fine-tune/${model.name}/${dataset.name}
-run_name: ${model.name}_${dataset.name}_fine_tune
+output_dir: data/experiments/fine-tune/${hydra:runtime.choices.model}/${hydra:runtime.choices.dataset}
+run_name: ${hydra:runtime.choices.model}_${hydra:runtime.choices.dataset}_fine_tune
 
 wandb_entity: graph-ml-lab-wust
 wandb_project: juddges-fine-tune
 
 truncate_context: True
+
+### HPARAMS ###
+epochs: 1
+batch_size: 4
 
 hydra:  
   output_subdir: null  

@@ -1,4 +1,4 @@
-name: mistralai/Mistral-7B-Instruct-v0.2
+name: unsloth/mistral-7b-instruct-v0.3-bnb-4bit
 tokenizer_name: ${.name}
 
 adapter_path: null
@@ -6,3 +6,5 @@ adapter_path: null
 max_seq_length: 20_000
 padding: longest
 batch_size: 1
+
+use_unsloth: true

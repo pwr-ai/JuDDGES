@@ -1,4 +1,4 @@
-name: meta-llama/Meta-Llama-3-8B-Instruct
+name: unsloth/llama-3-8b-Instruct-bnb-4bit
 tokenizer_name: ${.name}
 
 adapter_path: null
@@ -6,3 +6,5 @@ adapter_path: null
 max_seq_length: 7_900
 batch_size: 1
 padding: longest
+
+use_unsloth: true

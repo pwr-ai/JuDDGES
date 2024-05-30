@@ -12,7 +12,6 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-
 from juddges.config import DatasetConfig, LLMConfig
 from juddges.defaults import CONFIG_PATH
 from juddges.models.factory import get_model
@@ -76,7 +75,8 @@ def main(cfg: DictConfig) -> None:
 
     with tqdm(dataloader) as pbar:
         for batch in pbar:
-            model_inputs = batch["input_ids"].view(config.model.batch_size, -1).to(DEVICE)
+            model_inputs = batch["input_ids"].view(config.model.batch_size, -1)
+            model_inputs = model_inputs.to(DEVICE, non_blocking=True)
             input_length = model_inputs.size(1)
 
             start_time = time.time()
