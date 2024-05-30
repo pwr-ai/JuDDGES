@@ -80,10 +80,25 @@ def main(
     ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir, columns=feature_cols)
     assert all(col in ds.column_names["train"] for col in feature_cols)
 
-    logger.info("Cleaning dataset...")
+    initial_size = ds["train"].num_rows
+    logger.info(f"Pre-filtering dataset (initial size={initial_size})...")
+
     ds = ds.filter(_pre_filter)
+
+    pre_filtered_size = ds["train"].num_rows
+    logger.info(
+        f"Finished pre-filtering (size={pre_filtered_size}, removed {initial_size - pre_filtered_size})"
+    )
+
     ds = ds.map(_preprocess)
     ds = ds.filter(_filter)
+
+    filtered_size = ds["train"].num_rows
+    logger.info(
+        f"Finished filtering (size={filtered_size}, "
+        f"removed {initial_size - filtered_size} from original, "
+        f"and {pre_filtered_size - filtered_size} from pre-filtered)"
+    )
 
     logger.info("Generating instructions...")
     ds = ds.map(to_instruction_fmt, num_proc=num_jobs, remove_columns=FEATURES)

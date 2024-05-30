@@ -2,7 +2,9 @@ import os
 from pathlib import Path
 
 import hydra
-from omegaconf import DictConfig
+from loguru import logger
+from omegaconf import DictConfig, OmegaConf
+from openai import BaseModel
 from peft.tuners.lora.config import LoraConfig
 from trl import SFTTrainer
 from transformers import (
@@ -14,8 +16,9 @@ from transformers import (
     Trainer,
 )
 
+from juddges.config import DatasetConfig, LLMConfig
 from juddges.data.datasets.utils import create_chat
-from juddges.defaults import FINE_TUNING_DATASETS_PATH, ROOT_PATH
+from juddges.defaults import FINE_TUNING_DATASETS_PATH, CONFIG_PATH
 
 from datasets import (
     load_dataset,
@@ -31,41 +34,55 @@ from transformers import TrainingArguments
 
 from juddges.preprocessing.context_truncator import ContextTruncator
 
+NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
-@hydra.main(
-    version_base="1.3", config_path=str(ROOT_PATH / "configs/fine-tune"), config_name="config.yaml"
-)
+
+class FineTuningConfig(BaseModel, extra="forbid"):
+    model: LLMConfig
+    dataset: DatasetConfig
+    output_dir: Path
+    run_name: str
+    wandb_entity: str
+    wandb_project: str
+    truncate_context: bool
+
+
+@hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="fine_tuning.yaml")
 def main(cfg: DictConfig) -> None:
-    os.environ["WANDB_ENTITY"] = cfg.wandb_entity
-    os.environ["WANDB_PROJECT"] = cfg.wandb_project
-    output_dir = Path(cfg.output_dir)
+    OmegaConf.resolve(cfg)
+    logger.info(f"config:\n{cfg}")
+    config = FineTuningConfig(**cfg)
+
+    os.environ["WANDB_ENTITY"] = config.wandb_entity
+    os.environ["WANDB_PROJECT"] = config.wandb_project
+    output_dir = Path(config.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    dataset = get_dataset(cfg.dataset.dataset_name)
-    model, tokenizer = get_model_and_tokenizer(cfg.model.model_name, cfg.model.tokenizer_name)
+    dataset = get_dataset(config.dataset.dataset_name, NUM_PROC)
+    model, tokenizer = get_model_and_tokenizer(config.model.model_name, config.model.tokenizer_name)
 
     dataset = prepare_dataset(
         dataset=dataset,
-        dataset_prompt_field=cfg.dataset.prompt_field,
-        dataset_context_field=cfg.dataset.context_field,
-        dataset_output_field=cfg.dataset.output_field,
-        truncate_context=cfg.truncate_context,
+        dataset_prompt_field=config.dataset.prompt_field,
+        dataset_context_field=config.dataset.context_field,
+        dataset_output_field=config.dataset.output_field,
+        truncate_context=config.truncate_context,
         tokenizer=tokenizer,
-        max_length=cfg.model.max_seq_length,
-        num_proc=cfg.num_proc,
+        max_length=config.model.max_seq_length,
+        num_proc=config.num_proc,
     )
 
     peft_config = get_peft_config()
     trainer = get_trainer(
         model,
         tokenizer,
-        cfg.model.max_seq_length,
+        config.model.max_seq_length,
         peft_config,
         dataset,
         "messages",
         output_dir,
-        cfg.run_name,
-        cfg.num_proc,
+        config.run_name,
+        NUM_PROC,
     )
     trainer.train()
     trainer.save_model()
@@ -73,11 +90,12 @@ def main(cfg: DictConfig) -> None:
 
 def get_dataset(
     dataset_name: str,
+    num_proc: int,
 ) -> DatasetDict | Dataset | IterableDatasetDict | IterableDataset:
     if dataset_name == "dummy":
         dataset = load_from_disk(FINE_TUNING_DATASETS_PATH / "dummy_dataset")
     else:
-        dataset = load_dataset(dataset_name, split="train", num_proc=20)
+        dataset = load_dataset(dataset_name, split="train", num_proc=num_proc)
     return dataset
 
 

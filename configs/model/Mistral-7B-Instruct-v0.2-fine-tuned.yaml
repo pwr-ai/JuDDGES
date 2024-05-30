@@ -1,6 +1,10 @@
-_model_name: Mistral-7B-Instruct-v0.2-fine-tuned
-model_name: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct/checkpoint-8000
-tokenizer_name: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct/checkpoint-8000
+org_name: mistralai
+name: Mistral-7B-Instruct-v0.2
+llm: ${.org_name}/${.name}
+tokenizer_name: ${.llm}
+
+adapter_path: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct/checkpoint-1000
+
 max_seq_length: 20_000
+padding: longest
 batch_size: 1
-padding: false
