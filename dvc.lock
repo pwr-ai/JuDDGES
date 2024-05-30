@@ -268,3 +268,24 @@ stages:
       hash: md5
       md5: 6a0eb30a14687342bc86ae80253cd60c
       size: 306
+  sft_unsloth@Unsloth-Llama-3-8B-Instruct:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_unsloth.py model=Unsloth-Llama-3-8B-Instruct
+    deps:
+    - path: configs/fine_tuning.yaml
+      hash: md5
+      md5: 9cd6fd320530e1c8ded7d9c369b8a082
+      size: 440
+    - path: configs/model/Unsloth-Llama-3-8B-Instruct.yaml
+      hash: md5
+      md5: e97bb2e6bf39f75edea7714d6ba58b77
+      size: 160
+    - path: scripts/sft/fine_tune_unsloth.py
+      hash: md5
+      md5: c8a06fdcb01188a621b5fc9cc579ea56
+      size: 6904
+    outs:
+    - path: data/experiments/fine-tune/Unsloth-Llama-3-8B-Instruct/pl-court-instruct
+      hash: md5
+      md5: 3e19503b79a8369ce4de2b67129e0f7c.dir
+      size: 7068367431
+      nfiles: 297
