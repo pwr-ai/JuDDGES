@@ -1,0 +1,10 @@
+org_name: meta-llama
+name: Meta-Llama-3-8B-Instruct
+llm: ${.org_name}/${.name}
+tokenizer_name: ${.llm}
+
+adapter_path: null
+
+max_seq_length: 7_900
+batch_size: 1
+padding: longest

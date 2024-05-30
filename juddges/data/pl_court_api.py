@@ -99,7 +99,34 @@ class PolishCourtAPI:
             raise
         else:
             assert isinstance(details, dict)
+            details = self.parse_details(data)
             return details
+
+    def parse_details(self, details: dict[str, Any]) -> dict[str, Any]:
+        cols_to_unnest = [
+            ("judges", "judge"),
+            ("themePhrases", "themePhrase"),
+            ("references", "reference"),
+            ("legalBases", "legalBasis"),
+        ]
+        for feature, nested_key in cols_to_unnest:
+            if details[feature] is None:
+                continue
+            details[feature] = self._unnest_dict(details.get(feature), nested_key)
+
+        return details
+
+    def _unnest_dict(
+        self,
+        ndict: dict[list[str] | str | None],
+        key: str,
+    ) -> list[str] | None:
+        if len(ndict) != 1:
+            raise ValueError("To unnest dict should contain exactly one element")
+
+        if isinstance(ndict[key], list):
+            return ndict[key]
+        return [ndict[key]]
 
 
 class DataNotFoundError(Exception):
