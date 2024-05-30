@@ -1,0 +1,55 @@
+stages:
+  build_fine_tuning_dataset:
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/build_fine_tuning_dataset.py
+      --dataset-dir data/datasets/pl/raw
+      --repo-id JuDDGES/pl-court-instruct
+    deps:
+      - data/datasets/pl/raw
+      - scripts/sft/build_fine_tuning_dataset.py
+    desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
+
+  fine_tune_sft:
+    matrix:
+      model:
+        - Mistral-7B-Instruct-v0.2
+        - Meta-Llama-3-8B-Instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
+    deps:
+      - scripts/sft/fine_tune_llm.py
+      - configs/fine_tuning.yaml
+      - configs/model/${item.model}.yaml
+    outs:
+      - data/experiments/fine-tune/${item.model}/pl-court-instruct
+
+  predict:
+    matrix:
+      model:
+        - Meta-Llama-3-8B-Instruct
+        - Mistral-7B-Instruct-v0.2
+        - Mistral-7B-Instruct-v0.2-fine-tuned
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/predict.py model=${item.model}
+    deps:
+      - scripts/sft/predict.py
+      - configs/predict.yaml
+      - configs/model/${item.model}.yaml
+    outs:
+      - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+
+  evaluate:
+    matrix:
+      model:
+        - Meta-Llama-3-8B-Instruct
+        - Mistral-7B-Instruct-v0.2
+        - Mistral-7B-Instruct-v0.2-fine-tuned
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate.py 
+      --output-file data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+    deps:
+      - scripts/sft/evaluate.py
+      - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+    metrics:
+      - data/experiments/predict/pl-court-instruct/metrics_${item.model}.json:
+          cache: false

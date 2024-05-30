@@ -1,0 +1,6 @@
+org_name: JuDDGES
+name: pl-court-instruct
+dataset_name: ${.org_name}/${.name}
+prompt_field: prompt
+context_field: context
+output_field: output

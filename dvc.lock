@@ -1,0 +1,175 @@
+schema: '2.0'
+stages:
+  build_fine_tuning_dataset:
+    cmd: PYTHONPATH=. python scripts/sft/build_fine_tuning_dataset.py --dataset-dir
+      data/datasets/pl/raw --repo-id JuDDGES/pl-court-instruct
+    deps:
+    - path: data/datasets/pl/raw
+      hash: md5
+      md5: 5dd44be2eea852bcce3d0918ff8b97da.dir
+      size: 10234880729
+      nfiles: 17
+    - path: scripts/sft/build_fine_tuning_dataset.py
+      hash: md5
+      md5: f07a9d106853e74be4d0e4807b33ff3d
+      size: 5393
+  evaluate_zero_shot:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_zero_shot.py --output-file data/results/pl/zero_shot/results_llama_3_8B.json
+      --metrics-file data/results/pl/zero_shot/metrics_llama_3_8B.json
+    deps:
+    - path: scripts/sft/evaluate_zero_shot.py
+      hash: md5
+      md5: 1b5fd40e348f17bd2fe78e98244c4d6c
+      size: 3826
+    outs:
+    - path: data/results/pl/zero_shot/metrics_llama_3_8B.json
+      hash: md5
+      md5: 95ac287e74bc109f224b95b12e5b17f4
+      size: 170
+    - path: data/results/pl/zero_shot/results_llama_3_8B.json
+      hash: md5
+      md5: 93f78708a597fad33b3da43e505b9707
+      size: 957343
+  evaluate_zero_shot@config0:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_zero_shot.py --llm meta-llama/Meta-Llama-3-8B-Instruct
+      --output-file data/results/pl_court_instruct/zero_shot/results_meta_llama_3_8B_instruct.json
+      --metrics-file data/results/pl_court_instruct/zero_shot/metrics_meta_llama_3_8B_instruct.json
+    deps:
+    - path: scripts/sft/evaluate_zero_shot.py
+      hash: md5
+      md5: 26555545a062ce43602a8ac11280bbde
+      size: 2714
+    outs:
+    - path: data/results/pl_court_instruct/zero_shot/metrics_meta_llama_3_8B_instruct.json
+      hash: md5
+      md5: fb665645d904d37e14a931e38fef9915
+      size: 188
+    - path: data/results/pl_court_instruct/zero_shot/results_meta_llama_3_8B_instruct.json
+      hash: md5
+      md5: 93f78708a597fad33b3da43e505b9707
+      size: 957343
+  fine_tune_sft@Mistral-7B-Instruct-v0.2:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=Mistral-7B-Instruct-v0.2
+    deps:
+    - path: scripts/sft/fine_tune_llm.py
+      hash: md5
+      md5: dd9baba0d88e09f47e70f38a2e6716cd
+      size: 6499
+    outs:
+    - path: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct
+      hash: md5
+      md5: 2078cca8b3c2fa97914dc8f1c18f48fc.dir
+      size: 1556588028
+      nfiles: 176
+  predict@Mistral-7B-Instruct-v0.2:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Mistral-7B-Instruct-v0.2
+    deps:
+    - path: configs/model/Mistral-7B-Instruct-v0.2.yaml
+      hash: md5
+      md5: f220398e738892d5c0e831ac6aee5c1c
+      size: 177
+    - path: configs/predict.yaml
+      hash: md5
+      md5: e9abd4b2398c420ac0ca6ddcb4423c8f
+      size: 382
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: d0d05a225ca7d9bbf1d9ad60a4fb4663
+      size: 3090
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/outputs_Mistral-7B-Instruct-v0.2.json
+      hash: md5
+      md5: 3d27738cbbc4c7bde92584d2d44a329d
+      size: 2209577
+  predict@Meta-Llama-3-8B-Instruct:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Meta-Llama-3-8B-Instruct
+    deps:
+    - path: configs/model/Meta-Llama-3-8B-Instruct.yaml
+      hash: md5
+      md5: 2283be0da4606f3a77c880397b3e39d6
+      size: 177
+    - path: configs/predict.yaml
+      hash: md5
+      md5: e9abd4b2398c420ac0ca6ddcb4423c8f
+      size: 382
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: d0d05a225ca7d9bbf1d9ad60a4fb4663
+      size: 3090
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/outputs_Meta-Llama-3-8B-Instruct.json
+      hash: md5
+      md5: f9a13687ad85b6c4538cd13cb6c60724
+      size: 20963
+  predict@Mistral-7B-Instruct-v0.2-fine-tuned:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Mistral-7B-Instruct-v0.2-fine-tuned
+    deps:
+    - path: configs/model/Mistral-7B-Instruct-v0.2-fine-tuned.yaml
+      hash: md5
+      md5: e10eef137d6d00057f7c7024a36d88d4
+      size: 258
+    - path: configs/predict.yaml
+      hash: md5
+      md5: e9abd4b2398c420ac0ca6ddcb4423c8f
+      size: 382
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: d0d05a225ca7d9bbf1d9ad60a4fb4663
+      size: 3090
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/outputs_Mistral-7B-Instruct-v0.2-fine-tuned.json
+      hash: md5
+      md5: adf03a2b51a7a9cd4431c884a89f6497
+      size: 1843278
+  evaluate@Mistral-7B-Instruct-v0.2:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate.py  --output-file data/experiments/predict/pl-court-instruct/outputs_Mistral-7B-Instruct-v0.2.json
+    deps:
+    - path: data/experiments/predict/pl-court-instruct/outputs_Mistral-7B-Instruct-v0.2.json
+      hash: md5
+      md5: 3d27738cbbc4c7bde92584d2d44a329d
+      size: 2209577
+    - path: scripts/sft/evaluate.py
+      hash: md5
+      md5: 5ee442a9a3525af7596bf24c3d724a1d
+      size: 570
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/metrics_Mistral-7B-Instruct-v0.2.json
+      hash: md5
+      md5: a3116f4a1f47ca64b4926d35d69855bb
+      size: 308
+  evaluate@Mistral-7B-Instruct-v0.2-fine-tuned:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate.py  --output-file 
+      data/experiments/predict/pl-court-instruct/outputs_Mistral-7B-Instruct-v0.2-fine-tuned.json
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/outputs_Mistral-7B-Instruct-v0.2-fine-tuned.json
+      hash: md5
+      md5: adf03a2b51a7a9cd4431c884a89f6497
+      size: 1843278
+    - path: scripts/sft/evaluate.py
+      hash: md5
+      md5: 5ee442a9a3525af7596bf24c3d724a1d
+      size: 570
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/metrics_Mistral-7B-Instruct-v0.2-fine-tuned.json
+      hash: md5
+      md5: 32c8a6e388f68e1c10e7b8fd5852e6d6
+      size: 306
+  evaluate@Meta-Llama-3-8B-Instruct:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate.py  --output-file data/experiments/predict/pl-court-instruct/outputs_Meta-Llama-3-8B-Instruct.json
+    deps:
+    - path: data/experiments/predict/pl-court-instruct/outputs_Meta-Llama-3-8B-Instruct.json
+      hash: md5
+      md5: f9a13687ad85b6c4538cd13cb6c60724
+      size: 20963
+    - path: scripts/sft/evaluate.py
+      hash: md5
+      md5: 5ee442a9a3525af7596bf24c3d724a1d
+      size: 570
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/metrics_Meta-Llama-3-8B-Instruct.json
+      hash: md5
+      md5: 051ccb01be98f323a11ec29d5a6be31b
+      size: 293
