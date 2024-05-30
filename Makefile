@@ -12,6 +12,9 @@ check:
 check-types:
 	mypy --install-types --non-interactive $(mypy_dirs)
 
+check-types:
+	mypy --install-types --non-interactive $(mypy_dirs)
+
 test:
 	coverage run -m pytest
 	coverage report -mi
