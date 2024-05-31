@@ -22,6 +22,12 @@ class LangCode(Enum):
     ENGLISH: str = "en"
 
 
+class DatasetContextType(Enum):
+    """Type of the context in th dataset"""
+
+    JUDGEMENTS: str = "judgements"
+
+
 class SyntheticQAPairs(BaseModel):
     questions: List[str] = Field(description="List of generated questions")
     answers: List[str] = Field(description="List of generated answers")

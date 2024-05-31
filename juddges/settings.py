@@ -11,6 +11,7 @@ ROOT_PATH = Path(__file__).resolve().parent.parent
 
 DATA_PATH = ROOT_PATH / "data"
 CONFIGS_DIR = ROOT_PATH / "configs"
+CHARTS_DIR = ROOT_PATH / "charts"
 CACHE_DIR = DATA_PATH / "cache"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
