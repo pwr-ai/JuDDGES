@@ -25,7 +25,6 @@ from juddges.exception import LanguageMismatchError
 from juddges.prompts.technique import PromptingTechnique
 from juddges.settings import (
     CACHE_DIR,
-    DATA_GEN_MODELS_CONFIGS_DIR,
     SAMPLE_DATA_PATH,
     prepare_langchain_cache,
 )
