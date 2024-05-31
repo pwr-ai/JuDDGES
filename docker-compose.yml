@@ -1,4 +1,3 @@
-version: "3"
 name: juddges
 
 services:
@@ -52,6 +51,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres-juddges-db:/var/lib/postgresql/data
+    restart: always
     networks:
       - juddges-network
 
