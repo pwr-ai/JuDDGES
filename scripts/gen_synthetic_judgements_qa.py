@@ -11,6 +11,7 @@ import yaml
 from joblib import Memory
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
 from langsmith import Client
 from langsmith.schemas import DataType
 from loguru import logger
@@ -84,8 +85,12 @@ def handle_lang_mismatch(
 
 
 def main(
+    openai_model: str = typer.Option(
+        default="gpt-3.5-turbo",
+        help="OpenAI model name",
+    ),
     model_cfg: str = typer.Option(
-        default=str(DATA_GEN_MODELS_CONFIGS_DIR / "CapybaraHermes-2.5-Mistral-7B-GPTQ.yaml"),
+        default=None,
         help="Path to the model .yaml configuration file",
     ),
     judgements_fpath: str = typer.Option(
@@ -93,11 +98,11 @@ def main(
         help="Dumped `judgements` collection file path",
     ),
     prompt_template_libpath: str = typer.Option(
-        default="juddges.prompts.synthetic_qa.GEN_QA_BASELINE_PROMPT",
+        default="juddges.prompts.synthetic_qa.GEN_QA_COT_PROMPT",
         help="Prompt variable module path",
     ),
     prompting_technique: PromptingTechnique = typer.Option(
-        default=PromptingTechnique.STANDARD.value,
+        default=PromptingTechnique.CHAIN_OF_THOUGHT.value,
         show_choices=True,
         help="Prompting technique",
     ),
@@ -116,21 +121,27 @@ def main(
         ),
     ),
 ) -> None:
-    ts_suffix = path_safe_udate()
-    with open(model_cfg) as f:
-        model_cfg_: Dict[str, Any] = yaml.safe_load(f)
     if translate:
         translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
+
+    if model_cfg is not None:
+        with open(model_cfg) as f:
+            model_cfg_: Dict[str, Any] = yaml.safe_load(f)
+    elif openai_model is not None:
+        model_cfg_ = {"model": openai_model}
+    else:
+        logger.error("Provide either `openai_model` or `model_cfg`. Aborting...")
+        raise typer.Abort()
+
     parent_module_path, prompt_template_varname = prompt_template_libpath.rsplit(".", maxsplit=1)
     prompt_src = import_module(parent_module_path)
     prompt_template = getattr(prompt_src, prompt_template_varname)
 
+    ts_suffix = path_safe_udate()
     if out is None:
         from juddges.settings import PL_JUDGEMENTS_SYNTH_QA_PATH
 
-        default_fname = (
-            f"judgements_sample50_synth_qa__{prompting_technique.value}__{ts_suffix}.jsonl"
-        )
+        default_fname = f"judgements_sample50_synth_qa__{prompting_technique.value}__{model_cfg_['model']}__{ts_suffix}.jsonl"
         out = str(PL_JUDGEMENTS_SYNTH_QA_PATH / default_fname)
         logger.warning(f"Output file path not provided. Using the default `out`: {out}")
     Path(out).parent.mkdir(parents=True, exist_ok=True)
@@ -139,11 +150,9 @@ def main(
     smith = Client()
 
     logger.info("Creating dataset...")
-    dataset_default_name = (
-        "debug__judgements_sample50_synth_qa__{prompting_technique}__{model}".format(
-            prompting_technique=prompting_technique.value,
-            model=model_cfg_["model"].replace("/", "_"),
-        )
+    dataset_default_name = "judgements_sample50_synth_qa__{prompting_technique}__{model}".format(
+        prompting_technique=prompting_technique.value,
+        model=model_cfg_["model"].replace("/", "_"),
     )
     dataset = smith.create_dataset(
         dataset_name=(out_smith_dataset if out_smith_dataset is not None else dataset_default_name),
@@ -168,26 +177,29 @@ def main(
 
     logger.info("Loading Hugging Face model and tokenizer...")
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_cfg_["model"],
-        trust_remote_code=True,
-        device_map="auto",
-        torch_dtype=model_cfg_.get("torch_dtype", None),
-        **model_cfg_.get("kwargs", {}),
-    )
-    logger.debug(f"{model.device=}")
+    if model_cfg is not None:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_cfg_["model"],
+            trust_remote_code=True,
+            device_map="auto",
+            torch_dtype=model_cfg_.get("torch_dtype", None),
+            **model_cfg_.get("kwargs", {}),
+        )
+        logger.debug(f"{model.device=}")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_cfg_["model"], use_fast=True)
-    text_gen_pipeline = pipeline(
-        task="text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        **model_cfg_["generate_kwargs"],
-    )
-    hf_pipeline = HuggingFacePipeline(pipeline=text_gen_pipeline)
+        tokenizer = AutoTokenizer.from_pretrained(model_cfg_["model"], use_fast=True)
+        text_gen_pipeline = pipeline(
+            task="text-generation",
+            model=model,
+            tokenizer=tokenizer,
+            **model_cfg_["generate_kwargs"],
+        )
+        llm = HuggingFacePipeline(pipeline=text_gen_pipeline)
+    elif openai_model is not None:
+        llm = ChatOpenAI(model=model_cfg_["model"], api_key=os.environ["OPENAI_API_KEY"])
 
     logger.info("Setting up generation pipeline...")
-    gen_chain = prompt | hf_pipeline | qa_parser
+    gen_chain = prompt | llm | qa_parser
 
     logger.info("Generating QA pairs from provided collection data...")
     generation_raport = defaultdict(int)
@@ -254,7 +266,7 @@ def main(
         logger.debug(f"Creating example for {judgement['_id']=}...")
         example_metadata = {
             "judgement_id": judgement["_id"],
-            "hf_model": model_cfg_["model"],
+            "model": model_cfg_["model"],
             "prompt_template": prompt_template,
             "prompting_technique": prompting_technique.value,
             "pairs_count": len(dto),
