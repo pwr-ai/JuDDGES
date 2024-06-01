@@ -352,10 +352,10 @@ stages:
       nfiles: 53
     - path: scripts/embed/aggregate_embeddings.py
       hash: md5
-      md5: f27180b8a98089d51481ef1327d1fa01
-      size: 1797
+      md5: 5b47bbdd9476d2a6f2ef43990be156f2
+      size: 1800
     outs:
     - path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
       hash: md5
-      md5: c3eb5051fd96f9e1521dd425ed6d671a
-      size: 1728016767
+      md5: 0d84b4da5513feeb6ca9bad70a2ff164
+      size: 1725566207
