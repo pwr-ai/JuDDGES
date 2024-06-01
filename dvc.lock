@@ -359,3 +359,27 @@ stages:
       hash: md5
       md5: 0d84b4da5513feeb6ca9bad70a2ff164
       size: 1725566207
+  generate_graph_dataset:
+    cmd: PYTHONPATH=. python scripts/dataset/generate_graph.py --dataset-dir data/datasets/pl/raw  --embeddings-file
+      data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt --target-dir
+      data/datasets/pl/graph
+    deps:
+    - path: data/datasets/pl/raw
+      hash: md5
+      md5: 5dd44be2eea852bcce3d0918ff8b97da.dir
+      size: 10234880729
+      nfiles: 17
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
+      hash: md5
+      md5: 0d84b4da5513feeb6ca9bad70a2ff164
+      size: 1725566207
+    - path: scripts/dataset/generate_graph.py
+      hash: md5
+      md5: b814ef18bc1f3231874eea378c0d4447
+      size: 948
+    outs:
+    - path: data/datasets/pl/graph/
+      hash: md5
+      md5: aec909c4efeec60226fb578cbad1dfb6.dir
+      size: 1708387374
+      nfiles: 2
