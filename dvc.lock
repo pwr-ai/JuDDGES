@@ -320,8 +320,8 @@ stages:
     outs:
     - path: data/experiments/predict/pl-court-instruct/metrics_summary.md
       hash: md5
-      md5: a72452f53099f61de9d653af1a596a3a
-      size: 1119
+      md5: f6ef483c69060955ee54526323083b4e
+      size: 1319
   evaluate@Unsloth-Mistral-7B-Instruct-v0.3:
     cmd: PYTHONPATH=. python scripts/sft/evaluate.py  --output-file 
       data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3.json
@@ -341,3 +341,43 @@ stages:
       hash: md5
       md5: 091b8888275600052dd2dcdd36a55588
       size: 305
+  predict@Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
+    deps:
+    - path: configs/model/Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.yaml
+      hash: md5
+      md5: c702cdf2d27b76ccd7a56f64747ec29f
+      size: 255
+    - path: configs/predict.yaml
+      hash: md5
+      md5: e6b047cf62e612a32381d6221eb99b4e
+      size: 416
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 69e4844a715c9c5c75e1127a06472ad4
+      size: 3148
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
+      hash: md5
+      md5: 139672a55d89acc699b39216eeacf75c
+      size: 1817620
+  evaluate@Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate.py  --output-file 
+      data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
+      hash: md5
+      md5: 139672a55d89acc699b39216eeacf75c
+      size: 1817620
+    - path: scripts/sft/evaluate.py
+      hash: md5
+      md5: 5ee442a9a3525af7596bf24c3d724a1d
+      size: 570
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/metrics_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
+      hash: md5
+      md5: 6e6330c14b645d1a65115546a8127484
+      size: 306
