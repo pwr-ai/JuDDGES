@@ -13,16 +13,28 @@ stages:
     matrix:
       model:
         - mmlw-roberta-large
-        # - e5-mistral-7b-instruct
     cmd: >-
-      PYTHONPATH=. python scripts/embed_text.py embedding_model=${item.model}
+      PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=${item.model}
     deps:
-      - scripts/embed_text.py
+      - scripts/embed/embed_text.py
       - configs/embedding.yaml
       - configs/embedding_model/${item.model}.yaml
       - data/datasets/pl/raw
     outs:
-      - data/embeddings/pl-court-raw/${item.model}
+      - data/embeddings/pl-court-raw/${item.model}/all_embeddings
+
+  aggregate_embeddings:
+    matrix:
+      model:
+        - mmlw-roberta-large
+    cmd: >-
+      PYTHONPATH=. python scripts/embed/aggregate_embeddings.py 
+      --embeddings-dir data/embeddings/pl-court-raw/${item.model}/all_embeddings
+    deps:
+      - scripts/embed/aggregate_embeddings.py
+      - data/embeddings/pl-court-raw/${item.model}/all_embeddings
+    outs:
+      - data/embeddings/pl-court-raw/${item.model}/agg_embeddings.pt
 
   sft:
     matrix:
