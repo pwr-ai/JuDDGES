@@ -1,8 +1,11 @@
 import math
 from pathlib import Path
+from typing import Any
+
 from dotenv import load_dotenv
 import torch
-import tqdm
+from loguru import logger
+from tqdm.auto import tqdm
 import typer
 
 from juddges.data.database import BatchDatabaseUpdate, BatchedDatabaseCursor, get_mongo_collection
@@ -19,15 +22,30 @@ def main(
 ):
     collection = get_mongo_collection(mongo_uri)
     query = {"embedding": {"$exists": False}}
-    cursor = collection.find(query, {"_id": 1})
     num_docs_to_update = collection.count_documents(query)
-    batched_cursor = BatchedDatabaseCursor(cursor, batch_size=BATCH_SIZE, prefetch=True)
+    logger.info(f"Found {num_docs_to_update} documents without embedding")
 
-    embeddings = torch.load(embeddings_file)
-    ingest_embeddings = BatchDatabaseUpdate(mongo_uri, lambda doc: embeddings.get(doc["_id"]))
+    cursor = collection.find(query, {"_id": 1}, batch_size=batch_size)
+    batched_cursor = BatchedDatabaseCursor(cursor, batch_size=batch_size, prefetch=True)
 
-    for batch in tqdm(batched_cursor, total=math.ceil(num_docs_to_update / batch_size)):
+    logger.info("Loading embeddings...")
+    emb_getter = EmbeddingGetter(embeddings_file)
+    ingest_embeddings = BatchDatabaseUpdate(mongo_uri, emb_getter)
+
+    logger.info("Ingesting embeddings...")
+    for batch in tqdm(iter(batched_cursor), total=math.ceil(num_docs_to_update / batch_size)):
         ingest_embeddings(batch)
+
+
+class EmbeddingGetter:
+    def __init__(self, embeddings_file: Path):
+        self.embeddings = torch.load(embeddings_file)
+
+    def __call__(self, doc: dict[str, Any]) -> dict[str, list[float] | None]:
+        emb = self.embeddings.get(doc["_id"])
+        if emb is not None:
+            emb = emb.tolist()
+        return {"embedding": emb}
 
 
 if __name__ == "__main__":
