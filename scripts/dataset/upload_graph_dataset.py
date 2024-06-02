@@ -38,7 +38,7 @@ def main(
         folder_path=str(root_dir),
         repo_id=repo_id,
         repo_type="dataset",
-        ignore_patterns="template_*",
+        ignore_patterns=["template_*", "metadata.yaml"],
     )
 
 
