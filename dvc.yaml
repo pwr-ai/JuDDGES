@@ -39,16 +39,18 @@ stages:
   
   generate_graph_dataset:
     cmd: >-
-      PYTHONPATH=. python scripts/dataset/generate_graph.py
+      PYTHONPATH=. python scripts/dataset/generate_graph_dataset.py
       --dataset-dir data/datasets/pl/raw 
-      --embeddings-file data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
+      --embeddings-root-dir data/embeddings/pl-court-raw/mmlw-roberta-large/
       --target-dir data/datasets/pl/graph
     deps:
-      - scripts/dataset/generate_graph.py
+      - scripts/dataset/generate_graph_dataset.py
       - data/datasets/pl/raw 
       - data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
+      - data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings/config.yaml
     outs:
-      - data/datasets/pl/graph/
+      - data/datasets/pl/graph/data
+      - data/datasets/pl/graph/metadata.yaml
 
   sft:
     matrix:
