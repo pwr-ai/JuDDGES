@@ -58,6 +58,7 @@ stages:
         - Meta-Llama-3-8B-Instruct
         - Mistral-7B-Instruct-v0.2
         - Mistral-7B-Instruct-v0.2-fine-tuned
+        - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
@@ -73,9 +74,7 @@ stages:
   evaluate:
     matrix:
       model:
-        - Meta-Llama-3-8B-Instruct
-        - Mistral-7B-Instruct-v0.2
-        - Mistral-7B-Instruct-v0.2-fine-tuned
+        - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
