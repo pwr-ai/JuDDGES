@@ -45,9 +45,7 @@ def extract_and_clean_judges(paragraphs):
     judges = []
     for para in paragraphs:
         text = para.get_text(strip=True)
-        if re.search(
-            r"\bJustice\b|\bJudge\b|\bSIR\b|\bHonour\b|\bHHJ\b", text, re.IGNORECASE
-        ):
+        if re.search(r"\bJustice\b|\bJudge\b|\bSIR\b|\bHonour\b|\bHHJ\b", text, re.IGNORECASE):
             # Remove text within parentheses
             cleaned_text = re.sub(r"\([^)]*\)", "", text).strip()
             # Remove dashes and any text following them
@@ -82,9 +80,7 @@ def categorize_court(court_name):
 
 
 def extract_information_from_xml(xml_content, file_name):
-    soup = BeautifulSoup(
-        xml_content, "xml"
-    )  # Using 'xml' parser for handling namespaces
+    soup = BeautifulSoup(xml_content, "xml")  # Using 'xml' parser for handling namespaces
 
     # Extract required fields
     _id = soup.find("uk:hash").text if soup.find("uk:hash") else None
@@ -119,9 +115,7 @@ def extract_information_from_xml(xml_content, file_name):
     excerpt = header_text[:500]
 
     # Get the full content of the header and judgment body as text
-    header_content = (
-        soup.header.get_text(separator="\n", strip=True) if soup.header else ""
-    )
+    header_content = soup.header.get_text(separator="\n", strip=True) if soup.header else ""
     judgment_body_content = (
         soup.find("judgmentBody").get_text(separator="\n", strip=True)
         if soup.find("judgmentBody")
@@ -145,9 +139,7 @@ def extract_information_from_xml(xml_content, file_name):
     judges = [
         judge
         for judge in judges
-        if re.search(
-            r"\bJustice\b|\bJudge\b|\bSIR\b|\bHonour\b|\bHHJ\b", judge, re.IGNORECASE
-        )
+        if re.search(r"\bJustice\b|\bJudge\b|\bSIR\b|\bHonour\b|\bHHJ\b", judge, re.IGNORECASE)
     ]
 
     # If no judges found, get text from <judge> elements
@@ -162,32 +154,25 @@ def extract_information_from_xml(xml_content, file_name):
 
     # If still no judges found, look for text in <p> tags with style="text-align:center"
     if not judges:
-        centered_paragraphs = soup.find_all(
-            "p", style=lambda x: x and "text-align:center" in x
-        )
+        centered_paragraphs = soup.find_all("p", style=lambda x: x and "text-align:center" in x)
         judges.extend(extract_and_clean_judges(centered_paragraphs))
 
     # If still no judges found, look for text in <p> tags with style="text-align:right"
     if not judges:
-        right_aligned_paragraphs = soup.find_all(
-            "p", style=lambda x: x and "text-align:right" in x
-        )
+        right_aligned_paragraphs = soup.find_all("p", style=lambda x: x and "text-align:right" in x)
         judges.extend(extract_and_clean_judges(right_aligned_paragraphs))
 
     # Filter judges using regex criteria
     judges = [
         judge
         for judge in judges
-        if re.search(
-            r"\bJustice\b|\bJudge\b|\bSIR\b|\bHonour\b|\bHHJ\b", judge, re.IGNORECASE
-        )
+        if re.search(r"\bJustice\b|\bJudge\b|\bSIR\b|\bHonour\b|\bHHJ\b", judge, re.IGNORECASE)
     ]
 
     # Extract URIs
     xml_uri = (
         soup.find("FRBRManifestation").find("FRBRuri")["value"]
-        if soup.find("FRBRManifestation")
-        and soup.find("FRBRManifestation").find("FRBRuri")
+        if soup.find("FRBRManifestation") and soup.find("FRBRManifestation").find("FRBRuri")
         else None
     )
     uri = (
@@ -199,16 +184,12 @@ def extract_information_from_xml(xml_content, file_name):
     # Extract legislation texts
     legislation_tags = soup.find_all("ref", {"uk:type": "legislation"})
     legislation_texts = set(tag.get_text() for tag in legislation_tags)
-    legislation_list = list(
-        legislation_texts
-    )  # Convert set to list to remove duplicates
+    legislation_list = list(legislation_texts)  # Convert set to list to remove duplicates
 
     # Extract case references
     case_tags = soup.find_all("ref", {"uk:type": "case"})
     case_references = set(tag.get_text() for tag in case_tags)
-    case_references_list = list(
-        case_references
-    )  # Convert set to list to remove duplicates
+    case_references_list = list(case_references)  # Convert set to list to remove duplicates
 
     # Extract case numbers
     case_numbers = set()
@@ -226,9 +207,7 @@ def extract_information_from_xml(xml_content, file_name):
 
     # If no case numbers found, look for text in <p> tags with style="text-align:right"
     if not case_numbers:
-        right_aligned_paragraphs = soup.find_all(
-            "p", style=lambda x: x and "text-align:right" in x
-        )
+        right_aligned_paragraphs = soup.find_all("p", style=lambda x: x and "text-align:right" in x)
         case_no_pattern = re.compile(r"\b\d{4}/\d{4}/\w+\b|\d{6}")
         for tag in right_aligned_paragraphs:
             matches = case_no_pattern.findall(tag.get_text())
@@ -273,9 +252,7 @@ def process_file(file_path):
 
 def process_directory(directory_path, output_file):
     xml_files = [
-        os.path.join(directory_path, f)
-        for f in os.listdir(directory_path)
-        if f.endswith(".xml")
+        os.path.join(directory_path, f) for f in os.listdir(directory_path) if f.endswith(".xml")
     ]
 
     with Pool() as pool, open(output_file, "w") as jsonl_file:
