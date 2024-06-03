@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import mlflow
@@ -9,12 +10,19 @@ from sqlalchemy.engine import Engine
 ROOT_PATH = Path(__file__).resolve().parent.parent
 
 DATA_PATH = ROOT_PATH / "data"
+CONFIGS_DIR = ROOT_PATH / "configs"
+CHARTS_DIR = ROOT_PATH / "charts"
+CACHE_DIR = DATA_PATH / "cache"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
 
 PL_JUDGEMENTS_PATH = DATA_PATH / "datasets" / "pl"
 PL_JUDGEMENTS_PATH_RAW = PL_JUDGEMENTS_PATH / "raw"
 PL_JUDGEMENTS_PATH_TEXTS = PL_JUDGEMENTS_PATH / "text"
+
+PL_JUDGEMENTS_SYNTH_PATH = PL_JUDGEMENTS_PATH / "synthetic"
+PL_JUDGEMENTS_SYNTH_QA_PATH = PL_JUDGEMENTS_SYNTH_PATH / "qa"
+DATA_GEN_MODELS_CONFIGS_DIR = CONFIGS_DIR / "data_generation" / "models"
 
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
@@ -43,12 +51,23 @@ LLM_TO_PRICE_COMPLETION = {
     "gpt-3.5-turbo-1106": 0.002 / 1000,
 }
 
-LOCAL_POSTGRES = "postgresql+psycopg2://llm:llm@postgres-juddges:5432/llm"
+
+def get_local_postgres_url(
+    serice_name: str = "postgres-juddges",
+    port: int = 5432,
+) -> str:
+    return "postgresql+psycopg2://{user}:{password}@{serice_name}:{port}/{db_name}".format(
+        user=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        serice_name=serice_name,
+        port=port,
+        db_name=os.environ["POSTGRES_DB"],
+    )
 
 
 def get_sqlalchemy_engine() -> Engine:
     return create_engine(
-        LOCAL_POSTGRES,
+        url=get_local_postgres_url(),
         pool_size=10,
         max_overflow=2,
         pool_recycle=300,
@@ -58,10 +77,10 @@ def get_sqlalchemy_engine() -> Engine:
 
 
 def prepare_langchain_cache() -> None:
-    import langchain
     from langchain.cache import SQLAlchemyMd5Cache
+    from langchain.globals import set_llm_cache
 
-    langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
+    set_llm_cache(SQLAlchemyMd5Cache(get_sqlalchemy_engine()))
 
 
 def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url="postgres-juddges") -> None:
