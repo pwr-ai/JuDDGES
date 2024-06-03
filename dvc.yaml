@@ -58,6 +58,7 @@ stages:
         - Meta-Llama-3-8B-Instruct
         - Mistral-7B-Instruct-v0.2
         - Mistral-7B-Instruct-v0.2-fine-tuned
+        - Bielik-7B-Instruct-v0.1
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
@@ -78,6 +79,7 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
+        - Bielik-7B-Instruct-v0.1
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py 
       --output-file data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
