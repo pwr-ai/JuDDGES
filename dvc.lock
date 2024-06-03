@@ -390,7 +390,7 @@ stages:
       md5: 69e4844a715c9c5c75e1127a06472ad4
       size: 3148
     outs:
-    - path: 
+    - path:
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
       hash: md5
       md5: a4fda5774b367e8924cf07f3bf271922
@@ -399,7 +399,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate.py  --output-file 
       data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
     deps:
-    - path: 
+    - path:
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
       hash: md5
       md5: a4fda5774b367e8924cf07f3bf271922
@@ -409,7 +409,7 @@ stages:
       md5: 5ee442a9a3525af7596bf24c3d724a1d
       size: 570
     outs:
-    - path: 
+    - path:
         data/experiments/predict/pl-court-instruct/metrics_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
       hash: md5
       md5: 3b3589929112cb2f199044d240e87bcc
@@ -430,7 +430,7 @@ stages:
       md5: 69e4844a715c9c5c75e1127a06472ad4
       size: 3148
     outs:
-    - path: 
+    - path:
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
       hash: md5
       md5: df2f1d464152f87737c8ebb5b0673854
@@ -439,7 +439,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate.py  --output-file 
       data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
     deps:
-    - path: 
+    - path:
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
       hash: md5
       md5: df2f1d464152f87737c8ebb5b0673854
@@ -449,7 +449,7 @@ stages:
       md5: 5ee442a9a3525af7596bf24c3d724a1d
       size: 570
     outs:
-    - path: 
+    - path:
         data/experiments/predict/pl-court-instruct/metrics_Unsloth-Llama-3-8B-Instruct.json
       hash: md5
       md5: 521a731cc2c45d3eda0656a8e69d505b
@@ -550,8 +550,27 @@ stages:
       md5: 69e4844a715c9c5c75e1127a06472ad4
       size: 3148
     outs:
-    - path: 
+    - path:
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
       hash: md5
       md5: 9199da7e04fb35cc1ce2bbe9dd5cd274
       size: 1891254
+  raw_dataset_readme:
+    cmd: jupyter nbconvert  --no-input  --to markdown  --execute nbs/Data/02_Dataset_Description_Raw.ipynb
+      --output-dir data/datasets/pl/readme/raw --output README --TagRemovePreprocessor.remove_single_output_tags='{"hide_output"}'
+    deps:
+    - path: data/datasets/pl/raw
+      hash: md5
+      md5: 5dd44be2eea852bcce3d0918ff8b97da.dir
+      size: 10234880729
+      nfiles: 17
+    - path: nbs/Data/02_Dataset_Description_Raw.ipynb
+      hash: md5
+      md5: 520ae4cd67c4e72e97301a496383adf4
+      size: 74776
+    outs:
+    - path: data/datasets/pl/readme/raw/
+      hash: md5
+      md5: f1d267b2829519729d5615b4a128e03b.dir
+      size: 473589
+      nfiles: 8
