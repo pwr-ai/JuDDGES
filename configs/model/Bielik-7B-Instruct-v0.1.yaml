@@ -1,0 +1,8 @@
+name: speakleash/Bielik-7B-Instruct-v0.1
+tokenizer_name: ${.name}
+
+adapter_path: null
+
+max_seq_length: 4_000
+padding: longest
+batch_size: 1
