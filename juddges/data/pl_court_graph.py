@@ -6,7 +6,18 @@ import networkx as nx
 import torch
 from tqdm.auto import tqdm
 
-FEATURES = ["_id", "signature", "date", "court_name", "department_name", "type", "isap_ids"]
+JUDGMENT_ATTRS = [
+    "_id",
+    "signature",
+    "date",
+    "court_name",
+    "department_name",
+    "type",
+    "judges",
+    "chairman",
+    "publisher",
+    "recorder",
+]
 
 
 def create_judgement_legal_base_pyg_graph(
@@ -27,7 +38,7 @@ def create_judgement_legal_base_pyg_graph(
     num_lb = len(nx.get_node_attributes(graph, "isap_id"))
 
     x_judgement = torch.zeros(num_judgements, emb_dim, dtype=torch.float)
-    x_legal_base = torch.zeros(num_lb, 1, dtype=torch.float)
+    x_legal_base = torch.eye(num_lb, dtype=torch.float)
 
     index_2_idd = nx.get_node_attributes(graph, "_id")
     for index, iid in index_2_idd.items():
@@ -52,7 +63,7 @@ def create_judgement_legal_base_pyg_graph(
 def create_judgement_legal_base_graph(
     dataset_root: Path, verbose: bool = True, sample_size: int | None = None
 ) -> nx.Graph:
-    """Create networkx graph where node are judgement and legal bases, both connected by edges
+    """Creates networkx graph where node are judgement and legal bases, both connected by edges
 
     Args:
         dataset_root (Path): Path to directory with parquet files containing raw dataset
@@ -62,7 +73,8 @@ def create_judgement_legal_base_graph(
     """
     raw_dataset = pl.scan_parquet(str(dataset_root / "*.parquet"))
     dataset = filter_data_and_extract_isap_ids(raw_dataset, sample_size)
-    graph = create_bipartite_graph(dataset, verbose=verbose)
+    isap_docs = create_isap_metadata(raw_dataset)
+    graph = create_bipartite_graph(dataset=dataset, isap_docs=isap_docs, verbose=verbose)
 
     return graph
 
@@ -77,7 +89,7 @@ def filter_data_and_extract_isap_ids(
             .map_elements(lambda legal_bases: list(set(lb["isap_id"] for lb in legal_bases)))
             .alias("isap_ids")
         )
-        .select(FEATURES)
+        .select(JUDGMENT_ATTRS + ["isap_ids"])
         .collect()
     )
 
@@ -87,10 +99,27 @@ def filter_data_and_extract_isap_ids(
     return df
 
 
-def create_bipartite_graph(dataset: pl.DataFrame, verbose: bool) -> nx.Graph:
-    isap_ids = dataset["isap_ids"].explode().unique()
-    isap_id_2_index = {iid: index for index, iid in enumerate(isap_ids, start=len(dataset))}
-    isap_attrs = {index: {"isap_id": iid} for iid, index in isap_id_2_index.items()}
+def create_isap_metadata(dataset: pl.LazyFrame) -> pl.DataFrame:
+    isap_docs = (
+        dataset.select(["text_legal_bases"])
+        .explode("text_legal_bases")
+        .unnest("text_legal_bases")
+        .select(["isap_id", "title"])
+        .collect()
+    )
+    isap_docs = isap_docs.group_by("isap_id").agg(pl.col("title").first())
+    assert isap_docs["isap_id"].is_unique().all()
+    return isap_docs
+
+
+def create_bipartite_graph(
+    dataset: pl.DataFrame,
+    isap_docs: pl.DataFrame,
+    verbose: bool,
+) -> nx.Graph:
+    isap_id_2_index = {
+        iid: index for index, iid in enumerate(isap_docs["isap_id"], start=len(dataset))
+    }
 
     source_nodes = list(range(len(dataset)))
     target_nodes = list(isap_id_2_index.values())
@@ -100,22 +129,17 @@ def create_bipartite_graph(dataset: pl.DataFrame, verbose: bool) -> nx.Graph:
     for index, doc in tqdm(
         enumerate(dataset.iter_rows(named=True)), total=len(dataset), disable=not verbose
     ):
-        judgment_attrs[index] = {
-            "_id": doc["_id"],
-            "signature": doc["signature"],
-            "date": doc["date"],
-            "court_name": doc["court_name"],
-            "department_name": doc["department_name"],
-        }
+        judgment_attrs[index] = {k: doc[k] for k in JUDGMENT_ATTRS}
         target_idx = [isap_id_2_index[iid] for iid in doc["isap_ids"]]
         edge_list.extend([(index, t_idx) for t_idx in target_idx])
 
     g = nx.Graph()
-    g.add_nodes_from(source_nodes, bipartite=0)
-    g.add_nodes_from(target_nodes, bipartite=1)
+    g.add_nodes_from(source_nodes, node_type="judgement")
+    g.add_nodes_from(target_nodes, node_type="legal_base")
     g.add_edges_from(edge_list)
 
     nx.set_node_attributes(g, judgment_attrs)
+    isap_attrs = isap_docs.to_pandas().to_dict(orient="index")
     nx.set_node_attributes(g, isap_attrs)
 
     # remove isolated small components

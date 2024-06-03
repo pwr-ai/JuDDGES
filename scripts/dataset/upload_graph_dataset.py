@@ -12,8 +12,10 @@ DATASET_CARD_TEMPLATE = "data/datasets/pl/graph/template_README.md"
 def main(
     root_dir: Path = typer.Option(...),
     repo_id: str = typer.Option(...),
+    commit_message: str = typer.Option("Add dataset", "--commit-message", "-m"),
+    dry: bool = typer.Option(False, "--dry-run", "-d"),
 ):
-    stats = _get_stats(root_dir)
+    stats = _get_graph_info(root_dir)
     config = OmegaConf.load(root_dir / "metadata.yaml")
     OmegaConf.resolve(config)
 
@@ -33,21 +35,24 @@ def main(
     )
     card.save(root_dir / "README.md")
 
-    api = HfApi()
-    api.upload_folder(
-        folder_path=str(root_dir),
-        repo_id=repo_id,
-        repo_type="dataset",
-        ignore_patterns=["template_*", "metadata.yaml"],
-    )
+    if not dry:
+        api = HfApi()
+        api.upload_folder(
+            folder_path=str(root_dir),
+            repo_id=repo_id,
+            repo_type="dataset",
+            ignore_patterns=["template_*", "metadata.yaml"],
+            commit_message=commit_message,
+        )
 
 
-def _get_stats(root_dir: Path) -> dict[str, Any]:
+def _get_graph_info(root_dir: Path) -> dict[str, Any]:
     with open(root_dir / "data" / "judgement_graph.json") as file:
         g_data = json.load(file)
 
     g = nx.node_link_graph(g_data)
     src_nodes, tgt_nodes = nx.bipartite.sets(g)
+
     return {
         "num_nodes": g.number_of_nodes(),
         "num_edges": g.number_of_edges(),
