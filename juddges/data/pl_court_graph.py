@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 from torch_geometric.data import HeteroData
 from torch import Tensor
 import polars as pl
@@ -23,7 +24,7 @@ JUDGMENT_ATTRS = [
 def create_judgement_legal_base_pyg_graph(
     graph: nx.Graph,
     embeddings: dict[str, Tensor],
-) -> tuple[HeteroData, dict[int, str]]:
+) -> dict[str, Any]:
     """Creates PytorchGeometric HeteroData object from networkx graph and judgment embeddings
 
     Args:
@@ -40,8 +41,8 @@ def create_judgement_legal_base_pyg_graph(
     x_judgement = torch.zeros(num_judgements, emb_dim, dtype=torch.float)
     x_legal_base = torch.eye(num_lb, dtype=torch.float)
 
-    index_2_idd = nx.get_node_attributes(graph, "_id")
-    for index, iid in index_2_idd.items():
+    judgement_idx_2_iid = nx.get_node_attributes(graph, "_id")
+    for index, iid in judgement_idx_2_iid.items():
         x_judgement[index] = embeddings[iid]
     assert (x_judgement.sum(dim=1) != 0).all()
 
@@ -57,7 +58,11 @@ def create_judgement_legal_base_pyg_graph(
             ("judgement", "refers", "legal_base"): {"edge_index": edge_index},
         }
     )
-    return data, index_2_idd
+    return {
+        "data": data,
+        "judgement_idx_2_iid": judgement_idx_2_iid,
+        "legal_base_idx_2_isap_id": nx.get_node_attributes(graph, "isap_id"),
+    }
 
 
 def create_judgement_legal_base_graph(
@@ -140,6 +145,7 @@ def create_bipartite_graph(
 
     nx.set_node_attributes(g, judgment_attrs)
     isap_attrs = isap_docs.to_pandas().to_dict(orient="index")
+    isap_attrs = {k + len(dataset): v for k, v in isap_attrs.items()}
     nx.set_node_attributes(g, isap_attrs)
 
     # remove isolated small components

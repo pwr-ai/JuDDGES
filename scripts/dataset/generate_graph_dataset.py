@@ -31,11 +31,7 @@ def main(
 
     embeddings_file = embeddings_root_dir / "agg_embeddings.pt"
     embs = torch.load(embeddings_file)
-    pyg_data, index_2_iid = create_judgement_legal_base_pyg_graph(g, embs)
-    pyg_dataset = {
-        "data": pyg_data,
-        "index_2_iid": index_2_iid,
-    }
+    pyg_dataset = create_judgement_legal_base_pyg_graph(g, embs)
     torch.save(pyg_dataset, data_dir / "pyg_judgement_graph.pt")
 
 
