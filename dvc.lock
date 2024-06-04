@@ -553,3 +553,26 @@ stages:
       hash: md5
       md5: 2d1b6a392152f2e022a33553265e141a
       size: 306
+  graph_dataset_readme:
+    cmd: jupyter nbconvert  --no-input  --to markdown  --execute nbs/Data/03_Graph_Dataset_Description.ipynb
+      --output-dir data/datasets/pl/graph --output README
+    deps:
+    - path: data/datasets/pl/graph/data
+      hash: md5
+      md5: 0fc182cc099217043866ef3c488ce00e.dir
+      size: 1824126514
+      nfiles: 2
+    - path: nbs/Data/03_Graph_Dataset_Description.ipynb
+      hash: md5
+      md5: f690f997d78d356fa369f6c548ab0dd7
+      size: 43107
+    outs:
+    - path: data/datasets/pl/graph/README.md
+      hash: md5
+      md5: 460453f24ea5c20ea88ac8c11a854138
+      size: 4155
+    - path: data/datasets/pl/graph/README_files
+      hash: md5
+      md5: cabe6e2cc1195b673b68dcca8fe4705d.dir
+      size: 25265
+      nfiles: 1
