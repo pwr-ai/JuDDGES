@@ -574,3 +574,17 @@ stages:
       md5: f1d267b2829519729d5615b4a128e03b.dir
       size: 473589
       nfiles: 8
+  instruct_dataset_readme:
+    cmd: jupyter nbconvert  --no-input  --to markdown  --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
+      --output-dir data/datasets/pl/readme/instruct --output README
+    deps:
+    - path: nbs/Data/03_Dataset_Description_Instruct.ipynb
+      hash: md5
+      md5: c403ede420e9c30b07920bc528bf8c7e
+      size: 16852
+    outs:
+    - path: data/datasets/pl/readme/instruct/
+      hash: md5
+      md5: de02794df3d74d86f8610f040a17dcbe.dir
+      size: 144326
+      nfiles: 5

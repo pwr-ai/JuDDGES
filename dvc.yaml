@@ -7,12 +7,24 @@ stages:
       --execute nbs/Data/02_Dataset_Description_Raw.ipynb
       --output-dir data/datasets/pl/readme/raw
       --output README
-      --TagRemovePreprocessor.remove_single_output_tags='{"hide_output"}'
     deps:
       - nbs/Data/02_Dataset_Description_Raw.ipynb
       - data/datasets/pl/raw
     outs:
       - data/datasets/pl/readme/raw/
+
+  instruct_dataset_readme:
+    cmd: >-
+      jupyter nbconvert 
+      --no-input 
+      --to markdown 
+      --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
+      --output-dir data/datasets/pl/readme/instruct
+      --output README
+    deps:
+      - nbs/Data/03_Dataset_Description_Instruct.ipynb
+    outs:
+      - data/datasets/pl/readme/instruct/
 
   build_fine_tuning_dataset:
     cmd: >-
