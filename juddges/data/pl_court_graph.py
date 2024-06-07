@@ -21,30 +21,30 @@ JUDGMENT_ATTRS = [
 ]
 
 
-def create_judgement_legal_base_pyg_graph(
+def create_judgment_legal_base_pyg_graph(
     graph: nx.Graph,
     embeddings: dict[str, Tensor],
 ) -> dict[str, Any]:
     """Creates PytorchGeometric HeteroData object from networkx graph and judgment embeddings
 
     Args:
-        graph (nx.Graph): graph created with create_judgement_legal_base_graph
+        graph (nx.Graph): graph created with create_judgment_legal_base_graph
         embeddings (dict[str, Tensor]): embeddings of judgments indexed by their original id
 
     Returns:
         tuple[HeteroData, dict[int, str]]: dataset and index to iid mapping
     """
     emb_dim = next(iter(embeddings.values())).size(0)
-    num_judgements = len(nx.get_node_attributes(graph, "_id"))
+    num_judgments = len(nx.get_node_attributes(graph, "_id"))
     num_lb = len(nx.get_node_attributes(graph, "isap_id"))
 
-    x_judgement = torch.zeros(num_judgements, emb_dim, dtype=torch.float)
+    x_judgment = torch.zeros(num_judgments, emb_dim, dtype=torch.float)
     x_legal_base = torch.eye(num_lb, dtype=torch.float)
 
-    judgement_idx_2_iid = nx.get_node_attributes(graph, "_id")
-    for index, iid in judgement_idx_2_iid.items():
-        x_judgement[index] = embeddings[iid]
-    assert (x_judgement.sum(dim=1) != 0).all()
+    judgment_idx_2_iid = nx.get_node_attributes(graph, "_id")
+    for index, iid in judgment_idx_2_iid.items():
+        x_judgment[index] = embeddings[iid]
+    assert (x_judgment.sum(dim=1) != 0).all()
 
     edges = []
     for e in graph.edges:
@@ -53,28 +53,28 @@ def create_judgement_legal_base_pyg_graph(
 
     data = HeteroData(
         {
-            "judgement": {"x": x_judgement},
+            "judgment": {"x": x_judgment},
             "legal_base": {"x": x_legal_base},
-            ("judgement", "refers", "legal_base"): {"edge_index": edge_index},
+            ("judgment", "refers", "legal_base"): {"edge_index": edge_index},
         }
     )
     return {
         "data": data,
-        "judgement_idx_2_iid": judgement_idx_2_iid,
+        "judgment_idx_2_iid": judgment_idx_2_iid,
         "legal_base_idx_2_isap_id": nx.get_node_attributes(graph, "isap_id"),
     }
 
 
-def create_judgement_legal_base_graph(
+def create_judgment_legal_base_graph(
     dataset_root: Path, verbose: bool = True, sample_size: int | None = None
 ) -> nx.Graph:
-    """Creates networkx graph where node are judgement and legal bases, both connected by edges
+    """Creates networkx graph where node are judgment and legal bases, both connected by edges
 
     Args:
         dataset_root (Path): Path to directory with parquet files containing raw dataset
 
     Returns:
-        nx.Graph: graph where node are judgement and legal bases, both connected by edges
+        nx.Graph: graph where node are judgment and legal bases, both connected by edges
     """
     raw_dataset = pl.scan_parquet(str(dataset_root / "*.parquet"))
     dataset = filter_data_and_extract_isap_ids(raw_dataset, sample_size)
@@ -139,7 +139,7 @@ def create_bipartite_graph(
         edge_list.extend([(index, t_idx) for t_idx in target_idx])
 
     g = nx.Graph()
-    g.add_nodes_from(source_nodes, node_type="judgement")
+    g.add_nodes_from(source_nodes, node_type="judgment")
     g.add_nodes_from(target_nodes, node_type="legal_base")
     g.add_edges_from(edge_list)
 

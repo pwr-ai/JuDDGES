@@ -53,21 +53,6 @@ stages:
       - data/datasets/pl/graph/data
       - data/datasets/pl/graph/metadata.yaml
 
-  graph_dataset_readme:
-    cmd: >-
-      jupyter nbconvert 
-      --no-input 
-      --to markdown 
-      --execute nbs/Data/03_Graph_Dataset_Description.ipynb
-      --output-dir data/datasets/pl/graph
-      --output README
-    deps:
-      - nbs/Data/03_Graph_Dataset_Description.ipynb
-      - data/datasets/pl/graph/data
-    outs:
-      - data/datasets/pl/graph/README.md
-      - data/datasets/pl/graph/README_files
-
   sft:
     matrix:
       model:
