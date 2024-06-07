@@ -1,4 +1,4 @@
-name: Lint & Test Python code
+name: python-lint-and-test
 on: [ push ]
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install deps
         run: make install_cpu
-      - name: Check
+      - name: Lint
         run: make check
 
   python-test:
@@ -49,5 +49,7 @@ jobs:
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install deps
         run: make install_cpu
-      - name: Check
+      - name: Test
+        env:
+          HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}
         run: make test
