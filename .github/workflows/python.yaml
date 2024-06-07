@@ -40,6 +40,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install deps
-        run: make install
+        run: make install_cpu
       - name: Check
         run: make test
