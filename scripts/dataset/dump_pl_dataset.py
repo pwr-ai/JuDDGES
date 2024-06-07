@@ -50,7 +50,9 @@ def main(
     for offset in trange(start_offset, num_docs, chunk_size, desc="Chunks"):
         docs = list(
             tqdm(
-                collection.find(query, batch_size=batch_size).skip(offset).limit(chunk_size),
+                collection.find(query, {"embedding": 0}, batch_size=batch_size)
+                .skip(offset)
+                .limit(chunk_size),
                 total=chunk_size,
                 leave=False,
                 desc="Documents in chunk",

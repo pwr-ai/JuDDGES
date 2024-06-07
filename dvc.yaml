@@ -13,16 +13,45 @@ stages:
     matrix:
       model:
         - mmlw-roberta-large
-        # - e5-mistral-7b-instruct
     cmd: >-
-      PYTHONPATH=. python scripts/embed_text.py embedding_model=${item.model}
+      PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=${item.model}
     deps:
-      - scripts/embed_text.py
+      - scripts/embed/embed_text.py
       - configs/embedding.yaml
       - configs/embedding_model/${item.model}.yaml
       - data/datasets/pl/raw
     outs:
-      - data/embeddings/pl-court-raw/${item.model}
+      - data/embeddings/pl-court-raw/${item.model}/all_embeddings
+
+  aggregate_embeddings:
+    matrix:
+      model:
+        - mmlw-roberta-large
+    cmd: >-
+      PYTHONPATH=. python scripts/embed/aggregate_embeddings.py 
+      --embeddings-dir data/embeddings/pl-court-raw/${item.model}/all_embeddings
+    deps:
+      - scripts/embed/aggregate_embeddings.py
+      - data/embeddings/pl-court-raw/${item.model}/all_embeddings
+    outs:
+      - data/embeddings/pl-court-raw/${item.model}/agg_embeddings.pt
+
+  
+  generate_graph_dataset:
+    cmd: >-
+      PYTHONPATH=. python scripts/dataset/generate_graph_dataset.py
+      --dataset-dir data/datasets/pl/raw 
+      --embeddings-root-dir data/embeddings/pl-court-raw/mmlw-roberta-large/
+      --target-dir data/datasets/pl/graph
+    deps:
+      - scripts/dataset/generate_graph_dataset.py
+      - juddges/data/pl_court_graph.py
+      - data/datasets/pl/raw 
+      - data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
+      - data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings/config.yaml
+    outs:
+      - data/datasets/pl/graph/data
+      - data/datasets/pl/graph/metadata.yaml
 
   sft:
     matrix:
