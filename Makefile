@@ -25,8 +25,14 @@ install:
 	pip install -r requirements.txt
 	pip install flash-attn --no-build-isolation
 
+install_cpu:
+	pip install --find-links https://download.pytorch.org/whl/cpu -r requirements.txt
+
+# unsloth requires python 3.10
+# requires conda environment
 install_unsloth:
 	conda install --yes pytorch-cuda=12.1 pytorch cudatoolkit xformers -c pytorch -c nvidia -c xformers
 	pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
+	conda install pyg -c pyg
 	pip install flash-attn --no-build-isolation
 	pip install -r requirements.txt

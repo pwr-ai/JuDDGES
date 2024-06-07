@@ -228,27 +228,6 @@ stages:
       md5: 1a086db46b90b0f3c4c66c3ecefe8adb.dir
       size: 24415235644
       nfiles: 53
-  predict@Unsloth-Llama-3-8B-Instruct-fine-tuned:
-    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Llama-3-8B-Instruct-fine-tuned
-    deps:
-    - path: configs/model/Unsloth-Llama-3-8B-Instruct-fine-tuned.yaml
-      hash: md5
-      md5: c9fab7cd7a4b0159d13ba61e3c516c0a
-      size: 244
-    - path: configs/predict.yaml
-      hash: md5
-      md5: e6b047cf62e612a32381d6221eb99b4e
-      size: 416
-    - path: scripts/sft/predict.py
-      hash: md5
-      md5: 69e4844a715c9c5c75e1127a06472ad4
-      size: 3148
-    outs:
-    - path: 
-        data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
-      hash: md5
-      md5: 9199da7e04fb35cc1ce2bbe9dd5cd274
-      size: 1891254
   evaluate@Unsloth-Llama-3-8B-Instruct-fine-tuned:
     cmd: PYTHONPATH=. python scripts/sft/evaluate.py  --output-file 
       data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
@@ -395,27 +374,6 @@ stages:
       hash: md5
       md5: 68b09dd0ce741e6ee1fff4e37c954fa6
       size: 564
-  predict@Unsloth-Llama-3-8B-Instruct:
-    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Llama-3-8B-Instruct
-    deps:
-    - path: configs/model/Unsloth-Llama-3-8B-Instruct.yaml
-      hash: md5
-      md5: e97bb2e6bf39f75edea7714d6ba58b77
-      size: 160
-    - path: configs/predict.yaml
-      hash: md5
-      md5: e6b047cf62e612a32381d6221eb99b4e
-      size: 416
-    - path: scripts/sft/predict.py
-      hash: md5
-      md5: 69e4844a715c9c5c75e1127a06472ad4
-      size: 3148
-    outs:
-    - path: 
-        data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
-      hash: md5
-      md5: df2f1d464152f87737c8ebb5b0673854
-      size: 2179383
   predict@Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned:
     cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
     deps:
@@ -576,3 +534,24 @@ stages:
       md5: cabe6e2cc1195b673b68dcca8fe4705d.dir
       size: 25265
       nfiles: 1
+  predict@Unsloth-Llama-3-8B-Instruct-fine-tuned:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Llama-3-8B-Instruct-fine-tuned
+    deps:
+    - path: configs/model/Unsloth-Llama-3-8B-Instruct-fine-tuned.yaml
+      hash: md5
+      md5: c9fab7cd7a4b0159d13ba61e3c516c0a
+      size: 244
+    - path: configs/predict.yaml
+      hash: md5
+      md5: e6b047cf62e612a32381d6221eb99b4e
+      size: 416
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 69e4844a715c9c5c75e1127a06472ad4
+      size: 3148
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
+      hash: md5
+      md5: 9199da7e04fb35cc1ce2bbe9dd5cd274
+      size: 1891254
