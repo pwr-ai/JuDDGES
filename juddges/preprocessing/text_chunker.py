@@ -1,5 +1,6 @@
 from typing import Any
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from transformers import PreTrainedTokenizer
 
 
 class TextSplitter:
@@ -8,13 +9,21 @@ class TextSplitter:
         chunk_size: int,
         min_split_chars: int | None = None,
         take_n_first_chunks: int | None = None,
+        tokenizer: PreTrainedTokenizer | None = None,
     ) -> None:
-        self.splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size)
+        if tokenizer:
+            self.splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
+                tokenizer,
+                chunk_size=chunk_size,
+            )
+        else:
+            self.splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size)
+
         self.min_split_chars = min_split_chars
         self.take_n_first_chunks = take_n_first_chunks
 
     def __call__(self, txt: dict[str, Any]) -> dict[str, Any]:
-        ids, chunk_ids, chunks = [], [], []
+        ids, chunk_ids, chunk_lens, chunks = [], [], [], []
 
         for id_, text in zip(txt["_id"], txt["text"]):
             current_chunks = self._split_text(text)
@@ -24,9 +33,10 @@ class TextSplitter:
 
             chunks.extend(current_chunks)
             ids.extend([id_] * len(current_chunks))
+            chunk_lens.extend([len(chunk) for chunk in current_chunks])
             chunk_ids.extend(range(len(current_chunks)))
 
-        return {"_id": ids, "chunk_id": chunk_ids, "text_chunk": chunks}
+        return {"_id": ids, "chunk_id": chunk_ids, "chunk_len": chunk_lens, "text_chunk": chunks}
 
     def _split_text(self, text: str) -> list[str]:
         chunks = self.splitter.split_text(text)

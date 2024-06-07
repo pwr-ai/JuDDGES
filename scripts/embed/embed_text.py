@@ -74,6 +74,7 @@ def main(cfg: DictConfig) -> None:
         batch_size=config.batch_size,
         num_proc=None,
         remove_columns=[text_column],
+        desc="Embedding chunks",
     )
     ds.save_to_disk(config.output_dir)
 
@@ -89,6 +90,7 @@ def chunk_dataset(dataset: Dataset, config: EmbeddingConfig) -> Dataset:
         batched=True,
         num_proc=NUM_PROC,
         remove_columns=["_id", "text"],
+        desc="Chunking documents",
     )
     logger.info(f"Dataset split into {ds.num_rows} chunks")
     return ds
@@ -101,7 +103,7 @@ class Embedder:
 
     def __call__(self, items: dict[str, Any]) -> dict[str, Any]:
         return {
-            "embeddings": self.model.encode(
+            "embedding": self.model.encode(
                 items[self.text_column],
                 show_progress_bar=False,
                 batch_size=len(items[self.text_column]),

@@ -203,12 +203,12 @@ stages:
       size: 387238698
       nfiles: 44
   embed@mmlw-roberta-large:
-    cmd: PYTHONPATH=. python scripts/embed_text.py embedding_model=mmlw-roberta-large
+    cmd: PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=mmlw-roberta-large
     deps:
     - path: configs/embedding.yaml
       hash: md5
-      md5: e7515e27e3bb7ddb3a2062a46efaa773
-      size: 408
+      md5: 8eb43bec3f5fe10d5c1c5cfefc5d6fe5
+      size: 379
     - path: configs/embedding_model/mmlw-roberta-large.yaml
       hash: md5
       md5: 22f36cfd196c0fdc3cfd8a036d52b606
@@ -218,15 +218,15 @@ stages:
       md5: 5dd44be2eea852bcce3d0918ff8b97da.dir
       size: 10234880729
       nfiles: 17
-    - path: scripts/embed_text.py
+    - path: scripts/embed/embed_text.py
       hash: md5
-      md5: 5813b589760b00ce693365a36c519ef0
-      size: 3384
+      md5: f3288be3419e01ebc2be904d52cbaab0
+      size: 3451
     outs:
-    - path: data/embeddings/pl-court-raw/mmlw-roberta-large
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings
       hash: md5
-      md5: b8ab133416880430c1f2d3d8357ffd7f.dir
-      size: 24368123117
+      md5: 1a086db46b90b0f3c4c66c3ecefe8adb.dir
+      size: 24415235644
       nfiles: 53
   predict@Unsloth-Llama-3-8B-Instruct-fine-tuned:
     cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Llama-3-8B-Instruct-fine-tuned
@@ -341,6 +341,81 @@ stages:
       hash: md5
       md5: 091b8888275600052dd2dcdd36a55588
       size: 305
+  aggregate_embeddings@mmlw-roberta-large:
+    cmd: PYTHONPATH=. python scripts/embed/aggregate_embeddings.py  --embeddings-dir
+      data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings
+    deps:
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings
+      hash: md5
+      md5: 1a086db46b90b0f3c4c66c3ecefe8adb.dir
+      size: 24415235644
+      nfiles: 53
+    - path: scripts/embed/aggregate_embeddings.py
+      hash: md5
+      md5: 5b47bbdd9476d2a6f2ef43990be156f2
+      size: 1800
+    outs:
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
+      hash: md5
+      md5: 0d84b4da5513feeb6ca9bad70a2ff164
+      size: 1725566207
+  generate_graph_dataset:
+    cmd: PYTHONPATH=. python scripts/dataset/generate_graph_dataset.py --dataset-dir
+      data/datasets/pl/raw  --embeddings-root-dir data/embeddings/pl-court-raw/mmlw-roberta-large/
+      --target-dir data/datasets/pl/graph
+    deps:
+    - path: data/datasets/pl/raw
+      hash: md5
+      md5: 5dd44be2eea852bcce3d0918ff8b97da.dir
+      size: 10234880729
+      nfiles: 17
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
+      hash: md5
+      md5: 0d84b4da5513feeb6ca9bad70a2ff164
+      size: 1725566207
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings/config.yaml
+      hash: md5
+      md5: fbb5585b8c3ef28255801d38c9248f8e
+      size: 502
+    - path: juddges/data/pl_court_graph.py
+      hash: md5
+      md5: 730e3d92be26408bd6dc26606b4c22ff
+      size: 4974
+    - path: scripts/dataset/generate_graph_dataset.py
+      hash: md5
+      md5: 3561a57587e54d1ed92deae0db8b66a4
+      size: 1189
+    outs:
+    - path: data/datasets/pl/graph/data
+      hash: md5
+      md5: f2820796cff4578c11ffcb0fa6cdadd7.dir
+      size: 1823760294
+      nfiles: 2
+    - path: data/datasets/pl/graph/metadata.yaml
+      hash: md5
+      md5: 68b09dd0ce741e6ee1fff4e37c954fa6
+      size: 564
+  predict@Unsloth-Llama-3-8B-Instruct:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Llama-3-8B-Instruct
+    deps:
+    - path: configs/model/Unsloth-Llama-3-8B-Instruct.yaml
+      hash: md5
+      md5: e97bb2e6bf39f75edea7714d6ba58b77
+      size: 160
+    - path: configs/predict.yaml
+      hash: md5
+      md5: e6b047cf62e612a32381d6221eb99b4e
+      size: 416
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 69e4844a715c9c5c75e1127a06472ad4
+      size: 3148
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
+      hash: md5
+      md5: df2f1d464152f87737c8ebb5b0673854
+      size: 2179383
   predict@Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned:
     cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
     deps:
@@ -478,3 +553,26 @@ stages:
       hash: md5
       md5: 2d1b6a392152f2e022a33553265e141a
       size: 306
+  graph_dataset_readme:
+    cmd: jupyter nbconvert  --no-input  --to markdown  --execute nbs/Data/03_Graph_Dataset_Description.ipynb
+      --output-dir data/datasets/pl/graph --output README
+    deps:
+    - path: data/datasets/pl/graph/data
+      hash: md5
+      md5: 0fc182cc099217043866ef3c488ce00e.dir
+      size: 1824126514
+      nfiles: 2
+    - path: nbs/Data/03_Graph_Dataset_Description.ipynb
+      hash: md5
+      md5: f690f997d78d356fa369f6c548ab0dd7
+      size: 43107
+    outs:
+    - path: data/datasets/pl/graph/README.md
+      hash: md5
+      md5: 460453f24ea5c20ea88ac8c11a854138
+      size: 4155
+    - path: data/datasets/pl/graph/README_files
+      hash: md5
+      md5: cabe6e2cc1195b673b68dcca8fe4705d.dir
+      size: 25265
+      nfiles: 1
