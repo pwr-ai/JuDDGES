@@ -1,5 +1,5 @@
-name: python-check
-on: [ pull_request, push ]
+name: Lint & Test Python code
+on: [ push ]
 
 jobs:
   python-check:
@@ -17,8 +17,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install deps
-        run: make install
+        run: make install_cpu
       - name: Check
         run: make check
 
@@ -39,6 +43,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install deps
         run: make install_cpu
       - name: Check
