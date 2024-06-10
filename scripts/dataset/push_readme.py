@@ -11,8 +11,12 @@ MAX_SHARD_SIZE = "4GB"
 
 DATASET_CARD_TEMPLATE_DIR = Path("data/datasets/pl/readme/instruct")
 
+
 def main(
-    dataset_card_template_dir: Path = typer.Option(DATASET_CARD_TEMPLATE_DIR, help="Path to the directory with the dataset card. It should contain a README.md file and (optionally) a  README_files directory."),
+    dataset_card_template_dir: Path = typer.Option(
+        DATASET_CARD_TEMPLATE_DIR,
+        help="Path to the directory with the dataset card. It should contain a README.md file and (optionally) a  README_files directory.",
+    ),
     repo_id: Optional[str] = typer.Option(...),
     branch: Optional[str] = typer.Option(None, help="Branch to push the dataset to"),
 ) -> None:

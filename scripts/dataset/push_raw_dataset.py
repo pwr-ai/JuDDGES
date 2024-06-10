@@ -36,7 +36,7 @@ def main(
     card_data = DatasetCardData(
         language="pl",
         multilinguality="monolingual",
-          size_categories="100K<n<1M",
+        size_categories="100K<n<1M",
         source_datasets=["original"],
         pretty_name="Polish Court Judgments Raw",
         tags=["polish court"],
