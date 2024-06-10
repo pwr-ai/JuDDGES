@@ -53,3 +53,27 @@ MONGO_DB_NAME="juddges"
     ```shell
     NUM_JOBS=10 SHELL=/bin/bash dvc repro build_fine_tuning_dataset
     ```
+
+## 2. Publishing the dataset
+
+8. Generate readme for the raw and instruction dataset
+    ```shell
+    dvc repro raw_dataset_readme instruct_dataset_readme && dvc push
+    ```
+   
+9. Push raw dataset (with README) to Huggingface
+    ```shell
+    PYTHONPATH=. python scripts/dataset/push_raw_dataset.py --repo-id "JuDDGES/pl-court-raw"
+   ```
+
+10. Push instruction dataset to Huggingface
+
+   [//]: # (   todo: )
+   TODO
+
+11. Push instruction README to Huggingface
+
+   ```shell
+   PYTHONPATH=. scripts/dataset/push_instruct_readme.py --repo-id JuDDGES/pl-court-instruct
+   ```
+   
