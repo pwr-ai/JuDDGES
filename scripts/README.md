@@ -56,43 +56,53 @@ MONGO_DB_NAME="datasets"
     dvc add data/datasets/pl/raw/raw.parquet && dvc push 
     ```
 7. Generate dataset card for `pl-court-raw`
-   ```shell
-   TBD
-   ```
-
-9. Upload `pl-court-raw` dataset to huggingface
     ```shell
-    TBD
+    dvc repro raw_dataset_readme && dvc push
     ```
 
+9. Upload `pl-court-raw` dataset (with card) to huggingface
+    ```shell
+    PYTHONPATH=. python scripts/dataset/push_raw_dataset.py --repo-id "JuDDGES/pl-court-raw"
+   ```
+
 ### Instruction dataset
-10. Generate intruction dataset and upload it to huggingface
+10. Generate intruction dataset and upload it to huggingface (`pl-court-instruct`)
     ```shell
     NUM_JOBS=8 dvc repro build_instruct_dataset
     ```
+    
+11. Generate dataset card for `pl-court-instruct`
+    ```shell
+    dvc repro instruct_dataset_readme && dvc push
+    ```
+    
+12. Upload `pl-court-instruct` dataset card to huggingface
+   ```shell
+   PYTHONPATH=. scripts/dataset/push_instruct_readme.py --repo-id JuDDGES/pl-court-instruct
+   ```
 
 ### Graph dataset
-11. Embed judgments with pre-trained lanuage model (documents arechunked and embeddings are computed per chunk)
+13. Embed judgments with pre-trained lanuage model (documents arechunked and embeddings are computed per chunk)
     ```shell
     CUDA_VISIBLE_DEVICES=<device_number> dvc repro embed
     ```
 
-12. Aggregate embeddings of chunks into embeddings of document
+14. Aggregate embeddings of chunks into embeddings of document
     ```shell
     NUM_PROC=4 dvc repro embed aggregate_embeddings
     ```
 
-13. Eventually ingest data to `mongodb` (e.g. for vector search)
+15. Eventually ingest data to `mongodb` (e.g. for vector search)
     ```shell
     PYTHONPATH=. python scripts/embed/ingest.py --embeddings-file <embeddgings>
     ```
 
-14. Generate graph dataset
+16. Generate graph dataset
     ```shell
     dvc repro embed build_graph_dataset
     ```
 
-16. Generate dataset card and upload it to huggingface (remember to be logged in to `huggingface` or set `HUGGING_FACE_HUB_TOKEN` env variable)
+17. Generate dataset card and upload it to huggingface (remember to be logged in to `huggingface` or set `HUGGING_FACE_HUB_TOKEN` env variable)
     ```shell
     PYTHONPATH=. python scripts/dataset/upload_graph_dataset.py \
         --root-dir <dir_to_dataset> \

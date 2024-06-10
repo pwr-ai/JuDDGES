@@ -425,3 +425,36 @@ stages:
       hash: md5
       md5: 68b09dd0ce741e6ee1fff4e37c954fa6
       size: 564
+  raw_dataset_readme:
+    cmd: jupyter nbconvert  --no-input  --to markdown  --execute nbs/Data/02_Dataset_Description_Raw.ipynb
+      --output-dir data/datasets/pl/readme/raw --output README
+    deps:
+    - path: data/datasets/pl/raw
+      hash: md5
+      md5: 5dd44be2eea852bcce3d0918ff8b97da.dir
+      size: 10234880729
+      nfiles: 17
+    - path: nbs/Data/02_Dataset_Description_Raw.ipynb
+      hash: md5
+      md5: d3d7509d084b85676857e13a2f20b82a
+      size: 73872
+    outs:
+    - path: data/datasets/pl/readme/raw/
+      hash: md5
+      md5: f1d267b2829519729d5615b4a128e03b.dir
+      size: 473589
+      nfiles: 8
+  instruct_dataset_readme:
+    cmd: jupyter nbconvert  --no-input  --to markdown  --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
+      --output-dir data/datasets/pl/readme/instruct --output README
+    deps:
+    - path: nbs/Data/03_Dataset_Description_Instruct.ipynb
+      hash: md5
+      md5: 27e6d517445028d45e5c40b22febece4
+      size: 16215
+    outs:
+    - path: data/datasets/pl/readme/instruct/
+      hash: md5
+      md5: de02794df3d74d86f8610f040a17dcbe.dir
+      size: 144326
+      nfiles: 5
