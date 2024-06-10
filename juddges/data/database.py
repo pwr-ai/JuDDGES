@@ -11,7 +11,7 @@ from pymongo.errors import BulkWriteError
 def get_mongo_collection(
     mongo_uri: str | None = None,
     mongo_db: str | None = None,
-    collection_name: str = "judgements",
+    collection_name: str = "pl-court",
 ) -> Collection:
     uri = mongo_uri or os.environ.get("MONGO_URI")
     assert uri, "Mongo URI is required"
