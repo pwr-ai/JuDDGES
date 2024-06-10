@@ -6,13 +6,15 @@ of the repository.
 ## 1. Building the dataset
 
 Dataset was downloaded from open API of [Polish Court Judgements](https://orzeczenia.ms.gov.pl/).
-The following procedure will download data and store it in `MongoDB`.
+The following procedure will download data and store it in `MongoDB`. Whenever script interacts with outside environment (storing data in `mongodb` or pushing files to `huggingface-hub`) it is run outisde `dvc`.
 Prior to downloading, make sure you have proper environment variable set in `.env` file:
 
 ```dotenv
-MONGO_URI=<mongo_uri>
-MONGO_DB_NAME="juddges"
+MONGO_URI=<mongo_uri_including_password>
+MONGO_DB_NAME="datasets"
 ```
+
+### Raw dataset
 
 1. Download judgements metadata - this will store metadata in the database:
     ```shell
@@ -21,13 +23,17 @@ MONGO_DB_NAME="juddges"
 
 2. Download judgements text (XML content of judgements) - this will alter the database with content:
     ```shell
-    PYTHONPATH=. python scripts/dataset/download_pl_additional_data.py --data-type content --n-jobs 10
+    PYTHONPATH=. python scripts/dataset/download_pl_additional_data.py \
+        --data-type content \
+        --n-jobs 10
     ```
 
 3. Download additional details available for each judgement - this will alter the database with
    acquired details:
     ```shell
-    PYTHONPATH=. python scripts/dataset/download_pl_additional_data.py --data-type details --n-jobs 10
+    PYTHONPATH=. python scripts/dataset/download_pl_additional_data.py \
+        --data-type details \
+        --n-jobs 10
     ```
 
 4. Map id of courts and departments to court name:
@@ -45,35 +51,61 @@ MONGO_DB_NAME="juddges"
 6. For further processing prepare local dataset dump in `parquet` file, version it with dvc and push
    to remote storage:
     ```shell
-    PYTHONPATH=.  python scripts/dataset/dump_pl_dataset.py --file-name data/datasets/pl/raw/raw.parquet
+    PYTHONPATH=.  python scripts/dataset/dump_pl_dataset.py \
+        --file-name data/datasets/pl/raw/raw.parquet
     dvc add data/datasets/pl/raw/raw.parquet && dvc push 
     ```
-
-7. Generate intruction dataset and upload it to huggingface
+7. Generate dataset card for `pl-court-raw`
     ```shell
-    NUM_JOBS=10 SHELL=/bin/bash dvc repro build_fine_tuning_dataset
+    dvc repro raw_dataset_readme && dvc push
     ```
 
-## 2. Publishing the dataset
-
-8. Generate readme for the raw and instruction dataset
-    ```shell
-    dvc repro raw_dataset_readme instruct_dataset_readme && dvc push
-    ```
-   
-9. Push raw dataset (with README) to Huggingface
+9. Upload `pl-court-raw` dataset (with card) to huggingface
     ```shell
     PYTHONPATH=. python scripts/dataset/push_raw_dataset.py --repo-id "JuDDGES/pl-court-raw"
    ```
 
-10. Push instruction dataset to Huggingface
-
-   [//]: # (   todo: )
-   TODO
-
-11. Push instruction README to Huggingface
-
+### Instruction dataset
+10. Generate intruction dataset and upload it to huggingface (`pl-court-instruct`)
+    ```shell
+    NUM_JOBS=8 dvc repro build_instruct_dataset
+    ```
+    
+11. Generate dataset card for `pl-court-instruct`
+    ```shell
+    dvc repro instruct_dataset_readme && dvc push
+    ```
+    
+12. Upload `pl-court-instruct` dataset card to huggingface
    ```shell
    PYTHONPATH=. scripts/dataset/push_instruct_readme.py --repo-id JuDDGES/pl-court-instruct
    ```
-   
+
+### Graph dataset
+13. Embed judgments with pre-trained lanuage model (documents arechunked and embeddings are computed per chunk)
+    ```shell
+    CUDA_VISIBLE_DEVICES=<device_number> dvc repro embed
+    ```
+
+14. Aggregate embeddings of chunks into embeddings of document
+    ```shell
+    NUM_PROC=4 dvc repro embed aggregate_embeddings
+    ```
+
+15. Eventually ingest data to `mongodb` (e.g. for vector search)
+    ```shell
+    PYTHONPATH=. python scripts/embed/ingest.py --embeddings-file <embeddgings>
+    ```
+
+16. Generate graph dataset
+    ```shell
+    dvc repro embed build_graph_dataset
+    ```
+
+17. Generate dataset card and upload it to huggingface (remember to be logged in to `huggingface` or set `HUGGING_FACE_HUB_TOKEN` env variable)
+    ```shell
+    PYTHONPATH=. python scripts/dataset/upload_graph_dataset.py \
+        --root-dir <dir_to_dataset> \
+        --repo-id JuDDGES/pl-court-graph \
+        --commit-message <message>
+    ```

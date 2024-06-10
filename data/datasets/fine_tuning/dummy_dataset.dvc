@@ -1,6 +1,0 @@
-outs:
-- md5: e212ce19a8d1e43dd2613da4a2684f22.dir
-  size: 18268622
-  nfiles: 3
-  hash: md5
-  path: dummy_dataset

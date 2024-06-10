@@ -25,15 +25,14 @@ stages:
       - nbs/Data/03_Dataset_Description_Instruct.ipynb
     outs:
       - data/datasets/pl/readme/instruct/
-
-  build_fine_tuning_dataset:
+  build_instruct_dataset:
     cmd: >-
-      PYTHONPATH=. python scripts/sft/build_fine_tuning_dataset.py
+      PYTHONPATH=. python scripts/dataset/build_instruct_dataset.py
       --dataset-dir data/datasets/pl/raw
       --repo-id JuDDGES/pl-court-instruct
     deps:
       - data/datasets/pl/raw
-      - scripts/sft/build_fine_tuning_dataset.py
+      - scripts/dataset/build_instruct_dataset.py
     desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
 
   embed:
@@ -64,14 +63,14 @@ stages:
       - data/embeddings/pl-court-raw/${item.model}/agg_embeddings.pt
 
   
-  generate_graph_dataset:
+  build_graph_dataset:
     cmd: >-
-      PYTHONPATH=. python scripts/dataset/generate_graph_dataset.py
+      PYTHONPATH=. python scripts/dataset/build_graph_dataset.py
       --dataset-dir data/datasets/pl/raw 
       --embeddings-root-dir data/embeddings/pl-court-raw/mmlw-roberta-large/
       --target-dir data/datasets/pl/graph
     deps:
-      - scripts/dataset/generate_graph_dataset.py
+      - scripts/dataset/build_graph_dataset.py
       - juddges/data/pl_court_graph.py
       - data/datasets/pl/raw 
       - data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
