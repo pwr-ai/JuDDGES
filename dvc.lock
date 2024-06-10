@@ -557,7 +557,7 @@ stages:
       size: 1891254
   raw_dataset_readme:
     cmd: jupyter nbconvert  --no-input  --to markdown  --execute nbs/Data/02_Dataset_Description_Raw.ipynb
-      --output-dir data/datasets/pl/readme/raw --output README --TagRemovePreprocessor.remove_single_output_tags='{"hide_output"}'
+      --output-dir data/datasets/pl/readme/raw --output README
     deps:
     - path: data/datasets/pl/raw
       hash: md5
