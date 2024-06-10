@@ -79,7 +79,7 @@ stages:
     deps:
     - hash: md5
       md5: df2f1d464152f87737c8ebb5b0673854
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
       size: 2179383
     - hash: md5
@@ -89,7 +89,7 @@ stages:
     outs:
     - hash: md5
       md5: 521a731cc2c45d3eda0656a8e69d505b
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/metrics_Unsloth-Llama-3-8B-Instruct.json
       size: 307
   evaluate@Unsloth-Llama-3-8B-Instruct-fine-tuned:
@@ -98,7 +98,7 @@ stages:
     deps:
     - hash: md5
       md5: 9199da7e04fb35cc1ce2bbe9dd5cd274
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
       size: 1891254
     - hash: md5
@@ -108,7 +108,7 @@ stages:
     outs:
     - hash: md5
       md5: 6a0eb30a14687342bc86ae80253cd60c
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/metrics_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
       size: 306
   evaluate@Unsloth-Mistral-7B-Instruct-v0.3:
@@ -117,7 +117,7 @@ stages:
     deps:
     - hash: md5
       md5: c2e03f3fbd29c744023bdac7e1007265
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3.json
       size: 2007040
     - hash: md5
@@ -127,7 +127,7 @@ stages:
     outs:
     - hash: md5
       md5: 091b8888275600052dd2dcdd36a55588
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/metrics_Unsloth-Mistral-7B-Instruct-v0.3.json
       size: 305
   evaluate@Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned:
@@ -136,7 +136,7 @@ stages:
     deps:
     - hash: md5
       md5: a4fda5774b367e8924cf07f3bf271922
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
       size: 1834778
     - hash: md5
@@ -146,7 +146,7 @@ stages:
     outs:
     - hash: md5
       md5: 3b3589929112cb2f199044d240e87bcc
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/metrics_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
       size: 305
   predict@Bielik-7B-Instruct-v0.1:
@@ -227,7 +227,7 @@ stages:
     outs:
     - hash: md5
       md5: adf03a2b51a7a9cd4431c884a89f6497
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Mistral-7B-Instruct-v0.2-fine-tuned.json
       size: 1843278
   predict@Unsloth-Llama-3-8B-Instruct:
@@ -248,7 +248,7 @@ stages:
     outs:
     - hash: md5
       md5: df2f1d464152f87737c8ebb5b0673854
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
       size: 2179383
   predict@Unsloth-Llama-3-8B-Instruct-fine-tuned:
@@ -269,7 +269,7 @@ stages:
     outs:
     - hash: md5
       md5: 9199da7e04fb35cc1ce2bbe9dd5cd274
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
       size: 1891254
   predict@Unsloth-Mistral-7B-Instruct-v0.3:
@@ -290,7 +290,7 @@ stages:
     outs:
     - hash: md5
       md5: c2e03f3fbd29c744023bdac7e1007265
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3.json
       size: 2007040
   predict@Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned:
@@ -311,7 +311,7 @@ stages:
     outs:
     - hash: md5
       md5: a4fda5774b367e8924cf07f3bf271922
-      path:
+      path: 
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned.json
       size: 1834778
   sft@Mistral-7B-Instruct-v0.2:
@@ -436,8 +436,8 @@ stages:
       nfiles: 17
     - path: nbs/Data/02_Dataset_Description_Raw.ipynb
       hash: md5
-      md5: 520ae4cd67c4e72e97301a496383adf4
-      size: 74776
+      md5: d3d7509d084b85676857e13a2f20b82a
+      size: 73872
     outs:
     - path: data/datasets/pl/readme/raw/
       hash: md5
@@ -450,8 +450,8 @@ stages:
     deps:
     - path: nbs/Data/03_Dataset_Description_Instruct.ipynb
       hash: md5
-      md5: c403ede420e9c30b07920bc528bf8c7e
-      size: 16852
+      md5: 27e6d517445028d45e5c40b22febece4
+      size: 16215
     outs:
     - path: data/datasets/pl/readme/instruct/
       hash: md5
