@@ -13,7 +13,7 @@ from transformers.utils import is_flash_attn_2_available
 import yaml
 
 from juddges.config import EmbeddingModelConfig, RawDatasetConfig
-from juddges.defaults import CONFIG_PATH
+from juddges.settings import CONFIG_PATH
 from juddges.preprocessing.text_chunker import TextSplitter
 
 assert is_flash_attn_2_available(), "FlashAttention2 is required for this script"

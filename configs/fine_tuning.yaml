@@ -2,6 +2,8 @@ defaults:
   - model: ???
   - dataset: pl-court-instruct
   - _self_
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled  
 
 output_dir: data/experiments/fine-tune/${hydra:runtime.choices.model}/${hydra:runtime.choices.dataset}
 run_name: ${hydra:runtime.choices.model}_${hydra:runtime.choices.dataset}_fine_tune

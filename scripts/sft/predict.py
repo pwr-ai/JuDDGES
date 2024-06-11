@@ -13,7 +13,7 @@ from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from juddges.config import DatasetConfig, LLMConfig
-from juddges.defaults import CONFIG_PATH
+from juddges.settings import CONFIG_PATH
 from juddges.models.factory import get_model
 from juddges.preprocessing.text_encoder import TextEncoderForEval
 
