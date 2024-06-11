@@ -2,9 +2,10 @@ import json
 from pathlib import Path
 from typing import Any
 import networkx as nx
-from omegaconf import OmegaConf
 import typer
 from huggingface_hub import DatasetCard, DatasetCardData, HfApi
+
+from juddges.utils.config import load_and_resolve_config
 
 DATASET_CARD_TEMPLATE = "data/datasets/pl/graph/template_README.md"
 
@@ -14,10 +15,9 @@ def main(
     repo_id: str = typer.Option(...),
     commit_message: str = typer.Option("Add dataset", "--commit-message", "-m"),
     dry: bool = typer.Option(False, "--dry-run", "-d"),
-):
+) -> None:
     stats = _get_graph_info(root_dir)
-    config = OmegaConf.load(root_dir / "metadata.yaml")
-    OmegaConf.resolve(config)
+    config = load_and_resolve_config(root_dir / "metadata.yaml")
 
     card_data = DatasetCardData(
         language="pl",

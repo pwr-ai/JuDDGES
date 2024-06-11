@@ -17,7 +17,7 @@ load_dotenv()
 
 
 def main(
-    mongo_uri: Optional[str] = typer.Option(None, envvar="MONGO_URI"),
+    mongo_uri: str = typer.Option(None, envvar="MONGO_URI"),
     batch_size: int = typer.Option(BATCH_SIZE),
     n_jobs: Optional[int] = typer.Option(None, help="Number of processes to use"),
 ) -> None:
@@ -47,7 +47,7 @@ def main(
 
 
 class ParseDoc:
-    def __init__(self):
+    def __init__(self) -> None:
         self.parser = SimplePlJudgementsParser()
 
     def __call__(self, doc: dict[str, Any]) -> dict[str, Any]:

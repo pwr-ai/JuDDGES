@@ -7,7 +7,7 @@ from pathlib import Path
 
 import hydra
 from loguru import logger
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from openai import BaseModel
 from trl import SFTTrainer
 from transformers import (
@@ -32,6 +32,7 @@ from datasets import (
 from transformers import TrainingArguments
 
 from juddges.preprocessing.context_truncator import ContextTruncator
+from juddges.utils.config import resolve_config
 from unsloth import FastLanguageModel
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
@@ -51,9 +52,9 @@ class FineTuningConfig(BaseModel, extra="forbid"):
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="fine_tuning.yaml")
 def main(cfg: DictConfig) -> None:
-    OmegaConf.resolve(cfg)
-    logger.info(f"config:\n{cfg}")
-    config = FineTuningConfig(**cfg)
+    cfg_dict = resolve_config(cfg)
+    logger.info(f"config:\n{cfg_dict}")
+    config = FineTuningConfig(**cfg_dict)
 
     os.environ["WANDB_ENTITY"] = config.wandb_entity
     os.environ["WANDB_PROJECT"] = config.wandb_project
@@ -98,12 +99,11 @@ def prepare_dataset(
     dataset_context_field: str,
     dataset_output_field: str,
     truncate_context: bool,
-    tokenizer: PreTrainedTokenizer | None,
+    tokenizer: PreTrainedTokenizer,
     max_length: int | None,
     num_proc: int | None,
 ) -> DatasetDict | Dataset | IterableDatasetDict | IterableDataset:
     if truncate_context:
-        assert tokenizer is not None
         assert max_length is not None
         truncator = ContextTruncator(tokenizer, max_length)
 

@@ -7,7 +7,7 @@ import typer
 
 def main(
     root_dir: Path = typer.Option(...),
-):
+) -> None:
     results = []
     for f in Path("data/experiments/predict/pl-court-instruct").glob("metrics_*.json"):
         model_name = f.stem.replace("metrics_", "")

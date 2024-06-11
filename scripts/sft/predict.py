@@ -9,13 +9,14 @@ from datasets import load_dataset
 from loguru import logger
 from openai import BaseModel
 import torch
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from juddges.config import DatasetConfig, LLMConfig
 from juddges.settings import CONFIG_PATH
 from juddges.models.factory import get_model
 from juddges.preprocessing.text_encoder import TextEncoderForEval
+from juddges.utils.config import resolve_config
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
@@ -37,9 +38,9 @@ class PredictConfig(BaseModel, extra="forbid"):
 @torch.inference_mode()
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
 def main(cfg: DictConfig) -> None:
-    OmegaConf.resolve(cfg)
-    logger.info(f"config:\n{cfg}")
-    config = PredictConfig(**cfg)
+    cfg_dict = resolve_config(cfg)
+    logger.info(f"config:\n{cfg_dict}")
+    config = PredictConfig(**cfg_dict)
 
     output_file = Path(config.output_file)
     output_file.parent.mkdir(parents=True, exist_ok=True)

@@ -1,10 +1,11 @@
 import re
+from typing import Any
 import yaml
 
 yaml_pattern: re.Pattern = re.compile(r"^```(?:ya?ml)?(?P<yaml>[^`]*)", re.MULTILINE | re.DOTALL)
 
 
-def parse_yaml(text: str):
+def parse_yaml(text: str) -> Any:
     """YAML parser taken from langchain.
     Credit: https://github.com/langchain-ai/langchain.
     """

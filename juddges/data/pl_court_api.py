@@ -118,7 +118,7 @@ class PolishCourtAPI:
 
     def _unnest_dict(
         self,
-        ndict: dict[list[str] | str | None],
+        ndict: dict[str, list[str] | str | None],
         key: str,
     ) -> list[str] | None:
         if len(ndict) != 1:

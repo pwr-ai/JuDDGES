@@ -1,6 +1,8 @@
+from typing import Any
 import streamlit as st
 
-from juddges.data.models import get_mongo_collection
+from juddges.data.datasets import get_mongo_collection
+from pymongo.collection import Collection
 
 TITLE = "Search for Judgements"
 
@@ -10,14 +12,14 @@ st.title(TITLE)
 
 
 @st.cache_resource
-def get_judgements_collection():
+def get_judgements_collection() -> Collection:
     return get_mongo_collection("judgements")
 
 
 judgements_collection = get_judgements_collection()
 
 
-def search_data(query: str, max_judgements: int = 5):
+def search_data(query: str, max_judgements: int = 5) -> list[dict[str, Any]]:
     items = list(judgements_collection.find({"$text": {"$search": query}}).limit(max_judgements))
     return items
 

@@ -1,6 +1,7 @@
 import torch
 import os
 from torch_geometric.data import InMemoryDataset, download_url
+from torch_geometric.transforms import BaseTransform
 
 
 class PlCourtGraphDataset(InMemoryDataset):
@@ -9,7 +10,12 @@ class PlCourtGraphDataset(InMemoryDataset):
         "data/pyg_judgement_graph.pt?download=true"
     )
 
-    def __init__(self, root_dir: str, transform=None, pre_transform=None):
+    def __init__(
+        self,
+        root_dir: str,
+        transform: BaseTransform | None = None,
+        pre_transform: BaseTransform | None = None,
+    ):
         super(PlCourtGraphDataset, self).__init__(root_dir, transform, pre_transform)
         data_file, index_file = self.processed_paths
         self.load(data_file)

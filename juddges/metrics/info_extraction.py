@@ -6,7 +6,7 @@ from juddges.utils.misc import parse_yaml
 EMPTY_ANSWER = ""
 
 
-def evaluate_extraction(results: list[dict[str, str]]) -> dict[str, float]:
+def evaluate_extraction(results: list[dict[str, str]]) -> dict[str, float | dict[str, float]]:
     """Evaluates information extraction by computing metrics per each field."""
     res_gold, res_pred = parse_results(results)
     full_text_chrf = full_text_chrf_score(results)
@@ -16,7 +16,7 @@ def evaluate_extraction(results: list[dict[str, str]]) -> dict[str, float]:
 
 def full_text_chrf_score(results: list[dict[str, str]]) -> float:
     preds, golds = [r["answer"] for r in results], [r["gold"] for r in results]
-    return chrf_score(preds=preds, target=golds, n_word_order=0).item()
+    return chrf_score(preds=preds, target=golds, n_word_order=0).item()  # type: ignore
 
 
 def extraction_chrf_score(
@@ -24,7 +24,7 @@ def extraction_chrf_score(
     gold: dict[str, list[str]],
 ) -> dict[str, float]:
     per_field_chrf_score = {
-        key: chrf_score(preds=preds[key], target=gold[key], n_word_order=0).item()
+        key: chrf_score(preds=preds[key], target=gold[key], n_word_order=0).item()  # type: ignore
         for key in gold.keys()
     }
     return per_field_chrf_score

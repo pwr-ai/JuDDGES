@@ -14,7 +14,7 @@ class ModelForGeneration:
     generate_kwargs: dict[str, Any]
 
 
-def get_model(llm_config: LLMConfig, **kwargs) -> ModelForGeneration:
+def get_model(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     if "llama" in llm_config.name.lower():
         return get_llama_3(llm_config, **kwargs)
     elif "mistral" in llm_config.name.lower():
