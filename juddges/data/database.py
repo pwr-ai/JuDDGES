@@ -1,5 +1,5 @@
 import os
-from typing import Any, Callable, Generator, Iterator
+from typing import Any, Callable, Generator, Iterable, Iterator
 
 from loguru import logger
 from pymongo import MongoClient, UpdateOne
@@ -15,11 +15,11 @@ def get_mongo_collection(
 ) -> Collection:
     uri = mongo_uri or os.environ.get("MONGO_URI")
     assert uri, "Mongo URI is required"
-    db = mongo_db or os.environ.get("MONGO_DB_NAME")
-    assert db, "Mongo DB name is required"
+    db_name = mongo_db or os.environ.get("MONGO_DB_NAME")
+    assert db_name, "Mongo DB name is required"
 
-    client = MongoClient(uri)
-    db = client[db]
+    client: MongoClient = MongoClient(uri)
+    db = client[db_name]
     return db[collection_name]
 
 
@@ -36,13 +36,13 @@ class BatchedDatabaseCursor:
 
     def __iter__(self) -> Iterator[list[dict[str, Any]]]:
         if self.prefetch:
-            iterable = list(self.cursor)
+            iterable: Iterable = list(self.cursor)
         else:
             iterable = self.cursor
 
-        def gen_batches() -> Generator[dict[str, Any], None, None]:
+        def gen_batches() -> Generator[list[dict[str, Any]], None, None]:
             """Credit: https://stackoverflow.com/a/61809417"""
-            chunk = []
+            chunk: list[dict[str, Any]] = []
             for i, row in enumerate(iterable):
                 if i % self.batch_size == 0 and i > 0:
                     yield chunk

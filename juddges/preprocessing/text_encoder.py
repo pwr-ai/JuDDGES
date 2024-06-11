@@ -1,3 +1,4 @@
+from typing import Any
 from torch import Tensor
 from transformers import PreTrainedTokenizer
 from juddges.preprocessing.context_truncator import ContextTruncator
@@ -12,7 +13,7 @@ class TextEncoderForEval:
         self.max_length = max_length
         self.padding = padding
 
-    def __call__(self, batch: list[dict[str, str]]) -> dict[str, Tensor]:
+    def __call__(self, batch: dict[str, list[Any]]) -> dict[str, Tensor]:
         texts = []
 
         for prompt, context in zip(batch["prompt"], batch["context"]):

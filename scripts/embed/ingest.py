@@ -19,7 +19,7 @@ def main(
     mongo_uri: str = typer.Option(..., envvar="MONGO_URI"),
     batch_size: int = typer.Option(BATCH_SIZE),
     embeddings_file: Path = typer.Option(...),
-):
+) -> None:
     collection = get_mongo_collection(mongo_uri)
     query = {"embedding": {"$exists": False}}
     num_docs_to_update = collection.count_documents(query)

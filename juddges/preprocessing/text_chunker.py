@@ -23,7 +23,10 @@ class TextSplitter:
         self.take_n_first_chunks = take_n_first_chunks
 
     def __call__(self, txt: dict[str, Any]) -> dict[str, Any]:
-        ids, chunk_ids, chunk_lens, chunks = [], [], [], []
+        ids: list[str] = []
+        chunk_ids: list[int] = []
+        chunk_lens: list[int] = []
+        chunks: list[str] = []
 
         for id_, text in zip(txt["_id"], txt["text"]):
             current_chunks = self._split_text(text)

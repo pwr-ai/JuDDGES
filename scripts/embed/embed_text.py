@@ -4,7 +4,7 @@ from datasets import Dataset
 from typing import Any, Literal
 import hydra
 from loguru import logger
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from openai import BaseModel
 import torch
 from datasets import load_dataset
@@ -15,6 +15,7 @@ import yaml
 from juddges.config import EmbeddingModelConfig, RawDatasetConfig
 from juddges.settings import CONFIG_PATH
 from juddges.preprocessing.text_chunker import TextSplitter
+from juddges.utils.config import resolve_config
 
 assert is_flash_attn_2_available(), "FlashAttention2 is required for this script"
 
@@ -35,9 +36,9 @@ class EmbeddingConfig(BaseModel, extra="forbid"):
 @torch.inference_mode()
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="embedding.yaml")
 def main(cfg: DictConfig) -> None:
-    OmegaConf.resolve(cfg)
-    logger.info(f"config:\n{cfg}")
-    config = EmbeddingConfig(**cfg)
+    cfg_dict = resolve_config(cfg)
+    logger.info(f"config:\n{cfg_dict}")
+    config = EmbeddingConfig(**cfg_dict)
 
     assert (config.chunk_config is not None) ^ (config.truncation_tokens is not None)
 
@@ -84,6 +85,7 @@ def main(cfg: DictConfig) -> None:
 
 def chunk_dataset(dataset: Dataset, config: EmbeddingConfig) -> Dataset:
     # todo: To be verified
+    assert config.chunk_config is not None
     split_worker = TextSplitter(**config.chunk_config)
     ds = dataset.select_columns(["_id", "text"]).map(
         split_worker,

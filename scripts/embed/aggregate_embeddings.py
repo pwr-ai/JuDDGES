@@ -11,7 +11,7 @@ from torch import Tensor
 
 def main(
     embeddings_dir: Path = typer.Option(...),
-):
+) -> None:
     embs = load_from_disk(dataset_path=str(embeddings_dir))["train"]
     embs.set_format(type="torch", columns=["embedding"])
 
@@ -42,11 +42,11 @@ def mean_average_embeddings(df: pl.DataFrame) -> tuple[list[str], Tensor]:
 
     for i, (id_, x) in tqdm(enumerate(df.group_by(["_id"])), total=num_unique_docs):
         ids.append(id_[0])
-        chunk_lengths = torch.tensor(np.stack(x["chunk_len"].to_numpy()))
+        chunk_lengths = torch.tensor(np.stack(x["chunk_len"].to_numpy()))  # type: ignore
         chunk_lengths = chunk_lengths / chunk_lengths.sum()
-        chunk_embs = torch.tensor(np.stack(x["embedding"].to_numpy()))
+        chunk_embs = torch.tensor(np.stack(x["embedding"].to_numpy()))  # type: ignore
         chunk_embs = chunk_embs * chunk_lengths[:, None]
-        embs[i] = chunk_embs.sum(axis=0)
+        embs[i] = chunk_embs.sum(dim=0)
 
     return ids, embs
 

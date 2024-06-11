@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Optional
 import networkx as nx
 from omegaconf import OmegaConf
 import torch
@@ -14,9 +13,9 @@ from juddges.data.pl_court_graph import (
 
 def main(
     dataset_dir: Path = typer.Option(...),
-    embeddings_root_dir: Optional[Path] = typer.Option(None),
+    embeddings_root_dir: Path = typer.Option(None),
     target_dir: Path = typer.Option(...),
-):
+) -> None:
     data_dir = target_dir / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
 

@@ -5,7 +5,7 @@ import typer
 from juddges.metrics.info_extraction import evaluate_extraction
 
 
-def evaluate_results(output_file: Path = typer.Option(...)):
+def evaluate_results(output_file: Path = typer.Option(...)) -> None:
     with open(output_file, "r") as file:
         results = json.load(file)
 
