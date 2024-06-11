@@ -2,6 +2,8 @@ defaults:
   - model: ???
   - dataset: pl-court-instruct
   - _self_
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled  
 
 device_map: 'auto'
 output_file: data/experiments/predict/${hydra:runtime.choices.dataset}/outputs_${hydra:runtime.choices.model}.json

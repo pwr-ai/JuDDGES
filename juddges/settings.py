@@ -9,6 +9,7 @@ from sqlalchemy.engine import Engine
 ROOT_PATH = Path(__file__).resolve().parent.parent
 
 DATA_PATH = ROOT_PATH / "data"
+CONFIG_PATH = ROOT_PATH / "configs"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
 

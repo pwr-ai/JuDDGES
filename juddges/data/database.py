@@ -24,6 +24,11 @@ def get_mongo_collection(
 
 
 class BatchedDatabaseCursor:
+    """MongoDB cursor wrapper that returns documents in batches.
+    - Cursor is consumed in batches of specified size.
+    - Prefetch option loads all documents into memory before iterating.
+    """
+
     def __init__(self, cursor: Cursor, batch_size: int, prefetch: bool) -> None:
         self.cursor = cursor
         self.batch_size = batch_size

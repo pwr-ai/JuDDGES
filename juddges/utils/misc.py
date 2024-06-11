@@ -5,7 +5,7 @@ yaml_pattern: re.Pattern = re.compile(r"^```(?:ya?ml)?(?P<yaml>[^`]*)", re.MULTI
 
 
 def parse_yaml(text: str):
-    """YAML parser taken from langchaing.
+    """YAML parser taken from langchain.
     Credit: https://github.com/langchain-ai/langchain.
     """
     match = re.search(yaml_pattern, text.strip())

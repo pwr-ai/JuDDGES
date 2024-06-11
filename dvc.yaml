@@ -79,20 +79,6 @@ stages:
       - data/datasets/pl/graph/data
       - data/datasets/pl/graph/metadata.yaml
 
-  sft:
-    matrix:
-      model:
-        - Mistral-7B-Instruct-v0.2
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
-    deps:
-      - scripts/sft/fine_tune_llm.py
-      - configs/fine_tuning.yaml
-      - configs/model/${item.model}.yaml
-    outs:
-      - data/experiments/fine-tune/${item.model}/pl-court-instruct
-    frozen: true
-
   sft_unsloth:
     matrix:
       model:
@@ -110,10 +96,6 @@ stages:
   predict:
     matrix:
       model:
-        - Meta-Llama-3-8B-Instruct
-        - Mistral-7B-Instruct-v0.2
-        - Mistral-7B-Instruct-v0.2-fine-tuned
-        - Bielik-7B-Instruct-v0.1
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
@@ -134,7 +116,6 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
-        - Bielik-7B-Instruct-v0.1
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py 
       --output-file data/experiments/predict/pl-court-instruct/outputs_${item.model}.json

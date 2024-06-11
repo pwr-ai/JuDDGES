@@ -1,8 +1,0 @@
-name: mistralai/Mistral-7B-Instruct-v0.2
-tokenizer_name: ${.name}
-
-adapter_path: data/experiments/fine-tune/Mistral-7B-Instruct-v0.2/pl-court-instruct/checkpoint-1000
-
-max_seq_length: 20_000
-padding: longest
-batch_size: 1

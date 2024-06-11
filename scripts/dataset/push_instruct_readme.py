@@ -7,8 +7,6 @@ from huggingface_hub import DatasetCardData, DatasetCard, HfApi
 
 load_dotenv()
 
-MAX_SHARD_SIZE = "4GB"
-
 DATASET_CARD_TEMPLATE_DIR = Path("data/datasets/pl/readme/instruct")
 
 

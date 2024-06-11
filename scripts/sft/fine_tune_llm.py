@@ -18,7 +18,7 @@ from transformers import (
 
 from juddges.config import DatasetConfig, LLMConfig
 from juddges.data.datasets.utils import create_chat
-from juddges.defaults import FINE_TUNING_DATASETS_PATH, CONFIG_PATH
+from juddges.settings import CONFIG_PATH
 
 from datasets import (
     load_dataset,
@@ -26,7 +26,6 @@ from datasets import (
     Dataset,
     IterableDatasetDict,
     IterableDataset,
-    load_from_disk,
 )
 
 import torch
@@ -92,11 +91,7 @@ def get_dataset(
     dataset_name: str,
     num_proc: int,
 ) -> DatasetDict | Dataset | IterableDatasetDict | IterableDataset:
-    if dataset_name == "dummy":
-        dataset = load_from_disk(FINE_TUNING_DATASETS_PATH / "dummy_dataset")
-    else:
-        dataset = load_dataset(dataset_name, split="train", num_proc=num_proc)
-    return dataset
+    return load_dataset(dataset_name, split="train", num_proc=num_proc)
 
 
 def prepare_dataset(
