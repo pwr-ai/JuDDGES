@@ -1,0 +1,19 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - section: Data
+        contents:
+          - Data/00_prepare_instruction_dataset_for_ir.ipynb
+          - Data/01_Dataset_Description.ipynb
+          - Data/02_Analyse_sft.ipynb
+          - Data/03_Graph_Dataset_Description.ipynb
+          - Data/04_Graph_Analysis.ipynb
+      - section: Dataset Cards
+        contents:
+          - Dataset Cards/01_Dataset_Description_Raw.ipynb
+          - Dataset Cards/02_Dataset_Description_Instruct.ipynb
+          - Dataset Cards/03_Graph_Description.md
+      - section: Presentations
+        contents:
+          - Presentations/00_workshop_demo.ipynb
