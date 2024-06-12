@@ -9,6 +9,8 @@ website:
           - Data/02_Analyse_sft.ipynb
           - Data/03_Graph_Dataset_Description.ipynb
           - Data/04_Graph_Analysis.ipynb
+          - Data/05_Analyze_En_Judgements_Texts.ipynb
+          - Data/06_Analyse_En_Dataset.ipynb
       - section: Dataset Cards
         contents:
           - Dataset Cards/01_Dataset_Description_Raw.ipynb
