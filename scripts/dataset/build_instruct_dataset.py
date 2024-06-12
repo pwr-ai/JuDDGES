@@ -14,6 +14,8 @@ from juddges.settings import PL_JUDGEMENTS_PATH_INSTRUCT, PL_JUDGEMENTS_PATH_RAW
 load_dotenv()
 
 MAX_SHARD_SIZE = "4GB"
+DATE_FORMAT = "%Y-%m-%d"
+JUDGE_SEPARATOR = " i "
 
 SCHEMA_TEMPLATE = "```yaml\n{schema}\n```"
 INSTRUCTION_TEMPLATE = """
@@ -113,7 +115,7 @@ def main(
 
 
 def _pre_filter(item: dict[str, Any]) -> bool:
-    return all(item[feat] is not None for feat in FEATURES)
+    return not any(item[feat] is None for feat in FEATURES)
 
 
 def _preprocess(item: dict[str, Any]) -> dict[str, Any]:
@@ -125,7 +127,7 @@ def _preprocess(item: dict[str, Any]) -> dict[str, Any]:
 
 def _simplify_date(item: dict[str, Any]) -> dict[str, Any]:
     item["date"], *_ = item["date"].split()
-    datetime.strptime(item["date"], "%Y-%m-%d")  # raises ValueError on invalid format
+    datetime.strptime(item["date"], DATE_FORMAT)  # raises ValueError on invalid format
     return item
 
 
@@ -133,7 +135,7 @@ def _split_multiple_names(item: dict[str, Any]) -> dict[str, Any]:
     """Splits judges names that are joined by 'i'."""
     judges = []
     for j in item["judges"]:
-        for j_part in j.split(" i "):
+        for j_part in j.split(JUDGE_SEPARATOR):
             judges.append(j_part)
 
     item["judges"] = judges
@@ -146,7 +148,7 @@ def _legal_bases_to_texts(item: dict[str, Any]) -> dict[str, Any]:
 
 
 def _filter(item: dict[str, Any]) -> bool:
-    all_judges_in_text = all(j in item["text"] for j in item["judges"])
+    all_judges_in_text = not any(j not in item["text"] for j in item["judges"])
     recorder_in_text = item["recorder"] in item["text"]
     signature_in_text = item["signature"] in item["text"]
 

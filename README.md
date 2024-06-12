@@ -23,12 +23,35 @@ fostering cross-disciplinary and cross-jurisdictional collaboration.
 
 ![baner](https://raw.githubusercontent.com/pwr-ai/JuDDGES/bffb1d75ba7c78f101fc94bd9086499886b2c128/nbs/images/baner.png)
 
+## Usage
+
+### Installation
+
+- to install necessary dependencies use available `Makefile`, you can
+  use `python>=3.10`: `shell     make install`
+- if you want to run evaluation and fine-tuning with `unsloth`, use the
+  following command with `python=3.10` inside conda environment:
+  `shell     make install_unsloth`
+
+### Dataset creation
+
+The specific details of dataset creation are available in
+[scripts/README.md](scripts/README.md).
+
+### Fine tuning
+
+To run evaluation or fine-tuning, run proper stages declared
+[`dvc.yaml`](dvc.yaml) (see [DVC docs for
+details](https://dvc.org/doc/user-guide))
+
+## Project details
+
 The JuDDGES project encompasses several Work Packages (WPs) designed to
 cover all aspects of its objectives, from project management to the open
 science practices and engaging early career researchers. Below is an
 overview of the project’s WPs based on the provided information:
 
-## WP1: Project Management
+### WP1: Project Management
 
 **Duration**: 24 Months
 
@@ -37,7 +60,7 @@ within budget. This includes administrative management, scientific and
 technological management, quality innovation and risk management,
 ethical and legal consideration, and facilitating open science.
 
-## WP2: Gathering and Human Encoding of Judicial Decision Data
+### WP2: Gathering and Human Encoding of Judicial Decision Data
 
 **Duration**: 22 Months
 
@@ -48,7 +71,7 @@ coders, making human-coded data available for WP3, facilitating
 human-in-loop coding for WP3, and enabling WP4 to make data open and
 reusable beyond the project team.
 
-## WP3: NLP and HITL Machine Learning Methodological Development
+### WP3: NLP and HITL Machine Learning Methodological Development
 
 **Duration**: 24 Months
 
@@ -59,7 +82,7 @@ baseline information extraction, intelligent inference methods for legal
 corpus data, and constructing an annotation tool through active learning
 and human-in-the-loop annotation methods.
 
-## WP4: Open Science Practices & Engaging Early Career Researchers
+### WP4: Open Science Practices & Engaging Early Career Researchers
 
 **Duration**: 12 Months
 
@@ -72,12 +95,6 @@ its findings.
 Each WP includes specific tasks aimed at achieving its goals, involving
 collaboration among project partners and contributing to the overarching
 aim of the JuDDGES project​​.
-
-## Install
-
-``` sh
-pip install juddges
-```
 
 ## Acknowledgements
 

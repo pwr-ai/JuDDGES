@@ -14,9 +14,11 @@ def main(
         with f.open() as file:
             m_res = json.load(file)
             results.append(
-                {"llm": model_name}
-                | {"full_text_chrf": m_res["full_text_chrf"]}
-                | m_res["field_chrf"]
+                {
+                    "llm": model_name,
+                    "full_text_chrf": m_res["full_text_chrf"],
+                    **m_res["field_chrf"],
+                }
             )
 
     summary_file = root_dir / "metrics_summary.md"
