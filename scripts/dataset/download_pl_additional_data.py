@@ -43,7 +43,7 @@ def main(
     cursor = collection.find(query, {"_id": 1}, batch_size=batch_size)
     batched_cursor = BatchedDatabaseCursor(cursor=cursor, batch_size=batch_size, prefetch=True)
 
-    download_data = DownloadAdditionalData(data_type)
+    download_data = AdditionalDataDownloader(data_type)
     download_data_and_update_db = BatchDatabaseUpdate(mongo_uri, download_data)
 
     with multiprocessing.Pool(n_jobs) as pool:
@@ -60,7 +60,7 @@ def main(
     assert collection.count_documents(query) == 0
 
 
-class DownloadAdditionalData:
+class AdditionalDataDownloader:
     def __init__(self, data_type: DataType):
         self.data_type = data_type
         self.api = PolishCourtAPI()

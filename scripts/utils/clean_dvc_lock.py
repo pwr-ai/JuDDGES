@@ -16,8 +16,6 @@ def main(
     for stage, *_ in repo.index.graph.nodes(data=True):
         if stage.path_in_repo == "dvc.yaml":
             stages.add(stage.name)
-        else:
-            continue
 
     with dvc_lock.open() as file:
         lock_file = yaml.safe_load(file)
@@ -25,7 +23,7 @@ def main(
     lock_stages = set(lock_file["stages"].keys())
     to_remove = lock_stages.difference(stages)
 
-    print(to_remove)
+    print(f"Removing stages from lock: \n{to_remove}")
     if typer.confirm("Are you sure you want to delete?"):
         lock_file["stages"] = {
             key: val for key, val in lock_file["stages"].items() if key not in to_remove

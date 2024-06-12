@@ -45,7 +45,7 @@ def main(cfg: DictConfig) -> None:
     output_file = Path(config.output_file)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    ds = load_dataset("JuDDGES/pl-court-instruct")
+    ds = load_dataset(config.dataset.name, split="test")
     logger.info("Loading model...")
 
     model_pack = get_model(config.model, device_map=config.device_map)
@@ -53,8 +53,6 @@ def main(cfg: DictConfig) -> None:
     model.eval()
     if config.model.batch_size > 1 and config.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
-
-    ds = ds["test"]
 
     gold_outputs = [item["output"] for item in ds]
 

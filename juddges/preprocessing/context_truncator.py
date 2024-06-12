@@ -10,8 +10,8 @@ class ContextTruncator:
 
         empty_messages = [
             {"role": "user", "content": ""},
+            {"role": "assistant", "content": ""},
         ]
-        empty_messages.append({"role": "assistant", "content": ""})
 
         self.empty_messages_length = len(
             self.tokenizer.apply_chat_template(empty_messages, tokenize=True)

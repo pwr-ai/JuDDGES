@@ -1,3 +1,7 @@
+"""
+Fine-tune a large language model using SFT.
+the script is based on: https://www.philschmid.de/fine-tune-llms-in-2024-with-trl
+"""
 import os
 from pathlib import Path
 

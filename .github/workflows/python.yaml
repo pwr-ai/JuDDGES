@@ -20,7 +20,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install deps
         run: make install_cpu
       - name: Lint
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install deps
         run: make install_cpu
       - name: Test
