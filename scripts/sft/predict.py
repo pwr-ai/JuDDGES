@@ -1,21 +1,21 @@
 import json
 import os
-from pathlib import Path
 import time
+from pathlib import Path
 
 import hydra
-from datasets import load_dataset
-
-from loguru import logger
-from openai import BaseModel
 import torch
+from datasets import load_dataset
+from loguru import logger
 from omegaconf import DictConfig
-from tqdm import tqdm
+from openai import BaseModel
 from torch.utils.data import DataLoader
+from tqdm import tqdm
+
 from juddges.config import DatasetConfig, LLMConfig
-from juddges.settings import CONFIG_PATH
 from juddges.models.factory import get_model
 from juddges.preprocessing.text_encoder import TextEncoderForEval
+from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

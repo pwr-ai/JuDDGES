@@ -1,5 +1,6 @@
 import re
 from typing import Any
+
 import yaml
 
 yaml_pattern: re.Pattern = re.compile(r"^```(?:ya?ml)?(?P<yaml>[^`]*)", re.MULTILINE | re.DOTALL)
