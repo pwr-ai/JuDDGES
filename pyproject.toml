@@ -12,4 +12,3 @@ plugins = "numpy.typing.mypy_plugin"
 [[tool.mypy.overrides]]
 module = ["pyarrow.*", "datasets.*", "sentence_transformers.*"]
 ignore_missing_imports = true
-
