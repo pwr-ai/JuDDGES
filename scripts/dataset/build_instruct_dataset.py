@@ -75,6 +75,9 @@ def main(
         help="Number of parallel jobs to use",
     ),
     branch: Optional[str] = typer.Option(None, help="Branch to push the dataset to"),
+    commit_message: Optional[str] = typer.Option(
+        None, help="Commit message", envvar="COMMIT_MESSAGE"
+    ),
 ) -> None:
     feature_cols = ["_id"] + FEATURES
     logger.info("Loading dataset...")
@@ -108,7 +111,12 @@ def main(
     logger.info("Built dataset with following parameters: {ds_info}", ds_info=str(ds))
 
     if repo_id:
-        ds.push_to_hub(repo_id, max_shard_size=MAX_SHARD_SIZE, revision=branch)
+        ds.push_to_hub(
+            repo_id,
+            max_shard_size=MAX_SHARD_SIZE,
+            commit_message=commit_message,
+            revision=branch,
+        )
     else:
         ds.save_to_disk(target_dir, max_shard_size=MAX_SHARD_SIZE, num_proc=num_jobs)
 
@@ -155,9 +163,11 @@ def _filter(item: dict[str, Any]) -> bool:
 
 
 def to_instruction_fmt(item: dict[str, Any]) -> dict[str, str]:
-    output = SCHEMA_TEMPLATE.format(
-        schema=yaml.dump({k: item[SCHEMA_2_FEATURES[k]] for k in SCHEMA_DESC.keys()}).strip()
-    )
+    yaml_output = yaml.dump(
+        {k: item[SCHEMA_2_FEATURES[k]] for k in SCHEMA_DESC.keys()},
+        allow_unicode=True,
+    ).strip()
+    output = SCHEMA_TEMPLATE.format(schema=yaml_output)
 
     return {"prompt": PROMPT, "context": item["text"], "output": output}
 
