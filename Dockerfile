@@ -24,7 +24,7 @@ RUN apt-get update \
     && gdebi -n quarto-1.5.17-linux-amd64.deb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists \
-    && rm -rf /tmp 
+    && rm -rf /tmp
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1

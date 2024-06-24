@@ -1,9 +1,9 @@
 stages:
   raw_dataset_readme:
     cmd: >-
-      jupyter nbconvert 
-      --no-input 
-      --to markdown 
+      jupyter nbconvert
+      --no-input
+      --to markdown
       --execute nbs/Data/02_Dataset_Description_Raw.ipynb
       --output-dir data/datasets/pl/readme/raw
       --output README
@@ -15,9 +15,9 @@ stages:
 
   instruct_dataset_readme:
     cmd: >-
-      jupyter nbconvert 
-      --no-input 
-      --to markdown 
+      jupyter nbconvert
+      --no-input
+      --to markdown
       --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
       --output-dir data/datasets/pl/readme/instruct
       --output README
@@ -54,7 +54,7 @@ stages:
       model:
         - mmlw-roberta-large
     cmd: >-
-      PYTHONPATH=. python scripts/embed/aggregate_embeddings.py 
+      PYTHONPATH=. python scripts/embed/aggregate_embeddings.py
       --embeddings-dir data/embeddings/pl-court-raw/${item.model}/all_embeddings
     deps:
       - scripts/embed/aggregate_embeddings.py
@@ -62,17 +62,17 @@ stages:
     outs:
       - data/embeddings/pl-court-raw/${item.model}/agg_embeddings.pt
 
-  
+
   build_graph_dataset:
     cmd: >-
       PYTHONPATH=. python scripts/dataset/build_graph_dataset.py
-      --dataset-dir data/datasets/pl/raw 
+      --dataset-dir data/datasets/pl/raw
       --embeddings-root-dir data/embeddings/pl-court-raw/mmlw-roberta-large/
       --target-dir data/datasets/pl/graph
     deps:
       - scripts/dataset/build_graph_dataset.py
       - juddges/data/pl_court_graph.py
-      - data/datasets/pl/raw 
+      - data/datasets/pl/raw
       - data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
       - data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings/config.yaml
     outs:
@@ -88,7 +88,7 @@ stages:
       PYTHONPATH=. python scripts/sft/fine_tune_unsloth.py model=${item.model}
     deps:
       - scripts/sft/fine_tune_unsloth.py
-      - configs/fine_tuning.yaml 
+      - configs/fine_tuning.yaml
       - configs/model/${item.model}.yaml
     outs:
       - data/experiments/fine-tune/${item.model}/pl-court-instruct
@@ -117,7 +117,7 @@ stages:
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
     cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate.py 
+      PYTHONPATH=. python scripts/sft/evaluate.py
       --output-file data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
     deps:
       - scripts/sft/evaluate.py
@@ -131,7 +131,7 @@ stages:
       dir:
         - data/experiments/predict/pl-court-instruct
     cmd: >-
-      PYTHONPATH=. python scripts/sft/summarize_metrics.py 
+      PYTHONPATH=. python scripts/sft/summarize_metrics.py
       --root-dir ${item.dir}
     deps:
       - scripts/sft/summarize_metrics.py

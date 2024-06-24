@@ -7,12 +7,12 @@ from langchain_openai import ChatOpenAI
 SCHEMA_PROMPT_TEMPLATE = """
 Act as a assistant that prepares schema for information extraction
 
-Based on the user input prepare schema containing variables with their short description and type. 
-Be precise about variable names, format names using snake_case. 
+Based on the user input prepare schema containing variables with their short description and type.
+Be precise about variable names, format names using snake_case.
 If user asks irrelevant question always return empty JSON.
 As example:
 User: I want extract age, gender, and plea from the judgement
-Agent: 
+Agent:
     age: integer
     gender: male or female
     plea: string
@@ -24,13 +24,13 @@ Agent:
 Format response as JSON:
 """
 
-EXTRACTION_PROMPT_TEMPLATE = """Act as a legal document tool that extracts information and answer questions based on judgements. 
+EXTRACTION_PROMPT_TEMPLATE = """Act as a legal document tool that extracts information and answer questions based on judgements.
 
 Instruction for extracting information from judgements:
 - Judgements are in {LANGUAGE} language, please extract information in {LANGUAGE}.
 - Do not provide information that are not explicitly mentioned in judgements. If you can't extract information from the text field, leave the field with empty string "".
 
-Follow the following YAML structure to extract information and answer questions based on judgements: 
+Follow the following YAML structure to extract information and answer questions based on judgements:
 {SCHEMA}
 
 ====
