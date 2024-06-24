@@ -7,36 +7,33 @@ import os
 from pathlib import Path
 
 import hydra
+import torch
+from datasets import (
+    Dataset,
+    DatasetDict,
+    IterableDataset,
+    IterableDatasetDict,
+    load_dataset,
+)
 from loguru import logger
 from omegaconf import DictConfig
 from openai import BaseModel
 from peft.tuners.lora.config import LoraConfig
-from trl import SFTTrainer
 from transformers import (
-    AutoTokenizer,
     AutoModelForCausalLM,
+    AutoTokenizer,
     BitsAndBytesConfig,
     PreTrainedModel,
     PreTrainedTokenizer,
     Trainer,
+    TrainingArguments,
 )
+from trl import SFTTrainer
 
 from juddges.config import DatasetConfig, LLMConfig
 from juddges.data.datasets.utils import create_chat
-from juddges.settings import CONFIG_PATH
-
-from datasets import (
-    load_dataset,
-    DatasetDict,
-    Dataset,
-    IterableDatasetDict,
-    IterableDataset,
-)
-
-import torch
-from transformers import TrainingArguments
-
 from juddges.preprocessing.context_truncator import ContextTruncator
+from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))

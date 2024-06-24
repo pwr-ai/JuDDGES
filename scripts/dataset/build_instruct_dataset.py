@@ -1,13 +1,12 @@
+from datetime import datetime
 from pathlib import Path
-from typing import Any
-from typing import Optional
+from typing import Any, Optional
+
+import typer
+import yaml
+from datasets import load_dataset
 from dotenv import load_dotenv
 from loguru import logger
-import typer
-from datasets import load_dataset
-from datetime import datetime
-
-import yaml
 
 from juddges.settings import PL_JUDGEMENTS_PATH_INSTRUCT, PL_JUDGEMENTS_PATH_RAW
 

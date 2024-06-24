@@ -4,7 +4,7 @@ from typing import Optional
 import typer
 from datasets import load_dataset
 from dotenv import load_dotenv
-from huggingface_hub import DatasetCardData, DatasetCard, HfApi
+from huggingface_hub import DatasetCard, DatasetCardData, HfApi
 from loguru import logger
 
 from juddges.settings import PL_JUDGEMENTS_PATH_RAW
