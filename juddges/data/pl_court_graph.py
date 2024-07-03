@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Any
-from torch_geometric.data import HeteroData
-from torch import Tensor
-import polars as pl
+
 import networkx as nx
+import polars as pl
 import torch
+from torch import Tensor
+from torch_geometric.data import HeteroData
 from tqdm.auto import tqdm
 
 JUDGMENT_ATTRS = [

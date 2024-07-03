@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+
 import typer
 
 from juddges.metrics.info_extraction import evaluate_extraction

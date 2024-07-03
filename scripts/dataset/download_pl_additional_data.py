@@ -6,12 +6,12 @@ from typing import Any
 import typer
 from dotenv import load_dotenv
 from loguru import logger
-from requests import HTTPError, ConnectionError
-from tenacity import retry, wait_random_exponential, retry_if_exception_type, stop_after_attempt
+from requests import ConnectionError, HTTPError
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
 from tqdm import tqdm
 
 from juddges.data.database import BatchDatabaseUpdate, BatchedDatabaseCursor, get_mongo_collection
-from juddges.data.pl_court_api import PolishCourtAPI, DataNotFoundError
+from juddges.data.pl_court_api import DataNotFoundError, PolishCourtAPI
 
 N_JOBS = 6
 BATCH_SIZE = 100

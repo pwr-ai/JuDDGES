@@ -1,13 +1,13 @@
 import math
 import multiprocessing
-from typing import Optional, Any
+from typing import Any, Optional
 
 import typer
 from dotenv import load_dotenv
 from loguru import logger
 from tqdm import tqdm
 
-from juddges.data.database import get_mongo_collection, BatchedDatabaseCursor, BatchDatabaseUpdate
+from juddges.data.database import BatchDatabaseUpdate, BatchedDatabaseCursor, get_mongo_collection
 from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
 
 BATCH_SIZE = 100

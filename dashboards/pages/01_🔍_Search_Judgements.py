@@ -1,8 +1,9 @@
 from typing import Any
+
 import streamlit as st
+from pymongo.collection import Collection
 
 from juddges.data.datasets import get_mongo_collection
-from pymongo.collection import Collection
 
 TITLE = "Search for Judgements"
 

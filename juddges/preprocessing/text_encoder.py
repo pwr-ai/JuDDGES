@@ -1,6 +1,8 @@
 from typing import Any
+
 from torch import Tensor
 from transformers import PreTrainedTokenizer
+
 from juddges.preprocessing.context_truncator import ContextTruncator
 
 

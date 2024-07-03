@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
+
 import networkx as nx
-from omegaconf import OmegaConf
 import torch
 import typer
+from omegaconf import OmegaConf
 
 from juddges.data.pl_court_graph import (
     create_judgment_legal_base_graph,

@@ -2,11 +2,11 @@ import math
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
 import torch
+import typer
+from dotenv import load_dotenv
 from loguru import logger
 from tqdm.auto import tqdm
-import typer
 
 from juddges.data.database import BatchDatabaseUpdate, BatchedDatabaseCursor, get_mongo_collection
 

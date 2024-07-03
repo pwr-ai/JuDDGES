@@ -1,12 +1,13 @@
 from pathlib import Path
-from loguru import logger
+
 import numpy as np
-from tqdm.auto import tqdm
-import typer
-from datasets import load_from_disk
 import polars as pl
 import torch
+import typer
+from datasets import load_from_disk
+from loguru import logger
 from torch import Tensor
+from tqdm.auto import tqdm
 
 
 def main(
