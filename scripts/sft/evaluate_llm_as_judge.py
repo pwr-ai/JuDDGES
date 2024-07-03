@@ -2,52 +2,40 @@ import json
 import os
 from pathlib import Path
 from pprint import pformat
-from typing import Any
+from typing import Any, Literal
 
 import hydra
+import requests
 import torch
-from accelerate import PartialState
-from datasets import load_dataset
+from deepdiff import DeepDiff
+from dotenv import load_dotenv
+from langsmith.wrappers import wrap_openai
 from loguru import logger
 from omegaconf import DictConfig
+from openai import OpenAI
 from pydantic import BaseModel, Field
-from torch import Tensor
-from transformers import PreTrainedTokenizer
 
-from juddges.config import LLMConfig
-from juddges.models.factory import get_model
-from juddges.models.predict import predict_with_llm
+from juddges.evaluation.llm_evaluator import StructuredLLMJudgeEvaluator
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 
-NUM_PROC = int(os.getenv("NUM_PROC", 1))
-if NUM_PROC > 1:
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+LLAMA_CPP_ENDOPOINT = os.getenv("LLAMA_CPP_ENDPOINT", "http://localhost:8000")
 
-JUDGE_PROMPT = """
-You are evaluating information extraction system by comparing a submitted answer to an expert answer on a given question.
-Data is in Polish. Here is the data:
-[BEGIN DATA]
-************
-[Expert]: {gold}
-************
-[Submission]: {answer}
-************
-[END DATA]
+load_dotenv()
 
-Submitted answer should be formatted as YAML. If the submitted answer cannot be parsed as YAML, return incorrect.
-When comparing consecutive fields, ignore order of fields, capitalization and don't be sensitive to abbreviations which preserves the meaning of the answer.
-In comparison, ignore legal_bases field.
-Format you answer as follows: The answer is <correct/incorrect>. Don't provide any additional explanation.
-"""
+
+class ApiModel(BaseModel, extra="forbid"):
+    name: str
+    api: Literal["llama.cpp", "openai"]
+    endpoint: str = Field(default=LLAMA_CPP_ENDOPOINT)
+    use_langsmith: bool
+    config: dict[str, Any] | None = None
 
 
 class LLMJudgeConfig(BaseModel, extra="forbid"):
-    model: LLMConfig
+    api_model: ApiModel
     answers_file: Path
     out_metric_file: Path
-    out_predictions_file: Path
-    generate_kwargs: dict[str, Any] = Field(default_factory=dict)
 
 
 @torch.inference_mode()
@@ -57,59 +45,46 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"config:\n{pformat(cfg_dict)}")
     config = LLMJudgeConfig(**cfg_dict)
 
-    config.out_metric_file.parent.mkdir(parents=True, exist_ok=True)
+    if config.api_model.api == "llama.cpp":
+        results = evaluate_with_llama_cpp(config)
+    elif config.api_model.api == "openai":
+        raise NotImplementedError("OpenAI API is not implemented yet")
+    else:
+        raise ValueError(f"Unknown API: {config.api_model.api}")
 
-    ds = load_dataset("json", data_files=str(config.answers_file), split="train")
-    ds = ds.map(
-        lambda x: {"input_text": JUDGE_PROMPT.format(answer=x["answer"], gold=x["gold"])},
+    with open(config.out_metric_file, "w") as f:
+        json.dump(results, f, indent="\t")
+
+
+def evaluate_with_llama_cpp(config: LLMJudgeConfig) -> dict[str, Any]:
+    _check_llama_cpp_integrity(config)
+
+    oai_client = OpenAI(
+        api_key="not-required",
+        base_url=config.api_model.endpoint,
     )
-    ds.cleanup_cache_files()
+    if config.api_model.use_langsmith:
+        oai_client = wrap_openai(oai_client)
 
-    model_pack = get_model(
-        llm_config=config.model,
-        device_map={"": PartialState().process_index},
+    evaluator = StructuredLLMJudgeEvaluator(
+        oai_client=oai_client,
+        model_name=config.api_model.name,
     )
-    model_pack.generate_kwargs |= config.generate_kwargs
+    with open(config.answers_file) as f:
+        answers = json.load(f)
 
-    encoder = SimpleEncoder(tokenizer=model_pack.tokenizer)
-    ds.set_transform(encoder, columns=["input_text"])
-
-    predictions = predict_with_llm(
-        model_pack=model_pack,
-        dataset=ds,
-        batch_size=config.model.batch_size,
-        num_proc=NUM_PROC,
-        verbose=True,
-    )
-
-    with open(config.out_predictions_file, "w") as f:
-        json.dump(predictions, f, indent="\t")
+    return evaluator.evaluate(answers)
 
 
-class SimpleEncoder:
-    def __init__(self, tokenizer: PreTrainedTokenizer):
-        self.tokenizer = tokenizer
+def _check_llama_cpp_integrity(config: LLMJudgeConfig) -> None:
+    props = _get_llama_props(config.api_model.endpoint)
+    diff = DeepDiff(config.api_model.config, props, ignore_order=True)
+    if diff:
+        raise ValueError(f"Config mismatch:\n{pformat(diff)}")
 
-    def __call__(self, batch: dict[str, list[str]]) -> dict[str, Tensor]:
-        # NOTE: truncation is disabled and padding is set to "longest"
-        input_texts = []
-        for text in batch["input_text"]:
-            input_chat = [{"role": "user", "content": text}]
-            final_input = self.tokenizer.apply_chat_template(
-                input_chat,
-                add_generation_prompt=True,
-                tokenize=False,
-            )
-            input_texts.append(final_input)
 
-        return self.tokenizer(
-            input_texts,
-            padding="longest",
-            truncation=False,
-            return_tensors="pt",
-            return_attention_mask=False,
-            return_special_tokens_mask=False,
-        )
+def _get_llama_props(endpoint: str) -> dict[str, Any]:
+    return requests.get(f"{endpoint}/props").json()
 
 
 if __name__ == "__main__":

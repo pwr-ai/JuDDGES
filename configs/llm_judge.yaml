@@ -1,11 +1,6 @@
 defaults:
-  - model: ???
+  - api_model: ???
   - _self_
 
 answers_file: ???
 out_metric_file: ???
-out_predictions_file: ???
-
-generate_kwargs:
-  max_new_tokens: 20
-  do_sample: False

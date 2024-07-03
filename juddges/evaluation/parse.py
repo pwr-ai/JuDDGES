@@ -1,40 +1,23 @@
 import datetime
 from collections import defaultdict
 
-from torchmetrics.functional.text import chrf_score
-
 from juddges.utils.misc import parse_yaml
 
 EMPTY_ANSWER = ""
-
-
-def evaluate_extraction(results: list[dict[str, str]]) -> dict[str, float | dict[str, float]]:
-    """Evaluates information extraction by computing metrics per each field."""
-    res_gold, res_pred = parse_results(results)
-    full_text_chrf = full_text_chrf_score(results)
-    per_field_chrf_score = extraction_chrf_score(preds=res_pred, gold=res_gold)
-    return {"full_text_chrf": full_text_chrf, "field_chrf": per_field_chrf_score}
-
-
-def full_text_chrf_score(results: list[dict[str, str]]) -> float:
-    preds, golds = [r["answer"] for r in results], [r["gold"] for r in results]
-    return chrf_score(preds=preds, target=golds, n_word_order=0).item()  # type: ignore
-
-
-def extraction_chrf_score(
-    preds: dict[str, list[str]],
-    gold: dict[str, list[str]],
-) -> dict[str, float]:
-    per_field_chrf_score = {
-        key: chrf_score(preds=preds[key], target=gold[key], n_word_order=0).item()  # type: ignore
-        for key in gold.keys()
-    }
-    return per_field_chrf_score
+DATE_FMT = "%Y-%m-%d"
 
 
 def parse_results(
     results: list[dict[str, str]],
 ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """Parses the results of the model into gold and predicted dictionaries.
+
+    Args:
+        results (list[dict[str, str]]): list of model and gold anserwers in format [{"answer": str, "gold": str}]
+
+    Returns:
+        tuple[dict[str, list[str]], dict[str, list[str]]]: parsed gold and predicted fields
+    """
     res_pred: dict[str, list[str]] = defaultdict(list)
     res_gold: dict[str, list[str]] = defaultdict(list)
 
@@ -56,7 +39,7 @@ def parse_results(
 def _parse_item(item: str) -> dict[str, str] | None:
     """Parses yaml model output to a dictionary.
     The following format is applied:
-        - dates -> strings
+        - dates -> string formatted according to DATE_FMT
         - lists -> comma-separated sorted strings
         - None  -> EMPTY_ANSWER
         - If the input cannot be parsed, returns None.
@@ -74,7 +57,7 @@ def _parse_item(item: str) -> dict[str, str] | None:
             # list values might be None (need to cast to string)
             data[k] = ", ".join(sorted(str(v_i) for v_i in v))
         elif isinstance(v, datetime.date):
-            data[k] = v.strftime("%Y-%m-%d")
+            data[k] = v.strftime(DATE_FMT)
         elif data[k] is None:
             data[k] = EMPTY_ANSWER
         else:
