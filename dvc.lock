@@ -65,8 +65,8 @@ stages:
       nfiles: 17
     - path: scripts/dataset/build_instruct_dataset.py
       hash: md5
-      md5: 9b138322059d63ce3ad1bd05c8b931f2
-      size: 5461
+      md5: 5038c49e847d847ea3fd05903624d5c9
+      size: 5696
   embed@mmlw-roberta-large:
     cmd: PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=mmlw-roberta-large
     deps:
@@ -192,11 +192,11 @@ stages:
       size: 161
     - path: configs/predict.yaml
       hash: md5
-      md5: 74ad1dc5d9f130074533078d85e55e94
-      size: 504
+      md5: 888667e56c54157be4d75f85657cf478
+      size: 494
     - path: scripts/sft/predict.py
       hash: md5
-      md5: 59c2afb977f520c9134153def544111d
+      md5: 1dc3e25365c4200d1e26e04b41d6b831
       size: 3188
     outs:
     - path:
@@ -213,18 +213,18 @@ stages:
       size: 245
     - path: configs/predict.yaml
       hash: md5
-      md5: 74ad1dc5d9f130074533078d85e55e94
-      size: 504
+      md5: 7422a2c12c7d31d7b68dbe89f02dab5a
+      size: 532
     - path: scripts/sft/predict.py
       hash: md5
-      md5: 59c2afb977f520c9134153def544111d
-      size: 3188
+      md5: 150d40027312348c19a82ca4f89b4cc6
+      size: 2735
     outs:
     - path:
         data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct-fine-tuned.json
       hash: md5
-      md5: 9199da7e04fb35cc1ce2bbe9dd5cd274
-      size: 1891254
+      md5: 5c49073109ca97d16501ca74fc568df7
+      size: 1742376
   predict@Unsloth-Mistral-7B-Instruct-v0.3:
     cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Mistral-7B-Instruct-v0.3
     deps:
@@ -234,11 +234,11 @@ stages:
       size: 167
     - path: configs/predict.yaml
       hash: md5
-      md5: 74ad1dc5d9f130074533078d85e55e94
-      size: 504
+      md5: 888667e56c54157be4d75f85657cf478
+      size: 494
     - path: scripts/sft/predict.py
       hash: md5
-      md5: 59c2afb977f520c9134153def544111d
+      md5: 1dc3e25365c4200d1e26e04b41d6b831
       size: 3188
     outs:
     - path:
@@ -255,11 +255,11 @@ stages:
       size: 256
     - path: configs/predict.yaml
       hash: md5
-      md5: 74ad1dc5d9f130074533078d85e55e94
-      size: 504
+      md5: 888667e56c54157be4d75f85657cf478
+      size: 494
     - path: scripts/sft/predict.py
       hash: md5
-      md5: 59c2afb977f520c9134153def544111d
+      md5: 1dc3e25365c4200d1e26e04b41d6b831
       size: 3188
     outs:
     - path:
@@ -340,3 +340,24 @@ stages:
       hash: md5
       md5: 703e82986a6ae26fbc2fd0dfac7f8893
       size: 989
+  evaluate_llm_as_judge@Unsloth-Llama-3-8B-Instruct-Unsloth-Llama-3-8B-Instruct:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py model=Unsloth-Llama-3-8B-Instruct
+      answers_file=data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
+      out_metric_file=data/experiments/llm_as_judge/pl-court-instruct/judge_Unsloth-Llama-3-8B-Instruct_metrics_Unsloth-Llama-3-8B-Instruct.json
+      out_predictions_file=data/experiments/llm_as_judge/pl-court-instruct/judge_Unsloth-Llama-3-8B-Instruct_predictions_Unsloth-Llama-3-8B-Instruct.json
+    deps:
+    - path:
+        data/experiments/predict/pl-court-instruct/outputs_Unsloth-Llama-3-8B-Instruct.json
+      hash: md5
+      md5: df2f1d464152f87737c8ebb5b0673854
+      size: 2179383
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 55ffa83e2778e921bdfc677889e45a23
+      size: 3676
+    outs:
+    - path:
+        data/experiments/llm_as_judge/pl-court-instruct/judge_Unsloth-Llama-3-8B-Instruct_predictions_Unsloth-Llama-3-8B-Instruct.json
+      hash: md5
+      md5: d0be277f3585e4d71d9551cd96851183
+      size: 54800
