@@ -1,0 +1,46 @@
+name: llama_3_8b_instruct_q8_0
+api: llama.cpp
+use_langsmith: true
+# taken from /props endpoint of llama.cpp server, needed for checking compatibility
+config:
+  default_generation_settings:
+    dynatemp_exponent: 1.0
+    dynatemp_range: 0.0
+    frequency_penalty: 0.0
+    grammar: ''
+    ignore_eos: false
+    logit_bias: []
+    min_keep: 0
+    min_p: 0.05000000074505806
+    mirostat: 0
+    mirostat_eta: 0.10000000149011612
+    mirostat_tau: 5.0
+    model: /models/Meta-Llama-3-8B-Instruct-Q8_0.gguf
+    n_ctx: 8192
+    n_discard: 0
+    n_keep: 0
+    n_predict: 512
+    n_probs: 0
+    penalize_nl: false
+    penalty_prompt_tokens: []
+    presence_penalty: 0.0
+    repeat_last_n: 64
+    repeat_penalty: 1.0
+    samplers:
+    - top_k
+    - tfs_z
+    - typical_p
+    - top_p
+    - min_p
+    - temperature
+    seed: -1
+    stop: []
+    stream: true
+    temperature: 0.800000011920929
+    tfs_z: 1.0
+    top_k: 40
+    top_p: 0.949999988079071
+    typical_p: 1.0
+    use_penalty_prompt_tokens: false
+  system_prompt: ''
+  total_slots: 1

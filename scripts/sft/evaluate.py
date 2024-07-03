@@ -3,7 +3,7 @@ from pathlib import Path
 
 import typer
 
-from juddges.metrics.info_extraction import evaluate_extraction
+from juddges.evaluation.info_extraction import evaluate_extraction
 
 
 def evaluate_results(output_file: Path = typer.Option(...)) -> None:

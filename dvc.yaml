@@ -130,21 +130,19 @@ stages:
   evaluate_llm_as_judge:
     matrix:
       judge_model:
-        - Unsloth-Llama-3-8B-Instruct
+        - llama_3_8b_instruct_q8_0
       predictions_model:
         - Unsloth-Llama-3-8B-Instruct
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
-      model=${item.judge_model}
+      api_model=${item.judge_model}
       answers_file=data/experiments/predict/pl-court-instruct/outputs_${item.predictions_model}.json
       out_metric_file=data/experiments/llm_as_judge/pl-court-instruct/judge_${item.judge_model}_metrics_${item.predictions_model}.json
-      out_predictions_file=data/experiments/llm_as_judge/pl-court-instruct/judge_${item.judge_model}_predictions_${item.predictions_model}.json
     deps:
       - scripts/sft/evaluate_llm_as_judge.py
       - data/experiments/predict/pl-court-instruct/outputs_${item.predictions_model}.json
     outs:
-      # - data/experiments/llm_as_judge/pl-court-instruct/judge_${item.judge_model}_metrics_${item.predictions_model}.json
-      - data/experiments/llm_as_judge/pl-court-instruct/judge_${item.judge_model}_predictions_${item.predictions_model}.json
+      - data/experiments/llm_as_judge/pl-court-instruct/judge_${item.judge_model}_metrics_${item.predictions_model}.json
 
   summarize_metrics:
     matrix:
