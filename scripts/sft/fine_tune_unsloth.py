@@ -170,6 +170,7 @@ def get_trainer(
     config: FineTuningConfig,
     num_proc: int | None,
 ) -> Trainer:
+    # TODO: Move all hparams to config and use SFTConfig due to deprecation of kwargs
     args = TrainingArguments(
         run_name=config.run_name,  # run name for the experiment
         output_dir=str(config.output_dir),  # directory to save and repository id

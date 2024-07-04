@@ -25,8 +25,17 @@ install_cpu:
 
 # unsloth requires python 3.10 and conda environment
 install_unsloth:
-	conda install --yes pytorch-cuda=12.1 pytorch cudatoolkit xformers -c pytorch -c nvidia -c xformers
-	pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
-	conda install pyg -c pyg
+	conda install \
+		python=3.10 \
+		pytorch-cuda=12.1 \
+		pytorch \
+		cudatoolkit \
+		xformers \
+		-c pytorch \
+		-c nvidia \
+		-c xformers \
+		--yes
+	pip install "unsloth[huggingface] @ git+https://github.com/unslothai/unsloth.git"
+	conda install pyg -c pyg --yes
 	pip install flash-attn --no-build-isolation
 	pip install -r requirements.txt
