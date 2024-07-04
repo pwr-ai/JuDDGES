@@ -1,3 +1,6 @@
+vars:
+  - seeds: [42, 7312, 997]
+
 stages:
   raw_dataset_readme:
     cmd: >-
@@ -101,14 +104,18 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
+      seed: ${seeds}
     cmd: >-
-      PYTHONPATH=. python scripts/sft/predict.py model=${item.model}
+      PYTHONPATH=. python scripts/sft/predict.py
+      model=${item.model}
+      random_seed=${item.seed}
+      output_file=data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/predict.py
       - configs/predict.yaml
       - configs/model/${item.model}.yaml
     outs:
-      - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+      - data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
 
   evaluate:
     matrix:

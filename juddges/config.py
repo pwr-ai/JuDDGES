@@ -29,6 +29,7 @@ class DatasetConfig(BaseModel, extra="forbid"):
     prompt_field: str
     context_field: str
     output_field: str
+    max_output_tokens: int
 
 
 class RawDatasetConfig(BaseModel, extra="forbid"):

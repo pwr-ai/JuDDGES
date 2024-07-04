@@ -5,6 +5,6 @@ adapter_path: null
 
 max_seq_length: 20_000
 padding: longest
-batch_size: 1
+batch_size: 4
 
 use_unsloth: true
