@@ -6,7 +6,8 @@ from typing import Any
 
 import hydra
 import torch
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
+from lightning_fabric import seed_everything
 from loguru import logger
 from omegaconf import DictConfig
 from openai import BaseModel
@@ -31,9 +32,9 @@ class PredictConfig(BaseModel, extra="forbid"):
     dataset: DatasetConfig
     device_map: str
     output_file: Path
-    metrics_file: Path
     truncate_context: bool
     generate_kwargs: dict[str, Any] = Field(default_factory=dict)
+    random_seed: int
 
 
 @torch.inference_mode()
@@ -47,6 +48,7 @@ def main(cfg: DictConfig) -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(config.dataset.name, split="test")
+    ds, _ = sort_dataset_by_text_length(ds, config.dataset.context_field)
     logger.info("Loading model...")
 
     model_pack = get_model(config.model, device_map=config.device_map)
@@ -68,6 +70,7 @@ def main(cfg: DictConfig) -> None:
     )
     ds.set_transform(encoder, columns=["prompt", "context"])
 
+    seed_everything(config.random_seed)
     model_outputs = predict_with_llm(
         model_pack=model_pack,
         dataset=ds,
@@ -81,6 +84,15 @@ def main(cfg: DictConfig) -> None:
 
     with open(output_file, "w") as f:
         json.dump(results, f, indent="\t", ensure_ascii=False)
+
+
+def sort_dataset_by_text_length(ds: Dataset, field: str) -> tuple[Dataset, torch.Tensor]:
+    lenghts = torch.tensor(
+        ds.map(lambda x: {"length": len(x[field])}, desc="Computing length")["length"]
+    )
+    sort_idx = torch.argsort(lenghts, descending=True, stable=True)
+    ds = ds.select(sort_idx)
+    return ds, sort_idx
 
 
 if __name__ == "__main__":

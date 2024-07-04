@@ -35,7 +35,7 @@ class TextEncoderForEval:
             max_length=self.max_length,
             truncation=False,
             return_tensors="pt",
-            return_attention_mask=False,
+            return_attention_mask=True,
             return_special_tokens_mask=False,
         )
 
