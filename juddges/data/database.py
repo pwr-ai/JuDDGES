@@ -62,7 +62,9 @@ class BatchDatabaseUpdate:
     - Update is called specified documents.
     """
 
-    def __init__(self, mongo_uri: str, update_func: Callable[[dict[str, Any]], dict]) -> None:
+    def __init__(
+        self, mongo_uri: str, update_func: Callable[[dict[str, Any]], dict]
+    ) -> None:
         self.mongo_uri = mongo_uri
         self.update_func = update_func
 
