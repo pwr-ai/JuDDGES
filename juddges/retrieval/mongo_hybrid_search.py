@@ -8,7 +8,7 @@ def run_hybrid_search(
     text_priority: float = 1,
 ):
     num_candidates = limit * 10
-    
+
     vector_search = {
         "$vectorSearch": {
             "index": "vector_index",
@@ -25,9 +25,7 @@ def run_hybrid_search(
 
     def make_compute_score_doc(priority, score_field_name):
         return {
-            "$addFields": {
-                score_field_name: {"$divide": [1.0, {"$add": ["$rank", priority, 1]}]}
-            }
+            "$addFields": {score_field_name: {"$divide": [1.0, {"$add": ["$rank", priority, 1]}]}}
         }
 
     def make_projection_doc(score_field_name):
