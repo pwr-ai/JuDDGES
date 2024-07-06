@@ -28,10 +28,10 @@ fostering cross-disciplinary and cross-jurisdictional collaboration.
 ### Installation
 
 - to install necessary dependencies use available `Makefile`, you can
-  use `python>=3.10`: `shell     make install`
+  use `python>=3.10`: `make install`
 - if you want to run evaluation and fine-tuning with `unsloth`, use the
   following command with `python=3.10` inside conda environment:
-  `shell     make install_unsloth`
+  `make install_unsloth`
 
 ### Dataset creation
 
