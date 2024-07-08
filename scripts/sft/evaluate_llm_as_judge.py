@@ -15,7 +15,7 @@ from omegaconf import DictConfig
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
-from juddges.evaluation.llm_evaluator import StructuredLLMJudgeEvaluator
+from juddges.evaluation.eval_structured_llm_judge import StructuredLLMJudgeEvaluator
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 

@@ -33,7 +33,7 @@ def parse_results(
             res_pred[k].append(ans.get(k, EMPTY_ANSWER))
             res_gold[k].append(gold[k])
 
-    return res_gold, res_pred
+    return res_pred, res_gold
 
 
 def _parse_item(item: str) -> dict[str, str] | None:

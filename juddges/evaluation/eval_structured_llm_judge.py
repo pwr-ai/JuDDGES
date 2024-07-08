@@ -2,7 +2,8 @@ import yaml
 from openai import OpenAI
 from tqdm.auto import tqdm
 
-from juddges.evaluation.parse import EMPTY_ANSWER, parse_results
+from juddges.evaluation.eval_structured import StructuredEvaluatorBase
+from juddges.evaluation.parse import EMPTY_ANSWER
 
 PROMPT = """
 You are comparing a submitted Asnwer to a Reference answer. Answer contains information extracted in Polish.
@@ -28,29 +29,33 @@ answer_2_num = {
 }
 
 
-class StructuredLLMJudgeEvaluator:
+class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
     """Evaluation pipeline which, whenver justified, queries LLM for a judgement.
     The pipeline works as follows for each extracted field:
-        1. Parsing yaml responses if possible, if not, treating them as incorrect.
-        2. Comparing the gold and predicted answers:
+        1. Comparing the gold and predicted answers:
             - If the predicted answer is the same as the gold, it is treated as correct.
             - Otherwise, the LLM is queried for a judgement.
-        3. Aggregating the results and computing accuracy.
+        2. Aggregating the results and computing accuracy.
+    Returns dictionary formatted as {"<field_name>": {"accuracy": <float_value>}}.
     """
 
     def __init__(self, oai_client: OpenAI, model_name: str):
+        super().__init__(name="llm_as_judge")
         self.oai_client = oai_client
         self.model_name = model_name
 
-    def evaluate(self, results: list[dict[str, str]]) -> dict[str, dict[str, float]]:
+    def evaluate(
+        self,
+        preds: dict[str, list[str]],
+        golds: dict[str, list[str]],
+    ) -> dict[str, dict[str, float]]:
         """Evaluates information extraction by computing metrics per each field."""
-        res_gold, res_pred = parse_results(results)
         return {
-            field: self.compute_metrics(res_gold[field], res_pred[field])
-            for field in tqdm(res_gold, desc="Fields")
+            field: self.compute_metrics(preds[field], golds[field])
+            for field in tqdm(golds.keys(), desc="Fields")
         }
 
-    def compute_metrics(self, golds: list[str], preds: list[str]) -> dict[str, float]:
+    def compute_metrics(self, preds: list[str], golds: list[str]) -> dict[str, float]:
         assert len(golds) == len(preds)
         results = []
         num_llm_evals = 0
