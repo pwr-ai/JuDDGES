@@ -39,9 +39,8 @@ def predict_with_llm(
 
     with tqdm(dataloader, disable=not verbose) as pbar:
         for batch in pbar:
-            input_ids = batch["input_ids"].view(batch_size, -1)
-            input_ids = input_ids.to(device, non_blocking=True)
-            attention_mask = batch["attention_mask"].to(device, non_blocking=True)
+            input_ids = batch["input_ids"].to(device)
+            attention_mask = batch["attention_mask"].to(device)
             input_length = input_ids.size(1)
 
             start_time = time.time()

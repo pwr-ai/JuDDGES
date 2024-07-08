@@ -5,13 +5,41 @@ defaults:
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
-output_dir: data/experiments/fine-tune/${hydra:runtime.choices.model}/${hydra:runtime.choices.dataset}
-run_name: ${hydra:runtime.choices.model}_${hydra:runtime.choices.dataset}_fine_tune
+training_args:
+  run_name: ${run_name}
+  output_dir: ${output_dir}
+  num_train_epochs: 1
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 4
+  gradient_checkpointing: True
+  gradient_checkpointing_kwargs: {"use_reentrant": False}
+  optim: "adamw_torch_fused"
+  logging_steps: 1
+  save_strategy: "steps"
+  save_steps: 0.25
+  bf16: True
+  tf32: True
+  learning_rate: 2e-4 # learning rate, based on QLoRA paper
+  max_grad_norm: 0.3  # max gradient norm based on QLoRA paper
+  warmup_ratio: 0.03  # warmup ratio based on QLoRA paper
+  lr_scheduler_type: "cosine"
+  push_to_hub: False
+  report_to: "wandb"
 
+peft_args:
+  lora_alpha: 16
+  lora_dropout: 0.05
+  r: 8
+  bias: "none"
+  target_modules: "all-linear"
+  task_type: "CAUSAL_LM"
+
+truncate_context: True
 wandb_entity: graph-ml-lab-wust
 wandb_project: juddges-fine-tune
 
-truncate_context: True
+output_dir: data/experiments/fine-tune/${hydra:runtime.choices.model}/${hydra:runtime.choices.dataset}
+run_name: ${hydra:runtime.choices.model}_${hydra:runtime.choices.dataset}_fine_tune
 
 ### HPARAMS ###
 epochs: 1
