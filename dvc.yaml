@@ -89,9 +89,9 @@ stages:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Mistral-7B-Instruct-v0.3
     cmd: >-
-      PYTHONPATH=. python scripts/sft/fine_tune_unsloth.py model=${item.model}
+      PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
     deps:
-      - scripts/sft/fine_tune_unsloth.py
+      - scripts/sft/fine_tune_llm.py
       - configs/fine_tuning.yaml
       - configs/model/${item.model}.yaml
     outs:

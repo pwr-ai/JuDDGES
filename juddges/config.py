@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -12,6 +13,7 @@ class LLMConfig(BaseModel, extra="forbid"):
     max_seq_length: int
     padding: str | bool
     batch_size: int
+    use_4bit: bool
     use_unsloth: bool = False
 
 
@@ -38,3 +40,15 @@ class RawDatasetConfig(BaseModel, extra="forbid"):
     name: str
     format: str
     root_dir: Path
+
+
+class FineTuningConfig(BaseModel, extra="forbid"):
+    model: LLMConfig
+    dataset: DatasetConfig
+    training_args: dict[str, Any]
+    peft_args: dict[str, Any]
+    truncate_context: bool
+    wandb_entity: str
+    wandb_project: str
+    output_dir: Path
+    run_name: str
