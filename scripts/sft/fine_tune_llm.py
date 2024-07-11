@@ -4,6 +4,7 @@ SFT script based on https://huggingface.co/blog/unsloth-trl
 
 import os
 from pathlib import Path
+from pprint import pformat
 
 import hydra
 from accelerate import PartialState
@@ -37,7 +38,7 @@ NUM_PROC = int(os.getenv("NUM_PROC", 1))
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="fine_tuning.yaml")
 def main(cfg: DictConfig) -> None:
     cfg_dict = resolve_config(cfg)
-    logger.info(f"config:\n{cfg_dict}")
+    logger.info(f"config:\n{pformat(cfg_dict)}")
     config = FineTuningConfig(**cfg_dict)
 
     os.environ["WANDB_ENTITY"] = config.wandb_entity
@@ -126,13 +127,20 @@ def get_trainer(
             "add_special_tokens": False,  # We template with special tokens
             "append_concat_token": False,  # No need to add additional separator token
         },
-        ddp_find_unused_parameters=False,
     )
 
-    if config.peft_args is None:
+    if config.use_peft and config.model.use_unsloth:
+        from unsloth import FastLanguageModel
+
+        model = FastLanguageModel.get_peft_model(
+            model,
+            **config.peft_args,
+        )
         peft_config = None
-    else:
+    elif config.use_peft:
         peft_config = LoraConfig(**config.peft_args)
+    else:
+        peft_config = None
 
     trainer = SFTTrainer(
         model=model,

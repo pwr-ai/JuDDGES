@@ -46,9 +46,13 @@ class FineTuningConfig(BaseModel, extra="forbid"):
     model: LLMConfig
     dataset: DatasetConfig
     training_args: dict[str, Any]
-    peft_args: dict[str, Any]
+    peft_args: dict[str, Any] | None
     truncate_context: bool
     wandb_entity: str
     wandb_project: str
     output_dir: Path
     run_name: str
+
+    @property
+    def use_peft(self) -> bool:
+        return self.peft_args is not None
