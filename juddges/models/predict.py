@@ -57,6 +57,11 @@ def predict_with_llm(
             )
             model_outputs.extend(decoded)
 
-            pbar.set_postfix_str(f"{generated_ids.numel() / duration: 0.2f} tok/sec")
+            stats = {
+                "input_size": input_length,
+                "throughput": f"{generated_ids.numel() / duration:0.2f} tok/sec",
+                "mean(#special_tokens)": f"{(1 - attention_mask).float().mean().item():0.3f}",
+            }
+            pbar.set_postfix(stats)
 
     return model_outputs
