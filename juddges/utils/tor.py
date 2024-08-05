@@ -25,5 +25,3 @@ class TorClient:
         http.mount("https://", adapter)
         http.mount("http://", adapter)
         return http
-
-

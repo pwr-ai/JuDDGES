@@ -6,24 +6,20 @@ services:
     volumes:
       - nsa_dbdata:/data/db
 
-  multiple-tor:
+  scraper:
     build:
-      context: ./multiple-tor
-      args:
-        SOCKET_START_PORT: 9000
-        SOCKET_END_PORT: 9100
-        CONTROL_START_PORT: 9900
-        CONTROL_END_PORT: 10000
-      dockerfile: ./Dockerfile
-    ports:
-      - 9000-9100:9000-9100
-      - 9900-10000:9900-10000
-    command: >
-        python3 main.py --num-tors 50
-
+        context: ../..
+        dockerfile: docker/nsa/scraper/Dockerfile
+    command: python scripts/dataset/nsa/run_scraper.py --mongo-db-uri mongodb://mongodb:27017
+    tty: true
+    depends_on:
+      - mongodb
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 1h
+        max_attempts: 10
+        window: 120s
 
 volumes:
   nsa_dbdata:
-  multitor_data:
-
-
