@@ -11,6 +11,7 @@ CONFIG_PORT_START = 9900
 
 processes = []
 
+
 def create_torrc_file(index: int, socks_port: int, control_port: int, data_dir: str) -> None:
     os.makedirs(data_dir, exist_ok=True)
     config_path = f"/etc/tor/torrc.{index}"
@@ -18,6 +19,7 @@ def create_torrc_file(index: int, socks_port: int, control_port: int, data_dir: 
         file.write(f"SocksPort 0.0.0.0:{socks_port}\n")
         file.write(f"ControlPort {control_port}\n")
         file.write(f"DataDirectory {data_dir}\n")
+
 
 def create_configs(num_tors: int) -> None:
     configs = []
@@ -30,6 +32,7 @@ def create_configs(num_tors: int) -> None:
     for index, socks_port, control_port, data_dir in configs:
         create_torrc_file(index, socks_port, control_port, data_dir)
 
+
 def signal_handler(sig, frame):
     print("Terminating all processes...")
     for process in processes:
@@ -38,6 +41,7 @@ def signal_handler(sig, frame):
         process.wait()
     print("All processes terminated.")
     exit(0)
+
 
 def run_tor_instances(num_tors: int = typer.Option(5)) -> None:
     create_configs(num_tors)

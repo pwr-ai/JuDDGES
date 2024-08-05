@@ -1,5 +1,5 @@
-lint_dirs := juddges scripts dashboards tests
-mypy_dirs := juddges scripts dashboards tests
+lint_dirs := juddges scripts dashboards tests docker
+mypy_dirs := juddges scripts dashboards tests docker
 
 fix:
 	ruff check $(lint_dirs) --fix
