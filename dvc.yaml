@@ -124,15 +124,15 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
+      seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+      --output-file data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/evaluate.py
-      - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
-    metrics:
-      - data/experiments/predict/pl-court-instruct/metrics_${item.model}.json:
-          cache: false
+      - data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/pl-court-instruct/${item.model}/metrics_${item.seed}.json
 
   evaluate_llm_as_judge:
     matrix:
