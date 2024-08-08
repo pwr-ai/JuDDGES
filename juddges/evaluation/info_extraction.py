@@ -1,4 +1,4 @@
-import tqdm
+from tqdm import tqdm
 
 from juddges.evaluation.eval_full_text import FullTextCHRFScorer
 from juddges.evaluation.eval_structured import StructuredCHRFEvaluator
@@ -17,14 +17,14 @@ class InfoExtractionEvaluator:
         ]
 
     def evaluate(self, results: list[dict[str, str]]) -> dict[str, dict[str, float]]:
-        results = {}
         preds, golds = parse_results(results)
 
+        metrics = {}
         for eval in (
             pbar := tqdm(self.structured_evaluators, desc="Structured", disable=not self.verbose)
         ):
             pbar.set_postfix({"eval": eval.name})
-            results[eval.name] = eval.evaluate(preds=preds, golds=golds)
+            metrics[eval.name] = eval.evaluate(preds=preds, golds=golds)
 
         text_preds = [res["answer"] for res in results]
         text_golds = [res["gold"] for res in results]
@@ -32,6 +32,6 @@ class InfoExtractionEvaluator:
             pbar := tqdm(self.full_text_evaluators, desc="Full text", disable=not self.verbose)
         ):
             pbar.set_postfix({"eval": eval.name})
-            results[eval.name] = eval.evaluate(preds=text_preds, golds=text_golds)
+            metrics[eval.name] = eval.evaluate(preds=text_preds, golds=text_golds)
 
-        return results
+        return metrics
