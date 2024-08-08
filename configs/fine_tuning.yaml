@@ -12,16 +12,15 @@ training_args:
   per_device_train_batch_size: 4
   gradient_accumulation_steps: 4
   gradient_checkpointing: True
-  gradient_checkpointing_kwargs: {"use_reentrant": False}
+  gradient_checkpointing_kwargs: { "use_reentrant": False }
   optim: "adamw_torch_fused"
   logging_steps: 1
   save_strategy: "steps"
-  save_steps: 0.25
+  save_steps: 500
   bf16: True
-  learning_rate: 2e-4 # learning rate, based on QLoRA paper
-  max_grad_norm: 0.3  # max gradient norm based on QLoRA paper
-  warmup_ratio: 0.03  # warmup ratio based on QLoRA paper
-  lr_scheduler_type: "cosine"
+  learning_rate: 2e-5 # learning rate, based on QLoRA paper
+  max_grad_norm: 0.3 # max gradient norm based on QLoRA paper
+  warmup_ratio: 0.03 # warmup ratio based on QLoRA paper
   push_to_hub: False
   report_to: "wandb"
   seed: 46
@@ -30,8 +29,17 @@ peft_args:
   r: 8
   lora_alpha: 16
   lora_dropout: 0 # Supports any, but = 0 is optimized
-  bias: null    # Supports any, but = "none" is optimized  r: 8
-  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj",]
+  bias: "none" # Supports any, but = "none" is optimized
+  target_modules:
+    [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj",
+    ]
 
 truncate_context: True
 wandb_entity: graph-ml-lab-wust
