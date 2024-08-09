@@ -37,13 +37,16 @@ class PredictConfig(BaseModel, extra="forbid"):
     generate_kwargs: dict[str, Any] = Field(default_factory=dict)
     random_seed: int
 
+    @property
+    def corrected_max_seq_length(self) -> int:
+        return self.model.max_seq_length - self.dataset.max_output_tokens
+
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
 @torch.inference_mode()
 def main(cfg: DictConfig) -> None:
-    cfg_dict = resolve_config(cfg)
-    logger.info(f"config:\n{pformat(cfg_dict)}")
-    config = PredictConfig(**cfg_dict)
+    config = PredictConfig(**resolve_config(cfg))
+    logger.info(f"config:\n{pformat(config.model_dump())}")
 
     output_file = Path(config.output_file)
     output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -72,7 +75,7 @@ def main(cfg: DictConfig) -> None:
 
     encoder = TextEncoderForEval(
         tokenizer=model_pack.tokenizer,
-        max_length=config.model.max_seq_length,
+        max_length=config.corrected_max_seq_length,
         padding=config.model.padding,
     )
     ds.set_transform(encoder, columns=["prompt", "context"])
