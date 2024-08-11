@@ -22,8 +22,9 @@ from transformers import (
     PreTrainedModel,
     PreTrainedTokenizer,
     Trainer,
+    TrainingArguments,
 )
-from trl import SFTConfig, SFTTrainer
+from trl import SFTTrainer
 
 from juddges.config import FineTuningConfig
 from juddges.data.datasets.utils import create_chat
@@ -117,17 +118,7 @@ def get_trainer(
     config: FineTuningConfig,
     num_proc: int | None,
 ) -> Trainer:
-    args = SFTConfig(
-        **config.training_args,
-        dataset_text_field="messages",
-        max_seq_length=config.model.max_seq_length,
-        packing=False,  # for now attention_mask is not supported (input is contaminated)
-        dataset_num_proc=num_proc,
-        dataset_kwargs={
-            "add_special_tokens": False,  # We template with special tokens
-            "append_concat_token": False,  # No need to add additional separator token
-        },
-    )
+    args = TrainingArguments(**config.training_args)
 
     if config.use_peft and config.model.use_unsloth:
         from unsloth import FastLanguageModel
@@ -148,6 +139,14 @@ def get_trainer(
         train_dataset=dataset,
         tokenizer=tokenizer,
         peft_config=peft_config,
+        dataset_text_field="messages",
+        max_seq_length=config.model.max_seq_length,
+        packing=False,  # for now attention_mask is not supported (input is contaminated)
+        dataset_num_proc=num_proc,
+        dataset_kwargs={
+            "add_special_tokens": False,  # We template with special tokens
+            "append_concat_token": False,  # No need to add additional separator token
+        },
     )
 
     return trainer
