@@ -1,7 +1,7 @@
 from tqdm import tqdm
 
 from juddges.evaluation.eval_full_text import FullTextCHRFScorer
-from juddges.evaluation.eval_structured import StructuredCHRFEvaluator
+from juddges.evaluation.eval_structured import StructuredChrfEvaluator
 from juddges.evaluation.parse import parse_results
 
 
@@ -10,7 +10,7 @@ class InfoExtractionEvaluator:
         self.verbose = verbose
 
         self.structured_evaluators = [
-            StructuredCHRFEvaluator(),
+            StructuredChrfEvaluator(),
         ]
         self.full_text_evaluators = [
             FullTextCHRFScorer(),

@@ -13,7 +13,7 @@ def parse_results(
     """Parses the results of the model into gold and predicted dictionaries.
 
     Args:
-        results (list[dict[str, str]]): list of model and gold anserwers in format [{"answer": str, "gold": str}]
+        results (list[dict[str, str]]): list of model and gold answers in format [{"answer": str, "gold": str}]
 
     Returns:
         tuple[dict[str, list[str]], dict[str, list[str]]]: parsed gold and predicted fields
@@ -29,6 +29,7 @@ def parse_results(
         if ans is None:
             ans = dict.fromkeys(gold.keys(), EMPTY_ANSWER)
 
+        # NOTE: it doesn't account for fields that were extra added by LLM
         for k in gold.keys():
             res_pred[k].append(ans.get(k, EMPTY_ANSWER))
             res_gold[k].append(gold[k])
