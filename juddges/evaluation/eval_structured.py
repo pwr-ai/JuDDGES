@@ -39,5 +39,5 @@ class StructuredChrfEvaluator(StructuredMetricEvaluator):
     def _compute(self, preds: list[str], gold: list[str]) -> float:
         scores = []
         for p, g in zip(preds, gold):
-            scores.append(chrf_score(preds=[p], target=[g], n_word_order=0).item())
+            scores.append(chrf_score(preds=[p], target=[g], n_word_order=1, n_char_order=1).item())
         return mean(scores)  # type: ignore
