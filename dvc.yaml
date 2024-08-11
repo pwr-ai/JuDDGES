@@ -137,19 +137,23 @@ stages:
   evaluate_llm_as_judge:
     matrix:
       judge_model:
-        - llama_3_8b_instruct_q8_0
-      predictions_model:
+        - llama_3.1_8b_instruct
+      evaluated_model:
+        - Unsloth-Mistral-7B-Instruct-v0.3
+        - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
         - Unsloth-Llama-3-8B-Instruct
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned
+      seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
       api_model=${item.judge_model}
-      answers_file=data/experiments/predict/pl-court-instruct/outputs_${item.predictions_model}.json
-      out_metric_file=data/experiments/llm_as_judge/pl-court-instruct/judge_${item.judge_model}_metrics_${item.predictions_model}.json
+      answers_file=data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
     deps:
       - scripts/sft/evaluate_llm_as_judge.py
-      - data/experiments/predict/pl-court-instruct/outputs_${item.predictions_model}.json
+      - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
     outs:
-      - data/experiments/llm_as_judge/pl-court-instruct/judge_${item.judge_model}_metrics_${item.predictions_model}.json
+      - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
 
   summarize_metrics:
     matrix:
@@ -161,5 +165,7 @@ stages:
     deps:
       - scripts/sft/summarize_metrics.py
     metrics:
-      - ${item.dir}/metrics_summary.md:
+      - ${item.dir}/metrics_ngram_summary.md:
+          cache: false
+      - ${item.dir}/metrics_judge_summary.md:
           cache: false

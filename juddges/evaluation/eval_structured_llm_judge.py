@@ -6,7 +6,13 @@ from juddges.evaluation.eval_structured import StructuredEvaluatorBase
 from juddges.evaluation.parse import EMPTY_ANSWER
 
 PROMPT = """
-You are comparing a submitted Asnwer to a Reference answer. Answer contains information extracted in Polish.
+You are professional assistant comparing a submitted Answer to a Reference written in Polish.
+Assess correctness of the Answer with one of the following options:
+- (Subset) The submitted Answer is a subset, i.e., contains part of information of the Reference and is fully consistent with it.
+- (Superset) The submitted Answer is a superset, i.e., contains all and some extra information of the Reference and is fully consistent with it.
+- (Correct) The submitted Answer contains all the same details as the Reference.
+- (Disagreement) There is a disagreement, either full or partial, between the submitted Answer and the Reference.
+
 [BEGIN DATA]
 ************
 [Reference]: {gold}
@@ -15,18 +21,17 @@ You are comparing a submitted Asnwer to a Reference answer. Answer contains info
 ************
 [END DATA]
 
-Compare the submitted Answer with the Reference answer, and state its correctness.
-Ignore any minor differences in style, grammar, or punctuation, accept abbreviations.
-If Answer contains any extra information that is not present in the Reference, mark it as incorrect.
-If Answer is partial, misses information present in the Reference, mark it as incorrect.
-Conversely, when comparing dates or numbers, be very precise.
-Format your answer as only a single word in parentheses "(correct)" or "(incorrect)".
+Format your judgment as only a single word in parentheses, e.g., "(Superset)"
 """
 
-answer_2_num = {
-    "(correct)": 1,
-    "(incorrect)": 0,
-}
+INVALID_JUDGMENT = "(non-evaluable)"
+allowed_answers = [
+    "(Subset)",
+    "(Superset)",
+    "(Correct)",
+    "(Disagreement)",
+    INVALID_JUDGMENT,
+]
 
 
 class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
@@ -59,8 +64,8 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
         assert len(golds) == len(preds)
         results = []
         num_llm_evals = 0
-        iterable = enumerate(zip(golds, preds))
-        with tqdm(iterable, total=len(golds), leave=False, desc="Evaluating") as pbar:
+        iter_golds_preds = enumerate(zip(golds, preds))
+        with tqdm(iter_golds_preds, total=len(golds), leave=False, desc="Evaluating") as pbar:
             for i, (g, p) in pbar:
                 if p == EMPTY_ANSWER:
                     results.append("(incorrect)")
@@ -68,6 +73,7 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
                     results.append(1)
                 else:
                     num_llm_evals += 1
+                    # TODO: Further can be improved with asynchronous requests
                     response = self.oai_client.chat.completions.create(
                         model=self.model_name,
                         messages=[{"role": "user", "content": PROMPT.format(gold=g, answer=p)}],
@@ -77,13 +83,22 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
 
                     response_msg = response.choices[0].message.content
                     try:
-                        results.append(answer_2_num[response_msg])
+                        results.append(response_msg)
                     except KeyError:
                         print(f"Unexpected response: {response_msg}")
                         results.append(-1)
-                pbar.set_postfix({"llm_calls": f"{num_llm_evals}/{i+1}"})
+                pbar.set_postfix({"llm_calls": f"{num_llm_evals}/{i + 1}"})
 
-        return {"accuracy": sum(results) / len(results)}
+        results_summary = dict.fromkeys(allowed_answers, 0)
+        for judgement in results:
+            try:
+                results_summary[judgement] += 1
+            except KeyError:
+                results_summary[INVALID_JUDGMENT] += 1
+
+        results_summary = {name: val / len(results) for name, val in results_summary.items()}
+
+        return results_summary
 
 
 if __name__ == "__main__":

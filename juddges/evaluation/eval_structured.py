@@ -8,8 +8,14 @@ class StructuredEvaluatorBase(ABC):
         self.name = f"field_{name}"
 
     @abstractmethod
-    def evaluate(self, results: list[dict[str, str]]) -> dict[str, dict[str, float]]:
-        """Evaluates information extraction by computing metrics per each field."""
+    def evaluate(
+        self,
+        preds: dict[str, list[str]],
+        golds: dict[str, list[str]],
+    ) -> dict[str, dict[str, float]]:
+        """Evaluates information extraction by computing metrics per each field.
+        The inputs should be formatted according to output of parse_results function.
+        """
 
 
 class StructuredMetricEvaluator(StructuredEvaluatorBase, ABC):
