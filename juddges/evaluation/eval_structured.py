@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from statistics import mean
 
 from torchmetrics.functional.text import chrf_score
 
@@ -31,9 +32,12 @@ class StructuredMetricEvaluator(StructuredEvaluatorBase, ABC):
         pass
 
 
-class StructuredCHRFEvaluator(StructuredMetricEvaluator):
+class StructuredChrfEvaluator(StructuredMetricEvaluator):
     def __init__(self) -> None:
         super().__init__(name="chrf")
 
     def _compute(self, preds: list[str], gold: list[str]) -> float:
-        return chrf_score(preds=preds, target=gold, n_word_order=0).item()  # type: ignore
+        scores = []
+        for p, g in zip(preds, gold):
+            scores.append(chrf_score(preds=[p], target=[g], n_word_order=0).item())
+        return mean(scores)  # type: ignore
