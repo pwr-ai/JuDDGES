@@ -1,4 +1,5 @@
 import yaml
+from loguru import logger
 from openai import OpenAI
 from tqdm.auto import tqdm
 
@@ -91,7 +92,11 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
                     n=1,
                 )
 
-                response_msg = response.choices[0].message.content
+                if response is not None:
+                    response_msg = response.choices[0].message.content
+                else:
+                    logger.warning(f"Empty response for: {(ans_gold, ans_pred)}")
+                    response_msg = INVALID_JUDGMENT
                 llm_assessments.append(response_msg)
 
             pbar.set_postfix({"llm_calls": f"{num_llm_evals}/{i + 1}"})
