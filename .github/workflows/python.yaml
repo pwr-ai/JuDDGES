@@ -10,7 +10,7 @@ jobs:
         os:
           - ubuntu-latest
 #          - macos-latest # at the moment bitsandbytes installation fails on macOS
-          - windows-latest
+#          - windows-latest # utf-8 bugs on windows (https://github.com/pre-commit/pre-commit/issues/835)
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -47,7 +47,7 @@ jobs:
         os:
           - ubuntu-latest
 #          - macos-latest # at the moment bitsandbytes installation fails on macOS
-          - windows-latest
+#          - windows-latest # utf-8 bugs on windows (https://github.com/pre-commit/pre-commit/issues/835)
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
