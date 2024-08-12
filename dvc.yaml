@@ -88,6 +88,7 @@ stages:
       model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Mistral-7B-Instruct-v0.3
+        - Unsloth-Mistral-Nemo-Instruct-2407
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
     deps:
@@ -104,6 +105,8 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
+        - Unsloth-Mistral-Nemo-Instruct-2407
+        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
