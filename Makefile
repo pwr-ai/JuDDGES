@@ -16,8 +16,9 @@ test:
 
 all: check test
 
+install: cuda := 121
 install:
-	pip install -r requirements.txt
+	pip install -r requirements.txt --find-links https://download.pytorch.org/whl/cu$(cuda)
 	pip install flash-attn --no-build-isolation
 
 install_cpu:
