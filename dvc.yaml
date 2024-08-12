@@ -127,6 +127,8 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
+        - Unsloth-Mistral-Nemo-Instruct-2407
+        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
@@ -142,10 +144,10 @@ stages:
       judge_model:
         - llama_3.1_8b_instruct
       evaluated_model:
-        - Unsloth-Mistral-7B-Instruct-v0.3
-        - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
+        - Unsloth-Mistral-Nemo-Instruct-2407
+        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
