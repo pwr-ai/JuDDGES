@@ -3,7 +3,7 @@ from typing import Any
 from torch import Tensor
 from transformers import PreTrainedTokenizer
 
-from juddges.preprocessing.context_truncator import ContextTruncator
+from juddges.preprocessing.context_truncator import ContextTruncator, ContextTruncatorTiktoken
 
 
 class TextEncoderForEval:
@@ -40,3 +40,14 @@ class TextEncoderForEval:
         )
 
         return tokenized
+
+
+class TextEncoderForOpenAIEval:
+    def __init__(self, truncator: ContextTruncatorTiktoken):
+        self.truncator = truncator
+
+    def __call__(self, item: dict[str, Any]) -> dict[str, str]:
+        truncated_context = self.truncator(
+            prompt=item["prompt"], context=item["context"], output=item["output"]
+        )
+        return {"final_input": item["prompt"].format(context=truncated_context)}
