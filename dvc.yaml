@@ -120,6 +120,23 @@ stages:
     outs:
       - data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
 
+  predict_with_api:
+    matrix:
+      model:
+        - gpt-4o-mini
+      seed:
+        - 997
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/predict_with_api.py
+      model_version=${item.model}
+      seed=${item.seed}
+      output_file=data/experiments/predict/pl-court-instruct/open_ai_${item.model}/outputs_${item.seed}.json
+    deps:
+      - scripts/sft/predict_with_api.py
+      - configs/predict_with_api.yaml
+    outs:
+      - data/experiments/predict/pl-court-instruct/open_ai_${item.model}/outputs_${item.seed}.json
+
   evaluate:
     matrix:
       model:

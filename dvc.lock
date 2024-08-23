@@ -1502,3 +1502,62 @@ stages:
       md5: c22563b3d92103e25b9658aff44a865c.dir
       size: 352212245
       nfiles: 11
+  predict@Bielik-7B-Instruct-v0.1-997:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Bielik-7B-Instruct-v0.1
+      random_seed=997
+      output_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_997.json
+    deps:
+    - path: configs/model/Bielik-7B-Instruct-v0.1.yaml
+      hash: md5
+      md5: c3412525e9819b53fbad06363a07a871
+      size: 173
+    - path: configs/predict.yaml
+      hash: md5
+      md5: 5fc8b9ac571d4a2209d7d866697252ab
+      size: 402
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: f9acd63cd4d682ae2242d7b51f0d974b
+      size: 3198
+    outs:
+    - path:
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_997.json
+      hash: md5
+      md5: fac04d78ad020b50f79fc7277a037e8e
+      size: 2016400
+  predict_with_api@gpt-4o-997:
+    cmd: PYTHONPATH=. python scripts/sft/predict_with_api.py model_version=gpt-4o
+      seed=997
+      output_file=data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/outputs_997.json
+    deps:
+    - path: configs/predict_with_api.yaml
+      hash: md5
+      md5: 5233a5ec17722a946ee39468f19cd285
+      size: 282
+    - path: scripts/sft/predict_with_api.py
+      hash: md5
+      md5: f4f3ce8f760f4c40aef228c466488f06
+      size: 3945
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/outputs_997.json
+      hash: md5
+      md5: efa592a94c9285c0100dfab05bb81de0
+      size: 8612
+  predict_with_api@gpt-4o-mini-997:
+    cmd: PYTHONPATH=. python scripts/sft/predict_with_api.py model_version=gpt-4o-mini
+      seed=997
+      output_file=data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+    deps:
+    - path: configs/predict_with_api.yaml
+      hash: md5
+      md5: 5233a5ec17722a946ee39468f19cd285
+      size: 282
+    - path: scripts/sft/predict_with_api.py
+      hash: md5
+      md5: d15e89fcbf106aae298e20959f396208
+      size: 4033
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+      hash: md5
+      md5: 839c911f542cd7c60c9ae52ef95e9907
+      size: 1812429
