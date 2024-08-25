@@ -1,0 +1,11 @@
+name: speakleash/Bielik-7B-Instruct-v0.1
+tokenizer_name: ${.name}
+
+adapter_path: data/experiments/fine-tune/Bielik-7B-Instruct-v0.1/pl-court-instruct/checkpoint-1500
+
+max_seq_length: 4096
+batch_size: 1
+padding: longest
+use_4bit: true
+
+use_unsloth: true

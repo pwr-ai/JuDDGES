@@ -1,5 +1,5 @@
 vars:
-  - seeds: [42, 7312, 997]
+  - seeds: [ 42, 7312, 997 ]
 
 stages:
   raw_dataset_readme:
@@ -89,6 +89,7 @@ stages:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-Nemo-Instruct-2407
+        - Bielik-7B-Instruct-v0.1
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
     deps:
@@ -107,6 +108,8 @@ stages:
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
+        - Bielik-7B-Instruct-v0.1
+        - Bielik-7B-Instruct-v0.1-fine-tuned
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
@@ -147,6 +150,8 @@ stages:
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
+        - Bielik-7B-Instruct-v0.1
+        - Bielik-7B-Instruct-v0.1-fine-tuned
         - open_ai_gpt-4o
         - open_ai_gpt-4o-mini
       seed: ${seeds}
