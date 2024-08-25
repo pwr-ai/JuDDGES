@@ -8,12 +8,14 @@ import hydra
 import torch
 from datasets import Dataset, load_dataset
 from dotenv import dotenv_values
+from langchain.globals import set_llm_cache
+from langchain_community.cache import SQLiteCache
+from langchain_openai import ChatOpenAI
 from loguru import logger
 from omegaconf import DictConfig
-from openai import APIConnectionError, AsyncOpenAI, BaseModel, RateLimitError
+from openai import APIConnectionError, BaseModel, RateLimitError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
 from tqdm import tqdm
-from tqdm.asyncio import tqdm_asyncio
 
 from juddges.config import DatasetConfig
 from juddges.preprocessing.context_truncator import ContextTruncatorTiktoken
@@ -23,9 +25,9 @@ from juddges.utils.config import resolve_config
 
 OPENAI_API_KEY = dotenv_values()["OPENAI_API_KEY"]
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
-MAX_REQUEST_ATTEMPTS = 3
+MAX_REQUEST_ATTEMPTS = 6
 MIN_RETRY_WAIT = 1
-MAX_RETRY_WAIT = 10
+MAX_RETRY_WAIT = 60
 
 
 class PredictWithAPIConfig(BaseModel, extra="forbid"):
@@ -36,6 +38,7 @@ class PredictWithAPIConfig(BaseModel, extra="forbid"):
     seed: int
     batch_size: int | None  # use batch size for systems with continuous batch optimizations
     output_file: Path
+    request_cache_db: Path | None
 
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict_with_api.yaml")
@@ -68,27 +71,27 @@ def main(cfg: DictConfig) -> None:
 class OpenAIPredictor:
     def __init__(self, config: PredictWithAPIConfig):
         self.config = config
-        self.client = AsyncOpenAI(
+        self.client = ChatOpenAI(
             api_key=OPENAI_API_KEY,
+            model_name=config.model_version,
+            temperature=config.temperature,
+            model_kwargs=dict(seed=config.seed),
         )
+
+        if config.request_cache_db is not None:
+            set_llm_cache(SQLiteCache(str(config.request_cache_db)))
 
     def run(self, dataset: Dataset) -> list[str]:
         return asyncio.run(self._predict_dataset(dataset))
 
     async def _predict_dataset(self, dataset: Dataset) -> list[str]:
-        if self.config.batch_size is None or (self.config.batch_size > dataset.num_rows):
-            pred_tasks = [self._predict_item(item["final_input"]) for item in dataset]
-            predictions = await tqdm_asyncio.gather(*pred_tasks)
-            return predictions
-        else:
-            predictions = []
-            for batch in tqdm(
-                dataset.iter(batch_size=self.config.batch_size),
-                total=len(dataset) // self.config.batch_size,
-                desc=f"Predicting with {self.config.model_version}",
-            ):
-                llm_requests = [self._predict_item(item) for item in batch["final_input"]]
-                predictions.extend(await asyncio.gather(*llm_requests))
+        predictions = []
+        for batch in tqdm(
+            dataset.iter(batch_size=self.config.batch_size),
+            total=len(dataset) // self.config.batch_size,
+            desc=f"Predicting with {self.config.model_version}",
+        ):
+            predictions.extend(await self._predict_batch(batch["final_input"]))
 
         return predictions
 
@@ -97,15 +100,14 @@ class OpenAIPredictor:
         stop=stop_after_attempt(MAX_REQUEST_ATTEMPTS),
         retry=retry_if_exception_type((RateLimitError, APIConnectionError)),
     )
-    async def _predict_item(self, item: str) -> str:
-        """Requests OpenAI API LLM."""
-        completion = await self.client.chat.completions.create(
-            model=self.config.model_version,
-            messages=[{"role": "user", "content": item}],
-            temperature=self.config.temperature,
-            seed=self.config.seed,
-        )
-        return completion.choices[0].message.content  # type: ignore[return-value]
+    async def _predict_batch(self, items: list[str]) -> list[str]:
+        """Takes list of inputs and requests OpenAI API LLM.
+        - items are raw input strings instead of chat-formatted
+        - preserves order (asyncio.gather used under the hood)
+        - returns raw text generations
+        """
+        completions = await self.client.abatch(items)
+        return [res.content for res in completions]
 
 
 if __name__ == "__main__":

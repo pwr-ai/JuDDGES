@@ -10,6 +10,7 @@ temperature: 0.1
 seed: ???
 batch_size: 32
 output_file: ???
+request_cache_db: .langchain_cache.db
 
 hydra:
   output_subdir: null
