@@ -123,6 +123,7 @@ stages:
   predict_with_api:
     matrix:
       model:
+        - gpt-4o
         - gpt-4o-mini
       seed:
         - 997
@@ -146,6 +147,8 @@ stages:
         - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
