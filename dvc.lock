@@ -1561,3 +1561,81 @@ stages:
       hash: md5
       md5: 839c911f542cd7c60c9ae52ef95e9907
       size: 1812429
+  evaluate@open_ai_gpt-4o-mini-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate.py --output-file data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+    deps:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+      hash: md5
+      md5: 839c911f542cd7c60c9ae52ef95e9907
+      size: 1812429
+    - path: scripts/sft/evaluate.py
+      hash: md5
+      md5: 73aa4a7eb8a035c087702457b9401654
+      size: 636
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/metrics_997.json
+      hash: md5
+      md5: fe43f0d25b500a0f2fb2d8199b8034fd
+      size: 305
+  predict@Bielik-7B-Instruct-v0.1-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Bielik-7B-Instruct-v0.1
+      random_seed=42
+      output_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_42.json
+    deps:
+    - path: configs/model/Bielik-7B-Instruct-v0.1.yaml
+      hash: md5
+      md5: c3412525e9819b53fbad06363a07a871
+      size: 173
+    - path: configs/predict.yaml
+      hash: md5
+      md5: 5fc8b9ac571d4a2209d7d866697252ab
+      size: 402
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: f9acd63cd4d682ae2242d7b51f0d974b
+      size: 3198
+    outs:
+    - path:
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_42.json
+      hash: md5
+      md5: 2dc39513a04910c5d0c54380166639d9
+      size: 2029644
+  predict@Bielik-7B-Instruct-v0.1-7312:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py model=Bielik-7B-Instruct-v0.1
+      random_seed=7312
+      output_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_7312.json
+    deps:
+    - path: configs/model/Bielik-7B-Instruct-v0.1.yaml
+      hash: md5
+      md5: c3412525e9819b53fbad06363a07a871
+      size: 173
+    - path: configs/predict.yaml
+      hash: md5
+      md5: 5fc8b9ac571d4a2209d7d866697252ab
+      size: 402
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: f9acd63cd4d682ae2242d7b51f0d974b
+      size: 3198
+    outs:
+    - path:
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_7312.json
+      hash: md5
+      md5: ae39bf31296ffe82c0f6a3e8c9ff63aa
+      size: 2014399
+  evaluate@open_ai_gpt-4o-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate.py --output-file data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/outputs_997.json
+    deps:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/outputs_997.json
+      hash: md5
+      md5: 7c5833fdd1419163b286baaa3d71e084
+      size: 1965252
+    - path: scripts/sft/evaluate.py
+      hash: md5
+      md5: 73aa4a7eb8a035c087702457b9401654
+      size: 636
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/metrics_997.json
+      hash: md5
+      md5: 65c808d4aebd8efe37b94a5128a19de6
+      size: 306
