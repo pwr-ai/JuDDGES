@@ -27,3 +27,7 @@ repos:
       - id: ruff-format
         name: Ruff Formatter
         args: [juddges, scripts, dashboards, tests]
+
+exclude: |
+  - data/
+  - dvc.lock

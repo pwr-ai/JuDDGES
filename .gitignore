@@ -155,3 +155,4 @@ secrets.env
 **/postgres-juddges/**
 outputs/
 wandb/
+.langchain_cache.db
