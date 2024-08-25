@@ -38,11 +38,56 @@ fostering cross-disciplinary and cross-jurisdictional collaboration.
 The specific details of dataset creation are available in
 [scripts/README.md](scripts/README.md).
 
-### Fine tuning
+### Inference, fine-tuning and evaluation
+All commands for running inference, fine-tuning, and evaluation are declared as stages in the [`dvc.yaml`](dvc.yaml) file (see [DVC docs for details](https://dvc.org/doc/user-guide)).
+Each stage is set up as a matrix, meaning it runs for a combination of different parameters (e.g. models and random seeds).
+Moreover, some scripts are configured with the [hydra](https://github.com/facebookresearch/hydra) tool.
+Simpler scripts, such as n-gram-based evaluation, leverage command line arguments instead of `hydra` configuration.
+Below, we provide commands to reproduce each of the stages and point to the appropriate configuration files.
 
-To run evaluation or fine-tuning, run proper stages declared
-[`dvc.yaml`](dvc.yaml) (see [DVC docs for
-details](https://dvc.org/doc/user-guide))
+> [!NOTE]
+> To run the following commands, you'll need all dependencies installed and a system with a GPU that has at least 40GB VRAM.
+
+> [!TIP]
+> To introduce a new model, either from `hf-hub` or a local model/adapter, add its configuration to the `configs/model` directory.
+
+> [!TIP]
+> To run a stage for a single combination of parameters from the DVC matrix, simply run it with its full name, e.g., `predict@Bielik-7B-Instruct-v0.1-42` (check for names with `dvc stage list <stage_name>`).
+
+#### Inference
+  - Configuration file: `configs/predict.yaml`
+  - Command:
+    ```bash
+    CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro predict
+    ```
+ - Outputs: LLM predictions (Information extracted by an LLM)
+
+#### Fine-tuning
+  - Configuration file: `configs/fine_tuning.yaml`
+  - Command:
+      ```bash
+      CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro sft_unsloth
+      ```
+  - Outputs: Trained LLM adapter
+
+#### Evaluation
+1. N-gram-based evaluation
+   - Configuration file: `n/a` (command-line arguments as config)
+   - Command:
+      ```bash
+      dvc repro evaluate
+      ```
+   - Inputs: Information extracted by an LLM (see `Inference` section)
+   - Outputs: Metrics
+
+2. LLM-as-judge evaluation
+   - Configuration file: `configs/llm_judge.yaml`
+   - Command:
+      ```bash
+      dvc repro evaluate_llm_as_judge
+      ```
+   - Inputs: Information extracted by an LLM (see `Inference` section)
+   - Outputs: Metrics
 
 ## Project details
 
