@@ -18,7 +18,7 @@ class ModelForGeneration:
 def get_model(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     if "llama" in llm_config.name.lower():
         return get_llama_3(llm_config, **kwargs)
-    elif "mistral" in llm_config.name.lower():
+    elif any(mistral_model in llm_config.name.lower() for mistral_model in ("mistral", "bielik")):
         return get_mistral(llm_config, **kwargs)
     else:
         raise ValueError(f"Model: {llm_config} not yet handled or doesn't exists.")
