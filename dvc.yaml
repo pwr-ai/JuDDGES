@@ -29,15 +29,22 @@ stages:
     outs:
       - data/datasets/pl/readme/instruct/
 
-  build_instruct_dataset:
+  build_instruct_dataset_pl:
     cmd: >-
-      PYTHONPATH=. python scripts/dataset/build_instruct_dataset.py
+      PYTHONPATH=. python scripts/dataset/build_instruct_dataset_pl.py
       --dataset-dir data/datasets/pl/raw
       --repo-id JuDDGES/pl-court-instruct
     deps:
       - data/datasets/pl/raw
-      - scripts/dataset/build_instruct_dataset.py
+      - scripts/dataset/build_instruct_dataset_pl.py
     desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
+
+  build_instruct_dataset_en:
+    cmd: >-
+      PYTHONPATH=. python scripts/dataset/build_instruct_dataset_en.py
+      --repo-id JuDDGES/en-court-instruct
+    deps:
+      - scripts/dataset/build_instruct_dataset_en.py
 
   embed:
     matrix:
@@ -85,22 +92,30 @@ stages:
 
   sft_unsloth:
     matrix:
+      dataset:
+        - pl-court-instruct
+        - en-court-instruct
       model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Bielik-7B-Instruct-v0.1
     cmd: >-
-      PYTHONPATH=. python scripts/sft/fine_tune_llm.py model=${item.model}
+      PYTHONPATH=. python scripts/sft/fine_tune_llm.py
+      dataset=${item.dataset}
+      model=${item.model}
     deps:
       - scripts/sft/fine_tune_llm.py
       - configs/fine_tuning.yaml
       - configs/model/${item.model}.yaml
     outs:
-      - data/experiments/fine-tune/${item.model}/pl-court-instruct
+      - data/experiments/fine-tune/${item.model}/${item.dataset}/
 
   predict:
     matrix:
+      dataset:
+        - pl-court-instruct
+        - en-court-instruct
       model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
@@ -113,18 +128,22 @@ stages:
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
+      dataset=${item.dataset}
       model=${item.model}
       random_seed=${item.seed}
-      output_file=data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
+      output_file=data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/predict.py
       - configs/predict.yaml
       - configs/model/${item.model}.yaml
     outs:
-      - data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
+      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
 
   predict_with_api:
     matrix:
+      dataset:
+        - pl-court-instruct
+        - en-court-instruct
       model:
         - gpt-4o
         - gpt-4o-mini
@@ -132,17 +151,21 @@ stages:
         - 997
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict_with_api.py
+      dataset=${item.dataset}
       model_version=${item.model}
       seed=${item.seed}
-      output_file=data/experiments/predict/pl-court-instruct/open_ai_${item.model}/outputs_${item.seed}.json
+      output_file=data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/predict_with_api.py
       - configs/predict_with_api.yaml
     outs:
-      - data/experiments/predict/pl-court-instruct/open_ai_${item.model}/outputs_${item.seed}.json
+      - data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
 
   evaluate:
     matrix:
+      dataset:
+          - pl-court-instruct
+          - en-court-instruct
       model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
@@ -157,12 +180,12 @@ stages:
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
+      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/evaluate.py
-      - data/experiments/predict/pl-court-instruct/${item.model}/outputs_${item.seed}.json
+      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
     outs:
-      - data/experiments/predict/pl-court-instruct/${item.model}/metrics_${item.seed}.json
+      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
 
   evaluate_llm_as_judge:
     matrix:
@@ -189,6 +212,7 @@ stages:
     matrix:
       dir:
         - data/experiments/predict/pl-court-instruct
+        - data/experiments/predict/en-court-instruct
     cmd: >-
       PYTHONPATH=. python scripts/sft/summarize_metrics.py
       --root-dir ${item.dir}

@@ -1843,3 +1843,45 @@ stages:
       hash: md5
       md5: adb7c1e239396bbf6e308f3f1b436099
       size: 307
+  build_instruct_dataset_en:
+    cmd: PYTHONPATH=. python scripts/dataset/build_instruct_dataset_en.py --repo-id
+      JuDDGES/en-court-instruct
+    deps:
+    - path: scripts/dataset/build_instruct_dataset_en.py
+      hash: md5
+      md5: 39e530fbd8c7f3a696e117ee13578e1f
+      size: 5203
+  predict_with_api@en-court-instruct-gpt-4o-mini-997:
+    cmd: PYTHONPATH=. python scripts/sft/predict_with_api.py dataset=en-court-instruct
+      model_version=gpt-4o-mini seed=997
+      output_file=data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+    deps:
+    - path: configs/predict_with_api.yaml
+      hash: md5
+      md5: aff18078742a14c3d8ce2cd74e718d44
+      size: 320
+    - path: scripts/sft/predict_with_api.py
+      hash: md5
+      md5: ea0d4f4743b77f46a9667364913db60b
+      size: 4019
+    outs:
+    - path: data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+      hash: md5
+      md5: 2a0819011b3eac56e497201a9f67e310
+      size: 690306
+  evaluate@en-court-instruct-open_ai_gpt-4o-mini-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate.py --output-file data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+    deps:
+    - path: data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+      hash: md5
+      md5: 2a0819011b3eac56e497201a9f67e310
+      size: 690306
+    - path: scripts/sft/evaluate.py
+      hash: md5
+      md5: 73aa4a7eb8a035c087702457b9401654
+      size: 636
+    outs:
+    - path: data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/metrics_997.json
+      hash: md5
+      md5: d70eb0821aff9c9e874a421b80f7f697
+      size: 155
