@@ -22,11 +22,15 @@ class TextEncoderForEval:
             truncated_context = self.truncator(prompt, context)
             input_message = prompt.format(context=truncated_context)
             input_chat = [{"role": "user", "content": input_message}]
-            final_input = self.tokenizer.apply_chat_template(
-                input_chat,
-                add_generation_prompt=True,
-                tokenize=False,
-            )
+            try:
+                final_input = self.tokenizer.apply_chat_template(
+                    input_chat,
+                    add_generation_prompt=True,
+                    tokenize=False,
+                )
+            except ValueError:
+                final_input = input_message
+
             texts.append(final_input)
 
         tokenized = self.tokenizer(

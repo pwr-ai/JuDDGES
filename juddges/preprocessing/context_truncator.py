@@ -24,9 +24,12 @@ class ContextTruncator(ContextTruncatorBase):
             {"role": "assistant", "content": ""},
         ]
 
-        self.empty_messages_length = len(
-            self.tokenizer.apply_chat_template(empty_messages, tokenize=True)
-        )
+        try:
+            self.empty_messages_length = len(
+                self.tokenizer.apply_chat_template(empty_messages, tokenize=True)
+            )
+        except ValueError:
+            self.empty_messages_length = 0
 
     def __call__(self, prompt: str, context: str, output: str | None = None) -> str:
         if output:
