@@ -52,8 +52,9 @@ MONGO_DB_NAME="datasets"
    to remote storage:
     ```shell
     PYTHONPATH=.  python scripts/dataset/dump_pl_dataset.py \
-        --file-name data/datasets/pl/raw/raw.parquet
-    dvc add data/datasets/pl/raw/raw.parquet && dvc push
+        --file-name data/datasets/pl/raw/raw.parquet \
+        --filter-empty-content
+    dvc add data/datasets/pl/raw && dvc push
     ```
 7. Generate dataset card for `pl-court-raw`
     ```shell
