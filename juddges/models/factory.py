@@ -20,6 +20,8 @@ def get_model(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
         return get_llama_3(llm_config, **kwargs)
     elif any(mistral_model in llm_config.name.lower() for mistral_model in ("mistral", "bielik")):
         return get_mistral(llm_config, **kwargs)
+    elif any(llama_2_model in llm_config.name.lower() for llama_2_model in ("trurl", "qra")):
+        return get_llama_2_based(llm_config, **kwargs)
     else:
         raise ValueError(f"Model: {llm_config} not yet handled or doesn't exists.")
 
@@ -41,6 +43,17 @@ def get_mistral(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
     tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.eos_token
+
+    return ModelForGeneration(
+        model=model,
+        tokenizer=tokenizer,
+        generate_kwargs={"pad_token_id": tokenizer.eos_token_id},
+    )
+
+
+def get_llama_2_based(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
+    model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
+    tokenizer.padding_side = "left"
 
     return ModelForGeneration(
         model=model,
