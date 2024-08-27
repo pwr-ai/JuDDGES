@@ -1,7 +1,7 @@
 name: unsloth/llama-3-8b-Instruct-bnb-4bit
 tokenizer_name: ${.name}
 
-adapter_path: data/experiments/fine-tune/Unsloth-Llama-3-8B-Instruct/${hydra:runtime.choices.dataset}/checkpoint-1500
+adapter_path: data/experiments/fine-tune/Unsloth-Llama-3-8B-Instruct/${hydra:runtime.choices.dataset}
 
 max_seq_length: 7_900
 batch_size: 1

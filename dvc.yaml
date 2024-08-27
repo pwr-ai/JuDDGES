@@ -115,7 +115,6 @@ stages:
     matrix:
       dataset:
         - pl-court-instruct
-        - en-court-instruct
       model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
@@ -125,6 +124,31 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
         - Bielik-7B-Instruct-v0.1
         - Bielik-7B-Instruct-v0.1-fine-tuned
+        - trurl-13B-academic
+        - qra-13b
+      seed: ${seeds}
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/predict.py
+      dataset=${item.dataset}
+      model=${item.model}
+      random_seed=${item.seed}
+      output_file=data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+    deps:
+      - scripts/sft/predict.py
+      - configs/predict.yaml
+      - configs/model/${item.model}.yaml
+    outs:
+      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+
+  predict_en:
+    matrix:
+      dataset:
+        - en-court-instruct
+      model:
+        - Unsloth-Llama-3-8B-Instruct
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
+        - Unsloth-Mistral-Nemo-Instruct-2407
+        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
@@ -177,6 +201,8 @@ stages:
         - Bielik-7B-Instruct-v0.1-fine-tuned
         - open_ai_gpt-4o
         - open_ai_gpt-4o-mini
+        - trurl-13B-academic
+        - qra-13b
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py

@@ -1,0 +1,11 @@
+name: OPI-PG/Qra-7b
+tokenizer_name: ${.name}
+
+adapter_path: null
+
+max_seq_length: 4096
+batch_size: 1
+padding: longest
+use_4bit: true
+
+use_unsloth: true
