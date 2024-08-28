@@ -63,7 +63,7 @@ MONGO_DB_NAME="datasets"
 
 9. Upload `pl-court-raw` dataset (with card) to huggingface
     ```shell
-    PYTHONPATH=. python scripts/dataset/push_raw_dataset.py --repo-id "JuDDGES/pl-court-raw"
+    PYTHONPATH=. python scripts/dataset/push_raw_dataset.py --repo-id "JuDDGES/pl-court-raw" --commit-message <commit_message>
    ```
 
 ### Instruction dataset
