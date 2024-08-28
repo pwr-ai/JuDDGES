@@ -28,6 +28,4 @@ repos:
         name: Ruff Formatter
         args: [juddges, scripts, dashboards, tests]
 
-exclude: |
-  - data/
-  - dvc.lock
+exclude: 'data/|dvc.lock'
