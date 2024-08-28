@@ -100,6 +100,7 @@ stages:
         - Unsloth-Mistral-7B-Instruct-v0.3
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Bielik-7B-Instruct-v0.1
+        - Bielik-11B-v2.2-Instruct
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_llm.py
       dataset=${item.dataset}
@@ -126,6 +127,7 @@ stages:
         - Bielik-7B-Instruct-v0.1-fine-tuned
         - trurl-13B-academic
         - qra-13b
+        - Bielik-11B-v2.2-Instruct
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
@@ -222,7 +224,7 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
         # - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
+        # - open_ai_gpt-4o-mini
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
