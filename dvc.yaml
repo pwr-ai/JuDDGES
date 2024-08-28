@@ -7,11 +7,11 @@ stages:
       jupyter nbconvert
       --no-input
       --to markdown
-      --execute nbs/Data/02_Dataset_Description_Raw.ipynb
+      --execute 'nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb'
       --output-dir data/datasets/pl/readme/raw
       --output README
     deps:
-      - nbs/Data/02_Dataset_Description_Raw.ipynb
+      - nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb
       - data/datasets/pl/raw
     outs:
       - data/datasets/pl/readme/raw/
@@ -189,7 +189,6 @@ stages:
     matrix:
       dataset:
           - pl-court-instruct
-          - en-court-instruct
       model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
@@ -199,8 +198,8 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
         - Bielik-7B-Instruct-v0.1
         - Bielik-7B-Instruct-v0.1-fine-tuned
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
+        # - open_ai_gpt-4o
+        # - open_ai_gpt-4o-mini
         - trurl-13B-academic
         - qra-13b
       seed: ${seeds}
@@ -212,6 +211,28 @@ stages:
       - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
     outs:
       - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
+
+  evaluate_en:
+    matrix:
+      dataset:
+          - en-court-instruct
+      model:
+        - Unsloth-Llama-3-8B-Instruct
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
+        - Unsloth-Mistral-Nemo-Instruct-2407
+        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
+        # - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
+      seed: ${seeds}
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate.py
+      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+    deps:
+      - scripts/sft/evaluate.py
+      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
+
 
   evaluate_llm_as_judge:
     matrix:
