@@ -200,8 +200,8 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
         - Bielik-7B-Instruct-v0.1
         - Bielik-7B-Instruct-v0.1-fine-tuned
-        # - open_ai_gpt-4o
-        # - open_ai_gpt-4o-mini
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
         - trurl-13B-academic
         - qra-13b
       seed: ${seeds}
@@ -223,8 +223,8 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
-        # - open_ai_gpt-4o
-        # - open_ai_gpt-4o-mini
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
