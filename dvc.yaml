@@ -1,5 +1,5 @@
 vars:
-  - seeds: [ 42, 7312, 997 ]
+  - seeds: [42, 7312, 997]
 
 stages:
   raw_dataset_readme:
@@ -72,7 +72,6 @@ stages:
       - data/embeddings/pl-court-raw/${item.model}/all_embeddings
     outs:
       - data/embeddings/pl-court-raw/${item.model}/agg_embeddings.pt
-
 
   build_graph_dataset:
     cmd: >-
@@ -190,7 +189,7 @@ stages:
   evaluate:
     matrix:
       dataset:
-          - pl-court-instruct
+        - pl-court-instruct
       model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
@@ -217,7 +216,7 @@ stages:
   evaluate_en:
     matrix:
       dataset:
-          - en-court-instruct
+        - en-court-instruct
       model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
@@ -235,16 +234,19 @@ stages:
     outs:
       - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
 
-
   evaluate_llm_as_judge:
     matrix:
       judge_model:
-        - llama_3.1_8b_instruct
+        - gpt_4o_mini
       evaluated_model:
         - Unsloth-Llama-3-8B-Instruct
         - Unsloth-Llama-3-8B-Instruct-fine-tuned
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
+        - Bielik-7B-Instruct-v0.1
+        - Bielik-7B-Instruct-v0.1-fine-tuned
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
@@ -256,6 +258,29 @@ stages:
       - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
     outs:
       - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+
+  evaluate_llm_as_judge_en:
+    matrix:
+      judge_model:
+        - gpt_4o_mini
+      evaluated_model:
+        - Unsloth-Llama-3-8B-Instruct
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
+        - Unsloth-Mistral-Nemo-Instruct-2407
+        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
+      seed: ${seeds}
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
+      api_model=${item.judge_model}
+      answers_file=data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      out_metric_file=data/experiments/predict/en-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+    deps:
+      - scripts/sft/evaluate_llm_as_judge.py
+      - data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/en-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
 
   summarize_metrics:
     matrix:

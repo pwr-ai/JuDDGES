@@ -8,10 +8,11 @@ from typing import Any
 import hydra
 import torch
 from dotenv import load_dotenv
-from langsmith.wrappers import wrap_openai
+from langchain.globals import set_llm_cache
+from langchain_community.cache import SQLiteCache
+from langchain_openai import ChatOpenAI
 from loguru import logger
 from omegaconf import DictConfig
-from openai import OpenAI
 from pydantic import BaseModel
 
 from juddges.evaluation.eval_structured_llm_judge import StructuredLLMJudgeEvaluator
@@ -30,7 +31,7 @@ OPENAI_ENDPOINT = os.getenv("OPENAI_ENDPOINT")
 class ApiModel(BaseModel, extra="forbid"):
     name: str
     endpoint: str | None = OPENAI_ENDPOINT
-    use_langsmith: bool
+    request_cache_db: Path | None
 
 
 class LLMJudgeConfig(BaseModel, extra="forbid"):
@@ -53,17 +54,17 @@ def main(cfg: DictConfig) -> None:
 
 
 def evaluate_with_api_llm(config: LLMJudgeConfig) -> dict[str, Any]:
-    oai_client = OpenAI(
+    client = ChatOpenAI(
         api_key=OPENAI_API_KEY,
         base_url=config.api_model.endpoint,
-    )
-    if config.api_model.use_langsmith:
-        oai_client = wrap_openai(oai_client)
-
-    evaluator = StructuredLLMJudgeEvaluator(
-        oai_client=oai_client,
         model_name=config.api_model.name,
+        temperature=0.0,
     )
+
+    if config.api_model.request_cache_db is not None:
+        set_llm_cache(SQLiteCache(str(config.api_model.request_cache_db)))
+
+    evaluator = StructuredLLMJudgeEvaluator(client=client)
 
     with open(config.answers_file) as f:
         answers = json.load(f)
