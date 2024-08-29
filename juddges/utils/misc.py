@@ -5,7 +5,7 @@ import torch
 import yaml
 from datasets import Dataset
 
-yaml_pattern: re.Pattern = re.compile(r"^```(?:ya?ml)?(?P<yaml>[^`]*)", re.MULTILINE | re.DOTALL)
+yaml_pattern: re.Pattern = re.compile(r"```(?:ya?ml)?(?P<yaml>[^`]*)", re.MULTILINE | re.DOTALL)
 
 
 def parse_yaml(text: str) -> Any:

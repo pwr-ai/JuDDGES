@@ -6,11 +6,11 @@ from juddges.evaluation.parse import parse_results
 
 
 class InfoExtractionEvaluator:
-    def __init__(self, verbose: bool = True):
+    def __init__(self, num_proc: int, verbose: bool = True):
         self.verbose = verbose
 
         self.structured_evaluators = [
-            StructuredChrfEvaluator(),
+            StructuredChrfEvaluator(num_proc=num_proc),
         ]
         self.full_text_evaluators = [
             FullTextCHRFScorer(),

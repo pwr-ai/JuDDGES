@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
 from statistics import mean
 
+import multiprocess
 from torchmetrics.functional.text import chrf_score
 
 
 class StructuredEvaluatorBase(ABC):
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, num_proc: int) -> None:
         self.name = f"field_{name}"
+        self.num_proc = num_proc
 
     @abstractmethod
     def evaluate(
@@ -25,7 +27,23 @@ class StructuredMetricEvaluator(StructuredEvaluatorBase, ABC):
         preds: dict[str, list[str]],
         golds: dict[str, list[str]],
     ) -> dict[str, dict[str, float]]:
-        return {key: self._compute(preds=preds[key], gold=golds[key]) for key in golds.keys()}
+        if self.num_proc == -1:
+            num_proc = len(golds)
+        else:
+            num_proc = min(self.num_proc, len(golds))
+        if num_proc > 1:
+
+            def _compute_task(key: str) -> float:
+                return self._compute(preds=preds[key], gold=golds[key])
+
+            with multiprocess.Pool(num_proc) as pool:
+                results = pool.map(
+                    _compute_task,
+                    golds.keys(),
+                )
+                return dict(zip(golds.keys(), results))
+        else:
+            return {key: self._compute(preds=preds[key], gold=golds[key]) for key in golds.keys()}
 
     @abstractmethod
     def _compute(self, preds: list[str], gold: list[str]) -> float:
@@ -33,8 +51,8 @@ class StructuredMetricEvaluator(StructuredEvaluatorBase, ABC):
 
 
 class StructuredChrfEvaluator(StructuredMetricEvaluator):
-    def __init__(self) -> None:
-        super().__init__(name="chrf")
+    def __init__(self, num_proc: int) -> None:
+        super().__init__(name="chrf", num_proc=num_proc)
 
     def _compute(self, preds: list[str], gold: list[str]) -> float:
         scores = []
