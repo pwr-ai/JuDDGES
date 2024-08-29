@@ -199,14 +199,13 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
         - Bielik-7B-Instruct-v0.1
         - Bielik-7B-Instruct-v0.1-fine-tuned
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
         - trurl-13B-academic
         - qra-13b
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
       --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      --num-proc=-1
     deps:
       - scripts/sft/evaluate.py
       - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
@@ -222,12 +221,30 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
       --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      --num-proc=-1
+    deps:
+      - scripts/sft/evaluate.py
+      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
+
+  evaluate_api_models:
+    matrix:
+      dataset:
+        - en-court-instruct
+        - pl-court-instruct
+      model:
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
+      seed: [997]
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate.py
+      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      --num-proc=-1
     deps:
       - scripts/sft/evaluate.py
       - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json

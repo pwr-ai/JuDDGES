@@ -6,11 +6,14 @@ import typer
 from juddges.evaluation.info_extraction import InfoExtractionEvaluator
 
 
-def evaluate_results(output_file: Path = typer.Option(...)) -> None:
+def evaluate_results(
+    output_file: Path = typer.Option(...),
+    num_proc: int = typer.Option(1),
+) -> None:
     with open(output_file, "r") as file:
         results = json.load(file)
 
-    evaluator = InfoExtractionEvaluator()
+    evaluator = InfoExtractionEvaluator(num_proc=num_proc)
     results = evaluator.evaluate(results)
 
     metrics_fname = output_file.name.split("_", maxsplit=1)[1]
