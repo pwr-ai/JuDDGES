@@ -28,6 +28,7 @@ class TestParseItem(TestCase):
         ```yaml
             name: John
         ```
+        Text after YAML
         """
         target_output = {"name": "John"}
         self.assertDictEqual(_parse_item(yaml_with_text), target_output)
@@ -44,7 +45,6 @@ class TestParseItem(TestCase):
         ```
         """
         target_output = {"name": "John"}
-        breakpoint()
         _parse_item(yaml_with_text)
         self.assertDictEqual(_parse_item(yaml_with_text), target_output)
 

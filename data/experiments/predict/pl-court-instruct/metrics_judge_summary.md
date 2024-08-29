@@ -48,3 +48,15 @@
 | Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned | (Superset)      | 0.002 (± 0.000) | 0.000 (± 0.000) | 0.013 (± 0.000)   | 0.020 (± 0.002) | 0.101 (± 0.003) | 0.001 (± 0.001) | 0.000 (± 0.000) |
 | Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned | (empty-answer)  | 0.088 (± 0.001) | 0.068 (± 0.002) | 0.161 (± 0.001)   | 0.144 (± 0.002) | 0.252 (± 0.000) | 0.273 (± 0.007) | 0.332 (± 0.004) |
 | Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned | (non-evaluable) | 0.000 (± 0.000) | 0.000 (± 0.000) | 0.000 (± 0.000)   | 0.000 (± 0.000) | 0.000 (± 0.000) | 0.000 (± 0.000) | 0.000 (± 0.000) |
+| open_ai_gpt-4o                                | (Correct)       | 0.939 (± nan)   | 0.978 (± nan)   | 0.915 (± nan)     | 0.662 (± nan)   | 0.019 (± nan)   | 0.684 (± nan)   | 0.972 (± nan)   |
+| open_ai_gpt-4o                                | (Disagreement)  | 0.032 (± nan)   | 0.022 (± nan)   | 0.049 (± nan)     | 0.135 (± nan)   | 0.394 (± nan)   | 0.001 (± nan)   | 0.017 (± nan)   |
+| open_ai_gpt-4o                                | (Subset)        | 0.012 (± nan)   | 0.000 (± nan)   | 0.011 (± nan)     | 0.040 (± nan)   | 0.015 (± nan)   | 0.311 (± nan)   | 0.001 (± nan)   |
+| open_ai_gpt-4o                                | (Superset)      | 0.017 (± nan)   | 0.000 (± nan)   | 0.015 (± nan)     | 0.163 (± nan)   | 0.354 (± nan)   | 0.002 (± nan)   | 0.011 (± nan)   |
+| open_ai_gpt-4o                                | (empty-answer)  | 0.001 (± nan)   | 0.001 (± nan)   | 0.011 (± nan)     | 0.001 (± nan)   | 0.218 (± nan)   | 0.003 (± nan)   | 0.001 (± nan)   |
+| open_ai_gpt-4o                                | (non-evaluable) | 0.000 (± nan)   | 0.000 (± nan)   | 0.000 (± nan)     | 0.000 (± nan)   | 0.000 (± nan)   | 0.000 (± nan)   | 0.000 (± nan)   |
+| open_ai_gpt-4o-mini                           | (Correct)       | 0.928 (± nan)   | 0.978 (± nan)   | 0.909 (± nan)     | 0.555 (± nan)   | 0.029 (± nan)   | 0.943 (± nan)   | 0.975 (± nan)   |
+| open_ai_gpt-4o-mini                           | (Disagreement)  | 0.034 (± nan)   | 0.022 (± nan)   | 0.059 (± nan)     | 0.175 (± nan)   | 0.672 (± nan)   | 0.001 (± nan)   | 0.015 (± nan)   |
+| open_ai_gpt-4o-mini                           | (Subset)        | 0.007 (± nan)   | 0.000 (± nan)   | 0.015 (± nan)     | 0.017 (± nan)   | 0.039 (± nan)   | 0.053 (± nan)   | 0.000 (± nan)   |
+| open_ai_gpt-4o-mini                           | (Superset)      | 0.030 (± nan)   | 0.000 (± nan)   | 0.015 (± nan)     | 0.252 (± nan)   | 0.181 (± nan)   | 0.002 (± nan)   | 0.009 (± nan)   |
+| open_ai_gpt-4o-mini                           | (empty-answer)  | 0.001 (± nan)   | 0.001 (± nan)   | 0.003 (± nan)     | 0.001 (± nan)   | 0.080 (± nan)   | 0.002 (± nan)   | 0.001 (± nan)   |
+| open_ai_gpt-4o-mini                           | (non-evaluable) | 0.000 (± nan)   | 0.000 (± nan)   | 0.000 (± nan)     | 0.000 (± nan)   | 0.000 (± nan)   | 0.000 (± nan)   | 0.000 (± nan)   |
