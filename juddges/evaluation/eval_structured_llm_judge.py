@@ -7,7 +7,7 @@ from juddges.evaluation.parse import EMPTY_ANSWER
 
 # TODO: might be a configurable prompt in future
 # Credit: https://github.com/openai/evals
-PROMPT = """
+PROMPT_PL = """
 You are comparing the extracted information from a submission to the expert-provided information on a given text in Polish. Here is the data:
 [BEGIN DATA]
 ************
@@ -26,6 +26,28 @@ The extracted information may either be a subset or superset of the expert extra
 
 Format your answer as only a single word in parentheses, e.g., "(Superset)".
 """
+
+PROMPT_EN = """
+You are comparing the extracted information from a submission to the expert-provided information. Here is the data:
+[BEGIN DATA]
+************
+[Expert Extraction]: {gold}
+************
+[Submission Extraction]: {answer}
+************
+[END DATA]
+
+Compare the factual content of the extracted information with the expert-provided information. Ignore any minor differences in style, grammar, punctuation, or abbreviations.
+The extracted information may either be a subset or superset of the expert extraction, or it may conflict with it. Determine which case applies. Assess the extraction by selecting one of the following options:
+(Subset) The extracted information is a subset, i.e., contains part of the expert-provided information and is fully consistent with it.
+(Superset) The extracted information is a superset, i.e., contains all and some extra information of the expert-provided information and is fully consistent with it.
+(Correct) The extracted information contains all the same details as the expert-provided information.
+(Disagreement) There is a disagreement, either full or partial, between the extracted information and the expert-provided information.
+
+Format your answer as only a single word in parentheses, e.g., "(Superset)".
+"""
+
+PROMPTS = {"pl": PROMPT_PL, "en": PROMPT_EN}
 
 INVALID_JUDGMENT = "(non-evaluable)"
 CORRECT_JUDGEMENT = "(Correct)"
@@ -50,9 +72,10 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
     Returns dictionary formatted as {"<field_name>": {"accuracy": <float_value>}}.
     """
 
-    def __init__(self, client: ChatOpenAI):
+    def __init__(self, client: ChatOpenAI, prompt: str):
         super().__init__(name="llm_as_judge", num_proc=1)
         self.client = client
+        self.prompt = prompt
 
     def evaluate(
         self,
@@ -89,7 +112,7 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
         elif ans_pred == ans_gold:
             return CORRECT_JUDGEMENT
         else:
-            response = self.client.invoke(PROMPT.format(gold=ans_gold, answer=ans_pred))
+            response = self.client.invoke(self.prompt.format(gold=ans_gold, answer=ans_pred))
 
             if response is not None:
                 return response.content

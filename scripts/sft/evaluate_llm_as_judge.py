@@ -3,7 +3,7 @@ import logging
 import os
 from pathlib import Path
 from pprint import pformat
-from typing import Any
+from typing import Any, Literal
 
 import hydra
 import torch
@@ -15,7 +15,7 @@ from loguru import logger
 from omegaconf import DictConfig
 from pydantic import BaseModel
 
-from juddges.evaluation.eval_structured_llm_judge import StructuredLLMJudgeEvaluator
+from juddges.evaluation.eval_structured_llm_judge import PROMPTS, StructuredLLMJudgeEvaluator
 from juddges.evaluation.parse import parse_results
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
@@ -38,6 +38,7 @@ class LLMJudgeConfig(BaseModel, extra="forbid"):
     api_model: ApiModel
     answers_file: Path
     out_metric_file: Path
+    prompt: Literal["pl", "en"]
 
 
 @torch.inference_mode()
@@ -64,7 +65,7 @@ def evaluate_with_api_llm(config: LLMJudgeConfig) -> dict[str, Any]:
     if config.api_model.request_cache_db is not None:
         set_llm_cache(SQLiteCache(str(config.api_model.request_cache_db)))
 
-    evaluator = StructuredLLMJudgeEvaluator(client=client)
+    evaluator = StructuredLLMJudgeEvaluator(client=client, prompt=PROMPTS[config.prompt])
 
     with open(config.answers_file) as f:
         answers = json.load(f)

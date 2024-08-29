@@ -4170,6 +4170,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_42.json
       out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_42.json
+      prompt=pl
     deps:
     - path: 
         data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_42.json
@@ -4178,8 +4179,8 @@ stages:
       size: 2008073
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_42.json
@@ -4213,6 +4214,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_7312.json
       out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_7312.json
+      prompt=pl
     deps:
     - path: 
         data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_7312.json
@@ -4221,8 +4223,8 @@ stages:
       size: 2013637
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_7312.json
@@ -4233,6 +4235,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_997.json
       out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_997.json
+      prompt=pl
     deps:
     - path: 
         data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_997.json
@@ -4241,8 +4244,8 @@ stages:
       size: 2010150
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_997.json
@@ -4553,6 +4556,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_997.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_997.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_997.json
@@ -4561,18 +4565,19 @@ stages:
       size: 817490
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_997.json
       hash: md5
-      md5: 3b8808d0d33ae377210fb92f9778acf6
+      md5: 4395c32931d25a1bd9aa092c5a0e5460
       size: 478
   evaluate_llm_as_judge_en@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-fine-tuned-en-997:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/outputs_997.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/judge_metrics_997.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/outputs_997.json
@@ -4581,18 +4586,19 @@ stages:
       size: 670674
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/judge_metrics_997.json
       hash: md5
-      md5: 504d5c08348c3f6dc71341db277c9432
-      size: 488
+      md5: 90c2b0cd132130d0b9d3a60bf6fdd69b
+      size: 486
   evaluate_llm_as_judge_en@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-997:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_997.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_997.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_997.json
@@ -4601,8 +4607,8 @@ stages:
       size: 705894
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_997.json
@@ -4613,6 +4619,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/outputs_997.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/judge_metrics_997.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/outputs_997.json
@@ -4621,13 +4628,13 @@ stages:
       size: 642477
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/judge_metrics_997.json
       hash: md5
-      md5: 7ef021199646e295975c1d45d22fb070
+      md5: 34de8eabaebe6a96b4b664b664f222e2
       size: 484
   summarize_metrics@data/experiments/predict/en-court-instruct:
     cmd: PYTHONPATH=. python scripts/sft/summarize_metrics.py --root-dir data/experiments/predict/en-court-instruct
@@ -4639,7 +4646,7 @@ stages:
     outs:
     - path: data/experiments/predict/en-court-instruct/metrics_judge_summary.md
       hash: md5
-      md5: 4a1af4dc5a2826b5302a0330a624db83
+      md5: 6065f2fbff28ab7439d35ddfe03b1938
       size: 4857
     - path: data/experiments/predict/en-court-instruct/metrics_ngram_summary.md
       hash: md5
@@ -4717,6 +4724,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_42.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_42.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_42.json
@@ -4725,18 +4733,19 @@ stages:
       size: 821683
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_42.json
       hash: md5
-      md5: a114d59fdb41e2bc7e852c648524f6a8
-      size: 477
+      md5: 77ecbff8c82afbfd6fec098fb87e1218
+      size: 478
   evaluate_llm_as_judge_en@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-7312:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_7312.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_7312.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_7312.json
@@ -4745,18 +4754,19 @@ stages:
       size: 818877
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_7312.json
       hash: md5
-      md5: 320b11f665f9216a2a138aa55ce5a327
-      size: 481
+      md5: f25c9ad98ef817e976def98d6b7d3b5d
+      size: 482
   evaluate_llm_as_judge_en@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-fine-tuned-en-42:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/outputs_42.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/judge_metrics_42.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/outputs_42.json
@@ -4765,18 +4775,19 @@ stages:
       size: 675578
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/judge_metrics_42.json
       hash: md5
-      md5: bd76c342a22e57703370abdc134e0661
+      md5: 5f2cea81c873a3b85ef95ba9a6dc90a5
       size: 487
   evaluate_llm_as_judge_en@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-fine-tuned-en-7312:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/outputs_7312.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/judge_metrics_7312.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/outputs_7312.json
@@ -4785,18 +4796,19 @@ stages:
       size: 670935
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned-en/judge_metrics_7312.json
       hash: md5
-      md5: 3be1ede4e2177e64d0bb9aa3d583ccb6
+      md5: 5cc45cac8a7607e42a8a394593d33396
       size: 486
   evaluate_llm_as_judge_en@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-42:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_42.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_42.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_42.json
@@ -4805,8 +4817,8 @@ stages:
       size: 705218
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_42.json
@@ -4817,6 +4829,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_7312.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_7312.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_7312.json
@@ -4825,8 +4838,8 @@ stages:
       size: 703876
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_7312.json
@@ -4837,6 +4850,7 @@ stages:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/outputs_42.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/judge_metrics_42.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/outputs_42.json
@@ -4845,18 +4859,19 @@ stages:
       size: 642688
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/judge_metrics_42.json
       hash: md5
-      md5: 9bceb1883522389717038125311d5a1d
+      md5: 974e972a09d844a77840029d642e8077
       size: 486
   evaluate_llm_as_judge_en@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en-7312:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
       answers_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/outputs_7312.json
       out_metric_file=data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/judge_metrics_7312.json
+      prompt=en
     deps:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/outputs_7312.json
@@ -4865,13 +4880,13 @@ stages:
       size: 642730
     - path: scripts/sft/evaluate_llm_as_judge.py
       hash: md5
-      md5: 1e556a79b0f9cf0a9cfdb23ed8077bcc
-      size: 2172
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
     outs:
     - path: 
         data/experiments/predict/en-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en/judge_metrics_7312.json
       hash: md5
-      md5: 1a032a31700c3417621a698c8b8f02ca
+      md5: 8a9712eb10a8da99d86bab8968fd3207
       size: 485
   evaluate_llm_as_judge_api_models@pl-court-instruct-gpt_4o_mini-open_ai_gpt-4o-997:
     cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
@@ -4947,3 +4962,459 @@ stages:
       hash: md5
       md5: 4edc8fe239f53890d71291f61b6cc96c
       size: 486
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-42:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_42.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_42.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_42.json
+      hash: md5
+      md5: e99c88720116c951087b6125e5f4be4d
+      size: 2008073
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_42.json
+      hash: md5
+      md5: 9d9fba0cf2169e9dd9f69579a2182b8e
+      size: 1172
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-7312:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_7312.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_7312.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_7312.json
+      hash: md5
+      md5: 4c25368aacb7402b1b2cae9368d187d1
+      size: 2013637
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_7312.json
+      hash: md5
+      md5: e58171fc082d33c84497a13dabcf766c
+      size: 1167
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_997.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_997.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/outputs_997.json
+      hash: md5
+      md5: baef589507248af212aaae51602fd999
+      size: 2010150
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct/judge_metrics_997.json
+      hash: md5
+      md5: f8d16a5298fabe288486822779470cd8
+      size: 1165
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-fine-tuned-42:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/outputs_42.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/judge_metrics_42.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/outputs_42.json
+      hash: md5
+      md5: 289b719e8c7166e578417e5706bdc4e3
+      size: 1760355
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/judge_metrics_42.json
+      hash: md5
+      md5: 70398042d030309e7e0bc7ba927136f3
+      size: 1167
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-fine-tuned-7312:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/outputs_7312.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/judge_metrics_7312.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/outputs_7312.json
+      hash: md5
+      md5: 25bee3b4ee09b36d636095b4c927a0d3
+      size: 1759194
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/judge_metrics_7312.json
+      hash: md5
+      md5: 9d22089c8d23bbc5a028c748e5522c23
+      size: 1157
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Llama-3-8B-Instruct-fine-tuned-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/outputs_997.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/judge_metrics_997.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/outputs_997.json
+      hash: md5
+      md5: 82b2c535d99d91b9a34986375bfa31a9
+      size: 1758747
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Llama-3-8B-Instruct-fine-tuned/judge_metrics_997.json
+      hash: md5
+      md5: 4222d5b165de8a3a89d71d6519b71b76
+      size: 1170
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-42:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_42.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_42.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_42.json
+      hash: md5
+      md5: 1385f49966e9db2a88a17f53d0887ad8
+      size: 1741944
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_42.json
+      hash: md5
+      md5: f4bac633a65afde9bf5612f35c3089bb
+      size: 1170
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-7312:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_7312.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_7312.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_7312.json
+      hash: md5
+      md5: 924744efce1483e9128579cad7a4454c
+      size: 1748772
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_7312.json
+      hash: md5
+      md5: 1f95777ef87a547fa7a41dc597adfc39
+      size: 1166
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_997.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_997.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/outputs_997.json
+      hash: md5
+      md5: 4d023797a9053fd7df61f6b1796112e9
+      size: 1747404
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407/judge_metrics_997.json
+      hash: md5
+      md5: de3f557dfdf3440262e4d8f811e526ca
+      size: 1167
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-42:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/outputs_42.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/judge_metrics_42.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/outputs_42.json
+      hash: md5
+      md5: 14d4613f7d9495f5fb5f2d7b81f402a9
+      size: 1825646
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/judge_metrics_42.json
+      hash: md5
+      md5: e8cff190991ee3164825dbf7eca03d12
+      size: 1170
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-7312:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/outputs_7312.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/judge_metrics_7312.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/outputs_7312.json
+      hash: md5
+      md5: 302e1dc4f064007e3df88ac1e8acccc5
+      size: 1831330
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/judge_metrics_7312.json
+      hash: md5
+      md5: aee4a08e0a4d0398b34a2587c039244d
+      size: 1169
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/outputs_997.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/judge_metrics_997.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/outputs_997.json
+      hash: md5
+      md5: 41a47dc56efc29b6c2771db68bdacb17
+      size: 1822491
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned/judge_metrics_997.json
+      hash: md5
+      md5: aac703269b10c85d1a2b5303c22ca077
+      size: 1168
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Bielik-7B-Instruct-v0.1-42:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_42.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/judge_metrics_42.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_42.json
+      hash: md5
+      md5: 2dc39513a04910c5d0c54380166639d9
+      size: 2029644
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/judge_metrics_42.json
+      hash: md5
+      md5: 243da4df07c6dfb5199b925e3f5c07aa
+      size: 1137
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Bielik-7B-Instruct-v0.1-7312:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_7312.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/judge_metrics_7312.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_7312.json
+      hash: md5
+      md5: ae39bf31296ffe82c0f6a3e8c9ff63aa
+      size: 2014399
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/judge_metrics_7312.json
+      hash: md5
+      md5: 8098cc937d57455ca47d32c3449159a3
+      size: 1129
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Bielik-7B-Instruct-v0.1-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_997.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/judge_metrics_997.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/outputs_997.json
+      hash: md5
+      md5: fac04d78ad020b50f79fc7277a037e8e
+      size: 2016400
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1/judge_metrics_997.json
+      hash: md5
+      md5: f1390b2d50893a17c90fc277dc363d6a
+      size: 1139
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Bielik-7B-Instruct-v0.1-fine-tuned-42:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/outputs_42.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/judge_metrics_42.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/outputs_42.json
+      hash: md5
+      md5: 178eb0649617d4a698da6c9e315e84c5
+      size: 2034749
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/judge_metrics_42.json
+      hash: md5
+      md5: 302b957707520fa327d1da0edf18baa3
+      size: 1167
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Bielik-7B-Instruct-v0.1-fine-tuned-7312:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/outputs_7312.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/judge_metrics_7312.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/outputs_7312.json
+      hash: md5
+      md5: 743ea22448bc73a7a991da075fca8841
+      size: 2031343
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/judge_metrics_7312.json
+      hash: md5
+      md5: 789f0906846251d3f0cab78d111f9c56
+      size: 1163
+  evaluate_llm_as_judge_pl@gpt_4o_mini-Bielik-7B-Instruct-v0.1-fine-tuned-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/outputs_997.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/judge_metrics_997.json
+      prompt=pl
+    deps:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/outputs_997.json
+      hash: md5
+      md5: 433a4b2aa7870a134277a265d099a588
+      size: 2029482
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/Bielik-7B-Instruct-v0.1-fine-tuned/judge_metrics_997.json
+      hash: md5
+      md5: 90f3ed04ef29c5cd29b7ec8f02a780a1
+      size: 1163
+  evaluate_llm_as_judge_api_models@pl-gpt_4o_mini-open_ai_gpt-4o-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/outputs_997.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/judge_metrics_997.json
+      prompt=pl
+    deps:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/outputs_997.json
+      hash: md5
+      md5: 7c5833fdd1419163b286baaa3d71e084
+      size: 1965252
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o/judge_metrics_997.json
+      hash: md5
+      md5: 867f10aeb55a3bd46b08c8a75c3bfc60
+      size: 1176
+  evaluate_llm_as_judge_api_models@pl-gpt_4o_mini-open_ai_gpt-4o-mini-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/judge_metrics_997.json
+      prompt=pl
+    deps:
+    - path: data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+      hash: md5
+      md5: 839c911f542cd7c60c9ae52ef95e9907
+      size: 1812429
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-instruct/open_ai_gpt-4o-mini/judge_metrics_997.json
+      hash: md5
+      md5: 24037233e5abe74fe13f69dd4fc5e26a
+      size: 1173
+  evaluate_llm_as_judge_api_models@en-gpt_4o_mini-open_ai_gpt-4o-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/en-court-instruct/open_ai_gpt-4o/outputs_997.json
+      out_metric_file=data/experiments/predict/en-court-instruct/open_ai_gpt-4o/judge_metrics_997.json
+      prompt=en
+    deps:
+    - path: data/experiments/predict/en-court-instruct/open_ai_gpt-4o/outputs_997.json
+      hash: md5
+      md5: 8f70e2baa0b0ae8a320577f5c8a60011
+      size: 679432
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: data/experiments/predict/en-court-instruct/open_ai_gpt-4o/judge_metrics_997.json
+      hash: md5
+      md5: 1ad8736bed0fff4e88a9c32775f370bf
+      size: 481
+  evaluate_llm_as_judge_api_models@en-gpt_4o_mini-open_ai_gpt-4o-mini-997:
+    cmd: PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py api_model=gpt_4o_mini
+      answers_file=data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+      out_metric_file=data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/judge_metrics_997.json
+      prompt=en
+    deps:
+    - path: data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/outputs_997.json
+      hash: md5
+      md5: 2a0819011b3eac56e497201a9f67e310
+      size: 690306
+    - path: scripts/sft/evaluate_llm_as_judge.py
+      hash: md5
+      md5: 79a02fb864cb279f93fc4171043bb31c
+      size: 2253
+    outs:
+    - path: 
+        data/experiments/predict/en-court-instruct/open_ai_gpt-4o-mini/judge_metrics_997.json
+      hash: md5
+      md5: bd272bea099716c0c2e689a2d19c0071
+      size: 488

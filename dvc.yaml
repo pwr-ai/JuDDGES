@@ -254,7 +254,7 @@ stages:
     outs:
       - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
 
-  evaluate_llm_as_judge:
+  evaluate_llm_as_judge_pl:
     matrix:
       judge_model:
         - gpt_4o_mini
@@ -271,6 +271,7 @@ stages:
       api_model=${item.judge_model}
       answers_file=data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
       out_metric_file=data/experiments/predict/pl-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      prompt=pl
     deps:
       - scripts/sft/evaluate_llm_as_judge.py
       - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
@@ -292,6 +293,7 @@ stages:
       api_model=${item.judge_model}
       answers_file=data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
       out_metric_file=data/experiments/predict/en-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      prompt=en
     deps:
       - scripts/sft/evaluate_llm_as_judge.py
       - data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
@@ -300,9 +302,9 @@ stages:
 
   evaluate_llm_as_judge_api_models:
     matrix:
-      dataset:
-        - pl-court-instruct
-        - en-court-instruct
+      language:
+        - pl
+        - en
       judge_model:
         - gpt_4o_mini
       evaluated_model:
@@ -312,13 +314,14 @@ stages:
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
       api_model=${item.judge_model}
-      answers_file=data/experiments/predict/${item.dataset}/${item.evaluated_model}/outputs_${item.seed}.json
-      out_metric_file=data/experiments/predict/${item.dataset}/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      answers_file=data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      out_metric_file=data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      prompt=${item.language}
     deps:
       - scripts/sft/evaluate_llm_as_judge.py
-      - data/experiments/predict/${item.dataset}/${item.evaluated_model}/outputs_${item.seed}.json
+      - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
     outs:
-      - data/experiments/predict/${item.dataset}/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
 
   summarize_metrics:
     matrix:
