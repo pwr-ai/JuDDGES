@@ -1,6 +1,5 @@
-import yaml
+from langchain_openai import ChatOpenAI
 from loguru import logger
-from openai import OpenAI
 from tqdm.auto import tqdm
 
 from juddges.evaluation.eval_structured import StructuredEvaluatorBase
@@ -51,10 +50,9 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
     Returns dictionary formatted as {"<field_name>": {"accuracy": <float_value>}}.
     """
 
-    def __init__(self, oai_client: OpenAI, model_name: str):
+    def __init__(self, client: ChatOpenAI):
         super().__init__(name="llm_as_judge")
-        self.oai_client = oai_client
-        self.model_name = model_name
+        self.client = client
 
     def evaluate(
         self,
@@ -62,48 +60,42 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
         golds: dict[str, list[str]],
     ) -> dict[str, dict[str, float]]:
         """Evaluates information extraction by computing metrics per each field."""
+        # todo: change to asyncio.gather when https://github.com/langchain-ai/langchain/issues/23904 is resolved
         return {
-            field: self.compute_metrics(preds[field], golds[field])
+            field: self.evalute_answers(preds=preds[field], golds=golds[field], field_name=field)
             for field in tqdm(golds.keys(), desc="Fields")
         }
 
-    def compute_metrics(self, preds: list[str], golds: list[str]) -> dict[str, float]:
-        """Assesses single field prediction either by comparing raw string or using LLM-as-judge otherwise."""
+    def evalute_answers(
+        self,
+        preds: list[str],
+        golds: list[str],
+        field_name: str,
+    ) -> dict[str, float]:
         assert len(golds) == len(preds)
-        llm_assessments = []
-        num_llm_evals = 0
-        enum_golds_preds = enumerate(zip(golds, preds))
-        for i, (ans_gold, ans_pred) in (
-            pbar := tqdm(enum_golds_preds, total=len(golds), leave=False, desc="Evaluating")
-        ):
-            if ans_pred == EMPTY_ANSWER:
-                llm_assessments.append(MISSING_ANSWER)
-            elif ans_pred == ans_gold:
-                llm_assessments.append(CORRECT_JUDGEMENT)
-            else:
-                num_llm_evals += 1
-                # TODO: Further can be improved with asynchronous requests
-                response = self.oai_client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "user", "content": PROMPT.format(gold=ans_gold, answer=ans_pred)}
-                    ],
-                    temperature=0.0,
-                    n=1,
-                )
-
-                if response is not None:
-                    response_msg = response.choices[0].message.content
-                else:
-                    logger.warning(f"Empty response for: {(ans_gold, ans_pred)}")
-                    response_msg = INVALID_JUDGMENT
-                llm_assessments.append(response_msg)
-
-            pbar.set_postfix({"llm_calls": f"{num_llm_evals}/{i + 1}"})
-
+        llm_assessments = [
+            self.evaluate_single_answer(ans_pred, ans_gold)
+            for ans_gold, ans_pred in tqdm(
+                zip(golds, preds), desc=f"Evaluating {field_name}", total=len(golds), leave=False
+            )
+        ]
         results_summary = self.answers_to_metrics(llm_assessments)
-
         return results_summary
+
+    def evaluate_single_answer(self, ans_pred: str, ans_gold: str) -> str:
+        """Assesses single answer either by comparing raw string or using LLM-as-judge otherwise."""
+        if ans_pred == EMPTY_ANSWER:
+            return MISSING_ANSWER
+        elif ans_pred == ans_gold:
+            return CORRECT_JUDGEMENT
+        else:
+            response = self.client.invoke(PROMPT.format(gold=ans_gold, answer=ans_pred))
+
+            if response is not None:
+                return response.content
+            else:
+                logger.warning(f"Empty API response for: {(ans_gold, ans_pred)}")
+                return INVALID_JUDGMENT
 
     @staticmethod
     def answers_to_metrics(llm_assessments: list[str]) -> dict[str, float]:
@@ -118,39 +110,34 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
 
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv
-    from langsmith.wrappers import wrap_openai
-    from openai import OpenAI
+    import pandas as pd
+    from dotenv import dotenv_values
+    from langchain_openai import ChatOpenAI
 
-    load_dotenv()
+    OPENAI_API_KEY = dotenv_values()["OPENAI_API_KEY"]
 
-    oai_client = wrap_openai(OpenAI())
-    model = "gpt-3.5-turbo"
+    client = ChatOpenAI(
+        api_key=OPENAI_API_KEY,
+        model_name="gpt-4o-mini",
+        temperature=0.0,
+    )
 
-    evaluator = StructuredLLMJudgeEvaluator(oai_client, model)
+    evaluator = StructuredLLMJudgeEvaluator(client)
 
-    results = [
-        {
-            "gold": yaml.dump(
-                {
-                    "name": "John",
-                    "surname": "Doe",
-                    "age": 29,
-                    "birth_date": "1993-01-01",
-                    "graduation_date": "2015-06-01",
-                }
-            ),
-            "answer": yaml.dump(
-                {
-                    "name": "John",
-                    "surname": "Does",
-                    "age": 30,
-                    "birth_date": "1993-01-01",
-                    "graduation_date": "2015-06-06",
-                }
-            ),
-        }
-    ]
+    preds = {
+        "name": ["John", "Jane"],
+        "surname": ["Doe", "Doe"],
+        "age": ["29", "30"],
+        "birth_date": ["1993-01-01", "1993-01-01"],
+        "graduation_date": ["2015-06-01", "2015-06-06"],
+    }
+    golds = {
+        "name": ["John", "John"],
+        "surname": ["Doe", "Doe"],
+        "age": ["29", "30"],
+        "birth_date": ["1993-01-01", "1993-01-01"],
+        "graduation_date": ["2015-06-01", "2015-06-01"],
+    }
 
-    metrics = evaluator.evaluate(results)
-    print(metrics)
+    metrics = evaluator.evaluate(preds=preds, golds=golds)
+    print(pd.DataFrame.from_dict(metrics).transpose().to_markdown())
