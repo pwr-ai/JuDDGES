@@ -89,6 +89,7 @@ stages:
       - data/datasets/pl/graph/data
       - data/datasets/pl/graph/metadata.yaml
 
+  ### Fine-tuning ###
   sft_unsloth:
     matrix:
       dataset:
@@ -111,6 +112,7 @@ stages:
     outs:
       - data/experiments/fine-tune/${item.model}/${item.dataset}/
 
+  ### Prediction ###
   predict:
     matrix:
       dataset:
@@ -186,6 +188,7 @@ stages:
     outs:
       - data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
 
+  ### Evaluation ###
   evaluate:
     matrix:
       dataset:
@@ -262,8 +265,6 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
         - Bielik-7B-Instruct-v0.1
         - Bielik-7B-Instruct-v0.1-fine-tuned
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
@@ -285,8 +286,6 @@ stages:
         - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
@@ -298,6 +297,28 @@ stages:
       - data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
     outs:
       - data/experiments/predict/en-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+
+  evaluate_llm_as_judge_api_models:
+    matrix:
+      dataset:
+        - pl-court-instruct
+        - en-court-instruct
+      judge_model:
+        - gpt_4o_mini
+      evaluated_model:
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
+      seed: [997]
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
+      api_model=${item.judge_model}
+      answers_file=data/experiments/predict/${item.dataset}/${item.evaluated_model}/outputs_${item.seed}.json
+      out_metric_file=data/experiments/predict/${item.dataset}/${item.evaluated_model}/judge_metrics_${item.seed}.json
+    deps:
+      - scripts/sft/evaluate_llm_as_judge.py
+      - data/experiments/predict/${item.dataset}/${item.evaluated_model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/${item.dataset}/${item.evaluated_model}/judge_metrics_${item.seed}.json
 
   summarize_metrics:
     matrix:

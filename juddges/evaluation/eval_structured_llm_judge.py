@@ -51,7 +51,7 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
     """
 
     def __init__(self, client: ChatOpenAI):
-        super().__init__(name="llm_as_judge")
+        super().__init__(name="llm_as_judge", num_proc=1)
         self.client = client
 
     def evaluate(
