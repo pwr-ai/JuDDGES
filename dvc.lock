@@ -169,20 +169,6 @@ stages:
       hash: md5
       md5: 3b3589929112cb2f199044d240e87bcc
       size: 305
-  instruct_dataset_readme:
-    cmd: jupyter nbconvert  --no-input  --to markdown  --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
-      --output-dir data/datasets/pl/readme/instruct --output README
-    deps:
-    - path: nbs/Data/03_Dataset_Description_Instruct.ipynb
-      hash: md5
-      md5: 27e6d517445028d45e5c40b22febece4
-      size: 16215
-    outs:
-    - path: data/datasets/pl/readme/instruct/
-      hash: md5
-      md5: de02794df3d74d86f8610f040a17dcbe.dir
-      size: 144326
-      nfiles: 5
   predict@Unsloth-Llama-3-8B-Instruct:
     cmd: PYTHONPATH=. python scripts/sft/predict.py model=Unsloth-Llama-3-8B-Instruct
     deps:
@@ -4947,3 +4933,31 @@ stages:
       hash: md5
       md5: 4edc8fe239f53890d71291f61b6cc96c
       size: 486
+  instruct_dataset_readme@1:
+    cmd: jupyter nbconvert --no-input --to markdown --execute "nbs/Dataset Cards/05_Dataset_Description_en_court_instruct.ipynb"
+      --output-dir data/datasets/en/readme/instruct --output README
+    deps:
+    - path: nbs/Dataset Cards/05_Dataset_Description_en_court_instruct.ipynb
+      hash: md5
+      md5: da1eb2132a552e2de52e42fc827ecef8
+      size: 14220
+    outs:
+    - path: data/datasets/en/readme/instruct
+      hash: md5
+      md5: dd812ae1518c3c934945b916aa9e5bfc.dir
+      size: 67727
+      nfiles: 3
+  instruct_dataset_readme@0:
+    cmd: jupyter nbconvert --no-input --to markdown --execute "nbs/Dataset Cards/02_Dataset_Description_Instruct.ipynb"
+      --output-dir data/datasets/pl/readme/instruct --output README
+    deps:
+    - path: nbs/Dataset Cards/02_Dataset_Description_Instruct.ipynb
+      hash: md5
+      md5: 1212931a887a1e4ab1939234554b4795
+      size: 16026
+    outs:
+    - path: data/datasets/pl/readme/instruct
+      hash: md5
+      md5: 5a7c4f784f826e2214d39decfd1c4625.dir
+      size: 206279
+      nfiles: 7

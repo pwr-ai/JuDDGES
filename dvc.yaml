@@ -17,17 +17,23 @@ stages:
       - data/datasets/pl/readme/raw/
 
   instruct_dataset_readme:
-    cmd: >-
-      jupyter nbconvert
-      --no-input
-      --to markdown
-      --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
-      --output-dir data/datasets/pl/readme/instruct
-      --output README
-    deps:
-      - nbs/Data/03_Dataset_Description_Instruct.ipynb
-    outs:
-      - data/datasets/pl/readme/instruct/
+    foreach:
+      - notebook: "nbs/Dataset Cards/02_Dataset_Description_Instruct.ipynb"
+        output_dir: data/datasets/pl/readme/instruct
+      - notebook: "nbs/Dataset Cards/05_Dataset_Description_en_court_instruct.ipynb"
+        output_dir: data/datasets/en/readme/instruct
+    do:
+      cmd: >-
+        jupyter nbconvert
+        --no-input
+        --to markdown
+        --execute "${item.notebook}"
+        --output-dir ${item.output_dir}
+        --output README
+      deps:
+        - ${item.notebook}
+      outs:
+        - ${item.output_dir}
 
   build_instruct_dataset_pl:
     cmd: >-
