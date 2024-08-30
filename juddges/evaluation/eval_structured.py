@@ -51,7 +51,7 @@ class StructuredMetricEvaluator(StructuredEvaluatorBase, ABC):
 
 
 class StructuredChrfEvaluator(StructuredMetricEvaluator):
-    def __init__(self, num_proc: int) -> None:
+    def __init__(self, num_proc: int = 1) -> None:
         super().__init__(name="chrf", num_proc=num_proc)
 
     def _compute(self, preds: list[str], gold: list[str]) -> float:
