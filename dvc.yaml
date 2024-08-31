@@ -113,7 +113,7 @@ stages:
       - data/experiments/fine-tune/${item.model}/${item.dataset}/
 
   ### Prediction ###
-  predict:
+  predict_pl:
     matrix:
       dataset:
         - pl-court-instruct
@@ -129,6 +129,7 @@ stages:
         - trurl-13B-academic
         - qra-13b
         - Bielik-11B-v2.2-Instruct
+        - Bielik-11B-v2.2-Instruct-fine-tuned
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
@@ -189,7 +190,7 @@ stages:
       - data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
 
   ### Evaluation ###
-  evaluate:
+  evaluate_pl:
     matrix:
       dataset:
         - pl-court-instruct
@@ -204,6 +205,8 @@ stages:
         - Bielik-7B-Instruct-v0.1-fine-tuned
         - trurl-13B-academic
         - qra-13b
+        - Bielik-11B-v2.2-Instruct
+        - Bielik-11B-v2.2-Instruct-fine-tuned
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
@@ -265,6 +268,8 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
         - Bielik-7B-Instruct-v0.1
         - Bielik-7B-Instruct-v0.1-fine-tuned
+        - Bielik-11B-v2.2-Instruct
+        - Bielik-11B-v2.2-Instruct-fine-tuned
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
