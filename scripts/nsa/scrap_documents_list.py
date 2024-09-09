@@ -1,6 +1,7 @@
 import random
 from datetime import datetime, timedelta
 
+import pandas as pd
 import pymongo
 import typer
 import urllib3
@@ -9,13 +10,14 @@ from mpire import WorkerPool
 from random_user_agent.user_agent import UserAgent
 
 from juddges.data.nsa.scraper import NSAScraper
+from juddges.settings import NSA_DATA_PATH
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DB_URI = "mongodb://localhost:27017/"
 
 START_DATE = "1981-01-01"
-END_DATE = datetime.now().strftime("%Y-%m-%d")
+END_DATE = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
 def main(
@@ -61,6 +63,14 @@ def main(
             else:
                 raise ValueError(f"Invalid result: {result}")
             logger.info(f"Success: {success}, Error: {error}")
+
+    logger.info("Finished scraping documents")
+    logger.info("Saving to file")
+    NSA_DATA_PATH.mkdir(parents=True, exist_ok=True)
+    output_path = NSA_DATA_PATH / "documents.json"
+    data = pd.DataFrame(dates_col.find().sort("date"))
+    data["_id"] = data["_id"].astype(str)
+    data.to_json(output_path, orient="records", indent=4)
 
 
 def generate_dates(start_date: str, end_date: str) -> list[str]:
