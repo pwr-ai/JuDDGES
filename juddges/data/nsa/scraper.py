@@ -68,11 +68,11 @@ class NSAScraper:
         return self.browser.page.prettify()
 
     def _browser_open(self, url: str) -> None:
-        response = self.browser.open(url, verify=False, timeout=30)
+        response = self.browser.open(url, verify=False, timeout=60)
         self._post_call(response)
 
     def _browser_submit_selected(self) -> None:
-        response = self.browser.submit_selected(verify=False, timeout=30)
+        response = self.browser.submit_selected(verify=False, timeout=60)
         self._post_call(response)
 
     def _post_call(self, response) -> None:

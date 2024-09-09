@@ -18,7 +18,7 @@ DB_URI = "mongodb://localhost:27017/"
 
 
 def main(
-    n_jobs: int = typer.Option(50),
+    n_jobs: int = typer.Option(25),
     proxy_address: str = typer.Option(...),
     db_uri: str = typer.Option(DB_URI),
 ) -> None:
