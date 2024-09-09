@@ -59,6 +59,14 @@ class NSAScraper:
             logger.info("No documents found")
             return None
 
+    @retry(
+        tries=15,
+        exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
+    )
+    def get_page_for_doc(self, doc_id: str) -> str:
+        self._browser_open(f"https://orzeczenia.nsa.gov.pl/{doc_id}")
+        return self.browser.page.prettify()
+
     def _browser_open(self, url: str) -> None:
         response = self.browser.open(url, verify=False, timeout=30)
         self._post_call(response)

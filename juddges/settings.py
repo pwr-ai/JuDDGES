@@ -23,6 +23,9 @@ MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
 TEXT_EMBEDDING_MODEL = "sdadas/mmlw-roberta-large"
 
+# NSA
+NSA_DATA_PATH = DATA_PATH / "datasets" / "nsa"
+
 
 def num_tokens_from_string(
     string: str,  # The string to count tokens for
