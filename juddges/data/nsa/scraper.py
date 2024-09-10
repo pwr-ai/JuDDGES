@@ -40,6 +40,9 @@ class NSAScraper:
         if proxy_config:
             self.browser.session.proxies = proxy_config
 
+    def close(self) -> None:
+        self.browser.close()
+
     @retry(
         tries=15,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),

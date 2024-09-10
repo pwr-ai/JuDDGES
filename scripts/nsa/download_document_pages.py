@@ -108,7 +108,9 @@ def process_doc_id(
     )
     try:
         page = nsa_scraper.get_page_for_doc(doc_id)
+        nsa_scraper.close()
     except Exception as e:
+        nsa_scraper.close()
         error_message = f"Failed to scrape page for doc {doc_id}: {e}"
         logger.error(f"{error_message}; Error type: {type(e)}")
         return {"error": {"doc_id": doc_id, "error": error_message, "error_type": type(e).__name__}}
