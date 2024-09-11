@@ -28,14 +28,16 @@ def main(
     errors_col = db["document_pages_errors"]
 
     done = docs_col.find().distinct("doc_id")
-    logger.info(f"Found {len(done)} done dates in the database.")
+    logger.info(f"Found {len(done)} done pages in the database.")
 
     docs_ids_to_download = get_docs_ids_to_download()
+    logger.info(f"Progress: {len(done)}/{len(docs_ids_to_download)}")
+    logger.info(f"Progress (%): {len(done)/len(docs_ids_to_download):.1%}")
 
     random.shuffle(docs_ids_to_download)
     dates = filter_done(docs_ids_to_download, done)
 
-    user_agents = UserAgent(limit=1000).get_user_agents()
+    user_agents = random.choices(UserAgent(limit=100_000).get_user_agents(), k=1000)
     user_agents = [ua["user_agent"].encode("utf-8").decode("utf-8") for ua in user_agents]
 
     buffer = []
