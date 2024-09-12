@@ -26,12 +26,12 @@ class NSAScraper:
             requests_adapters={
                 "https://": HTTPAdapter(
                     max_retries=Retry(
-                        total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504, 403]
+                        total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504, 403, 429]
                     )
                 ),
                 "http://": HTTPAdapter(
                     max_retries=Retry(
-                        total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504, 403]
+                        total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504, 403, 429]
                     )
                 ),
             },
