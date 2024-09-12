@@ -27,7 +27,7 @@ def main(
     docs_col = db["document_pages"]
     errors_col = db["document_pages_errors"]
 
-    done = docs_col.find().distinct("doc_id")
+    done = [x["_id"] for x in docs_col.aggregate([{"$group": {"_id": '$doc_id'} }])]
     logger.info(f"Found {len(done)} done pages in the database.")
 
     docs_ids_to_download = get_docs_ids_to_download()
@@ -96,6 +96,7 @@ def get_docs_ids_to_download() -> list[str]:
 
 def filter_done(document_ids: list[str], done: list[str]) -> list[str]:
     done_docs = set(done)
+    assert len(done) == len(done_docs)
     return [document_id for document_id in document_ids if document_id not in done_docs]
 
 
