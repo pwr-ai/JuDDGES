@@ -27,7 +27,7 @@ def main(
     docs_col = db["document_pages"]
     errors_col = db["document_pages_errors"]
 
-    done = [x["_id"] for x in docs_col.aggregate([{"$group": {"_id": '$doc_id'} }])]
+    done = [x["_id"] for x in docs_col.aggregate([{"$group": {"_id": "$doc_id"}}])]
     logger.info(f"Found {len(done)} done pages in the database.")
 
     docs_ids_to_download = get_docs_ids_to_download()
