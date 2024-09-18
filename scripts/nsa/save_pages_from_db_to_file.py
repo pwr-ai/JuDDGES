@@ -1,5 +1,3 @@
-import json
-
 import pandas as pd
 import pymongo
 import typer
@@ -20,10 +18,17 @@ def fetch_documents(collection, batch_size=1000):
         yield doc
 
 
-def write_to_jsonl_in_chunks(file_path, collection, batch_size=1000):
-    with open(file_path, "w") as file:
-        for doc in tqdm(fetch_documents(collection, batch_size)):
-            file.write(json.dumps(doc) + "\n")  # Write each document as a JSON line
+def write_to_parquet_in_chunks(file_path, collection, batch_size=1000):
+    buffer = []
+    for doc in tqdm(fetch_documents(collection, batch_size)):
+        buffer.append(doc)
+        if len(buffer) >= batch_size:
+            df = pd.DataFrame(buffer)
+            df.to_parquet(file_path, engine="pyarrow", compression="snappy", append=True)
+            buffer = []
+    if buffer:
+        df = pd.DataFrame(buffer)
+        df.to_parquet(file_path, engine="pyarrow", compression="snappy", append=True)
 
 
 def main(
@@ -36,13 +41,13 @@ def main(
 
     NSA_DATA_PATH.mkdir(parents=True, exist_ok=True)
 
-    # Save document pages in JSONL format
-    docs_output_path = NSA_DATA_PATH / "pages.jsonl"
-    write_to_jsonl_in_chunks(docs_output_path, docs_col)
+    # Save document pages in Parquet format
+    docs_output_path = NSA_DATA_PATH / "pages.parquet"
+    write_to_parquet_in_chunks(docs_output_path, docs_col)
 
-    # Save document errors in JSONL format
-    errors_output_path = NSA_DATA_PATH / "errors.jsonl"
-    write_to_jsonl_in_chunks(errors_output_path, errors_col)
+    # Save document errors in Parquet format
+    errors_output_path = NSA_DATA_PATH / "errors.parquet"
+    write_to_parquet_in_chunks(errors_output_path, errors_col)
 
 
 typer.run(main)
