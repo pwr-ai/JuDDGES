@@ -19,7 +19,7 @@ def fetch_documents(collection, batch_size=5000):
 
 
 def write_to_parquet_in_chunks(file_path, collection, batch_size=5000, chunk_size=50000):
-    file_path.mkdir(parents=True, exist_ok=True)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
     buffer = []
     chunk_index = 0
 
