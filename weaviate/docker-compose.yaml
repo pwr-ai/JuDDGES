@@ -1,0 +1,22 @@
+name: weaviate
+services:
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: cr.weaviate.io/semitechnologies/weaviate:1.26.4
+    ports:
+    - 8080:8080
+    - 50051:50051
+    volumes:
+    - ./weaviate_data:/var/lib/weaviate
+    restart: on-failure:0
+    env_file:
+      - path: .env
+        required: true
+    cpu_count: 14
+    mem_limit: 60g
