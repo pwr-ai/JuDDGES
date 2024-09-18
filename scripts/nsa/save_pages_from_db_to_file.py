@@ -18,7 +18,7 @@ def fetch_documents(collection, batch_size=5000):
         yield doc
 
 
-def write_to_parquet_in_chunks(file_path, collection, batch_size=5000, chunk_size=100000):
+def write_to_parquet_in_chunks(file_path, collection, batch_size=5000, chunk_size=50000):
     file_path.mkdir(parents=True, exist_ok=True)
     buffer = []
     chunk_index = 0
@@ -29,6 +29,7 @@ def write_to_parquet_in_chunks(file_path, collection, batch_size=5000, chunk_siz
             df = pd.DataFrame(buffer)
             chunk_file = file_path.parent / f"{file_path.stem}_chunk_{chunk_index}.parquet"
             df.to_parquet(chunk_file, engine="pyarrow", compression="snappy")
+            del df
             buffer = []
             chunk_index += 1
 
