@@ -18,7 +18,8 @@ def fetch_documents(collection, batch_size=5000):
         yield doc
 
 
-def write_to_parquet_in_chunks(file_path, collection, batch_size=5000, chunk_size=50000):
+def write_to_parquet_in_chunks(file_path, collection, batch_size=5000, chunk_size=100000):
+    file_path.mkdir(parents=True, exist_ok=True)
     buffer = []
     chunk_index = 0
 
@@ -45,14 +46,12 @@ def main(
     docs_col = db["document_pages"]
     errors_col = db["document_pages_errors"]
 
-    NSA_DATA_PATH.mkdir(parents=True, exist_ok=True)
-
     # Save document pages in Parquet format
-    docs_output_path = NSA_DATA_PATH / "pages.parquet"
+    docs_output_path = NSA_DATA_PATH / "pages" / "pages.parquet"
     write_to_parquet_in_chunks(docs_output_path, docs_col)
 
     # Save document errors in Parquet format
-    errors_output_path = NSA_DATA_PATH / "errors.parquet"
+    errors_output_path = NSA_DATA_PATH / "errors" / "errors.parquet"
     write_to_parquet_in_chunks(errors_output_path, errors_col)
 
 
