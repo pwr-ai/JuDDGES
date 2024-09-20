@@ -57,6 +57,9 @@ class WeaviateDatabase(ABC):
                 errors = [err.message for err in collection.batch.results.objs.errors.values()]
                 raise ValueError(f"Error ingesting batch: {errors}")
 
+    def get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:
+        return [str(obj.uuid) for obj in collection.iterator(return_properties=[])]
+
     def _safe_create_collection(self, *args: Any, **kwargs: Any) -> None:
         try:
             self.client.collections.create(*args, **kwargs)
@@ -103,3 +106,7 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
                 )
             ],
         )
+
+    @staticmethod
+    def uuid_from_judgement_chunk_id(judgement_id: str, chunk_id: int) -> str:
+        return weaviate.util.generate_uuid5(f"{judgement_id}_chunk_{chunk_id}")
