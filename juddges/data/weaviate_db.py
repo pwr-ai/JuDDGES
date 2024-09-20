@@ -98,7 +98,7 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
                 wvcc.Property(name="chunk_id", data_type=wvcc.DataType.INT),
                 wvcc.Property(name="chunk_text", data_type=wvcc.DataType.TEXT),
             ],
-            vectorizer_config=wvcc.Configure.Vectorizer.none(),
+            vectorizer_config=wvcc.Configure.Vectorizer.text2vec_transformers(),
             references=[
                 wvcc.ReferenceProperty(
                     name="judgementChunk",

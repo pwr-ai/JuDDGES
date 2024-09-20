@@ -26,6 +26,10 @@ def main(
     batch_size: int = typer.Option(BATCH_SIZE),
     upsert: bool = typer.Option(False),
 ) -> None:
+    logger.warning(
+        "The script will upload local embeddings to the database, "
+        "make sure they are the same as in the inference module of the database."
+    )
     embs = load_dataset(str(embeddings_dir))["train"]
     embs = embs.map(
         lambda item: {
