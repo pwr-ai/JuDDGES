@@ -12,13 +12,15 @@ from juddges.data.weaviate_db import WeaviateJudgementsDatabase
 from weaviate.util import generate_uuid5
 
 load_dotenv()
-WV_HOST = os.getenv("WV_URL", "localhost")
+WV_HOST = os.getenv("WV_HOST", "localhost")
 WV_PORT = os.getenv("WV_PORT", "8080")
 WV_GRPC_PORT = os.getenv("WV_GRPC_PORT", "50051")
 WV_API_KEY = os.getenv("WV_API_KEY", None)
 
 BATCH_SIZE = 64
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
+
+logger.info(f"Connecting to Weaviate at {WV_HOST}:{WV_PORT} (gRPC: {WV_GRPC_PORT})")
 
 
 def main(
