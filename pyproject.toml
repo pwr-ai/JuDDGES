@@ -1,5 +1,6 @@
 [project]
 requires-python = ">= 3.12"
+name = "juddges"
 
 [tool.ruff]
 line-length = 100
