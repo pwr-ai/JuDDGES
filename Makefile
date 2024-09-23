@@ -24,10 +24,10 @@ install:
 install_cpu:
 	pip install --find-links https://download.pytorch.org/whl/cpu -r requirements.txt
 
-# unsloth requires python 3.10 and conda environment
+install_unsloth: cuda := 12.1
 install_unsloth:
 	conda install \
-		pytorch-cuda=12.1 \
+		pytorch-cuda=$(cuda) \
 		pytorch \
 		cudatoolkit \
 		'xformers<0.0.27' \
