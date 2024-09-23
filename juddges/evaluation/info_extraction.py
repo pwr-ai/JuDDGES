@@ -20,18 +20,16 @@ class InfoExtractionEvaluator:
         preds, golds = parse_results(results)
 
         metrics = {}
-        for eval in (
-            pbar := tqdm(self.structured_evaluators, desc="Structured", disable=not self.verbose)
-        ):
-            pbar.set_postfix({"eval": eval.name})
-            metrics[eval.name] = eval.evaluate(preds=preds, golds=golds)
+        with tqdm(self.structured_evaluators, desc="Structured", disable=not self.verbose) as pbar:
+            for eval in pbar:
+                pbar.set_postfix({"eval": eval.name})
+                metrics[eval.name] = eval.evaluate(preds=preds, golds=golds)
 
         text_preds = [res["answer"] for res in results]
         text_golds = [res["gold"] for res in results]
-        for eval in (
-            pbar := tqdm(self.full_text_evaluators, desc="Full text", disable=not self.verbose)
-        ):
-            pbar.set_postfix({"eval": eval.name})
-            metrics[eval.name] = eval.evaluate(preds=text_preds, golds=text_golds)
+        with tqdm(self.full_text_evaluators, desc="Full text", disable=not self.verbose) as pbar:
+            for eval in pbar:
+                pbar.set_postfix({"eval": eval.name})
+                metrics[eval.name] = eval.evaluate(preds=text_preds, golds=text_golds)
 
         return metrics

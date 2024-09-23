@@ -72,34 +72,36 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
         assert len(golds) == len(preds)
         llm_assessments = []
         num_llm_evals = 0
-        enum_golds_preds = enumerate(zip(golds, preds))
-        for i, (ans_gold, ans_pred) in (
-            pbar := tqdm(enum_golds_preds, total=len(golds), leave=False, desc="Evaluating")
-        ):
-            if ans_pred == EMPTY_ANSWER:
-                llm_assessments.append(MISSING_ANSWER)
-            elif ans_pred == ans_gold:
-                llm_assessments.append(CORRECT_JUDGEMENT)
-            else:
-                num_llm_evals += 1
-                # TODO: Further can be improved with asynchronous requests
-                response = self.oai_client.chat.completions.create(
-                    model=self.model_name,
-                    messages=[
-                        {"role": "user", "content": PROMPT.format(gold=ans_gold, answer=ans_pred)}
-                    ],
-                    temperature=0.0,
-                    n=1,
-                )
-
-                if response is not None:
-                    response_msg = response.choices[0].message.content
+        enum_golds_preds = enumerate(zip(golds, preds, strict=True))
+        with tqdm(enum_golds_preds, total=len(golds), leave=False, desc="Evaluating") as pbar:
+            for i, (ans_gold, ans_pred) in pbar:
+                if ans_pred == EMPTY_ANSWER:
+                    llm_assessments.append(MISSING_ANSWER)
+                elif ans_pred == ans_gold:
+                    llm_assessments.append(CORRECT_JUDGEMENT)
                 else:
-                    logger.warning(f"Empty response for: {(ans_gold, ans_pred)}")
-                    response_msg = INVALID_JUDGMENT
-                llm_assessments.append(response_msg)
+                    num_llm_evals += 1
+                    # TODO: Further can be improved with asynchronous requests
+                    response = self.oai_client.chat.completions.create(
+                        model=self.model_name,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": PROMPT.format(gold=ans_gold, answer=ans_pred),
+                            }
+                        ],
+                        temperature=0.0,
+                        n=1,
+                    )
 
-            pbar.set_postfix({"llm_calls": f"{num_llm_evals}/{i + 1}"})
+                    if response is not None:
+                        response_msg = response.choices[0].message.content
+                    else:
+                        logger.warning(f"Empty response for: {(ans_gold, ans_pred)}")
+                        response_msg = INVALID_JUDGMENT
+                    llm_assessments.append(response_msg)
+
+                pbar.set_postfix({"llm_calls": f"{num_llm_evals}/{i + 1}"})
 
         results_summary = self.answers_to_metrics(llm_assessments)
 
@@ -117,6 +119,7 @@ class StructuredLLMJudgeEvaluator(StructuredEvaluatorBase):
         return {name: val / len(llm_assessments) for name, val in results_summary.items()}
 
 
+# Example usage:
 if __name__ == "__main__":
     from dotenv import load_dotenv
     from langsmith.wrappers import wrap_openai
