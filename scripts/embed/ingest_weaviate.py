@@ -67,7 +67,7 @@ def main(
                     "uuid": generate_uuid5(f"{batch['_id'][i]}_chunk_{batch['chunk_id'][i]}"),
                     "vector": batch["embedding"][i],
                 }
-                for i in range(len(batch))
+                for i in range(len(batch["_id"]))
             ]
             db.insert_batch(
                 collection=db.judgement_chunks_collection,
