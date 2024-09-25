@@ -21,8 +21,6 @@ PL_JUDGEMENTS_PATH_INSTRUCT = PL_JUDGEMENTS_PATH / "instruct"
 
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
-TEXT_EMBEDDING_MODEL = "sdadas/mmlw-roberta-large"
-
 
 def num_tokens_from_string(
     string: str,  # The string to count tokens for

@@ -1,20 +1,20 @@
 import os
 from pathlib import Path
-from datasets import Dataset
 from typing import Any, Literal
+
 import hydra
+import torch
+import yaml
+from datasets import Dataset, load_dataset
 from loguru import logger
 from omegaconf import DictConfig
 from openai import BaseModel
-import torch
-from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
 from transformers.utils import is_flash_attn_2_available
-import yaml
 
 from juddges.config import EmbeddingModelConfig, RawDatasetConfig
-from juddges.settings import CONFIG_PATH
 from juddges.preprocessing.text_chunker import TextSplitter
+from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 
 assert is_flash_attn_2_available(), "FlashAttention2 is required for this script"

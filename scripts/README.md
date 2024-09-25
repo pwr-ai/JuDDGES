@@ -53,7 +53,7 @@ MONGO_DB_NAME="datasets"
     ```shell
     PYTHONPATH=.  python scripts/dataset/dump_pl_dataset.py \
         --file-name data/datasets/pl/raw/raw.parquet
-    dvc add data/datasets/pl/raw/raw.parquet && dvc push 
+    dvc add data/datasets/pl/raw/raw.parquet && dvc push
     ```
 7. Generate dataset card for `pl-court-raw`
     ```shell
@@ -70,12 +70,12 @@ MONGO_DB_NAME="datasets"
     ```shell
     NUM_JOBS=8 dvc repro build_instruct_dataset
     ```
-    
+
 11. Generate dataset card for `pl-court-instruct`
     ```shell
     dvc repro instruct_dataset_readme && dvc push
     ```
-    
+
 12. Upload `pl-court-instruct` dataset card to huggingface
    ```shell
    PYTHONPATH=. scripts/dataset/push_instruct_readme.py --repo-id JuDDGES/pl-court-instruct
