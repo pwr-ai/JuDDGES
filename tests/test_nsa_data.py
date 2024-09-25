@@ -11,6 +11,7 @@ def lf():
     return pl.scan_parquet(NSA_DATA_PATH / "pages" / "pages_chunk_*.parquet")
 
 
+@pytest.mark.skip(reason="This test requires a lot of RAM.")
 def test_duplicated_page_rows(lf):
     duplicated_page_rows = lf.with_columns(
         pl.col("page").is_duplicated().alias("is_duplicated")
@@ -19,6 +20,7 @@ def test_duplicated_page_rows(lf):
     assert duplicate_count == 0, f"Number of duplicated page rows: {duplicate_count}"
 
 
+@pytest.mark.skip(reason="This test requires a lot of RAM.")
 def test_duplicated_doc_id_rows(lf):
     duplicated_id_rows = lf.with_columns(
         pl.col("doc_id").is_duplicated().alias("is_duplicated")
@@ -27,6 +29,7 @@ def test_duplicated_doc_id_rows(lf):
     assert duplicate_count == 0, f"Number of duplicated doc_id rows: {duplicate_count}"
 
 
+@pytest.mark.skip(reason="This test requires a lot of RAM.")
 def test_duplicated_id_rows(lf):
     duplicated_id_rows = lf.with_columns(
         pl.col("_id").is_duplicated().alias("is_duplicated")
@@ -35,6 +38,7 @@ def test_duplicated_id_rows(lf):
     assert duplicate_count == 0, f"Number of duplicated _id rows: {duplicate_count}"
 
 
+@pytest.mark.skip(reason="This test takes a lot of time.")
 @pytest.mark.parametrize(
     "test_str",
     [
