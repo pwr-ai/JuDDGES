@@ -3,6 +3,9 @@ line-length = 100
 extend-include = ["*.ipynb"]
 exclude = ["_modidx.py"]
 
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true
@@ -12,4 +15,3 @@ plugins = "numpy.typing.mypy_plugin"
 [[tool.mypy.overrides]]
 module = ["pyarrow.*", "datasets.*", "sentence_transformers.*"]
 ignore_missing_imports = true
-

@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
-from peft import PeftModel
+
 import torch
+from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 from juddges.config import LLMConfig
@@ -17,14 +18,14 @@ class ModelForGeneration:
 def get_model(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     if "llama" in llm_config.name.lower():
         return get_llama_3(llm_config, **kwargs)
-    elif "mistral" in llm_config.name.lower():
+    elif any(mistral_model in llm_config.name.lower() for mistral_model in ("mistral", "bielik")):
         return get_mistral(llm_config, **kwargs)
     else:
         raise ValueError(f"Model: {llm_config} not yet handled or doesn't exists.")
 
 
-def get_llama_3(llm_config: LLMConfig, device_map: str) -> ModelForGeneration:
-    model, tokenizer = _get_model_tokenizer(llm_config, device_map)
+def get_llama_3(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
+    model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
     tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.eos_token
     terminators: list[int] = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
@@ -36,8 +37,8 @@ def get_llama_3(llm_config: LLMConfig, device_map: str) -> ModelForGeneration:
     )
 
 
-def get_mistral(llm_config: LLMConfig, device_map: str) -> ModelForGeneration:
-    model, tokenizer = _get_model_tokenizer(llm_config, device_map)
+def get_mistral(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
+    model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
     tokenizer.padding_side = "left"
     tokenizer.pad_token = tokenizer.eos_token
 
@@ -49,7 +50,9 @@ def get_mistral(llm_config: LLMConfig, device_map: str) -> ModelForGeneration:
 
 
 def _get_model_tokenizer(
-    llm_config: LLMConfig, device: str
+    llm_config: LLMConfig,
+    device_map: dict[str, Any],
+    **kwargs: Any,
 ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     if llm_config.use_unsloth:
         from unsloth import FastLanguageModel
@@ -58,17 +61,19 @@ def _get_model_tokenizer(
             model_name=llm_config.name,
             max_seq_length=llm_config.max_seq_length,
             dtype=None,
-            load_in_4bit=True,
+            load_in_4bit=llm_config.use_4bit,
+            device_map=device_map,
+            **kwargs,
         )
     else:
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.bfloat16,
-        )
+        if llm_config.use_4bit:
+            kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+            )
+
         model = AutoModelForCausalLM.from_pretrained(
-            llm_config.name,
-            quantization_config=quantization_config,
-            device_map=device,
+            llm_config.name, device_map=device_map, **kwargs
         )
         tokenizer = AutoTokenizer.from_pretrained(llm_config.name)
 

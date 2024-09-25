@@ -1,4 +1,6 @@
 from pathlib import Path
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -11,6 +13,7 @@ class LLMConfig(BaseModel, extra="forbid"):
     max_seq_length: int
     padding: str | bool
     batch_size: int
+    use_4bit: bool
     use_unsloth: bool = False
 
 
@@ -28,6 +31,7 @@ class DatasetConfig(BaseModel, extra="forbid"):
     prompt_field: str
     context_field: str
     output_field: str
+    max_output_tokens: int
 
 
 class RawDatasetConfig(BaseModel, extra="forbid"):
@@ -36,3 +40,19 @@ class RawDatasetConfig(BaseModel, extra="forbid"):
     name: str
     format: str
     root_dir: Path
+
+
+class FineTuningConfig(BaseModel, extra="forbid"):
+    model: LLMConfig
+    dataset: DatasetConfig
+    training_args: dict[str, Any]
+    peft_args: dict[str, Any] | None
+    truncate_context: bool
+    wandb_entity: str
+    wandb_project: str
+    output_dir: Path
+    run_name: str
+
+    @property
+    def use_peft(self) -> bool:
+        return self.peft_args is not None

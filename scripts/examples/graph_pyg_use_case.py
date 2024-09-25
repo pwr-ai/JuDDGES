@@ -1,14 +1,12 @@
-import torch
 import os
+
+import torch
 from torch_geometric.data import InMemoryDataset, download_url
 from torch_geometric.transforms import BaseTransform
 
 
 class PlCourtGraphDataset(InMemoryDataset):
-    URL = (
-        "https://huggingface.co/datasets/JuDDGES/pl-court-graph/resolve/main/"
-        "data/pyg_judgement_graph.pt?download=true"
-    )
+    URL = "https://huggingface.co/datasets/JuDDGES/pl-court-graph/resolve/main/data/pyg_judgment_graph.pt?download=true"
 
     def __init__(
         self,
@@ -19,15 +17,15 @@ class PlCourtGraphDataset(InMemoryDataset):
         super(PlCourtGraphDataset, self).__init__(root_dir, transform, pre_transform)
         data_file, index_file = self.processed_paths
         self.load(data_file)
-        self.judgement_idx_2_iid, self.legal_base_idx_2_isap_id = torch.load(index_file).values()
+        self.judgment_idx_2_iid, self.legal_base_idx_2_isap_id = torch.load(index_file).values()
 
     @property
     def raw_file_names(self) -> str:
-        return "pyg_judgement_graph.pt"
+        return "pyg_judgment_graph.pt"
 
     @property
     def processed_file_names(self) -> list[str]:
-        return ["processed_pyg_judgement_graph.pt", "index_map.pt"]
+        return ["processed_pyg_judgment_graph.pt", "index_map.pt"]
 
     def download(self) -> None:
         os.makedirs(self.root, exist_ok=True)
@@ -45,7 +43,7 @@ class PlCourtGraphDataset(InMemoryDataset):
 
         torch.save(
             {
-                "judgement_idx_2_iid": dataset["judgement_idx_2_iid"],
+                "judgment_idx_2_iid": dataset["judgment_idx_2_iid"],
                 "legal_base_idx_2_isap_id": dataset["legal_base_idx_2_isap_id"],
             },
             index_file,
@@ -55,5 +53,5 @@ class PlCourtGraphDataset(InMemoryDataset):
         return f"{self.__class__.__name__}({len(self)})"
 
 
-ds = PlCourtGraphDataset(root_dir="data/datasets/pyg")
+ds = PlCourtGraphDataset(root_dir="tmp/data/pyg")
 print(ds)

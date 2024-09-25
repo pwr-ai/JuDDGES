@@ -1,6 +1,8 @@
-from torchmetrics.functional.text import chrf_score
 import datetime
 from collections import defaultdict
+
+from torchmetrics.functional.text import chrf_score
+
 from juddges.utils.misc import parse_yaml
 
 EMPTY_ANSWER = ""
