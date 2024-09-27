@@ -8,6 +8,7 @@ import urllib3
 from loguru import logger
 from mpire import WorkerPool
 from random_user_agent.user_agent import UserAgent
+from tqdm import tqdm
 
 from juddges.data.nsa.scraper import NSAScraper
 from juddges.settings import NSA_DATA_PATH
@@ -27,7 +28,11 @@ def main(
     docs_col = db["document_pages"]
     errors_col = db["document_pages_errors"]
 
-    done = [x["_id"] for x in docs_col.aggregate([{"$group": {"_id": "$doc_id"}}])]
+    done = [
+        x["doc_id"]
+        for x in tqdm(docs_col.find({}, {"_id": 0, "doc_id": 1}), desc="Loading done pages")
+    ]
+
     logger.info(f"Found {len(done)} done pages in the database.")
 
     docs_ids_to_download = get_docs_ids_to_download()
@@ -35,7 +40,7 @@ def main(
     logger.info(f"Progress (%): {len(done)/len(docs_ids_to_download):.1%}")
 
     random.shuffle(docs_ids_to_download)
-    dates = filter_done(docs_ids_to_download, done)
+    to_download = filter_done(docs_ids_to_download, done)
 
     user_agents = random.choices(UserAgent(limit=100_000).get_user_agents(), k=1000)
     user_agents = [ua["user_agent"].encode("utf-8").decode("utf-8") for ua in user_agents]
@@ -47,7 +52,7 @@ def main(
     with WorkerPool(n_jobs=n_jobs, shared_objects=(proxy_address, user_agents)) as pool:
         for result in pool.imap_unordered(
             process_doc_id,
-            dates,
+            to_download,
             progress_bar=True,
             progress_bar_options={"smoothing": 0},
             chunk_size=5,
