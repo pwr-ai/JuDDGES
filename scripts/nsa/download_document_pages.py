@@ -7,6 +7,7 @@ import typer
 import urllib3
 from loguru import logger
 from mpire import WorkerPool
+from pymongo.collection import Collection
 from random_user_agent.user_agent import UserAgent
 from tqdm import tqdm
 
@@ -28,19 +29,10 @@ def main(
     docs_col = db["document_pages"]
     errors_col = db["document_pages_errors"]
 
-    done = [
-        x["doc_id"]
-        for x in tqdm(docs_col.find({}, {"_id": 0, "doc_id": 1}), desc="Loading done pages")
-    ]
-
-    logger.info(f"Found {len(done)} done pages in the database.")
-
     docs_ids_to_download = get_docs_ids_to_download()
-    logger.info(f"Progress: {len(done)}/{len(docs_ids_to_download)}")
-    logger.info(f"Progress (%): {len(done)/len(docs_ids_to_download):.1%}")
 
     random.shuffle(docs_ids_to_download)
-    to_download = filter_done(docs_ids_to_download, done)
+    to_download = filter_done(docs_ids_to_download, docs_col)
 
     user_agents = random.choices(UserAgent(limit=100_000).get_user_agents(), k=1000)
     user_agents = [ua["user_agent"].encode("utf-8").decode("utf-8") for ua in user_agents]
@@ -56,6 +48,7 @@ def main(
             progress_bar=True,
             progress_bar_options={"smoothing": 0},
             chunk_size=5,
+            worker_lifespan=1000,
         ):
             assert len(result) == 1
             if "error" in result:
@@ -99,7 +92,16 @@ def get_docs_ids_to_download() -> list[str]:
     return df["document_ids"].tolist()
 
 
-def filter_done(document_ids: list[str], done: list[str]) -> list[str]:
+def filter_done(document_ids: list[str], docs_col: Collection) -> list[str]:
+    done = [
+        x["doc_id"]
+        for x in tqdm(docs_col.find({}, {"_id": 0, "doc_id": 1}), desc="Loading done pages")
+    ]
+
+    logger.info(f"Found {len(done)} done pages in the database.")
+    logger.info(f"Progress: {len(done)}/{len(document_ids)}")
+    logger.info(f"Progress (%): {len(done)/len(document_ids):.1%}")
+
     done_docs = set(done)
     assert len(done) == len(done_docs)
     return [document_id for document_id in document_ids if document_id not in done_docs]
