@@ -48,7 +48,7 @@ def main(
             progress_bar=True,
             progress_bar_options={"smoothing": 0},
             chunk_size=5,
-            worker_lifespan=1000,
+            worker_lifespan=100,
         ):
             assert len(result) == 1
             if "error" in result:
