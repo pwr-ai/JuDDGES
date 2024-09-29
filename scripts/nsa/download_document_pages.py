@@ -48,7 +48,6 @@ def main(
             progress_bar=True,
             progress_bar_options={"smoothing": 0},
             chunk_size=5,
-            worker_lifespan=100,
         ):
             assert len(result) == 1
             if "error" in result:
@@ -115,6 +114,7 @@ def process_doc_id(
     nsa_scraper = NSAScraper(
         user_agent=random.choice(user_agents),
         proxy_config=proxy,
+        wait=False,
     )
     try:
         page = nsa_scraper.get_page_for_doc(doc_id)

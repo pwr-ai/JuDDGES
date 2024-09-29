@@ -20,18 +20,21 @@ class IncorrectPage(Exception):
 
 
 class NSAScraper:
-    def __init__(self, user_agent: str, proxy_config: dict[str, str] | None = None) -> None:
+    def __init__(
+        self, user_agent: str, proxy_config: dict[str, str] | None = None, wait: bool = False
+    ) -> None:
+        self.wait = wait
         self.browser = mechanicalsoup.StatefulBrowser(
             user_agent=user_agent,
             requests_adapters={
                 "https://": HTTPAdapter(
                     max_retries=Retry(
-                        total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504, 403, 429]
+                        total=5, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504, 403, 429]
                     )
                 ),
                 "http://": HTTPAdapter(
                     max_retries=Retry(
-                        total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504, 403, 429]
+                        total=5, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504, 403, 429]
                     )
                 ),
             },
@@ -80,9 +83,10 @@ class NSAScraper:
 
     def _post_call(self, response) -> None:
         response.raise_for_status()
-        # wait random from normal distribution
-        time_to_wait = random.normalvariate(1, 0.5)
-        time.sleep(time_to_wait if time_to_wait > 0 else 0)
+        if self.wait:
+            # wait random from normal distribution
+            time_to_wait = random.normalvariate(1, 0.5)
+            time.sleep(time_to_wait if time_to_wait > 0 else 0)
         if not self._correct_page():
             raise IncorrectPage(f"Incorrect page: {self.browser.page.text}")
 

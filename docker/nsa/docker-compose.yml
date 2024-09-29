@@ -5,6 +5,7 @@ services:
       - '27017:27017'
     volumes:
       - nsa_dbdata:/data/db
+    command: --wiredTigerCacheSizeGB 8
 
 volumes:
   nsa_dbdata:
