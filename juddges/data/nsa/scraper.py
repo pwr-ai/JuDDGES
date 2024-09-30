@@ -21,7 +21,7 @@ class IncorrectPage(Exception):
 
 class NSAScraper:
     def __init__(
-        self, user_agent: str, proxy_config: dict[str, str] | None = None, wait: bool = False
+        self, user_agent: str, proxy_config: dict[str, str] | None = None, wait: bool = True
     ) -> None:
         self.wait = wait
         self.browser = mechanicalsoup.StatefulBrowser(
