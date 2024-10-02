@@ -22,6 +22,32 @@ class TestParseItem(TestCase):
         """
         self.assertIsNone(_parse_item(invalid_list_yaml))
 
+    def test_yaml_with_preceeding_text(self):
+        yaml_with_text = """
+        Here is the extracted information in YAML format:
+        ```yaml
+            name: John
+        ```
+        Text after YAML
+        """
+        target_output = {"name": "John"}
+        self.assertDictEqual(_parse_item(yaml_with_text), target_output)
+
+    def test_several_yamls(self):
+        yaml_with_text = """
+        Here is the extracted information in YAML format:
+        ```yaml
+            name: John
+        ```
+        Here is alternative:
+        ```yaml
+            name: Jack
+        ```
+        """
+        target_output = {"name": "John"}
+        _parse_item(yaml_with_text)
+        self.assertDictEqual(_parse_item(yaml_with_text), target_output)
+
     def test_list_field_casted_to_dict_and_sorted(self):
         valid_list_yaml = """
         ```yaml
