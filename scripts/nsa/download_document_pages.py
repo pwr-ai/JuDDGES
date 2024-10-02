@@ -29,14 +29,21 @@ def main(
     docs_col = db["document_pages"]
     errors_col = db["document_pages_errors"]
 
-    docs_ids_to_download = get_docs_ids_to_download()
+    # Due to potential errors we do it in a loop
+    while to_download := get_filtered_docs_is_to_download(docs_col):
+        logger.info(f"Downloading {len(to_download)} pages")
+        download_pages(docs_col, errors_col, n_jobs, proxy_address, to_download)
 
-    random.shuffle(docs_ids_to_download)
-    to_download = filter_done(docs_ids_to_download, docs_col)
 
+def download_pages(
+    docs_col: Collection,
+    errors_col: Collection,
+    n_jobs: int,
+    proxy_address: str,
+    to_download: list[str],
+) -> None:
     user_agents = random.choices(UserAgent(limit=100_000).get_user_agents(), k=1000)
     user_agents = [ua["user_agent"].encode("utf-8").decode("utf-8") for ua in user_agents]
-
     buffer = []
     success = 0
     pushed_to_db = 0
@@ -65,19 +72,18 @@ def main(
             else:
                 raise ValueError(f"Invalid result: {result}")
             logger.info(f"Success: {success}, Pushed to DB: {pushed_to_db}, Error: {error}")
-
     if buffer:
         docs_col.insert_many(buffer)
         pushed_to_db += len(buffer)
         logger.info(f"Success: {success}, Pushed to DB: {pushed_to_db}, Error: {error}")
-
     logger.info("Finished scraping pages")
-    logger.info("Saving to file")
-    NSA_DATA_PATH.mkdir(parents=True, exist_ok=True)
-    output_path = NSA_DATA_PATH / "pages.json"
-    data = pd.DataFrame(docs_col.find().sort("date"))
-    data["_id"] = data["_id"].astype(str)
-    data.to_json(output_path, orient="records", indent=4)
+
+
+def get_filtered_docs_is_to_download(docs_col: Collection) -> list[str]:
+    docs_ids_to_download = get_docs_ids_to_download()
+    random.shuffle(docs_ids_to_download)
+    to_download = filter_done(docs_ids_to_download, docs_col)
+    return to_download
 
 
 def get_docs_ids_to_download() -> list[str]:
