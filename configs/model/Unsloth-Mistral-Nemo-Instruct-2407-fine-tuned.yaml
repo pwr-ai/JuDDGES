@@ -1,7 +1,7 @@
 name: unsloth/Mistral-Nemo-Instruct-2407-bnb-4bit
 tokenizer_name: ${.name}
 
-adapter_path: data/experiments/fine-tune/Unsloth-Mistral-Nemo-Instruct-2407/pl-court-instruct/checkpoint-1500
+adapter_path: data/experiments/fine-tune/Unsloth-Mistral-Nemo-Instruct-2407/${hydra:runtime.choices.dataset}/checkpoint-1500
 
 max_seq_length: 7_900 # can handle larger inputs, but set is equal to llama-3 for better comparison
 padding: longest

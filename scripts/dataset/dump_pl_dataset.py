@@ -29,12 +29,11 @@ def main(
     collection = get_mongo_collection(mongo_uri=mongo_uri)
 
     if filter_empty_content:
-        query = {"content": {"$ne": True}}
+        query = {"content": {"$ne": None}}
     else:
         query = {}
 
     num_docs = collection.count_documents(query)
-
     dumped_data = list(file_name.parent.glob("*.parquet"))
     start_offset = 0
     if dumped_data:

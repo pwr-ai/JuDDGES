@@ -75,7 +75,7 @@ class OpenAIPredictor:
             api_key=OPENAI_API_KEY,
             model_name=config.model_version,
             temperature=config.temperature,
-            model_kwargs=dict(seed=config.seed),
+            seed=config.seed,
         )
 
         if config.request_cache_db is not None:
