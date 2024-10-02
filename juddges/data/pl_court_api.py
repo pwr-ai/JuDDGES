@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Any
 
 import requests
@@ -10,7 +11,7 @@ class PolishCourtAPI:
     def __init__(self) -> None:
         self.url = "https://apiorzeczenia.wroclaw.sa.gov.pl/ncourt-api"
 
-    @property
+    @cached_property
     def schema(self) -> dict[str, list[str]]:
         return {
             "judgement": [
