@@ -8,6 +8,7 @@ class TextSplitter:
     def __init__(
         self,
         chunk_size: int,
+        chunk_overlap: int | None = None,
         min_split_chars: int | None = None,
         take_n_first_chunks: int | None = None,
         tokenizer: PreTrainedTokenizer | None = None,
@@ -16,6 +17,7 @@ class TextSplitter:
             self.splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
                 tokenizer,
                 chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
             )
         else:
             self.splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size)

@@ -10,6 +10,7 @@ from loguru import logger
 from omegaconf import DictConfig
 from openai import BaseModel
 from sentence_transformers import SentenceTransformer
+from transformers import PreTrainedTokenizer
 from transformers.utils import is_flash_attn_2_available
 
 from juddges.config import EmbeddingModelConfig, RawDatasetConfig
@@ -21,6 +22,7 @@ assert is_flash_attn_2_available(), "FlashAttention2 is required for this script
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+os.environ["TOKENIZERS_PARALLELISM"] = "false" if (NUM_PROC > 1) else "true"
 
 
 class EmbeddingConfig(BaseModel, extra="forbid"):
@@ -51,18 +53,18 @@ def main(cfg: DictConfig) -> None:
     )
     ds = ds.filter(lambda item: item["text"] is not None)
 
-    if config.chunk_config is not None:
-        ds = chunk_dataset(ds, config)
-        text_column = "text_chunk"
-    else:
-        text_column = "text"
-
     model = SentenceTransformer(
         config.embedding_model.name,
         device=DEVICE,
         model_kwargs=dict(torch_dtype=torch.bfloat16),
     )
     model.compile()
+
+    if config.chunk_config is not None:
+        ds = chunk_dataset(dataset=ds, config=config, tokenizer=model.tokenizer)
+        text_column = "text_chunk"
+    else:
+        text_column = "text"
 
     if config.truncation_tokens is not None:
         assert config.truncation_tokens <= config.embedding_model.max_seq_length
@@ -74,19 +76,22 @@ def main(cfg: DictConfig) -> None:
         batched=True,
         batch_size=config.batch_size,
         num_proc=None,
-        remove_columns=[text_column],
         desc="Embedding chunks",
     )
-    ds.save_to_disk(config.output_dir)
+    ds.save_to_disk(str(config.output_dir))
 
     with open(config.output_dir / "config.yaml", "w") as f:
         yaml.dump(config.model_dump(), f)
 
 
-def chunk_dataset(dataset: Dataset, config: EmbeddingConfig) -> Dataset:
+def chunk_dataset(
+    dataset: Dataset,
+    config: EmbeddingConfig,
+    tokenizer: PreTrainedTokenizer | None = None,
+) -> Dataset:
     # todo: To be verified
     assert config.chunk_config is not None
-    split_worker = TextSplitter(**config.chunk_config)
+    split_worker = TextSplitter(**config.chunk_config, tokenizer=tokenizer)
     ds = dataset.select_columns(["_id", "text"]).map(
         split_worker,
         batched=True,
