@@ -1,9 +1,10 @@
-from typing import Any, Iterable
+from typing import Any, Iterable, Sequence
 
 import pandas as pd
 from mpire import WorkerPool
 import re
 from bs4 import BeautifulSoup, Tag
+
 
 FIELD_MAP = {
     "id": "id",
@@ -58,6 +59,15 @@ ORDER = [
     "Dissenting opinion",
 ]
 
+LIST_TYPE_FIELDS = {
+    "Hasła tematyczne",
+    "Symbol z opisem",
+    "Sędziowie",
+    "Treść wyniku",
+    "Info. o glosach",
+    "Publikacja w u.z.o.",
+}
+
 
 class NSADataExtractor:
     def __init__(self) -> None:
@@ -65,22 +75,24 @@ class NSADataExtractor:
         assert (set(ORDER) - set(FIELD_MAP.values())) == set()
 
     def extract_data_from_pages(
-        self, pages: Iterable[str], doc_ids: Iterable[str]
+        self, pages: Sequence[str], doc_ids: Sequence[str], n_jobs: int | None = None
     ) -> list[dict[str, Any]]:
         extracted_data = []
-        with WorkerPool() as pool:
+        with WorkerPool(n_jobs) as pool:
             args = (
                 {"page": page, "doc_id": doc_id}
                 for page, doc_id in zip(pages, doc_ids, strict=True)
             )
-            for item in pool.map(self.extract_data, args, progress_bar=True):
+            for item in pool.map(
+                self.extract_data, args, progress_bar=True, iterable_len=len(pages)
+            ):
                 extracted_data.append(item)
         return extracted_data
 
     def extract_data_from_pages_to_df(
-        self, pages: Iterable[str], doc_ids: Iterable[str]
+        self, pages: Iterable[str], doc_ids: Iterable[str], n_jobs: int | None = None
     ) -> pd.DataFrame:
-        extracted_data = self.extract_data_from_pages(pages, doc_ids)
+        extracted_data = self.extract_data_from_pages(pages, doc_ids, n_jobs)
         return pd.DataFrame(extracted_data, columns=ORDER)
 
     def extract_data(self, page: str, doc_id: str) -> dict[str, Any]:
@@ -137,12 +149,7 @@ class NSADataExtractor:
                     )
                 elif "Sygn. powiązane" in label_text:
                     extracted_data[FIELD_MAP["Sygn. powiązane"]] = self._extract_related(value)
-                elif "<br/>" in value_text or label_text in (
-                    "Hasła tematyczne",
-                    "Symbol z opisem",
-                    "Sędziowie",
-                    "Treść wyniku",
-                ):
+                elif "<br/>" in value_text or label_text in LIST_TYPE_FIELDS:
                     extracted_data |= self._extract_fields_with_br(label_text, value_text)
                 elif "Data orzeczenia" in label_text:
                     extracted_data |= self._extract_date_finality(value)
