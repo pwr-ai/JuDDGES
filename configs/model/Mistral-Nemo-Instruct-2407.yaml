@@ -1,0 +1,11 @@
+name: mistralai/Mistral-Nemo-Instruct-2407
+tokenizer_name: ${.name}
+
+adapter_path: null
+
+max_seq_length: 7_900 # can handle larger inputs, but set is equal to llama-3 for better comparison
+padding: longest
+batch_size: 1
+use_4bit: true
+
+use_unsloth: false
