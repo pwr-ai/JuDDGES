@@ -1,6 +1,14 @@
 import streamlit as st
+import yaml
 
 from juddges.data.pl_court_api import PolishCourtAPI
+from juddges.llms import (
+    GPT_3_5_TURBO_1106,
+    GPT_4_0125_PREVIEW,
+    GPT_4_1106_PREVIEW,
+    GPT_4o,
+    GPT_4o_MINI,
+)
 from juddges.prompts.information_extraction import (
     EXAMPLE_SCHEMA,
     prepare_information_extraction_chain,
@@ -22,7 +30,9 @@ st.info(
 )
 
 st.header("Data source")
-source_option = st.selectbox("Choose the source of the judgement text:", ["API", "Plain text"])
+source_option = st.selectbox(
+    "Choose the source of the judgement text:", ["API", "Plain text"]
+)
 
 if source_option == "API":
     api = PolishCourtAPI()
@@ -42,26 +52,33 @@ schema_query = st.text_input(
 )
 llm_schema = st.selectbox(
     "Select the LLM model (schema)",
-    ["gpt-3.5-turbo-1106", "gpt-4-0125-preview", "gpt-4-1106-preview"],
+    [GPT_4o, GPT_4o_MINI, GPT_4_0125_PREVIEW, GPT_4_1106_PREVIEW, GPT_3_5_TURBO_1106],
 )
 
 if st.button("Generate schema to extract information"):
     chain = prepare_schema_chain(model_name=llm_schema)
     schema = chain.invoke({"SCHEMA_TEXT": schema_query})
     if not schema:
-        st.error("Could not extract schema from the given query. Try with a different one.")
+        st.error(
+            "Could not extract schema from the given query. Try with a different one."
+        )
     else:
         st.session_state.schema = schema
 
 schema_text = st.text_area(
-    "Enter the schema text here:", st.session_state.get("schema") or EXAMPLE_SCHEMA, height=500
+    "Enter the schema text here:",
+    st.session_state.get("schema") or EXAMPLE_SCHEMA,
+    height=500,
 )
 
 st.header("Information extraction")
 llm_extraction = st.selectbox(
-    "Select the LLM model", ["gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-3.5-turbo-1106"]
+    "Select the LLM model",
+    [GPT_4o, GPT_4o_MINI, GPT_4_0125_PREVIEW, GPT_4_1106_PREVIEW, GPT_3_5_TURBO_1106],
 )
-language = st.selectbox("Enter the language of the judgement text:", ["Polish", "English"])
+language = st.selectbox(
+    "Enter the language of the judgement text:", ["Polish", "English"]
+)
 
 
 if st.button("Extract information"):
@@ -74,3 +91,6 @@ if st.button("Extract information"):
 
         col_left.write(judgement_text)
         col_right.write(retrieved_informations)
+        col_right.write(
+            yaml.dump(retrieved_informations, allow_unicode=True, sort_keys=False)
+        )

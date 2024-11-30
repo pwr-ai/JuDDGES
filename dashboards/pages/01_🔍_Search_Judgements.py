@@ -38,7 +38,9 @@ model = get_embedding_model()
 
 with st.form(key="search_form"):
     query = st.text_area("What you are looking for in the judgements?")
-    max_judgements = st.slider("Max judgements to show", min_value=1, max_value=20, value=5)
+    max_judgements = st.slider(
+        "Max judgements to show", min_value=1, max_value=20, value=5
+    )
     submit_button = st.form_submit_button(label="Search")
 
 if submit_button:
