@@ -21,6 +21,8 @@ PL_JUDGEMENTS_PATH_INSTRUCT = PL_JUDGEMENTS_PATH / "instruct"
 
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
+TEXT_EMBEDDING_MODEL = "sdadas/mmlw-roberta-large"
+
 
 def num_tokens_from_string(
     string: str,  # The string to count tokens for
@@ -67,6 +69,8 @@ def prepare_langchain_cache() -> None:
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 
 
-def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url: str = "postgres-juddges") -> None:
+def prepare_mlflow(
+    experiment_name: str = MLFLOW_EXP_NAME, url: str = "postgres-juddges"
+) -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)

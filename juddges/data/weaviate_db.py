@@ -1,3 +1,4 @@
+import os
 import re
 from abc import ABC, abstractmethod
 from typing import Any, ClassVar
@@ -8,7 +9,13 @@ from weaviate.auth import Auth, _APIKey
 
 
 class WeaviateDatabase(ABC):
-    def __init__(self, host: str, port: str, grpc_port: str, api_key: str | None):
+    def __init__(
+        self,
+        host: str = os.getenv("WV_URL", "localhost"),
+        port: str = os.getenv("WV_PORT", "8080"),
+        grpc_port: str = os.getenv("WV_GRPC_PORT", "50051"),
+        api_key: str | None = os.getenv("WV_API_KEY", None),
+    ):
         self.host = host
         self.port = port
         self.grpc_port = grpc_port
@@ -54,7 +61,9 @@ class WeaviateDatabase(ABC):
                 if wv_batch.number_errors > 0:
                     break
             if wv_batch.number_errors > 0:
-                errors = [err.message for err in collection.batch.results.objs.errors.values()]
+                errors = [
+                    err.message for err in collection.batch.results.objs.errors.values()
+                ]
                 raise ValueError(f"Error ingesting batch: {errors}")
 
     def get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:

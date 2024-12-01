@@ -6,6 +6,7 @@ from sentence_transformers import SentenceTransformer
 
 from juddges.data.database import get_mongo_collection
 from juddges.retrieval.mongo_hybrid_search import run_hybrid_search
+from juddges.retrieval.mongo_term_based_search import search_judgements
 from juddges.settings import TEXT_EMBEDDING_MODEL
 
 TITLE = "Search for Judgements"
@@ -13,13 +14,19 @@ TITLE = "Search for Judgements"
 st.set_page_config(page_title=TITLE, page_icon="⚖️", layout="wide")
 
 st.title(TITLE)
-st.header(
-    "Search is based on hybrid search using text and vector search with the same priority for both."
-)
 
 judgement_country = st.sidebar.selectbox("Select judgement country", ["pl", "uk"])
 judgement_collection_name = f"{judgement_country}-court"
 st.sidebar.info(f"Selected country: {judgement_collection_name}")
+
+use_hybrid_search = st.sidebar.toggle("Use hybrid search", value=False)
+
+if use_hybrid_search:
+    st.header(
+        "Search is based on hybrid search using text and vector search with the same priority for both."
+    )
+else:
+    st.header("Search is based on term-based search with highlighting.")
 
 
 @st.cache_resource
@@ -45,18 +52,43 @@ with st.form(key="search_form"):
 
 if submit_button:
     with st.spinner("Searching..."):
-        items = run_hybrid_search(
-            collection=judgements_collection,
-            collection_name=judgement_collection_name,
-            embedding=model.encode(query).tolist(),
-            query=query,
-            limit=max_judgements,
-        )
+        if use_hybrid_search:
+            items = run_hybrid_search(
+                collection=judgements_collection,
+                collection_name=judgement_collection_name,
+                embedding=model.encode(query).tolist(),
+                query=query,
+                limit=max_judgements,
+            )
 
-        st.header("Judgements - Results")
-        for item in items:
-            st.header(item["signature"])
-            st.info(f"Department: {item['department_name']}")
-            st.info(f"Score: {item['score']}")
-            st.subheader(item["excerpt"])
-            st.text_area(label="Judgement text", value=item["text"], height=200)
+            st.header("Judgements - Results")
+            for item in items:
+                st.header(item["signature"])
+                st.info(f"Department: {item['department_name']}")
+                st.info(f"Score: {item['score']}")
+                st.subheader(item["excerpt"])
+                st.text_area(label="Judgement text", value=item["text"], height=200)
+        else:
+            items = search_judgements(query=query, max_docs=max_judgements)
+
+            st.header("Judgements - Results")
+            for item in items:
+                st.header(item["signature"])
+                st.info(f"Score: {item['score']}")
+
+                # Process and display highlights first
+                if "highlights" in item:
+                    st.subheader("Relevant Fragments")
+                    for highlight in item["highlights"]:
+                        texts = highlight["texts"]
+                        highlight_text = ""
+                        for text_highlight in texts:
+                            if text_highlight.get("type") == "hit":
+                                highlight_text += f"**{text_highlight['value']}**"
+                            else:
+                                highlight_text += text_highlight["value"]
+                        st.info(highlight_text)
+
+                # Add toggle for full text
+                with st.expander("Show Full Judgment Text"):
+                    st.markdown(item["text"])

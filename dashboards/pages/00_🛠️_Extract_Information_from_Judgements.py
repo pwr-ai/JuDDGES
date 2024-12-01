@@ -11,6 +11,7 @@ from juddges.llms import (
 )
 from juddges.prompts.information_extraction import (
     EXAMPLE_SCHEMA,
+    SWISS_FRANC_LOAN_SCHEMA,
     prepare_information_extraction_chain,
     prepare_schema_chain,
 )
@@ -67,7 +68,7 @@ if st.button("Generate schema to extract information"):
 
 schema_text = st.text_area(
     "Enter the schema text here:",
-    st.session_state.get("schema") or EXAMPLE_SCHEMA,
+    st.session_state.get("schema") or SWISS_FRANC_LOAN_SCHEMA,
     height=500,
 )
 
