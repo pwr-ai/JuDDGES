@@ -5,6 +5,7 @@ from pymongo.collection import Collection
 from sentence_transformers import SentenceTransformer
 
 from juddges.data.database import get_mongo_collection
+from juddges.data_models import Judgment
 from juddges.retrieval.mongo_hybrid_search import run_hybrid_search
 from juddges.retrieval.mongo_term_based_search import search_judgements
 from juddges.settings import TEXT_EMBEDDING_MODEL
@@ -64,17 +65,23 @@ if submit_button:
 
             st.header("Judgements - Results")
             for item in items:
-                st.header(item["signature"])
-                st.info(f"Department: {item['department_name']}")
+                st.header(item[Judgment.SIGNATURE.value])
+                st.info(f"Court: {item[Judgment.COURT_NAME.value]}")
+                st.info(f"Department: {item[Judgment.DEPARTMENT_NAME.value]}")
+                st.info(f"Date: {item[Judgment.DATE.value]}")
                 st.info(f"Score: {item['score']}")
-                st.subheader(item["excerpt"])
-                st.text_area(label="Judgement text", value=item["text"], height=200)
+                st.subheader(item[Judgment.EXCERPT.value])
+                st.text_area(
+                    label="Judgement text", value=item[Judgment.TEXT.value], height=200
+                )
         else:
             items = search_judgements(query=query, max_docs=max_judgements)
 
             st.header("Judgements - Results")
             for item in items:
-                st.header(item["signature"])
+                st.header(item[Judgment.SIGNATURE.value])
+                st.info(f"Court: {item[Judgment.COURT_NAME.value]}")
+                st.info(f"Date: {item[Judgment.DATE.value]}")
                 st.info(f"Score: {item['score']}")
 
                 # Process and display highlights
@@ -93,9 +100,9 @@ if submit_button:
 ---
 {text}
 """,
-                            unsafe_allow_html=True
+                            unsafe_allow_html=True,
                         )
 
                 # Add toggle for full text
                 with st.expander("Show Full Judgment Text"):
-                    st.markdown(item["text"])
+                    st.markdown(item[Judgment.TEXT.value])

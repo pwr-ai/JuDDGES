@@ -1,6 +1,18 @@
 from juddges.data.database import get_mongo_collection
 from juddges.data_models import Judgment
 
+RETURNED_ATTRIBUTES = {
+    Judgment.ID.value: 0,
+    Judgment.SIGNATURE.value: 1,
+    Judgment.TEXT.value: 1,
+    Judgment.EXCERPT.value: 1,
+    Judgment.COURT_NAME.value: 1,
+    Judgment.DEPARTMENT_NAME.value: 1,
+    Judgment.DATE.value: 1,
+    "score": {"$meta": "searchScore"},
+    "highlights": {"$meta": "searchHighlights"},
+}
+
 
 def search_judgements(query: str, max_docs: int = 100):
     collection = get_mongo_collection()
@@ -15,24 +27,13 @@ def search_judgements(query: str, max_docs: int = 100):
                     }
                 },
                 {"$limit": max_docs},
-                {
-                    "$project": {
-                        "_id": 0,
-                        "signature": 1,
-                        "text": 1,
-                        "excerpt": 1,
-                        "score": {"$meta": "searchScore"},
-                        "highlights": {"$meta": "searchHighlights"},
-                    }
-                },
+                {"$project": RETURNED_ATTRIBUTES},
             ]
         )
     )
 
 
-def search_judgements_by_signature(
-    signature: str, max_docs: int = 100, max_distance: int = 2
-):
+def search_judgements_by_signature(signature: str, max_docs: int = 100):
     collection = get_mongo_collection()
     return list(
         collection.aggregate(
@@ -49,16 +50,7 @@ def search_judgements_by_signature(
                     }
                 },
                 {"$limit": max_docs},
-                {
-                    "$project": {
-                        "_id": 0,
-                        "signature": 1,
-                        "text": 1,
-                        "excerpt": 1,
-                        "score": {"$meta": "searchScore"},
-                        "highlights": {"$meta": "searchHighlights"},
-                    }
-                },
+                {"$project": RETURNED_ATTRIBUTES},
             ]
         )
     )
