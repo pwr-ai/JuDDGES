@@ -10,6 +10,7 @@ chunk_config:
   chunk_size: ${embedding_model.max_seq_length}
   min_split_chars: 10
   take_n_first_chunks: 16
+  chunk_overlap: 32
 batch_size: 64
 
 output_dir: data/embeddings/${dataset.name}/${hydra:runtime.choices.embedding_model}/all_embeddings
