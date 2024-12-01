@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.39">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Schema-based information retrieval from judgements – juddges</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-e26003cea8cd680ca0c55a263523d882.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-ebc57992554dae5230fa85c1bd5a55fa.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+<meta property="og:title" content="Schema-based information retrieval from judgements – juddges">
+<meta property="og:description" content="">
+<meta property="og:site_name" content="juddges">
+<meta name="twitter:title" content="Schema-based information retrieval from judgements – juddges">
+<meta name="twitter:description" content="">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">juddges</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../Data/prepare_instruction_dataset_for_ir.html">Data</a></li><li class="breadcrumb-item"><a href="../Data/prepare_instruction_dataset_for_ir.html">Schema-based information retrieval from judgements</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">JuDDGES</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Data/prepare_instruction_dataset_for_ir.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Schema-based information retrieval from judgements</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Data/dataset_description.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Raw &amp; Instruct Datasets Analyses</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Data/analyse_sft.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SFT results inspection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Data/graph_dataset_description.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Graph dataset analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Data/graph_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Local subgraphs analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Data/analyze_en_judgements_texts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analyze Text of England and Wales Judgements</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Data/analyse_en_dataset.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analyse England and Wales Dataset</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Data/hybrid_search.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Example of hybrid search for our indexed data</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Dataset Cards</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Dataset Cards/dataset_description_raw.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dataset Card for <a href="https://huggingface.co/datasets/JuDDGES/pl-court-raw">JuDDGES/pl-court-raw</a></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Dataset Cards/dataset_description_instruct.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dataset Card for <a href="https://huggingface.co/datasets/JuDDGES/pl-court-instruct">JuDDGES/pl-court-instruct</a></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Presentations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../Presentations/workshop_demo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Workshop Demo</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../Data/prepare_instruction_dataset_for_ir.html">Data</a></li><li class="breadcrumb-item"><a href="../Data/prepare_instruction_dataset_for_ir.html">Schema-based information retrieval from judgements</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Schema-based information retrieval from judgements</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<div id="cell-3" class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> loguru <span class="im">import</span> logger</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> mlflow</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juddges.prompts.information_extraction <span class="im">import</span> (</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    prepare_information_extraction_chain,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    EXAMPLE_SCHEMA,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juddges.settings <span class="im">import</span> prepare_langchain_cache, prepare_mlflow</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juddges.data.pl_court_api <span class="im">import</span> PolishCourtAPI</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-4" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dotenv <span class="im">import</span> load_dotenv</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>load_dotenv(<span class="st">"../../.env"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>True</code></pre>
+</div>
+</div>
+<div id="cell-5" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>prepare_langchain_cache()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>prepare_mlflow()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-6" class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>logger.add(level<span class="op">=</span><span class="st">"INFO"</span>, sink<span class="op">=</span><span class="st">"../../logs/ir_judgments.log"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>1</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>LLM_NAME <span class="op">=</span> <span class="st">"gpt-4-0125-preview"</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>PROMPT_VERSION <span class="op">=</span> <span class="st">"initial-ir"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>LANGUAGE <span class="op">=</span> <span class="st">"Polish"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-8" class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mlflow.start_run(run_name<span class="op">=</span><span class="ss">f"</span><span class="sc">{</span>PROMPT_VERSION<span class="sc">}</span><span class="ss">-</span><span class="sc">{</span>LLM_NAME<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>&lt;ActiveRun: &gt;</code></pre>
+</div>
+</div>
+<div id="cell-9" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>api <span class="op">=</span> PolishCourtAPI()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-10" class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>judgement <span class="op">=</span> api.get_content(<span class="bu">id</span><span class="op">=</span><span class="st">"155000000001006_II_AKa_000334_2019_Uz_2020-02-06_001"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-11" class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>judgement</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>{'content': '&lt;?xml version=\'1.0\' encoding=\'UTF-8\'?&gt;\n&lt;xPart xPublisherFullName="Anna Turek" xPublisher="anna.turek" xEditorFullName="Wiktoria Dąbrowicz" xEditor="wiktoria.dabrowicz" xVersion="1.0" xLang="PL" xFromPg="1" xToPage="2" xFlag="published" xVolType="15/500000/0001006/AKa" xYear="2019" xVolNmbr="000334" xDocType="Uz" xml:space="preserve"&gt;\n  &lt;xName&gt;Wyrok&lt;/xName&gt;\n  &lt;xBlock&gt;\n    &lt;xText xALIGNx="left"&gt;\n      &lt;xBx&gt;Sygn. akt II AKa 334/19&lt;/xBx&gt;&lt;/xText&gt;\n    &lt;xText/&gt;\n    &lt;xUnit xBold="true" xIsTitle="true" xType="part"&gt;\n      &lt;xName&gt;WYROK&lt;/xName&gt;\n      &lt;xTitle&gt;W IMIENIU RZECZYPOSPOLITEJ POLSKIEJ&lt;/xTitle&gt;\n      &lt;xText xALIGNx="right"&gt;Dnia 6 lutego 2020 r.&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;Sąd Apelacyjny we Wrocławiu II Wydział Karny w składzie:&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;Przewodniczący: sędzia SA Cezariusz Baćkowski&lt;/xText&gt;\n      &lt;xText&gt;Sędziowie: SA Piotr Kaczmarek (spr.)&lt;/xText&gt;\n      &lt;xText&gt;SA Robert Zdych&lt;/xText&gt;\n      &lt;xText&gt;Protokolant: Wiktoria Dąbrowicz&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;przy udziale prokuratora Prokuratury &lt;xAnon&gt; (...)&lt;/xAnon&gt; we &lt;xAnon&gt;W.&lt;/xAnon&gt; Zbigniewa Jaworskiego&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;po rozpoznaniu w dniu 20 grudnia 2019 r., 31 stycznia 2020 r. i 6 lutego 2020 r.&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;sprawy:&lt;xBRx/&gt;&lt;xAnon&gt;A. D.&lt;/xAnon&gt; (&lt;xAnon&gt;D.&lt;/xAnon&gt;)&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;oskarżonego z &lt;xLexLink xArt="art. 258;art. 258 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 258 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 55;art. 55 ust. 3" xIsapId="WDU20051791485" xTitle="Ustawa z dnia 29 lipca 2005 r. o przeciwdziałaniu narkomanii" xAddress="Dz. U. z 2005 r. Nr 179, poz. 1485"&gt;art. 55 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 56;art. 56 ust. 3" xIsapId="WDU20051791485" xTitle="Ustawa z dnia 29 lipca 2005 r. o przeciwdziałaniu narkomanii" xAddress="Dz. U. z 2005 r. Nr 179, poz. 1485"&gt;art. 56 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 18;art. 18 § 3" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 18 § 3 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 299;art. 299 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 299 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;&lt;xAnon&gt;R. M.&lt;/xAnon&gt; &lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;oskarżonego z &lt;xLexLink xArt="art. 258;art. 258 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 258 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 55;art. 55 ust. 3" xIsapId="WDU20051791485" xTitle="Ustawa z dnia 29 lipca 2005 r. o przeciwdziałaniu narkomanii" xAddress="Dz. U. z 2005 r. Nr 179, poz. 1485"&gt;art. 55 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 56;art. 56 ust. 3" xIsapId="WDU20051791485" xTitle="Ustawa z dnia 29 lipca 2005 r. o przeciwdziałaniu narkomanii" xAddress="Dz. U. z 2005 r. Nr 179, poz. 1485"&gt;art. 56 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 299;art. 299 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 299 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;&lt;xAnon&gt;E. L.&lt;/xAnon&gt; (&lt;xAnon&gt;L.&lt;/xAnon&gt;)&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;oskarżonej z &lt;xLexLink xArt="art. 299;art. 299 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 299 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; &lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;&lt;xAnon&gt;R. P.&lt;/xAnon&gt; &lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;oskarżonego z &lt;xLexLink xArt="art. 56;art. 56 ust. 3" xIsapId="WDU20051791485" xTitle="Ustawa z dnia 29 lipca 2005 r. o przeciwdziałaniu narkomanii" xAddress="Dz. U. z 2005 r. Nr 179, poz. 1485"&gt;art. 56 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii&lt;/xLexLink&gt; &lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;\n  &lt;xBx&gt;\n    \n    \n    \n    \n    \n    \n    \n    &lt;xAnon&gt;L. L.&lt;/xAnon&gt; (&lt;xAnon&gt;L.&lt;/xAnon&gt;)&lt;/xBx&gt;\n&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;oskarżonego z &lt;xLexLink xArt="art. 258;art. 258 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 258 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 18;art. 18 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 18 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 55;art. 55 ust. 3" xIsapId="WDU20051791485" xTitle="Ustawa z dnia 29 lipca 2005 r. o przeciwdziałaniu narkomanii" xAddress="Dz. U. z 2005 r. Nr 179, poz. 1485"&gt;art. 55 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 64;art. 64 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 64 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 18;art. 18 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 18 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 56;art. 56 ust. 3" xIsapId="WDU20051791485" xTitle="Ustawa z dnia 29 lipca 2005 r. o przeciwdziałaniu narkomanii" xAddress="Dz. U. z 2005 r. Nr 179, poz. 1485"&gt;art. 56 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 64;art. 64 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 64 § 1 k.k.&lt;/xLexLink&gt;, z &lt;xLexLink xArt="art. 18;art. 18 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 18 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 299;art. 299 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 299 § 1 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 12" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 12 k.k.&lt;/xLexLink&gt; w zw. z &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;na skutek apelacji wniesionej przez oskarżonych&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;od wyroku Sądu Okręgowego w Świdnicy &lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;z dnia 5 kwietnia 2019 r., sygn. akt III K 52/17&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;I&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;zmienia zaskarżony wyrok: &lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;1&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;co do oskarżonego  \n            &lt;xUx&gt;&lt;xAnon&gt;R. M.&lt;/xAnon&gt;&lt;/xUx&gt;\n            w ten sposób, że:&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;a&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;uniewinnia oskarżonego od przestępstwa przypisanego w punkcie I, stwierdzając, że utraciło moc orzeczenie o karze łącznej pozbawienia wolności zawarte w punkcie VII,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;b&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;w przestępstwach przypisanych w punkcie II i IV pomija ustalenie o działaniu w ramach zorganizowanej grupy przestępczej, w miejsce ustalenia o przekazaniu &lt;xAnon&gt;R. P.&lt;/xAnon&gt;, przyjmuje ustalenie o przekazaniu innej osobie oraz w kwalifikacji prawnej pomija &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;c&lt;/xName&gt;\n        &lt;xText&gt;\n  &lt;xBx&gt;\n    \n    \n    w przestępstwie przypisanym w punkcie V pomija ustalenie o działaniu w ramach zorganizowanej grupy przestępczej, w miejsce ustalenia o przekazaniu &lt;xAnon&gt;E. L.&lt;/xAnon&gt; przyjmuje przekazanie innej osobie, w miejsce ustalenia o działaniu wspólnie i w porozumieniu z &lt;xAnon&gt;L. L.&lt;/xAnon&gt; przyjmuje ustalenie o działaniu wspólnie i w porozumieniu z inną osobą oraz w kwalifikacji prawnej pomija &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt; ,&lt;/xBx&gt;\n&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;d&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;uchyla orzeczenie o przepadku równowartości części korzyści zawarte w punkcie VI;&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;2&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;co do oskarżonego  \n            &lt;xUx&gt;&lt;xAnon&gt;A. D.&lt;/xAnon&gt;&lt;/xUx&gt;\n            w ten sposób, że:&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;a&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;uniewinnia oskarżonego od przestępstwa przypisanego w punkcie VIII, stwierdzając, że utraciło moc orzeczenie o karze łącznej pozbawienia wolności zawarte w punkcie XIV,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;b&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;w przestępstwach przypisanych w punkcie IX i XI pomija ustalenie o działaniu w ramach zorganizowanej grupy przestępczej, w miejsce ustalenia o przekazaniu &lt;xAnon&gt;R. P.&lt;/xAnon&gt;, przyjmuje ustalenie o przekazaniu innej osobie oraz w kwalifikacji prawnej pomija &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;c&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;uniewinnia oskarżonego od przestępstwa przypisanego w punkcie XII, stwierdzając, że straciło moc orzeczenie o przepadku równowartości części korzyści zawarte w punkcie XIV;&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;3&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;co do oskarżonego  \n            &lt;xUx&gt;&lt;xAnon&gt;R. P.&lt;/xAnon&gt;&lt;/xUx&gt;\n            w ten sposób, że uniewinnia oskarżonego od przestępstwa przypisanego w punkcie XV;&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;4&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;co do oskarżonej  \n            &lt;xUx&gt;&lt;xAnon&gt;E. L.&lt;/xAnon&gt;&lt;/xUx&gt;\n            w ten sposób, że uniewinnia oskarżoną od przestępstwa przypisanego w punkcie XVII&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;5&lt;/xName&gt;\n        &lt;xText&gt;\n  &lt;xBx&gt;\n    co do oskarżonego  \n            &lt;xUx&gt;\n      &lt;xAnon&gt;L. L.&lt;/xAnon&gt;&lt;/xUx&gt;\n            w ten sposób, że:&lt;/xBx&gt;\n&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;a&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;uniewinnia oskarżonego od przestępstwa przypisanego w punkcie XIX, stwierdzając, że utraciło moc orzeczenie o karze łącznej pozbawienia wolności zawarte w punkcie XXV,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;b&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;w przestępstwach przypisanych w punkcie XX i XXII pomija ustalenie o działaniu w ramach zorganizowanej grupy przestępczej, w miejsce ustalenia o ustalaniu terminów i okoliczności odbioru przez &lt;xAnon&gt;R. P.&lt;/xAnon&gt;, przyjmuje ustalenie o ustalaniu terminów i okoliczności odbioru przez inną osobę oraz w kwalifikacji prawnej pomija &lt;xLexLink xArt="art. 65;art. 65 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 65 § 1 k.k.&lt;/xLexLink&gt;,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx=")"&gt;c&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;uniewinnia oskarżonego od przestępstwa przypisanego w punkcie XXIII, stwierdzając, że straciło moc orzeczenie o przepadku równowartości części korzyści zawarte w punkcie XXIV,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;II&lt;/xName&gt;\n        &lt;xText&gt;\n  &lt;xBx&gt;\n    w pozostałym zakresie zaskarżony wyrok co do oskarżonych &lt;xAnon&gt;R. M.&lt;/xAnon&gt;, &lt;xAnon&gt;A. D.&lt;/xAnon&gt; i &lt;xAnon&gt;L. L.&lt;/xAnon&gt; utrzymuje w mocy;&lt;/xBx&gt;\n&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;III&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;na podstawie &lt;xLexLink xArt="art. 85;art. 85 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 85 § 1 k.k.&lt;/xLexLink&gt; i &lt;xLexLink xArt="art. 86;art. 86 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 86 § 1 k.k.&lt;/xLexLink&gt; łączy kary pozbawienia wolności wymierzone oskarżonym:&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xText&gt;&lt;xBx&gt;- &lt;xAnon&gt;R. M.&lt;/xAnon&gt; w punkcie II i IV i wymierza karę łączną 4 (czterech) lat i 6 (sześciu) miesięcy pozbawienia wolności,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;- &lt;xAnon&gt;A. D.&lt;/xAnon&gt; w punkcie IX i XI i wymierza karę łączną 4 (czterech) lat pozbawienia wolności,&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;\n  &lt;xBx&gt;\n    - &lt;xAnon&gt;L. L.&lt;/xAnon&gt; w punkcie XX i XXII i wymierza karę łączną 5 (pięciu) lat i 6 (sześciu) miesięcy pozbawienia wolności;&lt;/xBx&gt;\n&lt;/xText&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;IV&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;na podstawie &lt;xLexLink xArt="art. 63;art. 63 § 1" xIsapId="WDU19970880553" xTitle="Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny" xAddress="Dz. U. z 1997 r. Nr 88, poz. 553"&gt;art. 63 § 1 k.k.&lt;/xLexLink&gt; na poczet orzeczonych kar pozbawienia wolności zalicza:&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xText&gt;&lt;xBx&gt;- oskarżonemu &lt;xAnon&gt;R. M.&lt;/xAnon&gt; okresy zatrzymania od 1 grudnia 2015 roku do 3 grudnia 2015 roku oraz od 25 stycznia 2017 roku do 26 stycznia 2017 roku;&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;&lt;xBx&gt;- oskarżonemu &lt;xAnon&gt;A. D.&lt;/xAnon&gt; okresy zatrzymania i tymczasowego aresztowania od 20 czerwca 2015 roku do 12 listopada 2015 roku oraz od 25 stycznia 2017 roku do 26 stycznia 2017 roku;&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;xText&gt;\n  &lt;xBx&gt;\n    - oskarżonemu &lt;xAnon&gt;L. L.&lt;/xAnon&gt; okres tymczasowego aresztowania w sprawie od 26 stycznia 2019 roku do 5 kwietnia 2019 roku;&lt;/xBx&gt;\n&lt;/xText&gt;\n      &lt;xUnit xIsTitle="false" xType="none"&gt;\n        &lt;xName xSffx="."&gt;V&lt;/xName&gt;\n        &lt;xText&gt;&lt;xBx&gt;wydatkami związanymi z postępowaniem, w części której nastąpiło uniewinnienie obciąża Skarb Państwa, w pozostałym zakresie zwalniając oskarżonych od kosztów za postępowanie odwoławcze.&lt;/xBx&gt;&lt;/xText&gt;\n      &lt;/xUnit&gt;\n      &lt;xRows&gt;\n        &lt;xCOLGROUPx&gt;\n          &lt;xCOLx xWIDTHx="240"/&gt;\n          &lt;xCOLx xWIDTHx="239"/&gt;\n          &lt;xCOLx xWIDTHx="237"/&gt;\n        &lt;/xCOLGROUPx&gt;\n        &lt;xRow&gt;\n          &lt;xClmn xALIGNx="left"&gt;\n            &lt;xText xALIGNx="center"&gt;Piotr Kaczmarek&lt;/xText&gt;\n          &lt;/xClmn&gt;\n          &lt;xClmn xALIGNx="left"&gt;\n            &lt;xText xALIGNx="center"&gt;Cezariusz Baćkowski&lt;/xText&gt;\n          &lt;/xClmn&gt;\n          &lt;xClmn xALIGNx="left"&gt;\n            &lt;xText xALIGNx="center"&gt;Robert Zdych&lt;/xText&gt;\n          &lt;/xClmn&gt;\n        &lt;/xRow&gt;\n      &lt;/xRows&gt;\n    &lt;/xUnit&gt;\n  &lt;/xBlock&gt;\n&lt;/xPart&gt;\n'}</code></pre>
+</div>
+</div>
+<div id="cell-12" class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(EXAMPLE_SCHEMA)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>verdict_date: date as ISO 8601
+verdict: string, text representing verdict of the judgement
+verdict_summary: string, short summary of the verdict
+verdict_id: string
+court: string
+parties: string
+appeal_against: string
+first_trial: boolean
+drug_offence: boolean
+child_offence: boolean
+offence_seriousness: boolean
+verdict_tags: List[string]</code></pre>
+</div>
+</div>
+<div id="cell-13" class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>chain <span class="op">=</span> prepare_information_extraction_chain()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-14" class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>logged_model <span class="op">=</span> mlflow.langchain.log_model(chain, <span class="st">"langchain_model"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>2024/04/12 12:20:42 WARNING mlflow.utils.environment: Encountered an unexpected error while inferring pip requirements (model URI: /tmp/tmp_e0svs4s/model, flavor: langchain). Fall back to return ['langchain==0.1.13', 'pydantic==2.7.0', 'cloudpickle==3.0.0']. Set logging level to DEBUG to see the full traceback. </code></pre>
+</div>
+</div>
+<div id="cell-15" class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>mlflow.log_param(<span class="st">"prompt_version"</span>, PROMPT_VERSION)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>mlflow.log_param(<span class="st">"llm_name"</span>, LLM_NAME)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>mlflow.log_param(<span class="st">"language"</span>, LANGUAGE)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>mlflow.log_param(<span class="st">"schema"</span>, EXAMPLE_SCHEMA)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>'verdict_date: date as ISO 8601\nverdict: string, text representing verdict of the judgement\nverdict_summary: string, short summary of the verdict\nverdict_id: string\ncourt: string\nparties: string\nappeal_against: string\nfirst_trial: boolean\ndrug_offence: boolean\nchild_offence: boolean\noffence_seriousness: boolean\nverdict_tags: List[string]'</code></pre>
+</div>
+</div>
+<div id="cell-16" class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>EXAMPLE_SCHEMA <span class="op">=</span> <span class="st">"""</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="st">Rodzaj_przestepstwa_i_kwalifikacja_prawna: string</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="st">Dodatkowe_okolicznosci: {'recydywa': 'boolean', 'w_zwiazku_z_art_207_kk_znecanie_sie': 'boolean', 'zgwalcenie_maloletniego_zbiorowe_kazirodcze_ze_szczegolnym_okrucienstwem': 'boolean'}</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="st">Rodzaj_wyroku: string</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="st">Sankcja_karna: {'wyrok_w_zawieszeniu': 'boolean', 'skazujacy_na_kare_pobawienia_wolnosci_od_lat_2_do_lat_3': 'boolean', 'skazujacy_na_kare_pobawienia_wolnosci_od_lat_3': 'boolean', 'kara_25_lat_pobawienia_wolnosci': 'boolean'}</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="st">Srodki_kompensacyjne: {'czy_jest': 'boolean', 'jaka_kwota': 'integer'}</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="st">Srodki_karne: {'jakie': 'string'}</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="st">Okolicznosci_zwiazane_z_opisem_czynu: {'stosowanie_przemocy': 'boolean', 'grozby_bezprawnej': 'boolean', 'podstepu': 'boolean', 'wykorzystanie_bezradnosci': 'boolean', 'znajdowanie_sie_pod_wplywem_alkoholu': 'boolean', 'podanie_GHB_innej_podobnie_dzialajacej_substancji': 'boolean'}</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="st">"""</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-17" class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>retrieved_informations <span class="op">=</span> chain.invoke(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"LANGUAGE"</span>: LANGUAGE, <span class="st">"TEXT"</span>: judgement, <span class="st">"SCHEMA"</span>: EXAMPLE_SCHEMA}</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-18" class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>retrieved_informations</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>{'Rodzaj_przestepstwa_i_kwalifikacja_prawna': 'art. 258 § 1 k.k., art. 55 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii, art. 12 k.k., art. 65 § 1 k.k., art. 56 ust. 3 ustawy z dnia 29 lipca 2005 roku o przeciwdziałaniu narkomanii, art. 299 § 1 k.k., art. 18 § 3 k.k.',
+ 'Dodatkowe_okolicznosci': {'recydywa': False,
+  'w_zwiazku_z_art_207_kk_znecanie_sie': False,
+  'zgwalcenie_maloletniego_zbiorowe_kazirodcze_ze_szczegolnym_okrucienstwem': False},
+ 'Rodzaj_wyroku': 'zmiana wyroku; uniewinnienie od niektórych przestępstw; utrzymanie w mocy pozostałej części wyroku',
+ 'Sankcja_karna': {'wyrok_w_zawieszeniu': False,
+  'skazujacy_na_kare_pobawienia_wolnosci_od_lat_2_do_lat_3': False,
+  'skazujacy_na_kare_pobawienia_wolnosci_od_lat_3': True,
+  'kara_25_lat_pobawienia_wolnosci': False},
+ 'Srodki_kompensacyjne': {'czy_jest': False, 'jaka_kwota': 0},
+ 'Srodki_karne': {'jakie': ''},
+ 'Okolicznosci_zwiazane_z_opisem_czynu': {'stosowanie_przemocy': False,
+  'grozby_bezprawnej': False,
+  'podstepu': False,
+  'wykorzystanie_bezradnosci': False,
+  'znajdowanie_sie_pod_wplywem_alkoholu': False,
+  'podanie_GHB_innej_podobnie_dzialajacej_substancji': False}}</code></pre>
+</div>
+</div>
+<div id="cell-19" class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juddges.data.models <span class="im">import</span> get_mongo_collection</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>judgements_collection <span class="op">=</span> get_mongo_collection(<span class="st">"judgements"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-20" class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># search for mongo documents with empty text field, index named `text_text`</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>judgements <span class="op">=</span> <span class="bu">list</span>(</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    judgements_collection.find({<span class="st">"$text"</span>: {<span class="st">"$search"</span>: <span class="st">"przestepstwo seksualne"</span>}}).limit(<span class="dv">10</span>)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-21" class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># judgements = list(judgements_collection.find(filter={}).limit(100))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-22" class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="bu">len</span>(judgements)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>10</code></pre>
+</div>
+</div>
+<p>Estimate price of prompt with judgements text for 100 sample (is USD)</p>
+<div id="cell-24" class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juddges.settings <span class="im">import</span> num_tokens_from_string, LLM_TO_PRICE_INPUT</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="bu">sum</span>(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>        LLM_TO_PRICE_INPUT[LLM_NAME] <span class="op">*</span> num_tokens_from_string(judgement[<span class="st">"text"</span>])</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> judgement <span class="kw">in</span> judgements</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>1.53363</code></pre>
+</div>
+</div>
+<div id="cell-25" class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(judgements[<span class="dv">0</span>][<span class="st">"text"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>WYROK ŁĄCZNY
+
+W IMIENIU
+
+RZECZYPOSPOLITEJ POLSKIEJ
+
+Dnia 07 maja 2014 roku.
+
+Sąd Okręgowy w Poznaniu w III Wydziale Karnym w składzie:
+
+Przewodnicząca: SSO Katarzyna Wolff
+Protokolant: Patrycja Rataj
+przy udziale Prokuratora Wojskowej Prokuratury Okręgowej w Poznaniu Agnieszka Hildebrandt
+po rozpoznaniu dnia 07 maja 2014r
+
+sprawy:
+
+A. W.,synaR.iE.z domuS.,urodzonego (...)wP.
+
+skazanego prawomocnymi wyrokami:
+
+I
+Sądu Rejonowego w Poznaniu z dnia 17 czerwca 1999 roku sygn. aktVK 667/99za przestępstwo zart. 279§1kkpopełnione w dniu 24.12.1998r na karę 2 lat pozbawienia wolności z warunkowym zawieszeniem na okres 5 lat próby oraz grzywnę w wysokości 100 stawek dziennych po 20 złotych, po czym postanowieniem Sądu Rejonowego w Poznaniu zarządzono wykonanie kary pozbawienia wolności
+
+II
+Sądu Rejonowego w Wałczu z dnia 24.09.2002r sygn. aktIIK 468/02za przestępstwo zart. 209 § 1 kkpopełnione w okresie od 20.03.2001r do lutego 2002r na karę 10 miesięcy ograniczenia wolności polegającej na wykonywaniu nieodpłatnej dozorowanej pracy na cel społeczny w wymiarze 20 godzin w stosunku miesięcznym, po czym postanowieniem Sądu Rejonowego w Wałczu zamieniono tę karę na karę grzywny
+
+III
+Sądu Rejonowego Poznań Stare Miasto w Poznaniu z dnia 21.05.2011 r w sprawie sygn. IIIK 383/08za:
+
+- przestępstwo zart. 258§1 i 3 kk78§1 kkpopełnione w okresie od stycznia 2002r do października 2004 r na karę 2 miesięcy pozbawienia wolności.
+- przestępstwo zart. 298§ 1kkiart. 286§1 kkw zw. zart. 11§2 kkiart. 12 kkpopełnione w okresie od 7 maja 2001 r do 21 września 2001r na karę 1 roku pozbawienia wolności oraz 20 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 238 kkw zw. zart. 233§ 1 kkiart. 11§2 kkpopełnione w dniu 28 maja 2001r na karę 8 miesięcy pozbawienia wolności
+- przestępstwo zart. 286§1 kkpopełnione w okresie od 31 maja 2001r do 16 lipca 2001r na karę 1 roku pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 18§2 kkw zw. zart. 238 kkw zw. zart. 233§ 1 kkiart. 11§2 kkpopełnione w marcu 2002r na karę 8 miesięcy pozbawienia wolności
+- przestępstwo zart. 286§1 kkpopełnione w okresie od 4 marca 2002 r do 10 maja 2002r na karę 1 roku pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 18§2 kkw zw. zart. 238 kkw zw. zart. 233§ 1 kkiart. 11§2 kkpopełnione w marcu 2002r na karę 8 miesięcy pozbawienia wolności
+- przestępstwo zart. 13§1 kkw zw. zart. 286§1 kkpopełnione w okresie od 4 marca 2002r do 30 sierpnia 2002r na karę 10 miesięcy pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 270§ 1 kkpopełnione 11.09.2002r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 270§ 1 kkpopełnione w lutym 2003r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 270§ 1 kkpopełnione w 2003r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 270§ 1 kkpopełnione w listopadzie 2003 r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 18§2 kkw zw. zart. 272 kkpopełnione w listopadzie 2003 r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 297§1 kkw zw zart. 286§1 kkw zw zart. 11§2 kkpopełnione 15.01.2004r na karę 1 roku pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 18§ 2 kkw zw. zart. 272 kkpopełnione w styczniu 2004r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 18§ 2 kkw zw. zart. 272 kkw zw zart. 270§ 1 kkw zw. zart. 11§2 kkpopełnione w lutym 2004r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 270§1 kkpopełnione w dniu 26.04.2004r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 291§ 1kkpopełnione w okresie od 1 lipca 2004 do 19 lipca 2004r na karę 8 miesięcy pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 18§ 2 kkw zw. zart. 272 kkpopełnione w lipcu 2004r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 18§ 2 kkw zw. zart. 272 kkpopełnione w lipcu 2004r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 286§1 kkpopełnione w okresie od 17.08.2004r do 25.09.2004r na karę 10 miesięcy pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 284§2kk kkpopełnione 17.08.2004r na karę 1 roku pozbawienia wolności
+- przestępstwo zart. 18§ 2 kkw zw. zart. 233§1 kkw zw. zart. 238 kkw zw. zart. 11§2 kkpopełnione w styczniu 2004r na karę 8 miesięcy pozbawienia wolności
+- przestępstwo zart. 18§ 2 kkw zw. zart. 272 kkpopełnione w październiku 2004 r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 18§ 2 kkw zw. zart. 272 kkpopełnione w listopadzie 2004r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 291§1 kkpopełnione w okresie od 23.12.2004r do 13.01.2005r na karę 10 miesięcy pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 291§1kkpopełnione w okresie od 2.02.2005r do 23.05.2005r na karę 8 miesięcy pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 306 kkpopełnione w okresie od 02.02.2005r do 23.05.2005r na karę 8 miesięcy pozbawienia wolności
+- przestępstwo zart. 18§ 2 kkw zw. zart. 272 kkpopełnione w czerwcu 2005r na karę 6 miesięcy pozbawienia wolności
+- przestępstwo zart. 18§ 2 kkw zw. zart. 238 kkw zw zart. 233§1 kkw zw. zart. 11§2kkpopełnione 05.07.2005r na karę 8 miesięcy pozbawienia wolności
+- przestępstwoart. 286§1 kkpopełnione w okresie od 06.07.2005 r do 24.08.2005r na karę 1 roku pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+- przestępstwo zart. 286§1kkpopełnione w okresie od 12.09.2005r do 05.11.2005r na karę 1 roku pozbawienia wolności i 10 stawek dziennych grzywny po 100 złotych
+
+które połączono wymierzając karę łączną 6 lat pozbawienia wolności i 150 stawek dziennych grzywny po 100 złotych, przy czym wyrokiem Sądu Okręgowego w Poznaniu z dnia 07 lipca 2011 r w sprawie IV AKa 178/11 złagodzono orzeczoną karę łączna pozbawienia wolności do4 lat,a karę łączną grzywny do60 stawek dziennych po 100 złotych
+
+IV
+Sądu Rejonowego Poznań Grunwald i Jeżyce w Poznaniu z dnia 20.11.2012r sygn. akt
+    III K 536/12za przestępstwo zart. 270 § 1 kkw zw. zart. 12 kkpopełnione w nieokreślonym czasie na karę 8 miesięcy pozbawienia wolności, za czyn zart. 18§2 kkw zw zart. 233§1 kkpopełniony w dniu 10.10.2005 r na karę 10 miesięcy pozbawienia wolności, za czyn zart. 18§2 kkw zw zart. 233§1 kkpopełniony 10.10.2005r na karę 10 miesięcy pozbawienia wolności, za czyn zart. 245 kkpopełniony 10.11.2005r na karę 1 roku pozbawienia wolności, za czyn zart. 286§1 kkpopełniony w okresie od 15.07.2004r do 31.08.2004r na karę 1 roku i 6 miesięcy pozbawienia wolności, które połączono wymierzając karę łączną 1 roku i 6 miesięcy pozbawienia wolności
+
+V
+Sądu Okręgowego w Poznaniu z dnia 13.12.2012r w sprawie sygn.III K 49/2012za przestępstwo zart. 13§1 kkw zw. zart. 286§1 kkpopełnione w okresie od stycznia 2002 r do września 2004 na karę 3 lat pozbawienia wolności i 100 stawek dziennych grzywny po 100 złotych
+
+VI
+Sądu Rejonowego Poznań Grunwald i Jeżyce w Poznaniu z dnia 31.01.2012r r w sprawie sygn.
+    III K 640/08za:
+
+- czyn zart. 297§1 kkiart. 286§1 kkiart. 270§1 kkw zw zart. 11§2 kkpopełniony w dniu 29.11.2004r na karę 1 roku pozbawienia wolności i 80 stawek dziennych grzywny po 20 złotych
+- czyn zart. 297§1 kkiart. 286§1 kkiart. 273 kkw zw zart. 271§1 kkw zw zart. 11§2 kkpopełniony w dniu 26.01.2005r na karę 1 roku i 2 miesięcy pozbawienia wolności i 100 stawek dziennych grzywny po 20 złotych
+- czyny zart. 286§1 kkiart. 13§1 kkw zw. zart. 286§1 kkw zw. zart. 91§1 kkpopełnione w okresach od 25.05.2005 r do 23.06.2005r, od 08.07.2005r do 15.11.2005r, od 28.11.2005r do 13.12.2005r, od 20.01.2006r do 09.03.2006r na karę 1 roku i 6 miesięcy pozbawienia wolności i 150 stawek dziennych grzywny po 20 złotych
+- czyny zart. 297§1 kkiart. 286§1 kkiart. 273w zw zart. 270§1 kkw zw. zart. 11§2 kkpopełnione w dniach 30.06.2005r i 18.07.2005r na karę 1 roku i 4 miesięcy pozbawienia wolności i 130 stawek dziennych grzywny po 20 złotych,
+które połączono wymierzając karę łączną 2 lat i 10 miesięcy pozbawienia wolności oraz 300 stawek dziennych grzywny po 20 złotych
+
+1
+Rozwiązuje węzeł kar łącznych orzeczonych wyrokami w sprawach sygn. III K 383/08 Sądu Rejonowego Poznań Stare Miasto w Poznaniu, III K 536/12 i III K 640/08 Sądu Rejonowego Poznań Grunwald i Jeżyce w Poznaniu
+
+2
+Na podstawieart. 569 § 1i 2 kpk,art. 85 kkiart. 86 § 1i 2 kkłączy kary pozbawienia wolności i grzywny orzeczone wyrokami wskazanymi wyżej w punktach III- VI i wymierza skazanemuA. W.karę łączną w wymiarze4 (czterech) lat i 6 (sześciu) miesięcy pozbawienia wolności oraz 100 (stu) stawek dziennych grzywny po 100 (sto) złotych
+
+3
+Na podstawieart. 577 kpkna poczet kary łącznej pozbawienia wolności orzeczonej w punkcie 2. wyroku zalicza skazanemu okres rzeczywistego pozbawienia wolności w sprawie sygn. III K 383/08 Sądu Rejonowego Poznań Stare Miasto w Poznaniu od dnia 01.02.2006 r do 14.07.2006r i od 07.03.2012r do 07.05.2014r i nadal
+
+4
+W pozostałym zakresie wyżej wymienione wyroki podlegają odrębnemu wykonaniu.
+
+5
+Na podstawieart. 572 kpkumarza postępowania co do wydania wyroku łącznego w pozostałym zakresie
+
+6
+Na podstawie§ 14 ust 5 Rozporządzenia Ministra Sprawiedliwości z dnia 28.09.2002 r. w sprawie opłat za czynności adwokackie oraz ponoszenie przez Skarb Państwa kosztów nieopłaconej pomocy prawnej udzielonej z urzędu(Dz. U. z 2002 r., nr 163, poz. 1348 ze zm.) zasądza od Skarbu Państwa na rzecz adwokataB. M.kwotę 140, 40 złotych (w tym VAT) tytułem kosztów nieopłaconej pomocy prawnej udzielonej skazanemu z urzędu.
+
+7
+Na podstawieart. 624 § 1 kpkzwalnia skazanego od obowiązku zapłaty na rzecz Skarbu Państwa kosztów postępowania w całości, a na podstawieart. 6 ustawy z dnia 23 czerwca 1973 roku o opłatach w sprawach karnych(Dz. U. z 1983 roku, nr 49, poz. 223 ze zm.) nie wymierza skazanemu opłaty.
+
+SSO Katarzyna Wolff</code></pre>
+</div>
+</div>
+<div id="cell-26" class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># save sample judgments</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juddges.settings <span class="im">import</span> SAMPLE_DATA_PATH</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-27" class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame(judgements)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>df.to_csv(SAMPLE_DATA_PATH <span class="op">/</span> <span class="st">"judgements-konfiskata-10-sample.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-28" class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">_id</th>
+<th data-quarto-table-cell-role="th">signature</th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">publicationDate</th>
+<th data-quarto-table-cell-role="th">lastUpdate</th>
+<th data-quarto-table-cell-role="th">courtId</th>
+<th data-quarto-table-cell-role="th">departmentId</th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">excerpt</th>
+<th data-quarto-table-cell-role="th">content</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">legalBases</th>
+<th data-quarto-table-cell-role="th">publisher</th>
+<th data-quarto-table-cell-role="th">recorder</th>
+<th data-quarto-table-cell-role="th">references</th>
+<th data-quarto-table-cell-role="th">reviser</th>
+<th data-quarto-table-cell-role="th">themePhrases</th>
+<th data-quarto-table-cell-role="th">num_pages</th>
+<th data-quarto-table-cell-role="th">text</th>
+<th data-quarto-table-cell-role="th">vol_number</th>
+<th data-quarto-table-cell-role="th">vol_type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>153510000001506_III_K_000042_2014_Uz_2014-05-0...</td>
+<td>III K 42/14</td>
+<td>2014-05-07 02:00:00.0 CEST</td>
+<td>2014-05-30 20:15:03.0 CEST</td>
+<td>2014-06-17 00:57:36.0 CEST</td>
+<td>15351000</td>
+<td>1506</td>
+<td>SENTENCE</td>
+<td>WYROK ŁĄCZNY W IMIENIU RZECZYPOSPOLITEJ POLSKI...</td>
+<td>&lt;?xml version='1.0' encoding='UTF-8'?&gt;\n&lt;xPart...</td>
+<td>...</td>
+<td>[art. 85 i art. 86 § 1 i 2 kk]</td>
+<td>Justyna Grzegorek</td>
+<td>Patrycja Rataj</td>
+<td>[Ustawa z dnia 23 czerwca 1973 r. o opłatach w...</td>
+<td>Agnieszka Sikorska</td>
+<td>[Wyrok Łączny]</td>
+<td>4</td>
+<td>WYROK ŁĄCZNY\n\nW IMIENIU\n\nRZECZYPOSPOLITEJ ...</td>
+<td>42</td>
+<td>15/351000/0001506/K</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>150515000003506_VII_Ka_000726_2013_Uz_2013-09-...</td>
+<td>VII Ka 726/13</td>
+<td>2013-09-04 02:00:00.0 CEST</td>
+<td>2014-02-05 19:15:04.0 CET</td>
+<td>2014-09-07 10:18:28.0 CEST</td>
+<td>15051500</td>
+<td>3506</td>
+<td>SENTENCE, REASON</td>
+<td>Sygn. akt VII Ka 726/13 WYROK W IMIENIU RZECZY...</td>
+<td>&lt;?xml version='1.0' encoding='UTF-8'?&gt;\n&lt;xPart...</td>
+<td>...</td>
+<td>[Art.437§1 Kpk]</td>
+<td>Wioletta Suraj</td>
+<td>sekr.sądowy Elżbieta Łotowska</td>
+<td>[Ustawa z dnia 26 maja 1982 r. - Prawo o adwok...</td>
+<td>Rafał Banaszewski</td>
+<td>[Postępowanie Odwoławcze]</td>
+<td>18</td>
+<td>Sygn. akt VII Ka 726/13\n\nWYROK\nW IMIENIU RZ...</td>
+<td>726</td>
+<td>15/051500/0003506/Ka</td>
+</tr>
+</tbody>
+</table>
+
+<p>2 rows × 23 columns</p>
+</div>
+</div>
+</div>
+<div id="cell-29" class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>judgements_retrieved_informations <span class="op">=</span> chain.batch(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>        {<span class="st">"LANGUAGE"</span>: LANGUAGE, <span class="st">"TEXT"</span>: judgement[<span class="st">"text"</span>], <span class="st">"SCHEMA"</span>: EXAMPLE_SCHEMA}</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> judgement <span class="kw">in</span> judgements</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-30" class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add list of retrieved informations to each judgement to the data frame df but treat each key in dict as a new column</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm <span class="im">import</span> tqdm</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> key <span class="kw">in</span> tqdm(judgements_retrieved_informations[<span class="dv">0</span>].keys(), desc<span class="op">=</span><span class="st">"Adding columns to DataFrame"</span>):</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    df[key] <span class="op">=</span> [judgement[key] <span class="cf">for</span> judgement <span class="kw">in</span> judgements_retrieved_informations]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Adding columns to DataFrame: 100%|██████████| 7/7 [00:00&lt;00:00, 2339.83it/s]</code></pre>
+</div>
+</div>
+<div id="cell-31" class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">_id</th>
+<th data-quarto-table-cell-role="th">signature</th>
+<th data-quarto-table-cell-role="th">date</th>
+<th data-quarto-table-cell-role="th">publicationDate</th>
+<th data-quarto-table-cell-role="th">lastUpdate</th>
+<th data-quarto-table-cell-role="th">courtId</th>
+<th data-quarto-table-cell-role="th">departmentId</th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">excerpt</th>
+<th data-quarto-table-cell-role="th">content</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">text</th>
+<th data-quarto-table-cell-role="th">vol_number</th>
+<th data-quarto-table-cell-role="th">vol_type</th>
+<th data-quarto-table-cell-role="th">Rodzaj_przestepstwa_i_kwalifikacja_prawna</th>
+<th data-quarto-table-cell-role="th">Dodatkowe_okolicznosci</th>
+<th data-quarto-table-cell-role="th">Rodzaj_wyroku</th>
+<th data-quarto-table-cell-role="th">Sankcja_karna</th>
+<th data-quarto-table-cell-role="th">Srodki_kompensacyjne</th>
+<th data-quarto-table-cell-role="th">Srodki_karne</th>
+<th data-quarto-table-cell-role="th">Okolicznosci_zwiazane_z_opisem_czynu</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>153510000001506_III_K_000042_2014_Uz_2014-05-0...</td>
+<td>III K 42/14</td>
+<td>2014-05-07 02:00:00.0 CEST</td>
+<td>2014-05-30 20:15:03.0 CEST</td>
+<td>2014-06-17 00:57:36.0 CEST</td>
+<td>15351000</td>
+<td>1506</td>
+<td>SENTENCE</td>
+<td>WYROK ŁĄCZNY W IMIENIU RZECZYPOSPOLITEJ POLSKI...</td>
+<td>&lt;?xml version='1.0' encoding='UTF-8'?&gt;\n&lt;xPart...</td>
+<td>...</td>
+<td>WYROK ŁĄCZNY\n\nW IMIENIU\n\nRZECZYPOSPOLITEJ ...</td>
+<td>42</td>
+<td>15/351000/0001506/K</td>
+<td></td>
+<td>{'recydywa': True, 'w_zwiazku_z_art_207_kk_zne...</td>
+<td>wyrok łączny</td>
+<td>{'wyrok_w_zawieszeniu': False, 'skazujacy_na_k...</td>
+<td>{'czy_jest': False, 'jaka_kwota': 0}</td>
+<td>{'jakie': ''}</td>
+<td>{'stosowanie_przemocy': False, 'grozby_bezpraw...</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>150515000003506_VII_Ka_000726_2013_Uz_2013-09-...</td>
+<td>VII Ka 726/13</td>
+<td>2013-09-04 02:00:00.0 CEST</td>
+<td>2014-02-05 19:15:04.0 CET</td>
+<td>2014-09-07 10:18:28.0 CEST</td>
+<td>15051500</td>
+<td>3506</td>
+<td>SENTENCE, REASON</td>
+<td>Sygn. akt VII Ka 726/13 WYROK W IMIENIU RZECZY...</td>
+<td>&lt;?xml version='1.0' encoding='UTF-8'?&gt;\n&lt;xPart...</td>
+<td>...</td>
+<td>Sygn. akt VII Ka 726/13\n\nWYROK\nW IMIENIU RZ...</td>
+<td>726</td>
+<td>15/051500/0003506/Ka</td>
+<td>kradzież z włamaniem</td>
+<td>{'recydywa': True, 'w_zwiazku_z_art_207_kk_zne...</td>
+<td>utrzymanie wyroku w mocy</td>
+<td>{'wyrok_w_zawieszeniu': False, 'skazujacy_na_k...</td>
+<td>{'czy_jest': True, 'jaka_kwota': 3386243}</td>
+<td>{'jakie': ''}</td>
+<td>{'stosowanie_przemocy': False, 'grozby_bezpraw...</td>
+</tr>
+</tbody>
+</table>
+
+<p>2 rows × 30 columns</p>
+</div>
+</div>
+</div>
+<div id="cell-32" class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>df.to_csv(SAMPLE_DATA_PATH <span class="op">/</span> <span class="st">"judgements-10-konfiskata-sample-with-retrieved-informations.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/laugustyniak\.github\.io\/juddges");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions"><ul><li><a href="https://github.com/laugustyniak/juddges/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
