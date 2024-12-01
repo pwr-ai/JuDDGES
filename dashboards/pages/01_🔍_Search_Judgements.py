@@ -41,7 +41,8 @@ def get_embedding_model() -> Any:
 
 judgements_collection = get_judgements_collection(judgement_collection_name)
 
-model = get_embedding_model()
+if use_hybrid_search:
+    model = get_embedding_model()
 
 with st.form(key="search_form"):
     query = st.text_area("What you are looking for in the judgements?")
@@ -76,18 +77,24 @@ if submit_button:
                 st.header(item["signature"])
                 st.info(f"Score: {item['score']}")
 
-                # Process and display highlights first
+                # Process and display highlights
                 if "highlights" in item:
-                    st.subheader("Relevant Fragments")
+                    st.subheader("Highlighted Excerpts")
                     for highlight in item["highlights"]:
-                        texts = highlight["texts"]
-                        highlight_text = ""
-                        for text_highlight in texts:
-                            if text_highlight.get("type") == "hit":
-                                highlight_text += f"**{text_highlight['value']}**"
+                        text = ""
+                        for segment in highlight["texts"]:
+                            if segment["type"] == "hit":
+                                # Use yellow background with black text for better visibility in dark mode
+                                text += f"<span style='background-color: #FFD700; color: black; padding: 0 2px;'>{segment['value']}</span>"
                             else:
-                                highlight_text += text_highlight["value"]
-                        st.info(highlight_text)
+                                text += segment["value"]
+                        st.markdown(
+                            f"""
+---
+{text}
+""",
+                            unsafe_allow_html=True
+                        )
 
                 # Add toggle for full text
                 with st.expander("Show Full Judgment Text"):
