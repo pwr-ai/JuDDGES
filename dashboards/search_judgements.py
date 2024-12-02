@@ -45,9 +45,7 @@ if use_hybrid_search:
 
 with st.form(key="search_form"):
     query = st.text_area("What you are looking for in the judgements?")
-    max_judgements = st.slider(
-        "Max judgements to show", min_value=1, max_value=20, value=5
-    )
+    max_judgements = st.slider("Max judgements to show", min_value=1, max_value=20, value=5)
     submit_button = st.form_submit_button(label="Search")
 
 if submit_button:
@@ -69,9 +67,7 @@ if submit_button:
                 st.info(f"Date: {item[Judgment.DATE.value]}")
                 st.info(f"Score: {item['score']}")
                 st.subheader(item[Judgment.EXCERPT.value])
-                st.text_area(
-                    label="Judgement text", value=item[Judgment.TEXT.value], height=200
-                )
+                st.text_area(label="Judgement text", value=item[Judgment.TEXT.value], height=200)
         else:
             items = search_judgements(query=query, max_docs=max_judgements)
 

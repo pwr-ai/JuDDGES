@@ -10,7 +10,6 @@ from juddges.llms import (
     GPT_4o_MINI,
 )
 from juddges.prompts.information_extraction import (
-    EXAMPLE_SCHEMA,
     SWISS_FRANC_LOAN_SCHEMA,
     prepare_information_extraction_chain,
     prepare_schema_chain,
@@ -29,9 +28,7 @@ st.info(
 )
 
 st.header("Data source")
-source_option = st.selectbox(
-    "Choose the source of the judgement text:", ["API", "Plain text"]
-)
+source_option = st.selectbox("Choose the source of the judgement text:", ["API", "Plain text"])
 
 if source_option == "API":
     api = PolishCourtAPI()
@@ -58,9 +55,7 @@ if st.button("Generate schema to extract information"):
     chain = prepare_schema_chain(model_name=llm_schema)
     schema = chain.invoke({"SCHEMA_TEXT": schema_query})
     if not schema:
-        st.error(
-            "Could not extract schema from the given query. Try with a different one."
-        )
+        st.error("Could not extract schema from the given query. Try with a different one.")
     else:
         st.session_state.schema = schema
 
@@ -75,9 +70,7 @@ llm_extraction = st.selectbox(
     "Select the LLM model",
     [GPT_4o, GPT_4o_MINI, GPT_4_0125_PREVIEW, GPT_4_1106_PREVIEW, GPT_3_5_TURBO_1106],
 )
-language = st.selectbox(
-    "Enter the language of the judgement text:", ["Polish", "English"]
-)
+language = st.selectbox("Enter the language of the judgement text:", ["Polish", "English"])
 
 
 if st.button("Extract information"):
@@ -90,6 +83,4 @@ if st.button("Extract information"):
 
         col_left.write(judgement_text)
         col_right.write(retrieved_informations)
-        col_right.write(
-            yaml.dump(retrieved_informations, allow_unicode=True, sort_keys=False)
-        )
+        col_right.write(yaml.dump(retrieved_informations, allow_unicode=True, sort_keys=False))

@@ -9,9 +9,7 @@ def _prepare_data(extractions_df, column_name, min_year=2015):
     """Prepare and filter data for plotting."""
     # Filter by minimum year if specified
     if min_year is not None:
-        extractions_df = extractions_df[
-            pd.to_datetime(extractions_df["date"]).dt.year >= min_year
-        ]
+        extractions_df = extractions_df[pd.to_datetime(extractions_df["date"]).dt.year >= min_year]
 
     # Filter out empty values
     return extractions_df[

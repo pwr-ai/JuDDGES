@@ -61,9 +61,7 @@ class WeaviateDatabase(ABC):
                 if wv_batch.number_errors > 0:
                     break
             if wv_batch.number_errors > 0:
-                errors = [
-                    err.message for err in collection.batch.results.objs.errors.values()
-                ]
+                errors = [err.message for err in collection.batch.results.objs.errors.values()]
                 raise ValueError(f"Error ingesting batch: {errors}")
 
     def get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:

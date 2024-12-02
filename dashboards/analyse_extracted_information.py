@@ -13,15 +13,11 @@ st.title(TITLE)
 
 @st.cache_resource
 def load_data():
-    return pd.read_csv(
-        SAMPLE_DATA_PATH / "judgements-100-sample-with-retrieved-informations.csv"
-    )
+    return pd.read_csv(SAMPLE_DATA_PATH / "judgements-100-sample-with-retrieved-informations.csv")
 
 
 df = load_data()
-extracted_keys = [
-    line.split(":")[0] for line in EXAMPLE_SCHEMA.split("\n") if len(line) > 3
-] + [
+extracted_keys = [line.split(":")[0] for line in EXAMPLE_SCHEMA.split("\n") if len(line) > 3] + [
     "signature",
     "excerpt",
     "text",
