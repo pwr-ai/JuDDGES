@@ -7,7 +7,7 @@ services:
     volumes:
       - ./:/app
       - ~/.cache:/root/.cache
-      - L:\docker-configs\zsh\smartass_zsh_history:/root/.zsh_history
+      # - L:\docker-configs\zsh\smartass_zsh_history:/root/.zsh_history
     tty: true
     shm_size: "2gb"
     env_file:
