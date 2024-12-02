@@ -22,8 +22,6 @@ prepare_mlflow()
 
 TITLE = "⚖️ JuDDGES Information Extraction from Court Decisions ⚖️"
 
-st.set_page_config(page_title=TITLE, page_icon="⚖️", layout="wide")
-
 st.title(TITLE)
 
 st.info(

@@ -12,8 +12,6 @@ from juddges.settings import TEXT_EMBEDDING_MODEL
 
 TITLE = "Search for Judgements"
 
-st.set_page_config(page_title=TITLE, page_icon="⚖️", layout="wide")
-
 st.title(TITLE)
 
 judgement_country = st.sidebar.selectbox("Select judgement country", ["pl", "uk"])

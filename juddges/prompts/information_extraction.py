@@ -118,7 +118,8 @@ rodzaj_zabezpieczenia: string, description: "Rodzaj zabezpieczenia", example: "W
 zabezpieczenie_pierwsza_instancja: boolean, description: "Czy zabezpieczenia udzielił sąd I instancji", example: true
 czas_trwania_sprawy: string, description: "Czas rozpoznania sprawy – od złożenia pozwu do wydania wyroku", example: "2 lata 3 miesiące
 wynik_sprawy: enum [Wygrana kredytobiorcy, Wygrana banku, Częściowe uwzględnienie roszczeń obu stron], description: "Ocena, czy bank czy kredytobiorca wygrał sprawę", example: "Wygrana kredytobiorcy"
-szczegoły_wyniku_sprawy: string, description: "Szczegóły dotyczące wyniku sprawy", example: "Kredytobiorca wygrał, umowa uznana za nieważną"""
+szczegoły_wyniku_sprawy: string, description: "Szczegóły dotyczące wyniku sprawy", example: "Kredytobiorca wygrał, umowa uznana za nieważną
+sprawa_frankowiczów: boolean, description: "Czy sprawa dotyczy kredytu frankowego (CHF)", example: true"""
 
 
 def prepare_information_extraction_chain_from_user_prompt() -> RunnableSequence:

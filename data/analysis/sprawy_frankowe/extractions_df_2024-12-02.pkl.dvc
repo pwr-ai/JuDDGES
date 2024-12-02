@@ -1,0 +1,5 @@
+outs:
+- md5: 0e75e01cdbdee849cbca44e5fa22bbdd
+  size: 622874
+  hash: md5
+  path: extractions_df_2024-12-02.pkl

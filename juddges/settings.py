@@ -12,6 +12,7 @@ DATA_PATH = ROOT_PATH / "data"
 CONFIG_PATH = ROOT_PATH / "configs"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
+FRANKOWICZE_DATA_PATH = DATA_PATH / "analysis" / "sprawy_frankowe"
 
 PL_JUDGEMENTS_PATH = DATA_PATH / "datasets" / "pl"
 PL_COURT_DEP_ID_2_NAME = PL_JUDGEMENTS_PATH / "court_dep_names.csv"

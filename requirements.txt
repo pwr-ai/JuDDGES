@@ -47,4 +47,4 @@ nbdev==2.3.25
 pre-commit==3.7.1
 psycopg2-binary==2.9.9
 pytest==8.0.2
-streamlit==1.31.1
+streamlit==1.40.2
