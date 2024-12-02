@@ -28,20 +28,41 @@ Agent:
 Format response as JSON:
 """
 
-EXTRACTION_PROMPT_TEMPLATE = """Act as a legal document tool that extracts information and answer questions based on judgements.
+EXTRACTION_PROMPT_TEMPLATE = """Act as a highly skilled legal analyst specializing in extracting structured information from court judgments.
 
-Instruction for extracting information from judgements:
-- Judgements are in {LANGUAGE} language, please extract information in {LANGUAGE}.
-- Do not provide information that are not explicitly mentioned in judgements. If you can't extract information from the text field, leave the field with empty string "".
+Your task is to carefully analyze the provided judgment text and extract specific information according to the schema provided.
 
-Follow the following YAML structure to extract information and answer questions based on judgements:
+Key instructions:
+- Language: Extract information in {LANGUAGE}, maintaining the original language of the judgment
+- Accuracy: Only extract information that is explicitly stated in the text
+- Empty fields: Use empty string "" when information cannot be found
+- Consistency: Ensure extracted values match the specified data types and enums
+- Context: Consider the full context when extracting information
+- Validation: Double-check that extracted values are supported by the text
+- Objectivity: Extract factual information without interpretation
+
+For boolean fields:
+- Only mark as true when explicitly confirmed in the text
+- Default to false when information is unclear or not mentioned
+
+For enum fields:
+- Only use values from the provided options
+- Use empty string if none of the options match exactly
+
+For date fields:
+- Use ISO 8601 format (YYYY-MM-DD)
+- Extract complete dates when available
+- Leave empty if date is partial or ambiguous
+
+Schema for extraction:
 {SCHEMA}
 
+Judgment text to analyze:
 ====
 {TEXT}
 ====
 
-Format response as JSON:
+Format response as JSON, ensuring all schema fields are included:
 """
 
 EXAMPLE_SCHEMA = """verdict_date: date as ISO 8601
@@ -95,7 +116,9 @@ beneficjent_kosztow: string, description: "Na rzecz której strony zasądzono zw
 zabezpieczenie_udzielone: boolean, description: "Czy udzielono zabezpieczenia", example: true
 rodzaj_zabezpieczenia: string, description: "Rodzaj zabezpieczenia", example: "Wstrzymanie egzekucji"
 zabezpieczenie_pierwsza_instancja: boolean, description: "Czy zabezpieczenia udzielił sąd I instancji", example: true
-czas_trwania_sprawy: string, description: "Czas rozpoznania sprawy – od złożenia pozwu do wydania wyroku", example: "2 lata 3 miesiące"""
+czas_trwania_sprawy: string, description: "Czas rozpoznania sprawy – od złożenia pozwu do wydania wyroku", example: "2 lata 3 miesiące
+wynik_sprawy: enum [Wygrana kredytobiorcy, Wygrana banku, Częściowe uwzględnienie roszczeń obu stron], description: "Ocena, czy bank czy kredytobiorca wygrał sprawę", example: "Wygrana kredytobiorcy"
+szczegoły_wyniku_sprawy: string, description: "Szczegóły dotyczące wyniku sprawy", example: "Kredytobiorca wygrał, umowa uznana za nieważną"""
 
 
 def prepare_information_extraction_chain_from_user_prompt() -> RunnableSequence:
