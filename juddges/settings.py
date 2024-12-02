@@ -12,6 +12,7 @@ DATA_PATH = ROOT_PATH / "data"
 CONFIG_PATH = ROOT_PATH / "configs"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
+FRANKOWICZE_DATA_PATH = DATA_PATH / "analysis" / "sprawy_frankowe"
 
 PL_JUDGEMENTS_PATH = DATA_PATH / "datasets" / "pl"
 PL_COURT_DEP_ID_2_NAME = PL_JUDGEMENTS_PATH / "court_dep_names.csv"
@@ -20,6 +21,8 @@ PL_JUDGEMENTS_PATH_TEXTS = PL_JUDGEMENTS_PATH / "text"
 PL_JUDGEMENTS_PATH_INSTRUCT = PL_JUDGEMENTS_PATH / "instruct"
 
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
+
+TEXT_EMBEDDING_MODEL = "sdadas/mmlw-roberta-large"
 
 
 def num_tokens_from_string(
