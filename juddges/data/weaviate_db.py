@@ -1,3 +1,4 @@
+import os
 import re
 from abc import ABC, abstractmethod
 from typing import Any, ClassVar
@@ -8,7 +9,13 @@ from weaviate.auth import Auth, _APIKey
 
 
 class WeaviateDatabase(ABC):
-    def __init__(self, host: str, port: str, grpc_port: str, api_key: str | None):
+    def __init__(
+        self,
+        host: str = os.getenv("WV_URL", "localhost"),
+        port: str = os.getenv("WV_PORT", "8080"),
+        grpc_port: str = os.getenv("WV_GRPC_PORT", "50051"),
+        api_key: str | None = os.getenv("WV_API_KEY", None),
+    ):
         self.host = host
         self.port = port
         self.grpc_port = grpc_port

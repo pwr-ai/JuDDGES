@@ -1,0 +1,5 @@
+outs:
+- md5: 70d84d0662b0d76cdb4e2d8ca4101a4b
+  size: 9562421
+  hash: md5
+  path: judgements-konfiskata-100-sample.csv

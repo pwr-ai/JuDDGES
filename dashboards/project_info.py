@@ -4,7 +4,6 @@ from juddges.settings import ROOT_PATH
 
 TITLE = "⚖️ JuDDGES Information Extraction from Court Decisions ⚖️"
 
-st.set_page_config(page_title=TITLE, page_icon="⚖️", layout="wide")
 
 st.title(TITLE)
 
@@ -14,7 +13,7 @@ st.info(
     """The JuDDGES project aims to revolutionize the accessibility and analysis of judicial decisions across varied legal systems using advanced Natural Language Processing and Human-In-The-Loop technologies. It focuses on criminal court records from jurisdictions with diverse legal constitutions, including Poland and England & Wales. By overcoming barriers related to resources, language, data, and format inhomogeneity, the project facilitates the development and testing of theories on judicial decision-making and informs judicial policy and practice. Open software and tools produced by the project will enable extensive, flexible meta-annotation of legal texts, benefiting researchers and public legal institutions alike. This initiative not only advances empirical legal research by adopting Open Science principles but also creates the most comprehensive legal research repository in Europe, fostering cross-disciplinary and cross-jurisdictional collaboration."""
 )
 
-st.image((ROOT_PATH / "nbs/images/baner.png").as_posix(), use_column_width=True)
+st.image((ROOT_PATH / "nbs/images/baner.png").as_posix())
 
 st.info(
     "The JuDDGES project encompasses several Work Packages (WPs) designed to cover all aspects of its objectives, from project management to the open science practices and engaging early career researchers. Below is an overview of the project’s WPs based on the provided information."

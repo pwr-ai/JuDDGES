@@ -8,8 +8,6 @@ from juddges.settings import SAMPLE_DATA_PATH
 
 TITLE = "Analyse Judgements"
 
-st.set_page_config(page_title=TITLE, page_icon="⚖️", layout="wide")
-
 st.title(TITLE)
 
 
@@ -32,7 +30,10 @@ st.info(
 )
 
 st.text_area(
-    "Example schema for extracted informations: ", value=EXAMPLE_SCHEMA, height=300, disabled=True
+    "Example schema for extracted informations: ",
+    value=EXAMPLE_SCHEMA,
+    height=300,
+    disabled=True,
 )
 
 st.header("Extracted Information - tabular format")
