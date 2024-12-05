@@ -30,19 +30,19 @@ peft_args:
   lora_alpha: 16
   lora_dropout: 0 # Supports any, but = 0 is optimized
   bias: "none" # Supports any, but = "none" is optimized
-  target_modules:
-    [
-      "q_proj",
-      "k_proj",
-      "v_proj",
-      "o_proj",
-      "gate_proj",
-      "up_proj",
-      "down_proj",
-    ]
+  target_modules: "all-linear"
+    #[
+     # "q_proj",
+     # "k_proj",
+     # "v_proj",
+     # "o_proj",
+     # "gate_proj",
+     # "up_proj",
+     # "down_proj",
+    #]
 
 truncate_context: True
-wandb_entity: graph-ml-lab-wust
+wandb_entity: ebi_literature
 wandb_project: juddges-fine-tune
 
 output_dir: data/experiments/fine-tune/${hydra:runtime.choices.model}/${hydra:runtime.choices.dataset}

@@ -101,6 +101,7 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Bielik-7B-Instruct-v0.1
         - Bielik-11B-v2.2-Instruct
+        - Mistral-Nemo-Instruct-2407
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_llm.py
       dataset=${item.dataset}
