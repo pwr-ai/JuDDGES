@@ -5,12 +5,15 @@ defaults:
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
+model:
+  padding_side: right
+
 training_args:
   run_name: ${run_name}
   output_dir: ${output_dir}
   num_train_epochs: 1
-  per_device_train_batch_size: 2
-  gradient_accumulation_steps: 8
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
   gradient_checkpointing: True
   gradient_checkpointing_kwargs: { "use_reentrant": False }
   optim: "adamw_torch_fused"
@@ -24,22 +27,15 @@ training_args:
   push_to_hub: False
   report_to: "wandb"
   seed: 46
+  packing: True
+  torch_compile: True
 
 peft_args:
   r: 8
   lora_alpha: 16
   lora_dropout: 0 # Supports any, but = 0 is optimized
   bias: "none" # Supports any, but = "none" is optimized
-  target_modules:
-    [
-      "q_proj",
-      "k_proj",
-      "v_proj",
-      "o_proj",
-      "gate_proj",
-      "up_proj",
-      "down_proj",
-    ]
+  target_modules: "all-linear"
 
 truncate_context: True
 wandb_entity: graph-ml-lab-wust

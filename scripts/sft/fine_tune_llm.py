@@ -22,9 +22,8 @@ from transformers import (
     PreTrainedModel,
     PreTrainedTokenizer,
     Trainer,
-    TrainingArguments,
 )
-from trl import SFTTrainer
+from trl import SFTConfig, SFTTrainer
 
 from juddges.config import FineTuningConfig
 from juddges.data.datasets.utils import create_chat
@@ -42,8 +41,10 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"config:\n{pformat(cfg_dict)}")
     config = FineTuningConfig(**cfg_dict)
 
-    os.environ["WANDB_ENTITY"] = config.wandb_entity
-    os.environ["WANDB_PROJECT"] = config.wandb_project
+    if config.training_args["report_to"] == "wandb":
+        os.environ["WANDB_ENTITY"] = config.wandb_entity
+        os.environ["WANDB_PROJECT"] = config.wandb_project
+
     output_dir = Path(config.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -52,6 +53,7 @@ def main(cfg: DictConfig) -> None:
         config.model,
         device_map={"": PartialState().process_index},
     )
+    model_pack.model.config.use_cache = False
 
     dataset = prepare_dataset(
         dataset=dataset,
@@ -118,7 +120,12 @@ def get_trainer(
     config: FineTuningConfig,
     num_proc: int | None,
 ) -> Trainer:
-    args = TrainingArguments(**config.training_args)
+    sft_config = SFTConfig(
+        dataset_text_field="messages",
+        max_seq_length=config.model.max_seq_length,
+        dataset_num_proc=num_proc,
+        **config.training_args,
+    )
 
     if config.use_peft and config.model.use_unsloth:
         from unsloth import FastLanguageModel
@@ -135,18 +142,10 @@ def get_trainer(
 
     trainer = SFTTrainer(
         model=model,
-        args=args,
+        args=sft_config,
         train_dataset=dataset,
         tokenizer=tokenizer,
         peft_config=peft_config,
-        dataset_text_field="messages",
-        max_seq_length=config.model.max_seq_length,
-        packing=False,  # for now attention_mask is not supported (input is contaminated)
-        dataset_num_proc=num_proc,
-        dataset_kwargs={
-            "add_special_tokens": False,  # We template with special tokens
-            "append_concat_token": False,  # No need to add additional separator token
-        },
     )
 
     return trainer

@@ -30,7 +30,7 @@ def get_model(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
 
 def get_llama_3(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
-    tokenizer.padding_side = "left"
+    tokenizer.padding_side = llm_config.padding_side
     tokenizer.pad_token = tokenizer.eos_token
     terminators: list[int] = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
 
@@ -43,7 +43,7 @@ def get_llama_3(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
 
 def get_mistral(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
-    tokenizer.padding_side = "left"
+    tokenizer.padding_side = llm_config.padding_side
     tokenizer.pad_token = tokenizer.eos_token
 
     return ModelForGeneration(
@@ -55,7 +55,7 @@ def get_mistral(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
 
 def get_model_with_default_setup(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
-    tokenizer.padding_side = "left"
+    tokenizer.padding_side = llm_config.padding_side
 
     return ModelForGeneration(
         model=model,
