@@ -19,7 +19,7 @@ training_args:
   optim: "adamw_torch_fused"
   logging_steps: 1
   save_strategy: "steps"
-  save_steps: 500
+  save_steps: 0.25
   bf16: True
   learning_rate: 2e-5 # learning rate, based on QLoRA paper
   max_grad_norm: 0.3 # max gradient norm based on QLoRA paper

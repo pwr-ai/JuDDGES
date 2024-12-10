@@ -90,10 +90,11 @@ stages:
       - data/datasets/pl/graph/metadata.yaml
 
   ### Fine-tuning ###
-  sft_unsloth:
+  sft:
     matrix:
       dataset:
         - pl-court-instruct
+        - pl-court-frankowe-instruct
         - en-court-instruct
       model:
         - Unsloth-Llama-3-8B-Instruct
@@ -101,6 +102,7 @@ stages:
         - Unsloth-Mistral-Nemo-Instruct-2407
         - Bielik-7B-Instruct-v0.1
         - Bielik-11B-v2.2-Instruct
+        - llama_3.1_8b_instruct
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_llm.py
       dataset=${item.dataset}
