@@ -8,7 +8,17 @@ from juddges.settings import NSA_DATA_PATH
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-DB_URI = "mongodb://localhost:27017/"
+
+def main(
+    db_uri: str = typer.Option(..., envvar="DB_URI"),
+) -> None:
+    client = pymongo.MongoClient(db_uri)
+    db = client["nsa"]
+    docs_col = db["document_pages"]
+
+    # Save document pages in Parquet format
+    docs_output_path = NSA_DATA_PATH / "pages" / "pages.parquet"
+    write_to_parquet_in_chunks(docs_output_path, docs_col)
 
 
 def fetch_documents(collection, batch_size=5000):
@@ -37,23 +47,6 @@ def write_to_parquet_in_chunks(file_path, collection, batch_size=5000, chunk_siz
         df = pd.DataFrame(buffer)
         chunk_file = file_path.parent / f"{file_path.stem}_chunk_{chunk_index}.parquet"
         df.to_parquet(chunk_file, engine="pyarrow", compression="snappy")
-
-
-def main(
-    db_uri: str = typer.Option(DB_URI),
-) -> None:
-    client = pymongo.MongoClient(db_uri)
-    db = client["nsa"]
-    docs_col = db["document_pages"]
-    errors_col = db["document_pages_errors"]
-
-    # Save document pages in Parquet format
-    docs_output_path = NSA_DATA_PATH / "pages" / "pages.parquet"
-    write_to_parquet_in_chunks(docs_output_path, docs_col)
-
-    # Save document errors in Parquet format
-    errors_output_path = NSA_DATA_PATH / "errors" / "errors.parquet"
-    write_to_parquet_in_chunks(errors_output_path, errors_col)
 
 
 typer.run(main)

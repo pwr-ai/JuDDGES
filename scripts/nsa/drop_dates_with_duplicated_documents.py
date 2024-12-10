@@ -2,11 +2,9 @@ import pandas as pd
 import pymongo
 import typer
 
-DB_URI = "mongodb://localhost:27017/"
-
 
 def main(
-    db_uri: str = typer.Option(DB_URI),
+    db_uri: str = typer.Option(..., envvar="DB_URI"),
 ) -> None:
     client = pymongo.MongoClient(db_uri)
     db = client["nsa"]

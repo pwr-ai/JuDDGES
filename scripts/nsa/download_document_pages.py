@@ -16,13 +16,11 @@ from juddges.settings import NSA_DATA_PATH
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-DB_URI = "mongodb://localhost:27017/"
-
 
 def main(
     n_jobs: int = typer.Option(25),
     proxy_address: str = typer.Option(...),
-    db_uri: str = typer.Option(DB_URI),
+    db_uri: str = typer.Option(..., envvar="DB_URI"),
 ) -> None:
     client = pymongo.MongoClient(db_uri)
     db = client["nsa"]
