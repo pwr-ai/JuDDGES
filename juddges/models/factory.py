@@ -66,7 +66,6 @@ def get_model_with_default_setup(llm_config: LLMConfig, **kwargs: Any) -> ModelF
 
 def _get_model_tokenizer(
     llm_config: LLMConfig,
-    device_map: dict[str, Any],
     **kwargs: Any,
 ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     if llm_config.use_unsloth:
@@ -77,7 +76,6 @@ def _get_model_tokenizer(
             max_seq_length=llm_config.max_seq_length,
             dtype=None,
             load_in_4bit=llm_config.use_4bit,
-            device_map=device_map,
             **kwargs,
         )
     else:
@@ -87,9 +85,7 @@ def _get_model_tokenizer(
                 bnb_4bit_compute_dtype=torch.bfloat16,
             )
 
-        model = AutoModelForCausalLM.from_pretrained(
-            llm_config.name, device_map=device_map, **kwargs
-        )
+        model = AutoModelForCausalLM.from_pretrained(llm_config.name, **kwargs)
         tokenizer = AutoTokenizer.from_pretrained(llm_config.name)
 
     if llm_config.adapter_path is not None:
