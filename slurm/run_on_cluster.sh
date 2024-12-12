@@ -4,21 +4,23 @@
 #SBATCH --output=logs/%j-%x.log
 #SBATCH --time=72:00:00
 #SBATCH --nodes=1
-#SBATCH --gpus=4
+#SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-gpu=8
 #SBATCH --mem=64G
 # NOTE: You can reconfigure the above parameters to your needs in the sbatch call.
 # NOTE: All env variables must be exported to be available after calling srun.
 # NOTE: You may need to specify some NCCL args in .env file depending on your cluster configuration
 
-# =====Provide these user-specific env variables through .env file=====
+echo "[$(date)] Running job on host: $(hostname)"
 
-if [ -f .env ]; then
-    source .env
-else
-    echo "Error: .env file not found" >&2
+# =====Provide these user-specific env variables through .env file=====
+if [ ! -f ./slurm/.env ]; then
+    echo "Error: ./slurm/.env file not found"
     exit 1
 fi
+set -a # Enable automatic export of all variables
+source ./slurm/.env
+set +a # Disable automatic export after loading
 
 export WANDB_API_KEY
 export HF_TOKEN
@@ -67,10 +69,13 @@ export SFT_COMMAND="accelerate launch \
     --num_processes=$WORLD_SIZE \
     --num_machines=1 \
     --use-deepspeed \
-    scripts/sft/fine_tune_deepspeed.py
-        model=${model}
-        dataset=${dataset}
+    scripts/sft/fine_tune_deepspeed.py \
+        model=${model} \
+        dataset=${dataset} \
 "
+
+echo "Running the following command with apptainer: $SFT_COMMAND"
+
 srun --kill-on-bad-exit=1 \
     --jobid $SLURM_JOB_ID \
     apptainer run \
