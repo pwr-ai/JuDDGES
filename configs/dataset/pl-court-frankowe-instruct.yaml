@@ -1,6 +1,6 @@
-name: data/datasets/pl/sprawy_frankowe/instructions_08_12_2024
+name: data/datasets/pl/sprawy_frankowe
 prompt_field: prompt
 context_field: context
 output_field: output
 
-max_output_tokens: 800 # 1050 is the real maximum, we take 0.95 quantile value
+max_output_tokens: 800

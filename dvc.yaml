@@ -89,6 +89,23 @@ stages:
       - data/datasets/pl/graph/data
       - data/datasets/pl/graph/metadata.yaml
 
+  build_instruct_frankowe_dataset_pl:
+    cmd: >-
+      PYTHONPATH=. python scripts/dataset/build_instruct_frankowe_dataset_pl.py
+      --train-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
+      --test-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
+      --output-dir data/datasets/pl/sprawy_frankowe
+      --tokenizer-name meta-llama/Llama-3.1-8B-Instruct
+      --threshold-tokens 64_000
+    deps:
+      - scripts/dataset/build_instruct_frankowe_dataset_pl.py
+      - data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
+      - data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
+    outs:
+      - data/datasets/pl/sprawy_frankowe/train.jsonl
+      - data/datasets/pl/sprawy_frankowe/test.jsonl
+      - data/datasets/pl/sprawy_frankowe/dataset_info.json
+
   ### Fine-tuning ###
   sft:
     matrix:

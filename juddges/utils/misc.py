@@ -4,6 +4,7 @@ from typing import Any
 import torch
 import yaml
 from datasets import Dataset
+from loguru import logger
 
 yaml_pattern: re.Pattern = re.compile(r"```(?:ya?ml)?(?P<yaml>[^`]*)", re.MULTILINE | re.DOTALL)
 
@@ -38,3 +39,25 @@ def sort_dataset_by_input_length(ds: Dataset, field: str) -> tuple[Dataset, list
     sort_idx = torch.argsort(item_lenghts, stable=True, descending=True)
     reverse_sort_idx = torch.argsort(sort_idx, stable=True).tolist()
     return ds.select(sort_idx), reverse_sort_idx
+
+
+def log_size_change(func):
+    """Decorator that logs the size change of a collection after applying a function.
+
+    Args:
+        func: Function that takes and returns a collection
+
+    Returns:
+        Wrapped function that logs size changes
+    """
+
+    def wrapper(*args, **kwargs):
+        input_collection = args[0]
+        input_size = len(input_collection)
+        result = func(*args, **kwargs)
+        output_size = len(result)
+
+        logger.info(f"'{func.__name__}' changed size from {input_size} to {output_size}")
+        return result
+
+    return wrapper
