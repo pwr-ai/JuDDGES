@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
+from loguru import logger
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
@@ -84,11 +85,19 @@ def _get_model_tokenizer(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.bfloat16,
             )
+        if torch.cuda.is_available():
+            kwargs["attn_implementation"] = "flash_attention_2"
 
-        model = AutoModelForCausalLM.from_pretrained(llm_config.name, **kwargs)
+        model = AutoModelForCausalLM.from_pretrained(
+            llm_config.name,
+            torch_dtype="auto",
+            **kwargs,
+        )
         tokenizer = AutoTokenizer.from_pretrained(llm_config.name)
 
     if llm_config.adapter_path is not None:
+        logger.info(f"Loading adapter from {llm_config.adapter_path}")
         model = PeftModel.from_pretrained(model, llm_config.adapter_path)
+        model = model.merge_and_unload(safe_merge=True)
 
     return model, tokenizer
