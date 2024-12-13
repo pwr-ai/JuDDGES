@@ -25,6 +25,7 @@ set +a # Disable automatic export after loading
 export WANDB_API_KEY
 export HF_TOKEN
 export SIF_IMAGE_PATH
+export WORKDIR
 
 export NODES=($(scontrol show hostnames $SLURM_JOB_NODELIST | tr '\n' '\n'))
 export WORLD_SIZE=$(($SLURM_GPUS_PER_NODE * $SLURM_NNODES))
@@ -65,10 +66,14 @@ export PYTHONPATH=$PYTHONPATH:.
 export model
 export dataset
 
+cd $WORKDIR
+
 export SFT_COMMAND="accelerate launch \
     --num_processes=$WORLD_SIZE \
     --num_machines=1 \
     --use-deepspeed \
+    --mixed_precision=bf16 \
+    --dynamo_backend=no \
     scripts/sft/fine_tune_deepspeed.py \
         model=${model} \
         dataset=${dataset} \
@@ -81,6 +86,8 @@ srun --kill-on-bad-exit=1 \
     apptainer run \
         --fakeroot \
         --bind "$TMPDIR:$TMPDIR" \
+        --bind "$WORKDIR:$WORKDIR" \
+        --bind "$HOME:$HOME" \
         --nv \
         "$SIF_IMAGE_PATH" \
         bash -c "$SFT_COMMAND"
