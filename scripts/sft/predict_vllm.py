@@ -65,7 +65,6 @@ def main(cfg: DictConfig) -> None:
     )
     encoder = TextEncoderForEvalPlainTextFormat(truncator=truncator)
     ds = ds.map(encoder, num_proc=NUM_PROC)
-    ds = ds.select(range(10))
 
     params = SamplingParams(
         max_tokens=config.generate_kwargs.get("max_new_tokens", 100),
