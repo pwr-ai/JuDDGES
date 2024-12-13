@@ -1,6 +1,6 @@
 FROM nvcr.io/nvidia/pytorch:24.11-py3
 
-WORKDIR /judddges
+WORKDIR /juddges
 
 RUN apt-get update -qq && apt-get install --yes -q make git
 

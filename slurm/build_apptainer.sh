@@ -6,7 +6,7 @@ set -e
 
 # Creates docker image containing the environment for fine-tuning.
 docker build \
-    --tag juddges_sft:latest \
+    --tag juddges:latest \
     --file ./slurm/fine_tuning_env.dockerfile \
     .
 
@@ -14,5 +14,8 @@ docker build \
 docker run \
     --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
-    --volume $(pwd):/juddges \
-    kaczmarj/apptainer build juddges_sft.sif docker-daemon://juddges_sft:latest
+    --volume $(pwd):/work \
+    kaczmarj/apptainer \
+        build \
+        juddges.sif \
+        docker-daemon://juddges:latest
