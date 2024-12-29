@@ -6,6 +6,6 @@ adapter_path: null
 max_seq_length: 32_000
 batch_size: 1
 padding: longest
-use_4bit: true
+use_4bit: false
 
 use_unsloth: false

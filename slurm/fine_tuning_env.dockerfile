@@ -1,9 +1,8 @@
-FROM nvcr.io/nvidia/pytorch:24.11-py3
+FROM nvcr.io/nvidia/pytorch:24.06-py3
 
 WORKDIR /juddges
 
 RUN apt-get update -qq && apt-get install --yes -q make git
-
 # Install requirements
 RUN pip install --upgrade pip
 COPY requirements.txt requirements.txt
