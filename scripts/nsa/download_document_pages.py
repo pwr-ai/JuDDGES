@@ -13,8 +13,11 @@ from tqdm import tqdm
 
 from juddges.data.nsa.scraper import NSAScraper
 from juddges.settings import NSA_DATA_PATH
+from juddges.utils.logging import setup_loguru
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+setup_loguru(extra={"script": __file__})
 
 
 def main(

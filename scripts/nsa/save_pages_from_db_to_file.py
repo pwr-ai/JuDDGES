@@ -1,12 +1,13 @@
 import pandas as pd
 import pymongo
 import typer
-import urllib3
 from tqdm import tqdm
+from loguru import logger
+from juddges.utils.logging import setup_loguru
 
 from juddges.settings import NSA_DATA_PATH
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+setup_loguru(extra={"script": __file__})
 
 
 def main(
@@ -16,8 +17,8 @@ def main(
     db = client["nsa"]
     docs_col = db["document_pages"]
 
-    # Save document pages in Parquet format
     docs_output_path = NSA_DATA_PATH / "pages" / "pages.parquet"
+    logger.info(f"Saving document pages in Parquet format to {docs_output_path}...")
     write_to_parquet_in_chunks(docs_output_path, docs_col)
 
 
