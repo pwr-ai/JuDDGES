@@ -4,6 +4,8 @@ This directory contains a suite of Python scripts designed for scraping, process
 document data from the NSA archive.
 Below is an overview of the purpose, requirements, and usage of each script.
 
+---
+
 ## Requirements
 
 1. **MongoDB**  
@@ -20,6 +22,7 @@ Below is an overview of the purpose, requirements, and usage of each script.
    Configure `NSA_DATA_PATH` in the `juddges.settings` module to specify the directory for storing
    scraped and processed data.
 
+---
 
 ## Quick Start
 
@@ -65,9 +68,7 @@ Scripts will use already scraped data from the database, so you don't need to se
      - `extract_data_from_pages.py` to process the data
 
 
-
 ---
-
 
 ## Script Descriptions and Order of Execution
 
@@ -81,7 +82,7 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Arguments:**
 
   | Argument         | Description                                    | Default                    |
-       |------------------|------------------------------------------------|----------------------------|
+  |------------------|------------------------------------------------|----------------------------|
   | `--proxy-address`| Proxy address for scraping (required).         | None                       |
   | `--db-uri`       | MongoDB URI.                                   | None                       |
   | `--start-date`   | Start date for scraping (YYYY-MM-DD).          | `1981-01-01`               |
@@ -105,7 +106,7 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Arguments:**
 
   | Argument         | Description                    | Default |
-       |------------------|--------------------------------|---------|
+  |------------------|--------------------------------|---------|
   | `--db-uri`       | MongoDB URI.                   | None    |
 - **Output:** Cleans up the `dates` collection by deleting dates with duplicate document entries.
 
@@ -122,7 +123,7 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Arguments:**
 
   | Argument         | Description                                    | Default |
-       |------------------|------------------------------------------------|---------|
+  |------------------|------------------------------------------------|---------|
   | `--proxy-address`| Proxy address for scraping (required).         | None    |
   | `--db-uri`       | MongoDB URI.                                   | None    |
   | `--n-jobs`       | Number of parallel workers.                    | `25`    |
@@ -144,7 +145,7 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Arguments:**
 
   | Argument         | Description                    | Default |
-       |------------------|--------------------------------|---------|
+  |------------------|--------------------------------|---------|
   | `--db-uri`       | MongoDB URI.                   | None    |
 - **Output:** Cleans up the `document_pages` collection by deleting duplicate pages.
 
@@ -161,8 +162,9 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Arguments:**
 
   | Argument         | Description                    | Default |
-       |------------------|--------------------------------|---------|
+  |------------------|--------------------------------|---------|
   | `--db-uri`       | MongoDB URI.                   | None    |
+
 - **Output:** Saves pages to `pages/pages_chunk_*.parquet` in `data/datasets/nsa`.
 
 ---
@@ -177,6 +179,7 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Arguments:**
 
   | Argument         | Description                                    | Default                |
-       |------------------|------------------------------------------------|------------------------|
+  |------------------|------------------------------------------------|------------------------|
   | `--n-jobs`       | Number of parallel workers.                    | `10`                  |
+
 - **Output:** Saves processed data in Parquet files within `NSA_DATA_PATH/dataset`.
