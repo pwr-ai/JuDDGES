@@ -8,6 +8,8 @@ from sqlalchemy.engine import Engine
 # get root path as ROOT_PATH as pathlib objects
 ROOT_PATH = Path(__file__).resolve().parent.parent
 
+LOGS_PATH = ROOT_PATH / "logs"
+
 DATA_PATH = ROOT_PATH / "data"
 CONFIG_PATH = ROOT_PATH / "configs"
 

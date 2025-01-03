@@ -1,6 +1,6 @@
 import random
 from datetime import datetime
-
+from pathlib import Path
 import pandas as pd
 import pymongo
 import typer
@@ -17,14 +17,17 @@ from juddges.utils.logging import setup_loguru
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-setup_loguru(extra={"script": __file__})
-
 
 def main(
     n_jobs: int = typer.Option(25),
     proxy_address: str = typer.Option(...),
     db_uri: str = typer.Option(..., envvar="DB_URI"),
+    log_file: Path = typer.Option(None, help="Log file to save the logs to."),
 ) -> None:
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    setup_loguru(extra={"script": __file__}, log_file=log_file)
+    logger.info("Running download_document_pages.py with args:\n" + str(locals()))
+
     client = pymongo.MongoClient(db_uri)
     db = client["nsa"]
     docs_col = db["document_pages"]

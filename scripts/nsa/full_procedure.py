@@ -1,19 +1,17 @@
+from datetime import datetime
 import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
-from juddges.settings import ROOT_PATH
+from juddges.settings import LOGS_PATH, ROOT_PATH
 from juddges.utils.logging import setup_loguru
 
 from loguru import logger
-from rich import print
 
 import typer
 
-setup_loguru(extra={"script": __file__})
-
-
 NSA_SCRIPTS_PATH = ROOT_PATH / "scripts" / "nsa"
+LOG_FILE = LOGS_PATH / "nsa" / f"full_procedure_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
 
 def main(
@@ -32,7 +30,12 @@ def main(
     cleanup_iterations: int = typer.Option(
         1, help="Number of cleanup iterations to perform. Defaults to 1."
     ),
+    log_file: Path = typer.Option(
+        LOG_FILE, help=f"Log file to save the logs to. Defaults to {LOG_FILE}"
+    ),
 ) -> None:
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    setup_loguru(extra={"script": __file__}, log_file=str(log_file))
     logger.info("Running full procedure with args:\n" + str(locals()))
 
     base_args = [
@@ -82,9 +85,10 @@ def main(
         ]
     )
 
-    print("Pipeline steps:")
+    log_str = "Pipeline steps:\n"
     for i, step in enumerate(pipeline):
-        print(f"{i}. {step[0]}")
+        log_str += f"{i}. {step[0]}\n"
+    logger.info(log_str)
 
     confirm = typer.confirm("Are you sure you want to run the pipeline?")
     if not confirm:
@@ -96,18 +100,18 @@ def main(
         script_path = NSA_SCRIPTS_PATH / script_name
         assert script_path.exists()
 
-        if not run_script(script_path, script_args):
+        if not run_script(script_path, script_args, log_file):
             logger.error(f"Pipeline failed at step: {script_name}")
             raise typer.Exit(code=1)
 
     logger.info("Pipeline completed successfully!")
 
 
-def run_script(script_path: Path, args: list[str]) -> bool:
+def run_script(script_path: Path, args: list[str], log_file: Path) -> bool:
     """
     Run a Python script and return True if successful, False otherwise.
     """
-    cmd = [sys.executable, str(script_path)] + args
+    cmd = [sys.executable, str(script_path)] + args + ["--log-file", str(log_file)]
     try:
         logger.info(f"Running {script_path} with args: {' '.join(args)}")
         subprocess.run(cmd, check=True)

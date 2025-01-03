@@ -1,3 +1,4 @@
+from pathlib import Path
 import random
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -16,8 +17,6 @@ from juddges.utils.logging import setup_loguru
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-setup_loguru(extra={"script": __file__})
-
 START_DATE = "1981-01-01"
 END_DATE = (datetime.now(ZoneInfo("Europe/Warsaw")) - timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -26,9 +25,16 @@ def main(
     n_jobs: int = typer.Option(30),
     proxy_address: str = typer.Option(...),
     db_uri: str = typer.Option(..., envvar="DB_URI"),
-    start_date: str = typer.Option(START_DATE),
-    end_date: str = typer.Option(END_DATE),
+    start_date: str = typer.Option(START_DATE, help="Start date for scraping (YYYY-MM-DD)."),
+    end_date: str = typer.Option(
+        END_DATE, help="End date for scraping (YYYY-MM-DD). Defaults to yesterday's date in Poland."
+    ),
+    log_file: Path = typer.Option(None, help="Log file to save the logs to."),
 ) -> None:
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    setup_loguru(extra={"script": __file__}, log_file=log_file)
+    logger.info("Running scrap_documents_list.py with args:\n" + str(locals()))
+
     client = pymongo.MongoClient(db_uri)
     db = client["nsa"]
     dates_col = db["dates"]

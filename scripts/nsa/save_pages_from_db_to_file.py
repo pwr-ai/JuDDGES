@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 import pymongo
 import typer
@@ -7,12 +8,15 @@ from juddges.utils.logging import setup_loguru
 
 from juddges.settings import NSA_DATA_PATH
 
-setup_loguru(extra={"script": __file__})
-
 
 def main(
     db_uri: str = typer.Option(..., envvar="DB_URI"),
+    log_file: Path | None = typer.Option(None, help="Log file to save the logs to."),
 ) -> None:
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    setup_loguru(extra={"script": __file__}, log_file=log_file)
+    logger.info("Running save_pages_from_db_to_file.py with args:\n" + str(locals()))
+
     client = pymongo.MongoClient(db_uri)
     db = client["nsa"]
     docs_col = db["document_pages"]

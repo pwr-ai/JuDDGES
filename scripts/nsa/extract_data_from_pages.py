@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 import typer
 from tqdm import tqdm
@@ -15,7 +16,12 @@ N_JOBS = 10
 
 def main(
     n_jobs: int = typer.Option(N_JOBS),
+    log_file: Path = typer.Option(None, help="Log file to save the logs to."),
 ) -> None:
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    setup_loguru(extra={"script": __file__}, log_file=log_file)
+    logger.info("Running extract_data_from_pages.py with args:\n" + str(locals()))
+
     OUTPUT_PATH.mkdir(exist_ok=True, parents=True)
     files = list(sorted(NSA_DATA_PATH.glob("pages/pages_chunk_*.parquet")))
 

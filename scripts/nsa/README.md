@@ -53,6 +53,7 @@ Scripts will use already scraped data from the database, so you don't need to se
   | `--n-jobs`              | Number of parallel workers                           | `25`           |
   | `--scrap-dates-iterations` | Number of iterations to scrap dates                 | `1`            |
   | `--cleanup-iterations`   | Number of cleanup iterations to perform              | `1`            |
+  | `--log-file`            | Path for the log file                        | `{PROJECT_ROOT}/logs/nsa/full_procedure_YYYYMMDD_HHMMSS.log` |
 
 - **Pipeline Steps:**
   1. Runs `scrap_documents_list.py` to get initial document list
@@ -88,6 +89,8 @@ Scripts will use already scraped data from the database, so you don't need to se
   | `--start-date`   | Start date for scraping (YYYY-MM-DD).          | `1981-01-01`               |
   | `--end-date`     | End date for scraping (YYYY-MM-DD). (last day will be included) | Yesterday’s date in Poland |
   | `--n-jobs`       | Number of parallel workers.                    | `30`                       |
+  | `--log-file`     | Path for the log file (None to disable)         | None                       |
+
 - **Output:** Saves the scraped document list in MongoDB (`dates` collection) and as
   `documents.json` in `data/datasets/nsa`.
 
@@ -108,6 +111,8 @@ Scripts will use already scraped data from the database, so you don't need to se
   | Argument         | Description                    | Default |
   |------------------|--------------------------------|---------|
   | `--db-uri`       | MongoDB URI.                   | None    |
+  | `--log-file`     | Path for the log file (None to disable)         | None                       |
+
 - **Output:** Cleans up the `dates` collection by deleting dates with duplicate document entries.
 
 ---
@@ -127,6 +132,8 @@ Scripts will use already scraped data from the database, so you don't need to se
   | `--proxy-address`| Proxy address for scraping (required).         | None    |
   | `--db-uri`       | MongoDB URI.                                   | None    |
   | `--n-jobs`       | Number of parallel workers.                    | `25`    |
+  | `--log-file`     | Path for the log file (None to disable)         | None                       |
+
 - **Output:** Stores downloaded pages in the `document_pages` collection in MongoDB. Errors are
   stored in the `document_pages_errors` collection.
 
@@ -147,6 +154,8 @@ Scripts will use already scraped data from the database, so you don't need to se
   | Argument         | Description                    | Default |
   |------------------|--------------------------------|---------|
   | `--db-uri`       | MongoDB URI.                   | None    |
+  | `--log-file`     | Path for the log file (None to disable)         | None                       |
+
 - **Output:** Cleans up the `document_pages` collection by deleting duplicate pages.
 
 ---
@@ -164,6 +173,7 @@ Scripts will use already scraped data from the database, so you don't need to se
   | Argument         | Description                    | Default |
   |------------------|--------------------------------|---------|
   | `--db-uri`       | MongoDB URI.                   | None    |
+  | `--log-file`     | Path for the log file (None to disable)         | None                       |
 
 - **Output:** Saves pages to `pages/pages_chunk_*.parquet` in `data/datasets/nsa`.
 
@@ -181,5 +191,6 @@ Scripts will use already scraped data from the database, so you don't need to se
   | Argument         | Description                                    | Default                |
   |------------------|------------------------------------------------|------------------------|
   | `--n-jobs`       | Number of parallel workers.                    | `10`                  |
-
+  | `--log-file`     | Path for the log file (None to disable)         | None                       |
+  
 - **Output:** Saves processed data in Parquet files within `NSA_DATA_PATH/dataset`.

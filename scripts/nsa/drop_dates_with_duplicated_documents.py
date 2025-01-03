@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 import pymongo
 from tqdm import tqdm
@@ -11,7 +12,12 @@ setup_loguru(extra={"script": __file__})
 
 def main(
     db_uri: str = typer.Option(..., envvar="DB_URI"),
+    log_file: Path = typer.Option(None, help="Log file to save the logs to."),
 ) -> None:
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    setup_loguru(extra={"script": __file__}, log_file=log_file)
+    logger.info("Running drop_dates_with_duplicated_documents.py with args:\n" + str(locals()))
+
     client = pymongo.MongoClient(db_uri)
     db = client["nsa"]
     dates_col = db["dates"]
