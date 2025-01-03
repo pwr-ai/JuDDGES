@@ -2,11 +2,11 @@
 
 #SBATCH --job-name=juddges_sft
 #SBATCH --output=logs/%j-%x.log
-#SBATCH --time=72:00:00
+#SBATCH --time=48:00:00
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=1
-#SBATCH --cpus-per-gpu=8
-#SBATCH --mem=64G
+#SBATCH --gpus-per-node=4
+#SBATCH --cpus-per-gpu=4
+#SBATCH --mem=128G
 # NOTE: You can reconfigure the above parameters to your needs in the sbatch call.
 # NOTE: All env variables must be exported to be available after calling srun.
 # NOTE: You may need to specify some NCCL args in .env file depending on your cluster configuration

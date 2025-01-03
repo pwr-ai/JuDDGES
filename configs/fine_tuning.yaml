@@ -28,7 +28,7 @@ training_args:
   report_to: "wandb"
   seed: 46
   packing: True
-  torch_compile: True
+  torch_compile: False # setting to True might cause libcuda.so errors
 
 peft_args:
   r: 8
