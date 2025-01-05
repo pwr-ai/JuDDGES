@@ -3096,12 +3096,12 @@ stages:
     deps:
     - path: configs/fine_tuning.yaml
       hash: md5
-      md5: 2a6d378d432c046c9984d621393166d1
-      size: 1307
+      md5: e1e3b4627bd1c9d7211fe21e72dc77c2
+      size: 1356
     - path: configs/model/llama_3.1_8b_instruct.yaml
       hash: md5
-      md5: 452c3f843e7b46b961d5cdca7944e4ef
-      size: 174
+      md5: f2cc27ebf8f38cdfb45f1df900b6f726
+      size: 172
     - path: scripts/sft/fine_tune_llm.py
       hash: md5
       md5: 48ca128b26344b8f858e9e481914504e
@@ -3109,6 +3109,72 @@ stages:
     outs:
     - path: data/experiments/fine-tune/llama_3.1_8b_instruct/pl-court-frankowe-instruct/
       hash: md5
-      md5: 50d111e282622ba82255c92b032312f6.dir
-      size: 9761968145
-      nfiles: 88
+      md5: 4e56d5ce5684510e0783af41427aeaf7.dir
+      size: 296433086
+      nfiles: 39
+  sft@pl-court-frankowe-instruct-llama_3.2_3b_instruct:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py dataset=pl-court-frankowe-instruct
+      model=llama_3.2_3b_instruct
+    deps:
+    - path: configs/fine_tuning.yaml
+      hash: md5
+      md5: e1e3b4627bd1c9d7211fe21e72dc77c2
+      size: 1356
+    - path: configs/model/llama_3.2_3b_instruct.yaml
+      hash: md5
+      md5: d5dbb1b79c1502654e1ced8161e13027
+      size: 172
+    - path: scripts/sft/fine_tune_llm.py
+      hash: md5
+      md5: 48ca128b26344b8f858e9e481914504e
+      size: 4404
+    outs:
+    - path: data/experiments/fine-tune/llama_3.2_3b_instruct/pl-court-frankowe-instruct/
+      hash: md5
+      md5: 90a5d137a5bcbe928f419ea2c124d585.dir
+      size: 333239456
+      nfiles: 63
+  sft@model_dataset6:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py dataset=pl-court-frankowe-instruct
+      model=llama_3.2_3b_instruct
+    deps:
+    - path: configs/fine_tuning.yaml
+      hash: md5
+      md5: e1e3b4627bd1c9d7211fe21e72dc77c2
+      size: 1356
+    - path: configs/model/llama_3.2_3b_instruct.yaml
+      hash: md5
+      md5: d5dbb1b79c1502654e1ced8161e13027
+      size: 172
+    - path: scripts/sft/fine_tune_llm.py
+      hash: md5
+      md5: 48ca128b26344b8f858e9e481914504e
+      size: 4404
+    outs:
+    - path: data/experiments/fine-tune/llama_3.2_3b_instruct/pl-court-frankowe-instruct/
+      hash: md5
+      md5: 90a5d137a5bcbe928f419ea2c124d585.dir
+      size: 333239456
+      nfiles: 63
+  sft@model_dataset7:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py dataset=pl-court-frankowe-instruct
+      model=llama_3.2_3b_instruct
+    deps:
+    - path: configs/fine_tuning.yaml
+      hash: md5
+      md5: e1e3b4627bd1c9d7211fe21e72dc77c2
+      size: 1356
+    - path: configs/model/llama_3.2_3b_instruct.yaml
+      hash: md5
+      md5: d5dbb1b79c1502654e1ced8161e13027
+      size: 172
+    - path: scripts/sft/fine_tune_llm.py
+      hash: md5
+      md5: 48ca128b26344b8f858e9e481914504e
+      size: 4404
+    outs:
+    - path: data/experiments/fine-tune/llama_3.2_3b_instruct/pl-court-frankowe-instruct/
+      hash: md5
+      md5: 90a5d137a5bcbe928f419ea2c124d585.dir
+      size: 333239456
+      nfiles: 63
