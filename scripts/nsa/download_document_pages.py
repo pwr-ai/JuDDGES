@@ -17,6 +17,8 @@ from juddges.utils.logging import setup_loguru
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+RETRY_COUNT = 2
+
 
 def main(
     n_jobs: int = typer.Option(25),
@@ -33,8 +35,9 @@ def main(
     docs_col = db["document_pages"]
     errors_col = db["document_pages_errors"]
 
-    # Due to potential errors we do it in a loop
-    while to_download := get_filtered_docs_is_to_download(docs_col):
+    # Due to potential errors do it twice
+    for _ in range(RETRY_COUNT):
+        to_download = get_filtered_docs_is_to_download(docs_col)
         logger.info(f"Downloading {len(to_download)} pages")
         download_pages(docs_col, errors_col, n_jobs, proxy_address, to_download)
 

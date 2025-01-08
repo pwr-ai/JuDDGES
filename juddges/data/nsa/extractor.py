@@ -100,7 +100,7 @@ LIST_TYPE_FIELDS = {
 
 class NSADataExtractor:
     def __init__(self) -> None:
-        assert (set(FIELD_MAP.values()) - set(ORDER)) == {"Journal of laws", "Law", "Article"}
+        assert (set(FIELD_MAP.values()) - set(ORDER)) == {"journal", "law", "article"}
         assert (set(ORDER) - set(FIELD_MAP.values())) == set()
 
     def extract_data_from_pages(
