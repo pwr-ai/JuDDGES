@@ -3135,7 +3135,7 @@ stages:
       size: 333239456
       nfiles: 63
   sft@model_dataset6:
-    cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py dataset=pl-court-frankowe-instruct
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl-court-frankowe-instruct
       model=llama_3.2_3b_instruct
     deps:
     - path: configs/fine_tuning.yaml
@@ -3146,10 +3146,10 @@ stages:
       hash: md5
       md5: d5dbb1b79c1502654e1ced8161e13027
       size: 172
-    - path: scripts/sft/fine_tune_llm.py
+    - path: scripts/sft/fine_tune_deepspeed.py
       hash: md5
-      md5: 48ca128b26344b8f858e9e481914504e
-      size: 4404
+      md5: 79fad1ad8b1b70435b8a8837150430fa
+      size: 4359
     outs:
     - path: data/experiments/fine-tune/llama_3.2_3b_instruct/pl-court-frankowe-instruct/
       hash: md5
@@ -3157,24 +3157,46 @@ stages:
       size: 333239456
       nfiles: 63
   sft@model_dataset7:
-    cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py dataset=pl-court-frankowe-instruct
-      model=llama_3.2_3b_instruct
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=en-appealcourt-coded-instruct
+      model=llama_3.1_8b_instruct
     deps:
     - path: configs/fine_tuning.yaml
       hash: md5
       md5: e1e3b4627bd1c9d7211fe21e72dc77c2
       size: 1356
-    - path: configs/model/llama_3.2_3b_instruct.yaml
+    - path: configs/model/llama_3.1_8b_instruct.yaml
       hash: md5
-      md5: d5dbb1b79c1502654e1ced8161e13027
+      md5: f2cc27ebf8f38cdfb45f1df900b6f726
       size: 172
-    - path: scripts/sft/fine_tune_llm.py
+    - path: scripts/sft/fine_tune_deepspeed.py
       hash: md5
-      md5: 48ca128b26344b8f858e9e481914504e
-      size: 4404
+      md5: 79fad1ad8b1b70435b8a8837150430fa
+      size: 4359
     outs:
-    - path: data/experiments/fine-tune/llama_3.2_3b_instruct/pl-court-frankowe-instruct/
+    - path: data/experiments/fine-tune/llama_3.1_8b_instruct/en-appealcourt-coded-instruct/
       hash: md5
-      md5: 90a5d137a5bcbe928f419ea2c124d585.dir
-      size: 333239456
-      nfiles: 63
+      md5: 56512028d8c08d046f58904e8020c32b.dir
+      size: 362967877
+      nfiles: 31
+  sft@model_dataset8:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=en-appealcourt-coded-instruct
+      model=llama_3.1_8b_instruct
+    deps:
+    - path: configs/fine_tuning.yaml
+      hash: md5
+      md5: e1e3b4627bd1c9d7211fe21e72dc77c2
+      size: 1356
+    - path: configs/model/llama_3.1_8b_instruct.yaml
+      hash: md5
+      md5: f2cc27ebf8f38cdfb45f1df900b6f726
+      size: 172
+    - path: scripts/sft/fine_tune_deepspeed.py
+      hash: md5
+      md5: 79fad1ad8b1b70435b8a8837150430fa
+      size: 4359
+    outs:
+    - path: data/experiments/fine-tune/llama_3.1_8b_instruct/en-appealcourt-coded-instruct/
+      hash: md5
+      md5: 56512028d8c08d046f58904e8020c32b.dir
+      size: 362967877
+      nfiles: 31
