@@ -3,7 +3,7 @@ from typing import Any
 
 import torch
 from loguru import logger
-from peft import PeftModel
+from peft import PeftModelForCausalLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 from juddges.config import LLMConfig
@@ -97,7 +97,7 @@ def _get_model_tokenizer(
 
     if llm_config.adapter_path is not None:
         logger.info(f"Loading adapter from {llm_config.adapter_path}")
-        model = PeftModel.from_pretrained(model, llm_config.adapter_path)
+        model = PeftModelForCausalLM.from_pretrained(model, llm_config.adapter_path)
         model = model.merge_and_unload(safe_merge=True)
 
     return model, tokenizer

@@ -3223,3 +3223,49 @@ stages:
       hash: md5
       md5: 07de322cd2b0e6e3d4ea2c2f534c4df1
       size: 4386470
+  predict@model_dataset7-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=en-appealcourt-coded-instruct
+      model=llama_3.1_8b_instruct random_seed=42 
+      output_file=data/experiments/predict/en-appealcourt-coded-instruct/llama_3.1_8b_instruct/outputs_42.json
+    deps:
+    - path: configs/model/llama_3.1_8b_instruct.yaml
+      hash: md5
+      md5: f2cc27ebf8f38cdfb45f1df900b6f726
+      size: 172
+    - path: configs/predict.yaml
+      hash: md5
+      md5: 3852b077fd0f7995b5af8eb9d3c84041
+      size: 501
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 3559f9b82f3c052d4b9b350ee9a32914
+      size: 3519
+    outs:
+    - path: 
+        data/experiments/predict/en-appealcourt-coded-instruct/llama_3.1_8b_instruct/outputs_42.json
+      hash: md5
+      md5: 0b0853473cd29f03a9f498da602ec711
+      size: 1232839
+  predict_on_fine_tuned@model_dataset1-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=en-appealcourt-coded-instruct
+      model=llama_3.1_8b_instruct_fine_tuned_appealcourt_coded random_seed=42 
+      output_file=data/experiments/predict/en-appealcourt-coded-instruct/llama_3.1_8b_instruct_fine_tuned_appealcourt_coded/outputs_42.json
+    deps:
+    - path: configs/model/llama_3.1_8b_instruct_fine_tuned_appealcourt_coded.yaml
+      hash: md5
+      md5: f952f8a190fda5df97eb46a9353e4511
+      size: 259
+    - path: configs/predict.yaml
+      hash: md5
+      md5: 3852b077fd0f7995b5af8eb9d3c84041
+      size: 501
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 3559f9b82f3c052d4b9b350ee9a32914
+      size: 3519
+    outs:
+    - path: 
+        data/experiments/predict/en-appealcourt-coded-instruct/llama_3.1_8b_instruct_fine_tuned_appealcourt_coded/outputs_42.json
+      hash: md5
+      md5: 0b0853473cd29f03a9f498da602ec711
+      size: 1232839
