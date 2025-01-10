@@ -155,28 +155,27 @@ stages:
     outs:
       - data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
 
-  predict_en:
+  predict_on_fine_tuned:
     matrix:
-      dataset:
-        - en-court-instruct
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
+      model_dataset:
+        - dataset: pl-court-frankowe-instruct
+          model: llama_3.2_3b_instruct_fine_tuned_court_frankowe
+        - dataset: en-appealcourt-coded-instruct
+          model: llama_3.1_8b_instruct_fine_tuned_appealcourt_coded
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
-      dataset=${item.dataset}
-      model=${item.model}
+      dataset=${item.model_dataset.dataset}
+      model=${item.model_dataset.model}
       random_seed=${item.seed}
-      output_file=data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      output_file=data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/predict.py
       - configs/predict.yaml
-      - configs/model/${item.model}.yaml
+      - configs/model/${item.model_dataset.model}.yaml
     outs:
-      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      - data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
+
 
   predict_with_api:
     matrix:

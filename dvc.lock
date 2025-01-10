@@ -3200,3 +3200,26 @@ stages:
       md5: 56512028d8c08d046f58904e8020c32b.dir
       size: 362967877
       nfiles: 31
+  predict_on_fine_tuned@model_dataset0-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl-court-frankowe-instruct
+      model=llama_3.2_3b_instruct_fine_tuned_court_frankowe random_seed=42 
+      output_file=data/experiments/predict/pl-court-frankowe-instruct/llama_3.2_3b_instruct_fine_tuned_court_frankowe/outputs_42.json
+    deps:
+    - path: configs/model/llama_3.2_3b_instruct_fine_tuned_court_frankowe.yaml
+      hash: md5
+      md5: 43440f01305b87306d870523ab26e979
+      size: 258
+    - path: configs/predict.yaml
+      hash: md5
+      md5: 3852b077fd0f7995b5af8eb9d3c84041
+      size: 501
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 3559f9b82f3c052d4b9b350ee9a32914
+      size: 3519
+    outs:
+    - path: 
+        data/experiments/predict/pl-court-frankowe-instruct/llama_3.2_3b_instruct_fine_tuned_court_frankowe/outputs_42.json
+      hash: md5
+      md5: 07de322cd2b0e6e3d4ea2c2f534c4df1
+      size: 4386470
