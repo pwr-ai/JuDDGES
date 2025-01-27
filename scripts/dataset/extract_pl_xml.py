@@ -1,5 +1,6 @@
 import math
 import multiprocessing
+from datetime import datetime
 from typing import Any, Optional
 
 import typer
@@ -20,9 +21,19 @@ def main(
     mongo_uri: str = typer.Option(None, envvar="MONGO_URI"),
     batch_size: int = typer.Option(BATCH_SIZE),
     n_jobs: Optional[int] = typer.Option(None, help="Number of processes to use"),
+    last_update_from: Optional[str] = typer.Option(None, help="Format: YYYY-MM-DD"),
 ) -> None:
-    # find rows which have non-empty content field
     query = {"content": {"$ne": None}}
+
+    if last_update_from is not None:
+        # get all rows which were last updated after the given date
+        query = {
+            "$and": [
+                query,
+                {"lastUpdate": {"$gte": datetime.strptime(last_update_from, "%Y-%m-%d")}},
+            ]
+        }
+
     collection = get_mongo_collection()
     num_docs_to_update = collection.count_documents(query)
     logger.info(f"There are {num_docs_to_update} documents to update")

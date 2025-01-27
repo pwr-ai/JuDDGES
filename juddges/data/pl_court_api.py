@@ -45,7 +45,7 @@ class PolishCourtAPI:
         elif "limit" in params.keys():
             logger.warning("Setting limit to query the number of judgements has no effect!")
 
-        params |= {"limit": 0}
+        params = {**params, "limit": 0}
         endpoint = f"{self.url}/judgements"
         res = requests.get(endpoint, params=params)
         res.raise_for_status()
@@ -111,7 +111,7 @@ class PolishCourtAPI:
             ("legalBases", "legalBasis"),
         ]
         for feature, nested_key in cols_to_unnest:
-            if details[feature] is None:
+            if details.get(feature) is None:
                 continue
             details[feature] = self._unnest_dict(details.get(feature), nested_key)
 

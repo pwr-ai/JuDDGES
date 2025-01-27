@@ -1,7 +1,7 @@
 import math
 import multiprocessing
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import typer
 from dotenv import load_dotenv
@@ -29,19 +29,30 @@ def main(
     data_type: DataType = typer.Option(DataType.CONTENT),
     batch_size: int = typer.Option(BATCH_SIZE),
     n_jobs: int = typer.Option(N_JOBS),
+    last_update_from: Optional[str] = typer.Option(None, help="Format: YYYY-MM-DD"),
+    dry: bool = typer.Option(False),
 ) -> None:
     api = PolishCourtAPI()
 
-    # find rows which are missing at least one field
-    query = {"$or": [{field: {"$exists": False}} for field in api.schema[data_type.value]]}
+    query: dict[str, Any] = {}
+    if last_update_from is not None:
+        # get all rows which were last updated after the given date
+        query = {"lastUpdate": {"$gte": last_update_from}}
+    else:
+        # find rows which are missing at least one field
+        query = {"$or": [{field: {"$exists": False}} for field in api.schema[data_type.value]]}
 
     collection = get_mongo_collection()
     num_docs_to_update = collection.count_documents(query)
     logger.info(f"There are {num_docs_to_update} documents to update")
 
+    if dry:
+        return
+
     # fetch all ids at once to avoid cursor timeout
     cursor = collection.find(query, {"_id": 1}, batch_size=batch_size)
     batched_cursor = BatchedDatabaseCursor(cursor=cursor, batch_size=batch_size, prefetch=True)
+    batches = list(batched_cursor)
 
     download_data = AdditionalDataDownloader(data_type)
     download_data_and_update_db = BatchDatabaseUpdate(mongo_uri, download_data)
@@ -51,7 +62,7 @@ def main(
             tqdm(
                 pool.imap_unordered(
                     download_data_and_update_db,
-                    batched_cursor,
+                    batches,
                 ),
                 total=math.ceil(num_docs_to_update / batch_size),
             )

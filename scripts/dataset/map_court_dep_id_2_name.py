@@ -1,7 +1,8 @@
 import math
 import multiprocessing
+from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import typer
@@ -25,8 +26,19 @@ def main(
     ),
     batch_size: int = typer.Option(BATCH_SIZE, help="Batch size for fetching documents"),
     n_jobs: int = typer.Option(1, help="Number of parallel jobs"),
+    last_update_from: Optional[str] = typer.Option(None, help="Format: YYYY-MM-DD"),
 ) -> None:
     query = {"$or": [{"court_name": {"$exists": False}}, {"department_name": {"$exists": False}}]}
+
+    if last_update_from is not None:
+        # get all rows which were last updated after the given date
+        query = {
+            "$and": [
+                query,
+                {"lastUpdate": {"$gte": datetime.strptime(last_update_from, "%Y-%m-%d")}},
+            ]
+        }
+
     collection = get_mongo_collection()
     num_docs_to_update = collection.count_documents(query)
     cursor = collection.find(
