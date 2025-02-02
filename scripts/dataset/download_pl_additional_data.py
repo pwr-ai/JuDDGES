@@ -6,8 +6,14 @@ from typing import Any, Optional
 import typer
 from dotenv import load_dotenv
 from loguru import logger
+from pymongo.results import BulkWriteResult
 from requests import ConnectionError, HTTPError
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 from tqdm import tqdm
 
 from juddges.data.database import BatchDatabaseUpdate, BatchedDatabaseCursor, get_mongo_collection
@@ -34,39 +40,48 @@ def main(
 ) -> None:
     api = PolishCourtAPI()
 
-    query: dict[str, Any] = {}
+    # checks whether database misses any field present in the API schema
+    # (it tests for non-existing fields, not field with null value)
+    query: dict[str, Any] = {
+        "$or": [{field: {"$exists": False}} for field in api.schema[data_type.value]]
+    }
+    # if last_update_from is provided, it filters documents by last update date
     if last_update_from is not None:
-        # get all rows which were last updated after the given date
-        query = {"lastUpdate": {"$gte": last_update_from}}
-    else:
-        # find rows which are missing at least one field
-        query = {"$or": [{field: {"$exists": False}} for field in api.schema[data_type.value]]}
+        query = {"$and": [{"lastUpdate": {"$gte": last_update_from}}, query]}
 
     collection = get_mongo_collection()
     num_docs_to_update = collection.count_documents(query)
-    logger.info(f"There are {num_docs_to_update} documents to update")
+    logger.info(f"Found {num_docs_to_update} documents to update")
 
     if dry:
         return
 
     # fetch all ids at once to avoid cursor timeout
-    cursor = collection.find(query, {"_id": 1}, batch_size=batch_size)
+    cursor = collection.find(query, {"_id": 1}, batch_size=batch_size).limit(200)
     batched_cursor = BatchedDatabaseCursor(cursor=cursor, batch_size=batch_size, prefetch=True)
     batches = list(batched_cursor)
 
     download_data = AdditionalDataDownloader(data_type)
     download_data_and_update_db = BatchDatabaseUpdate(mongo_uri, download_data)
 
-    with multiprocessing.Pool(n_jobs) as pool:
-        list(
-            tqdm(
+    num_batches = math.ceil(num_docs_to_update / batch_size)
+    if n_jobs == 1:
+        with tqdm(batches, total=num_batches, desc="Downloading and updating database") as pbar:
+            for batch in pbar:
+                res = download_data_and_update_db(batch)
+                pbar.set_postfix(bulk_write_results_summary(res))
+    else:
+        with multiprocessing.Pool(n_jobs) as pool:
+            with tqdm(
                 pool.imap_unordered(
                     download_data_and_update_db,
                     batches,
                 ),
-                total=math.ceil(num_docs_to_update / batch_size),
-            )
-        )
+                total=num_batches,
+                desc="Downloading and updating database",
+            ) as pbar:
+                for res in pbar:
+                    pbar.set_postfix(bulk_write_results_summary(res))
 
     assert collection.count_documents(query) == 0
 
@@ -93,6 +108,15 @@ class AdditionalDataDownloader:
         except DataNotFoundError as err:
             logger.warning(err)
             return dict.fromkeys(self.api.schema[self.data_type.value], None)
+
+
+def bulk_write_results_summary(res: BulkWriteResult) -> dict[str, int]:
+    return {
+        "matched_for_update": res.matched_count,
+        "modified": res.modified_count,
+        "upserted": res.upserted_count,
+        "deleted": res.deleted_count,
+    }
 
 
 if __name__ == "__main__":

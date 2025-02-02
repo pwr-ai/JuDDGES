@@ -82,7 +82,12 @@ class PolishCourtAPI:
     def get_cleaned_details(self, id: str) -> dict[str, Any]:
         """Downloads details without repeating fields retrieved in get_judgements."""
         details = self.get_details(id)
-        return {k: v for k, v in details.items() if k in self.schema["details"]}
+        details_in_schema = {k: v for k, v in details.items() if k in self.schema["details"]}
+
+        if not details_in_schema:
+            logger.warning(f"Didn't find details corresponding to schema for document: {id}")
+
+        return details_in_schema
 
     def get_details(self, id: str) -> dict[str, Any]:
         params = {"id": id}
@@ -100,7 +105,7 @@ class PolishCourtAPI:
             raise
         else:
             assert isinstance(details, dict)
-            details = self.parse_details(data)
+            details = self.parse_details(details)
             return details
 
     def parse_details(self, details: dict[str, Any]) -> dict[str, Any]:
