@@ -41,7 +41,7 @@ def main(
     api = PolishCourtAPI()
 
     # checks whether database misses any field present in the API schema
-    # (it tests for non-existing fields, not field with null value)
+    # (it tests for non-existing fields, not fields with null value)
     query: dict[str, Any] = {
         "$or": [{field: {"$exists": False}} for field in api.schema[data_type.value]]
     }
@@ -57,16 +57,19 @@ def main(
         return
 
     # fetch all ids at once to avoid cursor timeout
-    cursor = collection.find(query, {"_id": 1}, batch_size=batch_size).limit(200)
+    cursor = collection.find(query, {"_id": 1}, batch_size=batch_size)
     batched_cursor = BatchedDatabaseCursor(cursor=cursor, batch_size=batch_size, prefetch=True)
-    batches = list(batched_cursor)
 
     download_data = AdditionalDataDownloader(data_type)
     download_data_and_update_db = BatchDatabaseUpdate(mongo_uri, download_data)
 
     num_batches = math.ceil(num_docs_to_update / batch_size)
     if n_jobs == 1:
-        with tqdm(batches, total=num_batches, desc="Downloading and updating database") as pbar:
+        with tqdm(
+            batched_cursor,
+            total=num_batches,
+            desc="Downloading and updating database",
+        ) as pbar:
             for batch in pbar:
                 res = download_data_and_update_db(batch)
                 pbar.set_postfix(bulk_write_results_summary(res))
@@ -75,7 +78,7 @@ def main(
             with tqdm(
                 pool.imap_unordered(
                     download_data_and_update_db,
-                    batches,
+                    batched_cursor,
                 ),
                 total=num_batches,
                 desc="Downloading and updating database",
