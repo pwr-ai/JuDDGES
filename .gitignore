@@ -159,3 +159,4 @@ wandb/
 slurm/.commands.sh
 logs/
 slurm/juddges.sif
+local_notebooks/

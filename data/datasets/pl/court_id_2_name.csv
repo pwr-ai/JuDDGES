@@ -1,0 +1,2015 @@
+,court_id,dep_id,court_name,department_name
+0,15050000,503,Sąd Apelacyjny w Białymstoku,I Wydział Cywilny
+1,15050000,1006,Sąd Apelacyjny w Białymstoku,II Wydział Karny
+2,15050000,1521,Sąd Apelacyjny w Białymstoku,III Wydział Pracy i Ubezpieczeń Społecznych
+3,15052000,503,Sąd Okręgowy w Suwałkach,I Wydział Cywilny
+4,15052000,1006,Sąd Okręgowy w Suwałkach,II Wydział Karny
+5,15052000,1521,Sąd Okręgowy w Suwałkach,III Wydział Pracy i Ubezpieczeń Społecznych
+6,15052005,503,Sąd Rejonowy w Augustowie,I Wydział Cywilny
+7,15052005,1006,Sąd Rejonowy w Augustowie,II Wydział Karny
+8,15052005,1512,Sąd Rejonowy w Augustowie,III Wydział Rodzinny i Nieletnich
+9,15052005,2024,Sąd Rejonowy w Augustowie,IV Wydział Ksiąg Wieczytych
+10,15052005,2520003,Sąd Rejonowy w Augustowie,V Zamiejscowy Wydział Cywilny z siedzibą w Sejnach
+11,15052005,3020006,Sąd Rejonowy w Augustowie,VI Zamiejscowy Wydział Karny z siedzibą w Sejnach
+12,15052005,3520012,Sąd Rejonowy w Augustowie,VII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Sejnach
+13,15052015,503,Sąd Rejonowy w Olecku,I Wydział Cywilny
+14,15052015,1006,Sąd Rejonowy w Olecku,II Wydział Karny
+15,15052015,1512,Sąd Rejonowy w Olecku,III Wydział Rodzinny i Nieletnich
+16,15052010,503,Sąd Rejonowy w Ełku,I Wydział Cywilny
+17,15052010,1006,Sąd Rejonowy w Ełku,II Wydział Karny
+18,15052010,1512,Sąd Rejonowy w Ełku,III Wydział Rodzinny i Nieletnich
+19,15052010,2015,Sąd Rejonowy w Ełku,IV Wydział Pracy
+20,15052010,2524,Sąd Rejonowy w Ełku,V Wydział Ksiąg Wieczytych
+21,15052020,503,Sąd Rejonowy w Suwałkach,I Wydział Cywilny
+22,15052020,1006,Sąd Rejonowy w Suwałkach,II Wydział Karny
+23,15052020,1512,Sąd Rejonowy w Suwałkach,III Wydział Rodzinny i Nieletnich
+24,15052020,2021,Sąd Rejonowy w Suwałkach,IV Wydział Pracy i Ubezpieczeń Społecznych
+25,15052020,2527,Sąd Rejonowy w Suwałkach,V Wydział Gospodarczy
+26,15052020,3024,Sąd Rejonowy w Suwałkach,VI Wydział Ksiąg Wieczystych
+27,15052020,3506,Sąd Rejonowy w Suwałkach,VII Wydział Karny
+28,15051500,503,Sąd Okręgowy w Olsztynie,I Wydział Cywilny
+29,15051500,1006,Sąd Okręgowy w Olsztynie,II Wydział Karny
+30,15051500,1539,Sąd Okręgowy w Olsztynie,III Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+31,15051500,2015,Sąd Okręgowy w Olsztynie,IV Wydział Pracy i Ubezpieczeń Społecznych
+32,15051500,4503,Sąd Okręgowy w Olsztynie,IX Wydział Cywilny Odwoławczy
+33,15051500,2527,Sąd Okręgowy w Olsztynie,V Wydział Gospodarczy
+34,15051500,3009,Sąd Okręgowy w Olsztynie,VI Wydział Cywilny Rodzinny
+35,15051500,3506,Sąd Okręgowy w Olsztynie,VII Wydział Karny Odwoławczy
+36,15051500,4057,Sąd Okręgowy w Olsztynie,VIII Wydział Wizytacyjny
+37,15051510,503,Sąd Rejonowy w Giżycku,I Wydział Cywilny
+38,15051510,1006,Sąd Rejonowy w Giżycku,II Wydział Karny
+39,15051510,1512,Sąd Rejonowy w Giżycku,III Wydział Rodzinny i Nieletnich
+40,15051510,2015,Sąd Rejonowy w Giżycku,IV Wydział Pracy
+41,15051510,522506,Sąd Rejonowy w Giżycku,V Zamiejscowy Wydział Karny w Węgorzewie
+42,15051505,503,Sąd Rejonowy w Bartoszycach,I Wydział Cywilny
+43,15051505,1006,Sąd Rejonowy w Bartoszycach,II Wydział Karny
+44,15051505,1512,Sąd Rejonowy w Bartoszycach,III Wydział Rodzinny i Nieletnich
+45,15051505,2015,Sąd Rejonowy w Bartoszycach,IV Wydział Pracy
+46,15051505,2524,Sąd Rejonowy w Bartoszycach,V Wydział Ksiąg Wieczystych
+47,15051505,523003,Sąd Rejonowy w Bartoszycach,VI Zamiejscowy Wydział Cywilny z siedzibą w Lidzbarku Warmińskim
+48,15051505,1023506,Sąd Rejonowy w Bartoszycach,VII Zamiejscowy Wydział Karny z siedzibą w Lidzbarku Warmińskim
+49,15051505,1524012,Sąd Rejonowy w Bartoszycach,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Lidzbarku Warmińskim
+50,15051515,503,Sąd Rejonowy w Kętrzynie,I Wydział Cywilny
+51,15051515,1006,Sąd Rejonowy w Kętrzynie,II Wydział Karny
+52,15051515,1512,Sąd Rejonowy w Kętrzynie,III Wydział Rodzinny i Nieletnich
+53,15051515,2021,Sąd Rejonowy w Kętrzynie,IV Wydział Pracy
+54,15051525,503,Sąd Rejonowy w Olsztynie,I Wydział Cywilny
+55,15051525,1006,Sąd Rejonowy w Olsztynie,II Wydział Karny
+56,15051525,1512,Sąd Rejonowy w Olsztynie,III Wydział Rodzinny i Nieletnich
+57,15051525,2021,Sąd Rejonowy w Olsztynie,IV Wydział Pracy i Ubezpieczeń Społecznych
+58,15051525,4506,Sąd Rejonowy w Olsztynie,IX Wydział Karny
+59,15051525,2527,Sąd Rejonowy w Olsztynie,V Wydział Gospodarczy
+60,15051525,3506,Sąd Rejonowy w Olsztynie,VII Wydział Karny
+61,15051525,4027,Sąd Rejonowy w Olsztynie,VIII Wydział Gospodarczy
+62,15051525,5003,Sąd Rejonowy w Olsztynie,X Wydział Cywilny
+63,15051525,525503,Sąd Rejonowy w Olsztynie,XI Zamiejscowy Wydział Cywilny
+64,15051525,1026006,Sąd Rejonowy w Olsztynie,XII Zamiejscowy Wydział Karny
+65,15051525,1526512,Sąd Rejonowy w Olsztynie,XIII Zamiejscowy Wydział Rodzinny i Nieletnich
+66,15051520,503,Sąd Rejonowy w Mrągowie,I Wydział Cywilny
+67,15051520,1006,Sąd Rejonowy w Mrągowie,II Wydział Karny
+68,15051520,1512,Sąd Rejonowy w Mrągowie,III Wydział Rodzinny i Nieletnich
+69,15051520,2024,Sąd Rejonowy w Mrągowie,IV Wydział Ksiąg Wieczystych
+70,15051520,522503,Sąd Rejonowy w Mrągowie,V Zamiejscowy Wydział Cywilny
+71,15051520,1023006,Sąd Rejonowy w Mrągowie,VI Zamiejscowy Wydział Karny
+72,15051520,1523512,Sąd Rejonowy w Mrągowie,VII Zamiejscowy Wydział Rodzinny i Nieletnich
+73,15051520,2024015,Sąd Rejonowy w Mrągowie,VIII Zamiejscowy Wydział Pracy
+74,15051535,503,Sąd Rejonowy w Piszu,I Wydział Cywilny
+75,15051535,1006,Sąd Rejonowy w Piszu,II Wydział Karny
+76,15051535,1512,Sąd Rejonowy w Piszu,III Wydział Rodzinny i Nieletnich
+77,15051530,503,Sąd Rejonowy w Szczytnie,I Wydział Cywilny
+78,15051530,1006,Sąd Rejonowy w Szczytnie,II Wydział Karny
+79,15051530,1512,Sąd Rejonowy w Szczytnie,III Wydział Rodzinny i Nieletnich
+80,15051530,2015,Sąd Rejonowy w Szczytnie,IV Wydział Pracy
+81,15051530,2527,Sąd Rejonowy w Szczytnie,V Wydział Gospodarczy
+82,15051530,523003,Sąd Rejonowy w Szczytnie,VI Zamiejscowy Wydział Cywilny z siedzibą w Piszu
+83,15051530,1023506,Sąd Rejonowy w Szczytnie,VII Zamiejscowy Wydział Karny z siedzibą w Piszu
+84,15051530,1524012,Sąd Rejonowy w Szczytnie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Piszu
+85,15051540,503,Sąd Rejonowy w Biskupcu,I Wydział Cywilny
+86,15051540,1006,Sąd Rejonowy w Biskupcu,II Wydział Karny
+87,15051540,1512,Sąd Rejonowy w Biskupcu,III Wydział Rodzinny i Nieletnich
+88,15051540,2015,Sąd Rejonowy w Biskupcu,IV Wydział Pracy
+89,15051550,503,Sąd Rejonowy w Nidzicy,I Wydział Cywilny
+90,15051550,1006,Sąd Rejonowy w Nidzicy,II Wydział Karny
+91,15051550,1512,Sąd Rejonowy w Nidzicy,III Wydział Rodzinny i Nieletnich
+92,15051545,503,Sąd Rejonowy w Lidzbarku Warmińskim,I Wydział Cywilny
+93,15051545,1006,Sąd Rejonowy w Lidzbarku Warmińskim,II Wydział Karny
+94,15051545,1512,Sąd Rejonowy w Lidzbarku Warmińskim,III Wydział Rodzinny i Nieletnich
+95,15051000,503,Sąd Okręgowy w Łomży,I Wydział Cywilny
+96,15051000,1006,Sąd Okręgowy w Łomży,II Wydział Karny
+97,15051000,1521,Sąd Okręgowy w Łomży,III Wydział Pracy i Ubezpieczeń Społecznych
+98,15051005,503,Sąd Rejonowy w Łomży,I Wydział Cywilny
+99,15051005,1006,Sąd Rejonowy w Łomży,II Wydział Karny
+100,15051005,1509,Sąd Rejonowy w Łomży,III Wydział Rodzinny
+101,15051005,2021,Sąd Rejonowy w Łomży,IV Wydział Pracy i Ubezpieczeń Społecznych
+102,15051005,1524506,Sąd Rejonowy w Łomży,IX Zamiejscowy Wydział Karny w Grajewie
+103,15051005,2527,Sąd Rejonowy w Łomży,V Wydział Gospodarczy
+104,15051005,3520006,Sąd Rejonowy w Łomży,VII Zamiejscowy Wydział Karny w Kolnie
+105,15051005,1024003,Sąd Rejonowy w Łomży,VIII Zamiejscowy Wydział Cywilny w Grajewie
+106,15051005,2025009,Sąd Rejonowy w Łomży,X Zamiejscowy Wydział Rodzinny w Grajewie
+107,15051015,503,Sąd Rejonowy w Wysokiem Mazowieckiem,I Wydział Cywilny
+108,15051015,1006,Sąd Rejonowy w Wysokiem Mazowieckiem,II Wydział Karny
+109,15051015,1512,Sąd Rejonowy w Wysokiem Mazowieckiem,III Wydział Rodzinny i Nieletnich
+110,15051010,503,Sąd Rejonowy w Zambrowie,I Wydział Cywilny
+111,15051010,1006,Sąd Rejonowy w Zambrowie,II Wydział Karny
+112,15051010,1512,Sąd Rejonowy w Zambrowie,III Wydział Rodzinny i Nieletnich
+113,15051010,2524,Sąd Rejonowy w Zambrowie,V Wydział Ksiąg Wieczystych
+114,15051010,523003,Sąd Rejonowy w Zambrowie,VI Zamiejscowy Wydział Cywilny w Wysokiem Mazowieckiem
+115,15051010,1023506,Sąd Rejonowy w Zambrowie,VII Zamiejscowy Wydział Karny w Wysokiem Mazowieckiem
+116,15051010,1524012,Sąd Rejonowy w Zambrowie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich w Wysokiem Mazowieckiem
+117,15051020,503,Sąd Rejonowy w Grajewie,I Wydział Cywilny
+118,15051020,1006,Sąd Rejonowy w Grajewie,II Wydział Karny
+119,15051020,1512,Sąd Rejonowy w Grajewie,III Wydział Rodzinny i Nieletnich
+120,15052500,503,Sąd Okręgowy w Ostrołęce,I Wydział Cywilny
+121,15052500,1006,Sąd Okręgowy w Ostrołęce,II Wydział Karny
+122,15052500,1521,Sąd Okręgowy w Ostrołęce,III Wydział Pracy i Ubezpieczeń Społecznych
+123,15052515,503,Sąd Rejonowy w Przasnyszu,I Wydział Cywilny
+124,15052515,1006,Sąd Rejonowy w Przasnyszu,II Wydział Karny
+125,15052515,1512,Sąd Rejonowy w Przasnyszu,III Wydział Rodzinny i Nieletnich
+126,15052515,2024,Sąd Rejonowy w Przasnyszu,IV Wydział Ksiąg Wieczytych
+127,15052525,503,Sąd Rejonowy w Pułtusku,I Wydział Cywilny
+128,15052525,1006,Sąd Rejonowy w Pułtusku,II Wydział Karny
+129,15052525,1512,Sąd Rejonowy w Pułtusku,III Wydział Rodzinny i Nieletnich
+130,15052520,503,Sąd Rejonowy w Wyszkowie,I Wydział Cywilny
+131,15052520,1006,Sąd Rejonowy w Wyszkowie,II Wydział Karny
+132,15052520,1512,Sąd Rejonowy w Wyszkowie,III Wydział Rodzinny i Nieletnich
+133,15052520,522503,Sąd Rejonowy w Wyszkowie,V Zamiejscowy Wydział Cywilny
+134,15052520,1023006,Sąd Rejonowy w Wyszkowie,VI Zamiejscowy Wydział Karny
+135,15052520,1523512,Sąd Rejonowy w Wyszkowie,VII Zamiejscowy Wydział Rodzinny i Nieletnich
+136,15052510,503,Sąd Rejonowy w Ostrowi Mazowieckiej,I Wydział Cywilny
+137,15052510,1006,Sąd Rejonowy w Ostrowi Mazowieckiej,II Wydział Karny
+138,15052510,1512,Sąd Rejonowy w Ostrowi Mazowieckiej,III Wydział Rodzinny i Nieletnich
+139,15052510,2524,Sąd Rejonowy w Ostrowi Mazowieckiej,V Wydział Ksiąg Wieczytych
+140,15052505,503,Sąd Rejonowy w Ostrołęce,I Wydział Cywilny
+141,15052505,1006,Sąd Rejonowy w Ostrołęce,II Wydział Karny
+142,15052505,1512,Sąd Rejonowy w Ostrołęce,III Wydział Rodzinny i Nieletnich
+143,15052505,2021,Sąd Rejonowy w Ostrołęce,IV Wydział Pracy i Ubezpieczeń Społecznych
+144,15052505,2527,Sąd Rejonowy w Ostrołęce,V Wydział Gospodarczy
+145,15052505,3024,Sąd Rejonowy w Ostrołęce,VI Wydział Ksiąg Wieczystych
+146,15050500,503,Sąd Okręgowy w Białymstoku,I Wydział Cywilny
+147,15050500,1003,Sąd Okręgowy w Białymstoku,II Wydział Cywilny
+148,15050500,1506,Sąd Okręgowy w Białymstoku,III Wydział Karny
+149,15050500,2039,Sąd Okręgowy w Białymstoku,IV Wydział Penitencjarny
+150,15050500,2521,Sąd Okręgowy w Białymstoku,V Wydział Pracy i Ubezpieczeń Społecznych
+151,15050500,3527,Sąd Okręgowy w Białymstoku,VII Wydział Gospodarczy
+152,15050500,4006,Sąd Okręgowy w Białymstoku,VIII Wydział Karny Odwoławczy
+153,15050510,503,Sąd Rejonowy w Bielsku Podlaskim,I Wydział Cywilny
+154,15050510,1006,Sąd Rejonowy w Bielsku Podlaskim,II Wydział Karny
+155,15050510,1512,Sąd Rejonowy w Bielsku Podlaskim,III Wydział Rodzinny i Nieletnich
+156,15050510,2524,Sąd Rejonowy w Bielsku Podlaskim,V Wydział Ksiąg Wieczystych
+157,15050510,523506,Sąd Rejonowy w Bielsku Podlaskim,VII Zamiejscowy Wydział Karny z siedzibą w Hajnówce
+158,15050510,1024006,Sąd Rejonowy w Bielsku Podlaskim,VIII Zamiejscowy Wydział Karny z siedzibą w Siemiatyczach
+159,15050505,503,Sąd Rejonowy w Białymstoku,I Wydział Cywilny
+160,15050505,1003,Sąd Rejonowy w Białymstoku,II Wydział Cywilny
+161,15050505,1103,Sąd Rejonowy w Białymstoku,II Wydział Cywilny Sekcja Egzekucyjna
+162,15050505,1506,Sąd Rejonowy w Białymstoku,III Wydział Karny
+163,15050505,1606,Sąd Rejonowy w Białymstoku,III Wydział Karny Sekcja ds. Nadzoru nad Postępowaniem Przygotowawczym
+164,15050505,2012,Sąd Rejonowy w Białymstoku,IV Wydział Rodzinny i Nieletnich
+165,15050505,2512,Sąd Rejonowy w Białymstoku,V Wydział Rodzinny i Nieletnich
+166,15050505,3021,Sąd Rejonowy w Białymstoku,VI Wydział Pracy i Ubezpieczeń Społecznych
+167,15050505,3506,Sąd Rejonowy w Białymstoku,VII Wydział Karny
+168,15050505,4027,Sąd Rejonowy w Białymstoku,VIII Wydział Gospodarczy
+169,15050505,4163,Sąd Rejonowy w Białymstoku,VIII Wydział Gospodarczy - Upadłości
+170,15050505,5503,Sąd Rejonowy w Białymstoku,XI Wydział Cywilny
+171,15050505,6506,Sąd Rejonowy w Białymstoku,XIII Wydział Karny
+172,15050505,7506,Sąd Rejonowy w Białymstoku,XV Wydział Karny
+173,15050515,503,Sąd Rejonowy w Sokółce,I Wydział Cywilny
+174,15050515,1006,Sąd Rejonowy w Sokółce,II Wydział Karny
+175,15050515,1512,Sąd Rejonowy w Sokółce,III Wydział Rodzinny i Nieletnich
+176,15050515,2024,Sąd Rejonowy w Sokółce,IV Wydział Ksiąg Wieczystych
+177,15100000,503,Sąd Apelacyjny w Gdańsku,I Wydział Cywilny
+178,15100000,1006,Sąd Apelacyjny w Gdańsku,II Wydział Karny
+179,15100000,1521,Sąd Apelacyjny w Gdańsku,III Wydział Pracy i Ubezpieczeń Społecznych
+180,15100000,2503,Sąd Apelacyjny w Gdańsku,V Wydział Cywilny
+181,15101000,503,Sąd Okręgowy w Elblągu,I Wydział Cywilny
+182,15101000,1006,Sąd Okręgowy w Elblągu,II Wydział Karny
+183,15101000,1539,Sąd Okręgowy w Elblągu,III Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+184,15101000,2021,Sąd Okręgowy w Elblągu,IV Wydział Pracy i Ubezpieczeń Społecznych
+185,15101000,2509,Sąd Okręgowy w Elblągu,V Wydział Cywilny Rodzinny
+186,15101000,3006,Sąd Okręgowy w Elblągu,VI Wydział Karny Odwoławczy
+187,15101030,503,Sąd Rejonowy w Nowym Mieście Lubawskim,I Wydział Cywilny
+188,15101030,1006,Sąd Rejonowy w Nowym Mieście Lubawskim,II Wydział Karny
+189,15101030,1512,Sąd Rejonowy w Nowym Mieście Lubawskim,III Wydział Rodzinny i Nieletnich
+190,15101025,503,Sąd Rejonowy w Działdowie,I Wydział Cywilny
+191,15101025,1006,Sąd Rejonowy w Działdowie,II Wydział Karny
+192,15101025,1512,Sąd Rejonowy w Działdowie,III Wydział Rodzinny i Nieletnich
+193,15101005,503,Sąd Rejonowy w Braniewie,I Wydział Cywilny
+194,15101005,1006,Sąd Rejonowy w Braniewie,II Wydział Karny
+195,15101005,1512,Sąd Rejonowy w Braniewie,III Wydział Rodzinny i Nieletnich
+196,15101015,503,Sąd Rejonowy w Iławie,I Wydział Cywilny
+197,15101015,1006,Sąd Rejonowy w Iławie,II Wydział Karny
+198,15101015,1512,Sąd Rejonowy w Iławie,III Wydział Rodzinny i Nieletnich
+199,15101015,3020003,Sąd Rejonowy w Iławie,VI Zamiejscowy Wydział Cywilny w Nowym Mieście Lubawskim
+200,15101015,3520006,Sąd Rejonowy w Iławie,VII Zamiejscowy Wydział Karny w Nowym Mieście Lubawskim
+201,15101015,4020012,Sąd Rejonowy w Iławie,VIII Zamiejscowy Wydział Rodzinnych i Nieletnich w Nowym Mieście Lubawskim
+202,15101010,503,Sąd Rejonowy w Elblągu,I Wydział Cywilny
+203,15101010,1006,Sąd Rejonowy w Elblągu,II Wydział Karny
+204,15101010,1512,Sąd Rejonowy w Elblągu,III Wydział Rodzinny i Nieletnich
+205,15101010,2021,Sąd Rejonowy w Elblągu,IV Wydział Pracy i Ubezpieczeń Społecznych
+206,15101010,4503,Sąd Rejonowy w Elblągu,IX Wydział Cywilny
+207,15101010,2527,Sąd Rejonowy w Elblągu,V Wydział Gospodarczy
+208,15101010,4006,Sąd Rejonowy w Elblągu,VIII Wydział Karny
+209,15101010,5003,Sąd Rejonowy w Elblągu,X Wydział Cywilny
+210,15101020,503,Sąd Rejonowy w Ostródzie,I Wydział Cywilny
+211,15101020,1006,Sąd Rejonowy w Ostródzie,II Wydział Karny
+212,15101020,1512,Sąd Rejonowy w Ostródzie,III Wydział Rodzinny i Nieletnich
+213,15101020,2015,Sąd Rejonowy w Ostródzie,IV Wydział Pracy
+214,15101020,3520006,Sąd Rejonowy w Ostródzie,VII Zamiejscowy Wydział Karny w Morągu
+215,15100500,503,Sąd Okręgowy w Bydgoszczy,I Wydział Cywilny
+216,15100500,1003,Sąd Okręgowy w Bydgoszczy,II Wydział Cywilny Odwoławczy
+217,15100500,1506,Sąd Okręgowy w Bydgoszczy,III Wydział Karny
+218,15100500,2006,Sąd Okręgowy w Bydgoszczy,IV Wydział Karny Odwoławczy
+219,15100500,4557,Sąd Okręgowy w Bydgoszczy,IX Wydział Wizytacyjny
+220,15100500,2539,Sąd Okręgowy w Bydgoszczy,V Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+221,15100500,3021,Sąd Okręgowy w Bydgoszczy,VI Wydział Pracy i Ubezpieczeń Społecznych
+222,15100500,4027,Sąd Okręgowy w Bydgoszczy,VIII Wydział Gospodarczy
+223,15100500,5009,Sąd Okręgowy w Bydgoszczy,X Wydział Cywilny Rodzinny
+224,15100515,503,Sąd Rejonowy w Szubinie,I Wydział Cywilny
+225,15100515,1006,Sąd Rejonowy w Szubinie,II Wydział Karny
+226,15100515,1512,Sąd Rejonowy w Szubinie,III Wydział Rodzinny i Nieletnich
+227,15100515,4520003,Sąd Rejonowy w Szubinie,IX Zamiejscowy Wydział Cywilny z siedzibą w Żninie
+228,15100515,5020006,Sąd Rejonowy w Szubinie,X Zamiejscowy Wydział Karny z siedzibą w Żninie
+229,15100515,5520012,Sąd Rejonowy w Szubinie,XI Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Żninie
+230,15100525,503,Sąd Rejonowy w Nakle nad Notecią,I Wydział Cywilny
+231,15100525,1006,Sąd Rejonowy w Nakle nad Notecią,II Wydział Karny
+232,15100525,1512,Sąd Rejonowy w Nakle nad Notecią,III Wydział Rodzinny i Nieletnich
+233,15100520,500503,Sąd Rejonowy w Świeciu,I Wydział Cywilny
+234,15100520,1001006,Sąd Rejonowy w Świeciu,II Wydział Karny
+235,15100520,1501512,Sąd Rejonowy w Świeciu,III Wydział Rodzinny i Nieletnich
+236,15100520,2002015,Sąd Rejonowy w Świeciu,IV Wydział Pracy
+237,15100535,503,Sąd Rejonowy w Mogilnie,I Wydział Cywilny
+238,15100535,1006,Sąd Rejonowy w Mogilnie,II Wydział Karny
+239,15100535,1512,Sąd Rejonowy w Mogilnie,III Wydział Rodzinny i Nieletnich
+240,15100530,503,Sąd Rejonowy w Tucholi,I Wydział Cywilny
+241,15100530,1006,Sąd Rejonowy w Tucholi,II Wydział Karny
+242,15100530,1512,Sąd Rejonowy w Tucholi,III Wydział Rodzinny i Nieletnich
+243,15100540,503,Sąd Rejonowy w Żninie,I Wydział Cywilny
+244,15100540,1006,Sąd Rejonowy w Żninie,II Wydział Karny
+245,15100540,1512,Sąd Rejonowy w Żninie,III Wydział Rodzinny i Nieletnich
+246,15100510,503,Sąd Rejonowy w Inowrocławiu,I Wydział Cywilny
+247,15100510,1006,Sąd Rejonowy w Inowrocławiu,II Wydział Karny
+248,15100510,1512,Sąd Rejonowy w Inowrocławiu,III Wydział Rodzinny i Nieletnich
+249,15100510,2015,Sąd Rejonowy w Inowrocławiu,IV Wydział Pracy
+250,15100510,4520012,Sąd Rejonowy w Inowrocławiu,IX Zamiejscowy Wydział Rodzinny i Nieletnich
+251,15100510,3006,Sąd Rejonowy w Inowrocławiu,VI Wydział Karny
+252,15100510,3520003,Sąd Rejonowy w Inowrocławiu,VII Zamiejscowy Wydział Cywilny
+253,15100510,4020006,Sąd Rejonowy w Inowrocławiu,VIII Zamiejscowy Wydział Karny
+254,15100505,503,Sąd Rejonowy w Bydgoszczy,I Wydział Cywilny
+255,15100505,1003,Sąd Rejonowy w Bydgoszczy,II Wydział Cywilny
+256,15100505,1506,Sąd Rejonowy w Bydgoszczy,III Wydział Karny
+257,15100505,2006,Sąd Rejonowy w Bydgoszczy,IV Wydział Karny
+258,15100505,4506,Sąd Rejonowy w Bydgoszczy,IX Wydział Karny
+259,15100505,2512,Sąd Rejonowy w Bydgoszczy,V Wydział Rodzinny i Nieletnich
+260,15100505,3012,Sąd Rejonowy w Bydgoszczy,VI Wydział Rodzinny i Nieletnich
+261,15100505,3521,Sąd Rejonowy w Bydgoszczy,VII Wydział Pracy i Ubezpieczeń Społecznych
+262,15100505,4027,Sąd Rejonowy w Bydgoszczy,VIII Wydział Gospodarczy
+263,15100505,5506,Sąd Rejonowy w Bydgoszczy,XI Wydział Karny
+264,15100505,6003,Sąd Rejonowy w Bydgoszczy,XII Wydział Cywilny
+265,15100505,7003,Sąd Rejonowy w Bydgoszczy,XIV Wydział Cywilny
+266,15100505,7006,Sąd Rejonowy w Bydgoszczy,XIV Wydział Karny
+267,15100505,7563,Sąd Rejonowy w Bydgoszczy,XV Wydział Gospodarczy ds. Upadłościowych i Naprawczych
+268,15102500,503,Sąd Okręgowy w Toruniu,I Wydział Cywilny
+269,15102500,1006,Sąd Okręgowy w Toruniu,II Wydział Karny
+270,15102500,1539,Sąd Okręgowy w Toruniu,III Wydział Penitencjarny
+271,15102500,2021,Sąd Okręgowy w Toruniu,IV Wydział Pracy i Ubezpieczeń Społecznych
+272,15102500,4506,Sąd Okręgowy w Toruniu,IX Wydział Karny Odwoławczy
+273,15102500,3027,Sąd Okręgowy w Toruniu,VI Wydział Gospodarczy
+274,15102500,3557,Sąd Okręgowy w Toruniu,VII Wydział Wizytacyjny
+275,15102500,4003,Sąd Okręgowy w Toruniu,VIII Wydział Cywilny Odwoławczy
+276,15102530,503,Sąd Rejonowy w Wąbrzeźnie,I Wydział Cywilny
+277,15102530,1006,Sąd Rejonowy w Wąbrzeźnie,II Wydział Karny
+278,15102530,1512,Sąd Rejonowy w Wąbrzeźnie,III Wydział Rodzinny i Nieletnich
+279,15102510,503,Sąd Rejonowy w Chełmnie,I Wydział Cywilny
+280,15102510,1006,Sąd Rejonowy w Chełmnie,II Wydział Karny
+281,15102510,1512,Sąd Rejonowy w Chełmnie,III Wydział Rodzinny i Nieletnich
+282,15102510,522503,Sąd Rejonowy w Chełmnie,VI Zamiejscowy Wydział Cywilny z siedzibą w Wąbrzeźnie
+283,15102510,1023006,Sąd Rejonowy w Chełmnie,VII Zamiejscowy Wydział Karny z siedzibą w Wąbrzeźnie
+284,15102510,1523512,Sąd Rejonowy w Chełmnie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Wąbrzeźnie
+285,15102505,503,Sąd Rejonowy w Brodnicy,I Wydział Cywilny
+286,15102505,1006,Sąd Rejonowy w Brodnicy,II Wydział Karny
+287,15102505,1512,Sąd Rejonowy w Brodnicy,III Wydział Rodzinny i Nieletnich
+288,15102505,3020003,Sąd Rejonowy w Brodnicy,VI Zamiejscowy Wydział Cywilny z siedzibą w Golubiu-Dobrzyniu
+289,15102505,3520006,Sąd Rejonowy w Brodnicy,VII Zamiejscowy Wydział Karny z siedzibą w Golubiu-Dobrzyniu
+290,15102505,4020012,Sąd Rejonowy w Brodnicy,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Golubiu-Dobrzyniu
+291,15102515,503,Sąd Rejonowy w Grudziądzu,I Wydział Cywilny
+292,15102515,1006,Sąd Rejonowy w Grudziądzu,II Wydział Karny
+293,15102515,1512,Sąd Rejonowy w Grudziądzu,III Wydział Rodzinny
+294,15102515,2015,Sąd Rejonowy w Grudziądzu,IV Wydział Pracy
+295,15102525,503,Sąd Rejonowy w Golubiu-Dobrzyniu,I Wydział Cywilny
+296,15102525,1006,Sąd Rejonowy w Golubiu-Dobrzyniu,II Wydział Karny
+297,15102525,1512,Sąd Rejonowy w Golubiu-Dobrzyniu,III Wydział Rodzinny i Nieletnich
+298,15102520,503,Sąd Rejonowy w Toruniu,I Wydział Cywilny
+299,15102520,1006,Sąd Rejonowy w Toruniu,II Wydział Karny
+300,15102520,1512,Sąd Rejonowy w Toruniu,III Wydział Rodzinny i Nieletnich
+301,15102520,2021,Sąd Rejonowy w Toruniu,IV Wydział Pracy i Ubezpieczeń Społecznych
+302,15102520,2527,Sąd Rejonowy w Toruniu,V Wydział Gospodarczy
+303,15102520,4006,Sąd Rejonowy w Toruniu,VIII Wydział Karny
+304,15102520,5003,Sąd Rejonowy w Toruniu,X Wydział Cywilny
+305,15102520,5503,Sąd Rejonowy w Toruniu,XI Wydział Cywilny
+306,15102520,6006,Sąd Rejonowy w Toruniu,XII Wydział Karny
+307,15102000,503,Sąd Okręgowy w Słupsku,I Wydział Cywilny
+308,15102000,1006,Sąd Okręgowy w Słupsku,II Wydział Karny
+309,15102000,1539,Sąd Okręgowy w Słupsku,III Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+310,15102000,2003,Sąd Okręgowy w Słupsku,IV Wydział Cywilny Odwoławczy
+311,15102000,2521,Sąd Okręgowy w Słupsku,V Wydział Pracy i Ubezpieczeń Społecznych
+312,15102000,3006,Sąd Okręgowy w Słupsku,VI Wydział Karny Odwoławczy
+313,15102020,503,Sąd Rejonowy w Słupsku,I Wydział Cywilny
+314,15102020,1006,Sąd Rejonowy w Słupsku,II Wydział Karny
+315,15102020,1512,Sąd Rejonowy w Słupsku,III Wydział Rodzinny i Nieletnich
+316,15102020,4503,Sąd Rejonowy w Słupsku,IX Wydział Cywilny
+317,15102020,2521,Sąd Rejonowy w Słupsku,V Wydział Pracy i Ubezpieczęń Społecznych
+318,15102020,3027,Sąd Rejonowy w Słupsku,VI Wydział Gospodarczy
+319,15102020,7006,Sąd Rejonowy w Słupsku,XIV Wydział Karny
+320,15102020,7520003,Sąd Rejonowy w Słupsku,XV Zamiejscowy Wydział Cywilny
+321,15102020,8020006,Sąd Rejonowy w Słupsku,XVI Zamiejscowy Wydział Karny
+322,15102020,8520012,Sąd Rejonowy w Słupsku,XVII Zamiejscowy Wydział Rodzinny i Nieletnich
+323,15102030,503,Sąd Rejonowy w Miastku,I Wydział Cywilny
+324,15102030,1006,Sąd Rejonowy w Miastku,II Wydział Karny
+325,15102030,1512,Sąd Rejonowy w Miastku,III Wydział Rodzinny i Nieletnich
+326,15102025,503,Sąd Rejonowy w Bytowie,I Wydział Cywilny
+327,15102025,1006,Sąd Rejonowy w Bytowie,II Wydział Karny
+328,15102025,1512,Sąd Rejonowy w Bytowie,III Wydział Rodzinny i Nieletnich
+329,15102005,503,Sąd Rejonowy w Chojnicach,I Wydział Cywilny
+330,15102005,1006,Sąd Rejonowy w Chojnicach,II Wydział Karny
+331,15102005,1512,Sąd Rejonowy w Chojnicach,III Wydział Rodzinny
+332,15102015,503,Sąd Rejonowy w Lęborku,I Wydział Cywilny
+333,15102015,1006,Sąd Rejonowy w Lęborku,II Wydział Karny
+334,15102015,1512,Sąd Rejonowy w Lęborku,III Wydział Rodzinny
+335,15102015,3000003,Sąd Rejonowy w Lęborku,VI Zamiejscowy Wydział Cywilny z siedzibą w Bytowie
+336,15102015,3500006,Sąd Rejonowy w Lęborku,VII Zamiejscowy Wydział Karny z siedzibą w Bytowie
+337,15102015,4000012,Sąd Rejonowy w Lęborku,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Bytowie
+338,15102010,503,Sąd Rejonowy w Człuchowie,I Wydział Cywilny
+339,15102010,1006,Sąd Rejonowy w Człuchowie,II Wydział Karny
+340,15102010,1512,Sąd Rejonowy w Człuchowie,III Wydział Rodzinny i Nieletnich
+341,15102010,2015,Sąd Rejonowy w Człuchowie,IV Wydział Pracy
+342,15102010,2524,Sąd Rejonowy w Człuchowie,V Wydział Ksiąg Wieczystych
+343,15101500,503,Sąd Okręgowy w Gdańsku,I Wydział Cywilny
+344,15101500,1003,Sąd Okręgowy w Gdańsku,II Wydział Cywilny Rodzinny
+345,15101500,1009,Sąd Okręgowy w Gdańsku,II Wydział Cywilny Rodzinny. Sekcja do Spraw Rodzinnych Odwoławczych
+346,15101500,1503,Sąd Okręgowy w Gdańsku,III Wydział Cywilny Odwoławczy
+347,15101500,2006,Sąd Okręgowy w Gdańsku,IV Wydział Karny
+348,15101500,4527,Sąd Okręgowy w Gdańsku,IX Wydział Gospodarczy
+349,15101500,2506,Sąd Okręgowy w Gdańsku,V Wydział Karny Odwoławczy
+350,15101500,3039,Sąd Okręgowy w Gdańsku,VI Wydział Penitencjarny
+351,15101500,3521,Sąd Okręgowy w Gdańsku,VII Wydział Pracy i Ubezpieczeń Społecznych
+352,15101500,4021,Sąd Okręgowy w Gdańsku,VIII Wydział Pracy i Ubezpieczeń Społecznych
+353,15101500,5057,Sąd Okręgowy w Gdańsku,X Wydział Wizytacyjny
+354,15101500,5554,Sąd Okręgowy w Gdańsku,XI Wydział Wykonawczy
+355,15101500,6027,Sąd Okręgowy w Gdańsku,XII Wydział Gospodarczy Odwoławczy
+356,15101500,6506,Sąd Okręgowy w Gdańsku,XIII Wydział Karny Odwoławczy
+357,15101500,7006,Sąd Okręgowy w Gdańsku,XIV Wydział Karny
+358,15101500,7503,Sąd Okręgowy w Gdańsku,XV Wydział Cywilny
+359,15101500,8003,Sąd Okręgowy w Gdańsku,XVI Wydział Cywilny Odwoławczy
+360,15101500,8527,Sąd Okręgowy w Gdańsku,XVII Wydziału Własności Intelektualnej
+361,15101540,503,Sąd Rejonowy w Starogardzie Gdańskim,I Wydział Cywilny
+362,15101540,1006,Sąd Rejonowy w Starogardzie Gdańskim,II Wydział Karny
+363,15101540,1512,Sąd Rejonowy w Starogardzie Gdańskim,III Wydział Rodzinny i Nieletnich
+364,15101550,503,Sąd Rejonowy w Wejherowie,I Wydział Cywilny
+365,15101550,1006,Sąd Rejonowy w Wejherowie,II Wydział Karny
+366,15101550,1512,Sąd Rejonowy w Wejherowie,III Wydział Rodzinny i Nieletnich
+367,15101550,4520006,Sąd Rejonowy w Wejherowie,IX Zamiejscowy Wydział Karny z siedzibą w Pucku
+368,15101545,503,Sąd Rejonowy w Tczewie,I Wydział Cywilny
+369,15101545,1006,Sąd Rejonowy w Tczewie,II Wydział Karny
+370,15101545,1512,Sąd Rejonowy w Tczewie,III Wydział Rodzinny i Nieletnich
+371,15101555,503,Sąd Rejonowy w Kościerzynie,I Wydział Cywilny
+372,15101555,1006,Sąd Rejonowy w Kościerzynie,II Wydział Karny
+373,15101555,1512,Sąd Rejonowy w Kościerzynie,III Wydział Rodzinny i Nieletnich
+374,15101510,503,Sąd Rejonowy Gdańsk-Północ w Gdańsku,I Wydział Cywilny
+375,15101510,1006,Sąd Rejonowy Gdańsk-Północ w Gdańsku,II Wydział Karny
+376,15101510,2027,Sąd Rejonowy Gdańsk-Północ w Gdańsku,IV Wydział Gospodarczy
+377,15101510,603,Sąd Rejonowy Gdańsk-Północ w Gdańsku,I_1 Wydział Cywilny. Sekcja ds.rozpoznawanych w postępowaniu uproszczonym
+378,15101510,2527,Sąd Rejonowy Gdańsk-Północ w Gdańsku,V Wydział Gospodarczy
+379,15101510,3063,Sąd Rejonowy Gdańsk-Północ w Gdańsku,VI Wydział Upadłościowy
+380,15101510,5506,Sąd Rejonowy Gdańsk-Północ w Gdańsku,XI Wydział Karny
+381,15101510,6503,Sąd Rejonowy Gdańsk-Północ w Gdańsku,XIII Cywilny
+382,15101510,6603,Sąd Rejonowy Gdańsk-Północ w Gdańsku,XIII Wydział Cywilny. Sekcja ds. Egzekucyjnych
+383,15101510,7003,Sąd Rejonowy Gdańsk-Północ w Gdańsku,XIV Wydział Cywilny
+384,15101505,503,Sąd Rejonowy Gdańsk-Południe w Gdańsku,I Wydział Cywilny
+385,15101505,1006,Sąd Rejonowy Gdańsk-Południe w Gdańsku,II Wydział Karny
+386,15101505,2012,Sąd Rejonowy Gdańsk-Południe w Gdańsku,IV Wydział Rodzinny
+387,15101505,4503,Sąd Rejonowy Gdańsk-Południe w Gdańsku,IX Wydział Cywilny
+388,15101505,2512,Sąd Rejonowy Gdańsk-Południe w Gdańsku,V Wydział Rodzinny
+389,15101505,3021,Sąd Rejonowy Gdańsk-Południe w Gdańsku,VI Wydział Pracy
+390,15101505,4006,Sąd Rejonowy Gdańsk-Południe w Gdańsku,VIII Wydział Karny
+391,15101505,5006,Sąd Rejonowy Gdańsk-Południe w Gdańsku,X Wydział Karny
+392,15101505,6003,Sąd Rejonowy Gdańsk-Południe w Gdańsku,XII Wydział Cywilny
+393,15101515,503,Sąd Rejonowy w Gdyni,I Wydział Cywilny
+394,15101515,1006,Sąd Rejonowy w Gdyni,II Wydział Karny
+395,15101515,1512,Sąd Rejonowy w Gdyni,III Wydział Rodzinny i Nieletnich
+396,15101515,2015,Sąd Rejonowy w Gdyni,IV Wydział Pracy
+397,15101515,4506,Sąd Rejonowy w Gdyni,IX Wydział Karny
+398,15101515,3027,Sąd Rejonowy w Gdyni,VI Wydział Gospodarczy
+399,15101515,3503,Sąd Rejonowy w Gdyni,VII Wydział Cywilny
+400,15101525,503,Sąd Rejonowy w Kwidzynie,I Wydział Cywilny
+401,15101525,1006,Sąd Rejonowy w Kwidzynie,II Wydział Karny
+402,15101525,1512,Sąd Rejonowy w Kwidzynie,III Wydział Rodzinny i Nieletnich
+403,15101520,503,Sąd Rejonowy w Kartuzach,I Wydział Cywilny
+404,15101520,1006,Sąd Rejonowy w Kartuzach,II Wydział Karny
+405,15101520,1512,Sąd Rejonowy w Kartuzach,III Wydział Rodzinny
+406,15101520,2015,Sąd Rejonowy w Kartuzach,IV Wydział Pracy
+407,15101535,503,Sąd Rejonowy w Sopocie,I Wydział Cywilny
+408,15101535,1006,Sąd Rejonowy w Sopocie,II Wydział Karny
+409,15101535,1512,Sąd Rejonowy w Sopocie,III Wydział Rodzinny i Nieletnich
+410,15101530,503,Sąd Rejonowy w Malborku,I Wydział Cywilny
+411,15101530,1006,Sąd Rejonowy w Malborku,II Wydział Karny
+412,15101530,1512,Sąd Rejonowy w Malborku,III Wydział Rodzinny i Nieletnich
+413,15101530,2015,Sąd Rejonowy w Malborku,IV Wydział Pracy
+414,15103000,503,Sąd Okręgowy we Włocławku,I Wydział Cywilny
+415,15103000,1006,Sąd Okręgowy we Włocławku,II Wydział Karny
+416,15103000,1539,Sąd Okręgowy we Włocławku,III Wydział Penitencjarny
+417,15103000,2021,Sąd Okręgowy we Włocławku,IV Wydział Pracy i Ubezpieczeń Społecznych
+418,15103000,2509,Sąd Okręgowy we Włocławku,V Wydział Cywilny Rodzinny
+419,15103015,503,Sąd Rejonowy we Włocławku,I Wydział Cywilny
+420,15103015,1006,Sąd Rejonowy we Włocławku,II Wydział Karny
+421,15103015,1512,Sąd Rejonowy we Włocławku,III Wydział Rodzinny i Nieletnich
+422,15103015,2021,Sąd Rejonowy we Włocławku,IV Wydział Pracy i Ubezpieczeń Społecznych
+423,15103015,2527,Sąd Rejonowy we Włocławku,V Wydział Gospodarczy
+424,15103010,503,Sąd Rejonowy w Lipnie,I Wydział Cywilny
+425,15103010,1006,Sąd Rejonowy w Lipnie,II Wydział Karny
+426,15103010,1512,Sąd Rejonowy w Lipnie,III Wydział Rodzinny i Nieletnich
+427,15103010,3020003,Sąd Rejonowy w Lipnie,VI Zamiejscowy Wydział Cywilny z siedzibą w Rypinie
+428,15103010,3520006,Sąd Rejonowy w Lipnie,VII Zamiejscowy Wydział Karny z siedzibą w Rypinie
+429,15103010,4020012,Sąd Rejonowy w Lipnie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Rypinie
+430,15103020,503,Sąd Rejonowy w Radziejowie,I Wydział Cywilny
+431,15103020,1006,Sąd Rejonowy w Radziejowie,II Wydział Karny
+432,15103020,1512,Sąd Rejonowy w Radziejowie,III Wydział Rodzinny i Nieletnich
+433,15103025,503,Sąd Rejonowy w Rypinie,I Wydział Cywilny
+434,15103025,1006,Sąd Rejonowy w Rypinie,II Wydział Karny
+435,15103025,1512,Sąd Rejonowy w Rypinie,III Wydział Rodzinny i Nieletnich
+436,15103005,503,Sąd Rejonowy w Aleksandrowie Kujawskim,I Wydział Cywilny
+437,15103005,1006,Sąd Rejonowy w Aleksandrowie Kujawskim,II Wydział Karny
+438,15103005,1512,Sąd Rejonowy w Aleksandrowie Kujawskim,III Wydział Rodzinny i Nieletnich
+439,15103005,2520003,Sąd Rejonowy w Aleksandrowie Kujawskim,V Zamiejscowy Wydział Cywilny
+440,15103005,3020006,Sąd Rejonowy w Aleksandrowie Kujawskim,VI Zamiejscowy Wydział Karny
+441,15103005,3520012,Sąd Rejonowy w Aleksandrowie Kujawskim,VII Zamiejscowy Wydział Rodzinny i Nieletnich
+442,15150000,503,Sąd Apelacyjny w Katowicach,I Wydział Cywilny
+443,15150000,1006,Sąd Apelacyjny w Katowicach,II Wydział Karny
+444,15150000,1521,Sąd Apelacyjny w Katowicach,III Wydział Pracy i Ubezpieczeń Społecznych
+445,15150000,2503,Sąd Apelacyjny w Katowicach,V Wydział Cywilny
+446,15150500,503,Sąd Okręgowy w Bielsku-Białej,I Wydział Cywilny
+447,15150500,1003,Sąd Okręgowy w Bielsku-Białej,II Wydział Cywilny Odwoławczy
+448,15150500,1506,Sąd Okręgowy w Bielsku-Białej,III Wydział Karny
+449,15150500,2039,Sąd Okręgowy w Bielsku-Białej,IV Wydział Penitencjarny
+450,15150500,2527,Sąd Okręgowy w Bielsku-Białej,V Wydział Gospodarczy
+451,15150500,3021,Sąd Okręgowy w Bielsku-Białej,VI Wydział Pracy i Ubezpieczeń Społecznych
+452,15150500,3121,Sąd Okręgowy w Bielsku-Białej,VI Wydział Pracy i Ubezpieczeń Społecznych II instancja
+453,15150500,3506,Sąd Okręgowy w Bielsku-Białej,VII Wydział Karny Odwoławczy
+454,15150510,503,Sąd Rejonowy w Cieszynie,I Wydział Cywilny
+455,15150510,1006,Sąd Rejonowy w Cieszynie,II Wydział Karny
+456,15150510,1512,Sąd Rejonowy w Cieszynie,III Wydział Rodzinny i Nieletnich
+457,15150510,2015,Sąd Rejonowy w Cieszynie,IV Wydział Pracy
+458,15150505,503,Sąd Rejonowy w Bielsku-Białej,I Wydział Cywilny
+459,15150505,1003,Sąd Rejonowy w Bielsku-Białej,II Wydział Cywilny
+460,15150505,1506,Sąd Rejonowy w Bielsku-Białej,III Wydział Karny
+461,15150505,2012,Sąd Rejonowy w Bielsku-Białej,IV Wydział Rodzinny i Nieletnich
+462,15150505,4506,Sąd Rejonowy w Bielsku-Białej,IX Wydział Karny
+463,15150505,2521,Sąd Rejonowy w Bielsku-Białej,V Wydział Pracy i Ubezpieczeń Społecznych
+464,15150505,3027,Sąd Rejonowy w Bielsku-Białej,VI Wydział Gospodarczy
+465,15150505,5003,Sąd Rejonowy w Bielsku-Białej,X Wydział Cywilny
+466,15150515,503,Sąd Rejonowy w Żywcu,I Wydział Cywilny
+467,15150515,1006,Sąd Rejonowy w Żywcu,II Wydział Karny
+468,15150515,1512,Sąd Rejonowy w Żywcu,III Wydział Rodzinny i Nieletnich
+469,15150515,2015,Sąd Rejonowy w Żywcu,IV Wydział Pracy
+470,15152000,403,Sąd Okręgowy w Katowicach,I Wydział Cywilny
+471,15152000,803,Sąd Okręgowy w Katowicach,II Wydział Cywilny
+472,15152000,1203,Sąd Okręgowy w Katowicach,III Wydział Cywilny Odwoławczy
+473,15152000,1603,Sąd Okręgowy w Katowicach,IV Wydział Cywilny Odwoławczy
+474,15152000,3615,Sąd Okręgowy w Katowicach,IX Wydział Pracy
+475,15152000,2006,Sąd Okręgowy w Katowicach,V Wydział Karny
+476,15152000,2406,Sąd Okręgowy w Katowicach,VI Wydział Karny Odwoławczy
+477,15152000,2806,Sąd Okręgowy w Katowicach,VII Wydział Karny Odwoławczy
+478,15152000,3239,Sąd Okręgowy w Katowicach,VIII Wydział Penitencjarny
+479,15152000,4018,Sąd Okręgowy w Katowicach,X Wydział Pracy i Ubezpieczeń Społecznych
+480,15152000,4418,Sąd Okręgowy w Katowicach,XI Wydział Pracy i Ubezpieczeń Społecznych
+481,15152000,5227,Sąd Okręgowy w Katowicach,XIII Wydział Gospodarczy
+482,15152000,5627,Sąd Okręgowy w Katowicach,XIV Wydział Gospodarczy
+483,15152000,7627,Sąd Okręgowy w Katowicach,XIX Wydział Gospodarczy Odwoławczy
+484,15152000,6057,Sąd Okręgowy w Katowicach,XV Wydział Wizytacyjny
+485,15152000,6406,Sąd Okręgowy w Katowicach,XVI Wydział Karny
+486,15152000,6809,Sąd Okręgowy w Katowicach,XVII Wydział Cywilny Rodzinny
+487,15152000,7209,Sąd Okręgowy w Katowicach,XVIII Wydział Cywilny Rodzinny
+488,15152000,8406,Sąd Okręgowy w Katowicach,XXI Wydział Karny
+489,15152000,8854,Sąd Okręgowy w Katowicach,XXII Wydział Wykonawczy
+490,15152000,9206,Sąd Okręgowy w Katowicach,XXIII Wydział Karny Odwoławczy
+491,15152000,9627,Sąd Okręgowy w Katowicach,XXIV Wydział Własności Intelektualnej
+492,15152065,503,Sąd Rejonowy w Tychach,I Wydział Cywilny
+493,15152065,1006,Sąd Rejonowy w Tychach,II Wydział Karny
+494,15152065,1512,Sąd Rejonowy w Tychach,III Wydział Rodzinny i Nieletnich
+495,15152065,2021,Sąd Rejonowy w Tychach,IV Wydział Pracy i Ubezpieczeń Społecznych
+496,15152065,4503,Sąd Rejonowy w Tychach,IX Wydział Cywilny
+497,15152065,3027,Sąd Rejonowy w Tychach,VI Wydział Gospodarczy
+498,15152065,3506,Sąd Rejonowy w Tychach,VII Wydział Karny
+499,15152035,503,Sąd Rejonowy Katowice-Zachód w Katowicach,I Wydział Cywilny
+500,15152035,1003,Sąd Rejonowy Katowice-Zachód w Katowicach,II Wydział Cywilny
+501,15152035,1506,Sąd Rejonowy Katowice-Zachód w Katowicach,III Wydział Karny
+502,15152035,2012,Sąd Rejonowy Katowice-Zachód w Katowicach,IV Wydział Rodzinny i Nieletnich
+503,15152035,2512,Sąd Rejonowy Katowice-Zachód w Katowicach,V Wydział Rodzinny i Nieletnich
+504,15152035,3521,Sąd Rejonowy Katowice-Zachód w Katowicach,VII Wydział Pracy i Ubezpieczeń Społecznych
+505,15152035,4006,Sąd Rejonowy Katowice-Zachód w Katowicach,VIII Wydział Karny
+506,15152045,503,Sąd Rejonowy w Mysłowicach,I Wydział Cywilny
+507,15152045,1006,Sąd Rejonowy w Mysłowicach,II Wydział Karny
+508,15152045,1512,Sąd Rejonowy w Mysłowicach,III Wydział Rodzinny i Nieletnich
+509,15152045,2015,Sąd Rejonowy w Mysłowicach,IV Wydział Pracy
+510,15152040,503,Sąd Rejonowy w Mikołowie,I Wydział Cywilny
+511,15152040,1006,Sąd Rejonowy w Mikołowie,II Wydział Karny
+512,15152040,1106,Sąd Rejonowy w Mikołowie,II Wydział Karny. Sekcja ds. Wykroczeń
+513,15152040,1512,Sąd Rejonowy w Mikołowie,III Wydział Rodzinny i Nieletnich
+514,15152040,2015,Sąd Rejonowy w Mikołowie,IV Wydział Pracy
+515,15152055,503,Sąd Rejonowy w Siemianowicach Śląskich,I Wydział Cywilny
+516,15152055,1006,Sąd Rejonowy w Siemianowicach Śląskich,II Wydział Karny
+517,15152055,1512,Sąd Rejonowy w Siemianowicach Śląskich,III Wydział Rodzinny i Nieletnich
+518,15152050,503,Sąd Rejonowy w Pszczynie,I Wydział Cywilny
+519,15152050,1006,Sąd Rejonowy w Pszczynie,II Wydział Karny
+520,15152050,1512,Sąd Rejonowy w Pszczynie,III Wydział Rodzinny i Nieletnich
+521,15152050,2015,Sąd Rejonowy w Pszczynie,IV Wydział Pracy
+522,15152060,503,Sąd Rejonowy w Sosnowcu,I Wydział Cywilny
+523,15152060,603,Sąd Rejonowy w Sosnowcu,I Wydział Cywilny. Sekcja ds. uproszczonych
+524,15152060,1003,Sąd Rejonowy w Sosnowcu,II Wydział Cywilny
+525,15152060,1506,Sąd Rejonowy w Sosnowcu,III Wydział Karny
+526,15152060,2012,Sąd Rejonowy w Sosnowcu,IV Wydział Rodzinny i Nieletnich
+527,15152060,4506,Sąd Rejonowy w Sosnowcu,IX Wydział Karny
+528,15152060,2521,Sąd Rejonowy w Sosnowcu,V Wydział Pracy i Ubezpieczeń Społecznych
+529,15152060,3506,Sąd Rejonowy w Sosnowcu,VII Wydział Karny
+530,15152060,5506,Sąd Rejonowy w Sosnowcu,XI Wydział Karny
+531,15152005,503,Sąd Rejonowy w Będzinie,I Wydział Cywilny
+532,15152005,1006,Sąd Rejonowy w Będzinie,II Wydział Karny
+533,15152005,1512,Sąd Rejonowy w Będzinie,III Wydział Rodzinny
+534,15152005,2015,Sąd Rejonowy w Będzinie,IV Wydział Pracy
+535,15152005,3506,Sąd Rejonowy w Będzinie,VII Wydział Karny
+536,15152015,503,Sąd Rejonowy w Chorzowie,I Wydział Cywilny
+537,15152015,1006,Sąd Rejonowy w Chorzowie,II Wydział Karny
+538,15152015,1512,Sąd Rejonowy w Chorzowie,III Wydział Rodzinny i Nieletnich
+539,15152015,2521,Sąd Rejonowy w Chorzowie,V Wydział Pracy i Ubezpieczeń Społecznych
+540,15152015,3506,Sąd Rejonowy w Chorzowie,VII Wydział Karny
+541,15152015,4003,Sąd Rejonowy w Chorzowie,VIII Wydział Cywilny
+542,15152010,503,Sąd Rejonowy w Bytomiu,I Wydział Cywilny
+543,15152010,1006,Sąd Rejonowy w Bytomiu,II Wydział Karny
+544,15152010,1512,Sąd Rejonowy w Bytomiu,III Wydział Rodzinny i Nieletnich
+545,15152010,4512,Sąd Rejonowy w Bytomiu,IX Wydział Rodzinny i Nieletnich
+546,15152010,2515,Sąd Rejonowy w Bytomiu,V Wydział Pracy
+547,15152010,3027,Sąd Rejonowy w Bytomiu,VI Wydział Gospodarczy
+548,15152010,4006,Sąd Rejonowy w Bytomiu,VIII Wydział Karny
+549,15152020,503,Sąd Rejonowy w Dąbrowie Górniczej,I Wydział Cywilny
+550,15152020,1006,Sąd Rejonowy w Dąbrowie Górniczej,II Wydział Karny
+551,15152020,1512,Sąd Rejonowy w Dąbrowie Górniczej,III Wydział Rodzinny
+552,15152020,2015,Sąd Rejonowy w Dąbrowie Górniczej,IV Wydział Pracy
+553,15152020,2527,Sąd Rejonowy w Dąbrowie Górniczej,V Wydział Gospodarczy
+554,15152020,3506,Sąd Rejonowy w Dąbrowie Górniczej,VII Wydział Karny
+555,15152030,503,Sąd Rejonowy Katowice-Wschód w Katowicach,I Wydział Cywilny
+556,15152030,1003,Sąd Rejonowy Katowice-Wschód w Katowicach,II Wydział Cywilny
+557,15152030,1506,Sąd Rejonowy Katowice-Wschód w Katowicach,III Wydział Karny
+558,15152030,2006,Sąd Rejonowy Katowice-Wschód w Katowicach,IV Wydział Karny
+559,15152030,4533,Sąd Rejonowy Katowice-Wschód w Katowicach,IX Wydział Gospodarczy Rejestru Zastawów
+560,15152030,2506,Sąd Rejonowy Katowice-Wschód w Katowicach,V Wydział Karny
+561,15152030,3027,Sąd Rejonowy Katowice-Wschód w Katowicach,VI Wydział Gospodarczy
+562,15152030,3527,Sąd Rejonowy Katowice-Wschód w Katowicach,VII Wydział Gospodarczy
+563,15152030,4036,Sąd Rejonowy Katowice-Wschód w Katowicach,VIII Wydział Gospodarczy Krajowego Rejestru Sądowego
+564,15152030,5027,Sąd Rejonowy Katowice-Wschód w Katowicach,X Wydział Gospodarczy
+565,15152030,5524,Sąd Rejonowy Katowice-Wschód w Katowicach,XI Wydział Ksiąg Wieczystych
+566,15152030,6039,Sąd Rejonowy Katowice-Wschód w Katowicach,XII Wydział Wykonywania Orzeczeń
+567,15152025,503,Sąd Rejonowy w Jaworznie,I Wydział Cywilny
+568,15152025,1006,Sąd Rejonowy w Jaworznie,II Wydział Karny
+569,15152025,1512,Sąd Rejonowy w Jaworznie,III Wydział Rodzinny i Nieletnich
+570,15152025,2015,Sąd Rejonowy w Jaworznie,IV Wydział Pracy
+571,15152025,2524,Sąd Rejonowy w Jaworznie,V Wydział Ksiąg Wieczystych
+572,15151500,503,Sąd Okręgowy w Gliwicach,I Wydział Cywilny
+573,15151500,511003,Sąd Okręgowy w Gliwicach,II Zamiejscowy Wydział Cywilny
+574,15151500,1503,Sąd Okręgowy w Gliwicach,III Wydział Cywilny Odwoławczy
+575,15151500,2006,Sąd Okręgowy w Gliwicach,IV Wydział Karny
+576,15151500,1514521,Sąd Okręgowy w Gliwicach,IX Zamiejscowy Wydział Pracy i Ubezpieczeń Społecznych
+577,15151500,1012506,Sąd Okręgowy w Gliwicach,V Zamiejscowy Wydział Karny
+578,15151500,1012706,Sąd Okręgowy w Gliwicach,V Zamiejscowy Wydział Karny. Sekcja Odwoławcza
+579,15151500,3006,Sąd Okręgowy w Gliwicach,VI Wydział Karny Odwoławczy
+580,15151500,3539,Sąd Okręgowy w Gliwicach,VII Wydział Penitencjarny i Nadzowu nad Wykonywaniem Orzeczeń Karnych
+581,15151500,4021,Sąd Okręgowy w Gliwicach,VIII Wydział Pracy i Ubezpieczeń Społecznych
+582,15151500,5027,Sąd Okręgowy w Gliwicach,X Wydział Gospodarczy
+583,15151500,5557,Sąd Okręgowy w Gliwicach,XI Wydział Wizytacyjny
+584,15151500,6003,Sąd Okręgowy w Gliwicach,XII Wydział Cywilny
+585,15151525,503,Sąd Rejonowy w Rybniku,I Wydział Cywilny
+586,15151525,1003,Sąd Rejonowy w Rybniku,II Wydział Cywilny
+587,15151525,1506,Sąd Rejonowy w Rybniku,III Wydział Karny
+588,15151525,2012,Sąd Rejonowy w Rybniku,IV Wydział Rodzinny i Nieletnich
+589,15151525,4506,Sąd Rejonowy w Rybniku,IX Wydział Karny
+590,15151525,2521,Sąd Rejonowy w Rybniku,V Wydział Pracy i Ubezpieczeń Społecznych
+591,15151525,3027,Sąd Rejonowy w Rybniku,VI Wydział Gospodarczy
+592,15151525,3524,Sąd Rejonowy w Rybniku,VII Wydział Ksiąg Wieczystych
+593,15151520,503,Sąd Rejonowy w Rudzie Śląskiej,I Wydział Cywilny
+594,15151520,1006,Sąd Rejonowy w Rudzie Śląskiej,II Wydział Karny
+595,15151520,1512,Sąd Rejonowy w Rudzie Śląskiej,III Wydział Rodzinny
+596,15151520,3006,Sąd Rejonowy w Rudzie Śląskiej,VI Wydział Karny
+597,15151535,503,Sąd Rejonowy w Wodzisławiu Śląśkim,I Wydział Cywilny
+598,15151535,1006,Sąd Rejonowy w Wodzisławiu Śląśkim,II Wydział Karny
+599,15151535,1512,Sąd Rejonowy w Wodzisławiu Śląśkim,III Wydział Rodzinny
+600,15151535,3006,Sąd Rejonowy w Wodzisławiu Śląśkim,VI Wydział Karny
+601,15151530,503,Sąd Rejonowy w Tarnowskich Górach,I Wydział Cywilny
+602,15151530,1006,Sąd Rejonowy w Tarnowskich Górach,II Wydział Karny
+603,15151530,1512,Sąd Rejonowy w Tarnowskich Górach,III Wydział Rodzinny i Nieletnich
+604,15151530,2015,Sąd Rejonowy w Tarnowskich Górach,IV Wydział Pracy
+605,15151530,3020006,Sąd Rejonowy w Tarnowskich Górach,VI Zamiejscowy Wydział Karny
+606,15151540,503,Sąd Rejonowy w Zabrzu,I Wydział Cywilny
+607,15151540,1006,Sąd Rejonowy w Zabrzu,II Wydział Karny
+608,15151540,1512,Sąd Rejonowy w Zabrzu,III Wydział Rodzinny
+609,15151540,2015,Sąd Rejonowy w Zabrzu,IV Wydział Pracy
+610,15151540,3506,Sąd Rejonowy w Zabrzu,VII Wydział Karny
+611,15151540,4003,Sąd Rejonowy w Zabrzu,VIII Wydział Cywilny
+612,15151545,503,Sąd Rejonowy w Żorach,I Wydział Cywilny
+613,15151545,1006,Sąd Rejonowy w Żorach,II Wydział Karny
+614,15151545,1512,Sąd Rejonowy w Żorach,III Wydział Rodzinny i Nieletnich
+615,15151510,503,Sąd Rejonowy w Jastrzębiu-Zdroju,I Wydział Cywilny
+616,15151510,1006,Sąd Rejonowy w Jastrzębiu-Zdroju,II Wydział Karny
+617,15151510,1512,Sąd Rejonowy w Jastrzębiu-Zdroju,III Wydział Rodzinny i Nieletnich
+618,15151510,2015,Sąd Rejonowy w Jastrzębiu-Zdroju,IV Wydział Pracy
+619,15151505,503,Sąd Rejonowy w Gliwicach,I Wydział Cywilny
+620,15151505,1003,Sąd Rejonowy w Gliwicach,II Wydział Cywilny
+621,15151505,1506,Sąd Rejonowy w Gliwicach,III Wydział Karny
+622,15151505,2012,Sąd Rejonowy w Gliwicach,IV Wydział Rodzinny i Nieletnich
+623,15151505,4506,Sąd Rejonowy w Gliwicach,IX Wydział Karny
+624,15151505,2512,Sąd Rejonowy w Gliwicach,V Wydział Rodzinny i Nieletnich
+625,15151505,3021,Sąd Rejonowy w Gliwicach,VI Wydział Pracy i Ubezpieczeń Społecznych
+626,15151505,3527,Sąd Rejonowy w Gliwicach,VII Wydział Gospodarczy
+627,15151505,6063,Sąd Rejonowy w Gliwicach,XII Wydział Gospodarczy
+628,15151515,503,Sąd Rejonowy w Raciborzu,I Wydział Cywilny
+629,15151515,1006,Sąd Rejonowy w Raciborzu,II Wydział Karny
+630,15151515,1512,Sąd Rejonowy w Raciborzu,III Wydział Rodzinny
+631,15151000,503,Sąd Okręgowy w Częstochowie,I Wydział Cywilny
+632,15151000,603,Sąd Okręgowy w Częstochowie,I Wydział Cywilny. Sekcja do Rozpoznawania Spraw o Rozwód i Separację
+633,15151000,1006,Sąd Okręgowy w Częstochowie,II Wydział Karny
+634,15151000,1539,Sąd Okręgowy w Częstochowie,III Wydział Penitencjarny
+635,15151000,2021,Sąd Okręgowy w Częstochowie,IV Wydział Pracy i Ubezpieczeń Społecznych
+636,15151000,2527,Sąd Okręgowy w Częstochowie,V Wydział Gospodarczy
+637,15151000,3003,Sąd Okręgowy w Częstochowie,VI Wydział Cywilny Odwoławczy
+638,15151000,3506,Sąd Okręgowy w Częstochowie,VII Wydział Karny Odwoławczy
+639,15151015,503,Sąd Rejonowy w Myszkowie,I Wydział Cywilny
+640,15151015,1006,Sąd Rejonowy w Myszkowie,II Wydział Karny
+641,15151015,1512,Sąd Rejonowy w Myszkowie,III Wydział Rodzinny i Nieletnich
+642,15151015,2015,Sąd Rejonowy w Myszkowie,IV Wydział Sądu Pracy
+643,15151010,503,Sąd Rejonowy w Lublińcu,I Wydział Cywilny
+644,15151010,1006,Sąd Rejonowy w Lublińcu,II Wydział Karny
+645,15151010,1512,Sąd Rejonowy w Lublińcu,III Wydział Rodzinny i Nieletnich
+646,15151020,503,Sąd Rejonowy w Zawierciu,I Wydział Cywilny
+647,15151020,1006,Sąd Rejonowy w Zawierciu,II Wydział Karny
+648,15151020,1512,Sąd Rejonowy w Zawierciu,III Wydział Rodzinny i Nieletnich
+649,15151020,2015,Sąd Rejonowy w Zawierciu,IV Wydział Pracy
+650,15151020,2524,Sąd Rejonowy w Zawierciu,V Wydział Ksiąg Wieczytych
+651,15151020,3006,Sąd Rejonowy w Zawierciu,VI Wydział Karny
+652,15151020,3554,Sąd Rejonowy w Zawierciu,VII Wydział Wykonywania Orzeczeń
+653,15151005,503,Sąd Rejonowy w Częstochowie,I Wydział Cywilny
+654,15151005,1003,Sąd Rejonowy w Częstochowie,II Wydział Cywilny
+655,15151005,1506,Sąd Rejonowy w Częstochowie,III Wydział Karny
+656,15151005,2006,Sąd Rejonowy w Częstochowie,IV Wydział Karny
+657,15151005,2512,Sąd Rejonowy w Częstochowie,V Wydział Rodzinny i Nieletnich
+658,15151005,3012,Sąd Rejonowy w Częstochowie,VI Wydział Rodzinny i Nieletnich
+659,15151005,3521,Sąd Rejonowy w Częstochowie,VII Wydział Pracy i Ubezpieczeń Społecznych
+660,15151005,4027,Sąd Rejonowy w Częstochowie,VIII Wydział Gospodarczy
+661,15151005,5506,Sąd Rejonowy w Częstochowie,XI Wydział Karny
+662,15151005,6003,Sąd Rejonowy w Częstochowie,XII Wydział Cywilny
+663,15151005,7503,Sąd Rejonowy w Częstochowie,XV Wydział Cywilny Wykonawczy
+664,15151005,8006,Sąd Rejonowy w Częstochowie,XVI Wydział Karny
+665,15153000,503,Sąd Okręgowy w Sosnowcu,I Wydział Cywilny
+666,15153000,1003,Sąd Okręgowy w Sosnowcu,II Wydział Cywilny Odwoławczy
+667,15153000,1503,Sąd Okręgowy w Sosnowcu,III Wydział Cywilny Rodzinny
+668,15153000,2006,Sąd Okręgowy w Sosnowcu,IV Wydział Karny
+669,15153000,2506,Sąd Okręgowy w Sosnowcu,V Wydział Karny Odwoławczy
+670,15153000,3039,Sąd Okręgowy w Sosnowcu,VI Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+671,15153000,3521,Sąd Okręgowy w Sosnowcu,VII Wydział Pracy i Ubezpieczeń Społecznych
+672,15153010,503,Sąd Rejonowy w Czeladzi,I Wydział Cywilny
+673,15153010,1006,Sąd Rejonowy w Czeladzi,II Wydział Karny
+674,15153010,1512,Sąd Rejonowy w Czeladzi,III Wydział Rodzinny i Nieletnich
+675,15152500,503,Sąd Okręgowy w Rybniku,I Wydział Cywilny
+676,15152500,1003,Sąd Okręgowy w Rybniku,II Wydział Cywilny Odwoławczy
+677,15152500,1506,Sąd Okręgowy w Rybniku,III Wydział Karny
+678,15152500,2021,Sąd Okręgowy w Rybniku,IV Wydział Pracy i Ubezpieczeń Społecznych
+679,15152500,2539,Sąd Okręgowy w Rybniku,V Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+680,15152500,3006,Sąd Okręgowy w Rybniku,VI Wydział Karny Odwoławczy
+681,15200000,503,Sąd Apelacyjny w Krakowie,I Wydział Cywilny
+682,15200000,1006,Sąd Apelacyjny w Krakowie,II Wydział Karny
+683,15200000,1521,Sąd Apelacyjny w Krakowie,III Wydział Pracy i Ubezpieczeń Społecznych
+684,15200000,2057,Sąd Apelacyjny w Krakowie,IV Wydział Wizytacji
+685,15201000,503,Sąd Okręgowy w Krakowie,I Wydział Cywilny
+686,15201000,1003,Sąd Okręgowy w Krakowie,II Wydział Cywilny Odwołaczy
+687,15201000,1506,Sąd Okręgowy w Krakowie,III Wydział Karny
+688,15201000,2106,Sąd Okręgowy w Krakowie,IV Sekcja ds. postępowań szczególnych i wykroczeń
+689,15201000,2006,Sąd Okręgowy w Krakowie,IV Wydział Karny Odwoławczy
+690,15201000,4527,Sąd Okręgowy w Krakowie,IX Wydział Gospodarczy
+691,15201000,2539,Sąd Okręgowy w Krakowie,V Wydział Penitencjarny
+692,15201000,6506,Sąd Okręgowy w Krakowie,VI Wydział Karny
+693,15201000,3015,Sąd Okręgowy w Krakowie,VI Wydział Pracy
+694,15201000,3518,Sąd Okręgowy w Krakowie,VII Wydział Ubezpieczeń Społecznych
+695,15201000,4018,Sąd Okręgowy w Krakowie,VIII Wydział Ubezpieczeń Społecznych
+696,15201000,5057,Sąd Okręgowy w Krakowie,X Wydział Wizytacyjny
+697,15201000,5509,Sąd Okręgowy w Krakowie,XI Wydział Cywilny Rodzinny
+698,15201000,6027,Sąd Okręgowy w Krakowie,XII Wydział Gospodarczy Odwoławczy
+699,15201005,503,Sąd Rejonowy w Chrzanowie,I Wydział Cywilny
+700,15201005,1006,Sąd Rejonowy w Chrzanowie,II Wydział Karny
+701,15201005,1512,Sąd Rejonowy w Chrzanowie,III Wydział Rodzinny
+702,15201005,2015,Sąd Rejonowy w Chrzanowie,IV Wydział Pracy
+703,15201015,503,Sąd Rejonowy dla Krakowa-Nowej Huty w Krakowie,I Wydział Cywilny
+704,15201015,1006,Sąd Rejonowy dla Krakowa-Nowej Huty w Krakowie,II Wydział Karny
+705,15201015,1512,Sąd Rejonowy dla Krakowa-Nowej Huty w Krakowie,III Wydział Rodzinny i Nieletnich
+706,15201015,2021,Sąd Rejonowy dla Krakowa-Nowej Huty w Krakowie,IV Wydział Pracy i Ubezpieczeń Społecznych
+707,15201015,4006,Sąd Rejonowy dla Krakowa-Nowej Huty w Krakowie,VIII Wydział Karny
+708,15201010,503,Sąd Rejonowy dla Krakowa-Krowodrzy w Krakowie,I Wydział Cywilny
+709,15201010,1006,Sąd Rejonowy dla Krakowa-Krowodrzy w Krakowie,II Wydział Karny
+710,15201010,1512,Sąd Rejonowy dla Krakowa-Krowodrzy w Krakowie,III Wydział Rodzinny
+711,15201010,4506,Sąd Rejonowy dla Krakowa-Krowodrzy w Krakowie,IX Wydział Karny
+712,15201020,503,Sąd Rejonowy dla Krakowa-Podgórza w Krakowie,I Wydział Cywilny
+713,15201020,1006,Sąd Rejonowy dla Krakowa-Podgórza w Krakowie,II Wydział Karny
+714,15201020,1512,Sąd Rejonowy dla Krakowa-Podgórza w Krakowie,III Wydział Rodzinny i Nieletnich
+715,15201020,5506,Sąd Rejonowy dla Krakowa-Podgórza w Krakowie,XI Wydział Karny
+716,15201020,6003,Sąd Rejonowy dla Krakowa-Podgórza w Krakowie,XII Wydział Cywilny
+717,15201060,503,Sąd Rejonowy w Miechowie,I Wydział Cywilny
+718,15201060,1006,Sąd Rejonowy w Miechowie,II Wydział Karny
+719,15201060,1512,Sąd Rejonowy w Miechowie,III Wydział Rodzinny i Nieletnich
+720,15201030,503,Sąd Rejonowy w Myślenicach,I Wydział Cywilny
+721,15201030,1006,Sąd Rejonowy w Myślenicach,II Wydział Karny
+722,15201030,1512,Sąd Rejonowy w Myślenicach,III Wydział Rodzinny i Nieletnich
+723,15201025,503,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,I Wydział Cywilny
+724,15201025,1006,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,II Wydział Karny
+725,15201025,1512,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,III Wydział Rodzinny
+726,15201025,2027,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,IV Wydział Gospodarczy
+727,15201025,2527,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,V Wydział Gospodarczy
+728,15201025,3003,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,VI Wydział Cywliny
+729,15201025,7006,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,XIV Wydział Karny
+730,15201025,7520003,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,XV Zamiejscowy Wydział Cywilny z siedzibą w Miechowie
+731,15201025,8020006,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,XVI Zamiejscowy Wydział Karny z siedzibą w Miechowie
+732,15201025,8520012,Sąd Rejonowy dla Krakowa-Śródmieścia w Krakowie,XVII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Miechowie
+733,15201035,503,Sąd Rejonowy w Olkuszu,I Wydział Cywilny
+734,15201035,1006,Sąd Rejonowy w Olkuszu,II Wydział Karny
+735,15201035,1512,Sąd Rejonowy w Olkuszu,III Wydział Rodzinny i Nieletnich
+736,15201045,503,Sąd Rejonowy w Wadowicach,I Wydział Cywilny
+737,15201045,1006,Sąd Rejonowy w Wadowicach,II Wydział Karny
+738,15201045,1512,Sąd Rejonowy w Wadowicach,III Wydział Rodzinny i Nieletnich
+739,15201040,503,Sąd Rejonowy w Oświęcimiu,I Wydział Cywilny
+740,15201040,1006,Sąd Rejonowy w Oświęcimiu,II Wydział Karny
+741,15201040,1512,Sąd Rejonowy w Oświęcimiu,III Wydział Rodzinny i Nieletnich
+742,15201055,503,Sąd Rejonowy w Suchej Beskidzkiej,I Wydział Cywilny
+743,15201055,1006,Sąd Rejonowy w Suchej Beskidzkiej,II Wydział Karny
+744,15201055,1512,Sąd Rejonowy w Suchej Beskidzkiej,III Wydział Rodzinny i Nieletnich
+745,15201050,503,Sąd Rejonowy w Wieliczce,I Wydział Cywilny
+746,15201050,1006,Sąd Rejonowy w Wieliczce,II Wydział Karny
+747,15201050,2012,Sąd Rejonowy w Wieliczce,IV Wydział Rodzinny i Nieletnich
+748,15200500,503,Sąd Okręgowy w Kielcach,I Wydział Cywilny
+749,15200500,1003,Sąd Okręgowy w Kielcach,II Wydział Cywilny Odwołaczy
+750,15200500,1506,Sąd Okręgowy w Kielcach,III Wydział Karny
+751,15200500,2039,Sąd Okręgowy w Kielcach,IV Wydział Penitencjarny i Nadzoru Nad Wykonywaniem Orzeczeń Karnych
+752,15200500,4506,Sąd Okręgowy w Kielcach,IX Wydział Karny Odwoławczy
+753,15200500,2521,Sąd Okręgowy w Kielcach,V Wydział Pracy i Ubezpieczeń Społecznych
+754,15200500,3021,Sąd Okręgowy w Kielcach,VI Wydział Pracy i Ubezpieczeń Społecznych
+755,15200500,3527,Sąd Okręgowy w Kielcach,VII Wydział Gospodarczy
+756,15200500,4057,Sąd Okręgowy w Kielcach,VIII Wydział Wizytacyjny
+757,15200510,503,Sąd Rejonowy w Jędrzejowie,I Wydział Cywilny
+758,15200510,1006,Sąd Rejonowy w Jędrzejowie,II Wydział Karny
+759,15200510,1512,Sąd Rejonowy w Jędrzejowie,III Wydział Rodzinny i Nieletnich
+760,15200510,2015,Sąd Rejonowy w Jędrzejowie,IV Wydział Pracy
+761,15200510,3020003,Sąd Rejonowy w Jędrzejowie,VI Zamiejscowy Wydział Cywilny z siedzibą we Włoszczowie
+762,15200510,3520006,Sąd Rejonowy w Jędrzejowie,VII Zamiejscowy Wydział Karny z siedzibą we Włoszczowie
+763,15200510,4020012,Sąd Rejonowy w Jędrzejowie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą we Włoszczowie
+764,15200505,503,Sąd Rejonowy w Busku-Zdroju,I Wydział Cywilny
+765,15200505,1006,Sąd Rejonowy w Busku-Zdroju,II Wydział Karny
+766,15200505,1512,Sąd Rejonowy w Busku-Zdroju,III Wydział Rodzinny i Nieletnich
+767,15200505,4520003,Sąd Rejonowy w Busku-Zdroju,IX Zamiejscowy Wydział Cywilny z siedzibą w Pińczowie
+768,15200505,2520003,Sąd Rejonowy w Busku-Zdroju,V Zamiejscowy Wydział Cywilny z siedzibą w Kazimierzy Wielkej
+769,15200505,3020006,Sąd Rejonowy w Busku-Zdroju,VI Zamiejscowy Wydział Karny z siedzibą w Kazimierzy Wielkej
+770,15200505,3520012,Sąd Rejonowy w Busku-Zdroju,VII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Kazimierzy Wielkej
+771,15200505,5020006,Sąd Rejonowy w Busku-Zdroju,X Zamiejscowy Wydział Karny z siedzibą w Pińczowie
+772,15200505,5520012,Sąd Rejonowy w Busku-Zdroju,XI Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Pińczowie
+773,15200550,503,Sąd Rejonowy w Staszowie,I Wydział Cywilny
+774,15200550,1006,Sąd Rejonowy w Staszowie,II Wydział Karny
+775,15200550,1512,Sąd Rejonowy w Staszowie,III Wydział Rodzinny i Nieletnich
+776,15200545,503,Sąd Rejonowy w Opatowie,I Wydział Cywilny
+777,15200545,1006,Sąd Rejonowy w Opatowie,II Wydział Karny
+778,15200545,1512,Sąd Rejonowy w Opatowie,III Wydział Rodzinny i Nieletnich
+779,15200555,503,Sąd Rejonowy w Pińczowie,I Wydział Cywilny
+780,15200555,1006,Sąd Rejonowy w Pińczowie,II Wydział Karny
+781,15200555,1512,Sąd Rejonowy w Pińczowie,III Wydział Rodzinny i Nieletnich
+782,15200560,503,Sąd Rejonowy we Włoszczowie,I Wydział Cywilny
+783,15200560,1006,Sąd Rejonowy we Włoszczowie,II Wydział Karny
+784,15200560,1512,Sąd Rejonowy we Włoszczowie,III Wydział Rodzinny i Nieletnich
+785,15200515,503,Sąd Rejonowy w Kielcach,I Wydział Cywilny
+786,15200515,1006,Sąd Rejonowy w Kielcach,II Wydział Karny
+787,15200515,1512,Sąd Rejonowy w Kielcach,III Wydział Rodzinny i Nieletnich
+788,15200515,2021,Sąd Rejonowy w Kielcach,IV Wydział Pracy i Ubezpieczeń Społecznych
+789,15200515,4506,Sąd Rejonowy w Kielcach,IX Wydział Karny
+790,15200515,2527,Sąd Rejonowy w Kielcach,V Wydział Gospodarczy
+791,15200515,3503,Sąd Rejonowy w Kielcach,VII Wydział Cywilny
+792,15200515,4003,Sąd Rejonowy w Kielcach,VIII Wydział Cywilny
+793,15200515,5506,Sąd Rejonowy w Kielcach,XI Wydział Karny
+794,15200515,6006,Sąd Rejonowy w Kielcach,XII Wydział Karny
+795,15200525,503,Sąd Rejonowy w Ostrowcu Świętokrzyskim,I Wydział Cywilny
+796,15200525,1006,Sąd Rejonowy w Ostrowcu Świętokrzyskim,II Wydział Karny
+797,15200525,1512,Sąd Rejonowy w Ostrowcu Świętokrzyskim,III Wydział Rodzinny i Nieletnich
+798,15200525,2015,Sąd Rejonowy w Ostrowcu Świętokrzyskim,IV Wydział Pracy
+799,15200525,3020003,Sąd Rejonowy w Ostrowcu Świętokrzyskim,VI Zamiejscowy Wydział Cywilny z siedzibą w Opatowie
+800,15200525,3520006,Sąd Rejonowy w Ostrowcu Świętokrzyskim,VII Zamiejscowy Wydział Karny z siedzibą w Opatowie
+801,15200525,4020012,Sąd Rejonowy w Ostrowcu Świętokrzyskim,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Opatowie
+802,15200520,503,Sąd Rejonowy w Końskich,I Wydział Cywilny
+803,15200520,1006,Sąd Rejonowy w Końskich,II Wydział Karny
+804,15200520,1512,Sąd Rejonowy w Końskich,III Wydział Rodzinny i Nieletnich
+805,15200535,503,Sąd Rejonowy w Skarżysku-Kamiennej,I Wydział Cywilny
+806,15200535,1006,Sąd Rejonowy w Skarżysku-Kamiennej,II Wydział Karny
+807,15200535,1512,Sąd Rejonowy w Skarżysku-Kamiennej,III Wydział Rodzinny i Nieletnich
+808,15200535,2015,Sąd Rejonowy w Skarżysku-Kamiennej,IV Wydział Pracy
+809,15200530,503,Sąd Rejonowy w Sandomierzu,I Wydział Cywilny
+810,15200530,1006,Sąd Rejonowy w Sandomierzu,II Wydział Karny
+811,15200530,1512,Sąd Rejonowy w Sandomierzu,III Wydział Rodzinny i Nieletnich
+812,15200530,2015,Sąd Rejonowy w Sandomierzu,IV Wydział Pracy
+813,15200530,3020003,Sąd Rejonowy w Sandomierzu,VI Zamiejscowy Wydział Cywilny z siedzibą w Staszowie
+814,15200530,3520006,Sąd Rejonowy w Sandomierzu,VII Zamiejscowy Wydział Karny z siedzibą w Staszowie
+815,15200530,4020012,Sąd Rejonowy w Sandomierzu,VIII Zamiejscowy Wydział Rodzinnych i Nieletnich z siedzibą w Staszowie
+816,15200540,503,Sąd Rejonowy w Starachowicach,I Wydział Cywilny
+817,15200540,1006,Sąd Rejonowy w Starachowicach,II Wydział Karny
+818,15200540,1512,Sąd Rejonowy w Starachowicach,III Wydział Rodzinny
+819,15200540,2015,Sąd Rejonowy w Starachowicach,IV Wydział Pracy
+820,15202000,503,Sąd Okręgowy w Tarnowie,I Wydział Cywilny
+821,15202000,1006,Sąd Okręgowy w Tarnowie,II Wydział Karny
+822,15202000,1539,Sąd Okręgowy w Tarnowie,III Wydział Penitencjarny
+823,15202000,2021,Sąd Okręgowy w Tarnowie,IV Wydział Pracy i Ubezpieczeń Społecznych
+824,15202000,2527,Sąd Okręgowy w Tarnowie,V Wydział Gospodarczy
+825,15202020,503,Sąd Rejonowy w Dąbrowie Tarnowskiej,I Wydział Cywilny
+826,15202020,1006,Sąd Rejonowy w Dąbrowie Tarnowskiej,II Wydział Karny
+827,15202020,1512,Sąd Rejonowy w Dąbrowie Tarnowskiej,III Wydział Rodzinny i Nieletnich
+828,15202005,503,Sąd Rejonowy w Bochni,I Wydział Cywilny
+829,15202005,1006,Sąd Rejonowy w Bochni,II Wydział Karny
+830,15202005,1512,Sąd Rejonowy w Bochni,III Wydział Rodzinny i Nieletnich
+831,15202005,2015,Sąd Rejonowy w Bochni,IV Wydział Pracy
+832,15202015,503,Sąd Rejonowy w Tarnowie,I Wydział Cywilny
+833,15202015,1006,Sąd Rejonowy w Tarnowie,II Wydział Karny
+834,15202015,1512,Sąd Rejonowy w Tarnowie,III Wydział Rodzinny i Nieletnich
+835,15202015,2021,Sąd Rejonowy w Tarnowie,IV Wydział Pracy i Ubezpieczeń Społecznych
+836,15202015,2527,Sąd Rejonowy w Tarnowie,V Wydział Gospodarczy
+837,15202015,3506,Sąd Rejonowy w Tarnowie,VII Wydział Karny
+838,15202015,5020003,Sąd Rejonowy w Tarnowie,X Zamiejscowy Cywilny z siedzibą w Tuchowie
+839,15202010,503,Sąd Rejonowy w Brzesku,I Wydział Cywilny
+840,15202010,1006,Sąd Rejonowy w Brzesku,II Wydział Karny
+841,15202010,1512,Sąd Rejonowy w Brzesku,III Wydział Rodzinny i Nieletnich
+842,15201500,503,Sąd Okręgowy w Nowym Sączu,I Wydział Cywilny
+843,15201500,1006,Sąd Okręgowy w Nowym Sączu,II Wydział Karny
+844,15201500,1506,Sąd Okręgowy w Nowym Sączu,II Wydział Karny Sekcja I Instancji
+845,15201500,2006,Sąd Okręgowy w Nowym Sączu,II Wydział Karny Sekcja Penitencjarna
+846,15201500,2503,Sąd Okręgowy w Nowym Sączu,III Wydział Cywilny Odwoławczy
+847,15201500,3021,Sąd Okręgowy w Nowym Sączu,IV Wydział Pracy i Ubezpieczeń Społecznych
+848,15201510,503,Sąd Rejonowy w Limanowej,I Wydział Cywilny
+849,15201510,1006,Sąd Rejonowy w Limanowej,II Wydział Karny
+850,15201510,1512,Sąd Rejonowy w Limanowej,III Wydział Rodzinny i Nieletnich
+851,15201505,503,Sąd Rejonowy w Gorlicach,I Wydział Cywilny
+852,15201505,1006,Sąd Rejonowy w Gorlicach,II Wydział Karny
+853,15201505,1512,Sąd Rejonowy w Gorlicach,III Wydział Rodzinny i Nieletnich
+854,15201505,2015,Sąd Rejonowy w Gorlicach,IV Wydział Pracy
+855,15201515,503,Sąd Rejonowy w Nowym Sączu,I Wydział Cywilny
+856,15201515,1006,Sąd Rejonowy w Nowym Sączu,II Wydział Karny
+857,15201515,1512,Sąd Rejonowy w Nowym Sączu,III Wydział Rodzinny i Nieletnich
+858,15201515,2021,Sąd Rejonowy w Nowym Sączu,IV Wydział Pracy i Ubezpieczeń Społęcznych
+859,15201515,4520012,Sąd Rejonowy w Nowym Sączu,IX Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Muszynie
+860,15201515,2527,Sąd Rejonowy w Nowym Sączu,V Wydział Gospodarczy
+861,15201515,3520003,Sąd Rejonowy w Nowym Sączu,VII Zamiejscowy Wydział Cywilny z siedzibą w Musznie
+862,15201515,4020006,Sąd Rejonowy w Nowym Sączu,VIII Zamiejscowy Wydział Karny z siedzibą w Muszynie
+863,15201525,503,Sąd Rejonowy w Zakopanem,I Wydział Cywilny
+864,15201525,1006,Sąd Rejonowy w Zakopanem,II Wydział Karny
+865,15201525,1512,Sąd Rejonowy w Zakopanem,III Wydział Rodzinny i Nieletnich
+866,15201520,503,Sąd Rejonowy w Nowym Targu,I Wydział Cywilny
+867,15201520,1006,Sąd Rejonowy w Nowym Targu,II Wydział Karny
+868,15201520,1512,Sąd Rejonowy w Nowym Targu,III Wydział Rodzinny i Nieletnich
+869,15201520,2015,Sąd Rejonowy w Nowym Targu,IV Wydział Pracy
+870,15250000,503,Sąd Apelacyjny w Łodzi,I Wydział Cywilny
+871,15250000,1006,Sąd Apelacyjny w Łodzi,II Wydział Karny
+872,15250000,1521,Sąd Apelacyjny w Łodzi,III Wydział Pracy i Ubezpieczeń Społecznych
+873,15250000,2057,Sąd Apelacyjny w Łodzi,IV Wydział Wizytacji
+874,15250500,503,Sąd Okręgowy w Kaliszu,I Wydział Cywilny
+875,15250500,1003,Sąd Okręgowy w Kaliszu,II Wydział Cywilny
+876,15250500,1506,Sąd Okręgowy w Kaliszu,III Wydział Karny
+877,15250500,2006,Sąd Okręgowy w Kaliszu,IV Wydział Karny
+878,15250500,2521,Sąd Okręgowy w Kaliszu,V Wydział Pracy i Ubezpieczeń Społecznych
+879,15250530,503,Sąd Rejonowy w Pleszewie,I Wydział Cywilny
+880,15250530,1006,Sąd Rejonowy w Pleszewie,II Wydział Karny
+881,15250530,1512,Sąd Rejonowy w Pleszewie,III Wydział Rodzinny i Nieletnich
+882,15250535,503,Sąd Rejonowy w Ostrzeszowie,I Wydział Cywilny
+883,15250535,1006,Sąd Rejonowy w Ostrzeszowie,II Wydział Karny
+884,15250535,1512,Sąd Rejonowy w Ostrzeszowie,III Wydział Rodzinny i Nieletnich
+885,15250505,503,Sąd Rejonowy w Jarocinie,I Wydział Cywilny
+886,15250505,1006,Sąd Rejonowy w Jarocinie,II Wydział Karny
+887,15250505,1512,Sąd Rejonowy w Jarocinie,III Wydział Rodzinny i Nieletnich
+888,15250505,3020003,Sąd Rejonowy w Jarocinie,VI Zamiejscowy Wydział Cywilny z siedzibą w Pleszewie
+889,15250505,3520006,Sąd Rejonowy w Jarocinie,VII Zamiejscowy Wydział Karny z siedzibą w Pleszewie
+890,15250505,4020012,Sąd Rejonowy w Jarocinie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Pleszewie
+891,15250510,503,Sąd Rejonowy w Kaliszu,I Wydział Cywilny
+892,15250510,1006,Sąd Rejonowy w Kaliszu,II Wydział Karny
+893,15250510,1512,Sąd Rejonowy w Kaliszu,III Wydział Rodzinny i Nieletnich
+894,15250510,2021,Sąd Rejonowy w Kaliszu,IV Wydział Pracy i Ubezpieczeń Społecznych
+895,15250510,2527,Sąd Rejonowy w Kaliszu,V Wydział Gospodarczy
+896,15250510,3506,Sąd Rejonowy w Kaliszu,VII Wydział Karny
+897,15250520,503,Sąd Rejonowy w Ostrowie Wielkopolskim,I Wydział Cywilny
+898,15250520,1006,Sąd Rejonowy w Ostrowie Wielkopolskim,II Wydział Karny
+899,15250520,1512,Sąd Rejonowy w Ostrowie Wielkopolskim,III Wydział Rodzinny i Nieletnich
+900,15250520,2015,Sąd Rejonowy w Ostrowie Wielkopolskim,IV Wydział Pracy
+901,15250525,503,Sąd Rejonowy w Krotoszynie,I Wydział Cywilny
+902,15250525,1006,Sąd Rejonowy w Krotoszynie,II Wydział Karny
+903,15250525,1512,Sąd Rejonowy w Krotoszynie,III Wydział Rodzinny i Nieletnich
+904,15250515,503,Sąd Rejonowy w Kępnie,I Wydział Cywilny
+905,15250515,1006,Sąd Rejonowy w Kępnie,II Wydział Karny
+906,15250515,1512,Sąd Rejonowy w Kępnie,III Wydział Rodzinny i Nieletnich
+907,15250515,2015,Sąd Rejonowy w Kępnie,IV Wydział Pracy
+908,15250515,3020003,Sąd Rejonowy w Kępnie,VI Zamiejscowy Wydział Cywilny z Siedzibą w Ostrzeszowie
+909,15250515,3520006,Sąd Rejonowy w Kępnie,VII Zamiejscowy Wydział Karny z Siedzibą w Ostrzeszowie
+910,15250515,4020012,Sąd Rejonowy w Kępnie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z Siedzibą w Ostrzeszowie
+911,15251500,503,Sąd Okręgowy w Piotrkowie Trybunalskim,I Wydział Cywilny
+912,15251500,1003,Sąd Okręgowy w Piotrkowie Trybunalskim,II Wydział Cywilny Odwoławczy
+913,15251500,1506,Sąd Okręgowy w Piotrkowie Trybunalskim,III Wydział Karny
+914,15251500,2006,Sąd Okręgowy w Piotrkowie Trybunalskim,IV Wydział Karny Odwoławczy
+915,15251500,2521,Sąd Okręgowy w Piotrkowie Trybunalskim,V Wydział Pracy i Ubezpieczeń Społecznych
+916,15251520,503,Sąd Rejonowy w Radomsku,I Wydział Cywilny
+917,15251520,1006,Sąd Rejonowy w Radomsku,II Wydział Karny
+918,15251520,1512,Sąd Rejonowy w Radomsku,III Wydział Rodzinny i Nieletnich
+919,15251520,2015,Sąd Rejonowy w Radomsku,IV Wydział Pracy
+920,15251520,2524,Sąd Rejonowy w Radomsku,V Wydział Ksiąg Wieczystych
+921,15251520,3006,Sąd Rejonowy w Radomsku,VI Wydział Karny
+922,15251525,503,Sąd Rejonowy w Tomaszowie Mazowieckim,I Wydział Cywilny
+923,15251525,1006,Sąd Rejonowy w Tomaszowie Mazowieckim,II Wydział Karny
+924,15251525,1512,Sąd Rejonowy w Tomaszowie Mazowieckim,III Wydział Rodzinny i Nieletnich
+925,15251525,2015,Sąd Rejonowy w Tomaszowie Mazowieckim,IV Wydział Pracy
+926,15251515,503,Sąd Rejonowy w Piotrkowie Trybunalskim,I Wydział Cywilny
+927,15251515,1006,Sąd Rejonowy w Piotrkowie Trybunalskim,II Wydział Karny
+928,15251515,1512,Sąd Rejonowy w Piotrkowie Trybunalskim,III Wydział Rodzinny i Nieletnich
+929,15251515,2021,Sąd Rejonowy w Piotrkowie Trybunalskim,IV Wydział Pracy i Ubezpieczeń Społecznych
+930,15251515,2527,Sąd Rejonowy w Piotrkowie Trybunalskim,V Wydział Gospodarczy
+931,15251515,3506,Sąd Rejonowy w Piotrkowie Trybunalskim,VII Wydział Karny
+932,15251505,503,Sąd Rejonowy w Bełchatowie,I Wydział Cywilny
+933,15251505,1006,Sąd Rejonowy w Bełchatowie,II Wydział Karny
+934,15251505,1512,Sąd Rejonowy w Bełchatowie,III Wydział Rodzinny i Nieletnich
+935,15251505,2015,Sąd Rejonowy w Bełchatowie,IV Wydział Pracy
+936,15251510,503,Sąd Rejonowy w Opocznie,I Wydział Cywilny
+937,15251510,1006,Sąd Rejonowy w Opocznie,II Wydział Karny
+938,15251510,1512,Sąd Rejonowy w Opocznie,III Wydział Rodzinny i Nieletnich
+939,15252000,503,Sąd Okręgowy w Sieradzu,I Wydział Cywilny
+940,15252000,1006,Sąd Okręgowy w Sieradzu,II Wydział Karny
+941,15252000,1539,Sąd Okręgowy w Sieradzu,III Wydział Penitencjarny
+942,15252000,2021,Sąd Okręgowy w Sieradzu,IV Wydział Pracy i Ubezpieczeń Społecznych
+943,15252010,503,Sąd Rejonowy w Sieradzu,I Wydział Cywilny
+944,15252010,1006,Sąd Rejonowy w Sieradzu,II Wydział Karny
+945,15252010,1512,Sąd Rejonowy w Sieradzu,III Wydział Rodzinny i Nieletnich
+946,15252010,2021,Sąd Rejonowy w Sieradzu,IV Wydział Pracy i Ubezpieczeń Społecznych
+947,15252010,2527,Sąd Rejonowy w Sieradzu,V Wydział Gospodarczy
+948,15252015,503,Sąd Rejonowy w Wieluniu,I Wydział Cywilny
+949,15252015,1006,Sąd Rejonowy w Wieluniu,II Wydział Karny
+950,15252015,1512,Sąd Rejonowy w Wieluniu,III Wydział Rodzinny i Nieletnich
+951,15252015,2015,Sąd Rejonowy w Wieluniu,IV Wydział Pracy
+952,15252015,3020006,Sąd Rejonowy w Wieluniu,VI Zamiejscowy Wydział Karny z siedzibą w Pajęcznie
+953,15252015,4020003,Sąd Rejonowy w Wieluniu,VIII Zamiejscowy Wydział Cywilny z siedzibą w Pajęcznie
+954,15252005,503,Sąd Rejonowy w Łasku,I Wydział Cywilny
+955,15252005,1006,Sąd Rejonowy w Łasku,II Wydział Karny
+956,15252005,1512,Sąd Rejonowy w Łasku,III Wydział Rodzinny i Nieletnich
+957,15252005,2015,Sąd Rejonowy w Łasku,IV Wydział Pracy
+958,15252005,3520006,Sąd Rejonowy w Łasku,VII Zamiejscowy Wydział Karny w Poddębicach
+959,15252020,503,Sąd Rejonowy w Zduńskiej Woli,I Wydział Cywilny
+960,15252020,1006,Sąd Rejonowy w Zduńskiej Woli,II Wydział Karny
+961,15252020,1512,Sąd Rejonowy w Zduńskiej Woli,III Wydział Rodzinny i Nieletnich
+962,15252020,2015,Sąd Rejonowy w Zduńskiej Woli,IV Wydział Pracy
+963,15251000,503,Sąd Okręgowy w Łodzi,I Wydział Cywilny
+964,15251000,1003,Sąd Okręgowy w Łodzi,II Wydział Cywilny
+965,15251000,1503,Sąd Okręgowy w Łodzi,III Wydział Cywilny Odwoławczy
+966,15251000,2006,Sąd Okręgowy w Łodzi,IV Wydział Karny
+967,15251000,2506,Sąd Okręgowy w Łodzi,V Wydział Karny Odwoławczy
+968,15251000,3039,Sąd Okręgowy w Łodzi,VI Wydział Penitencjarny i Nadzoru Nad Wykonywaniem Orzeczeń Karnych
+969,15251000,3521,Sąd Okręgowy w Łodzi,VII Wydział Pracy i Ubezpieczeń Społecznych
+970,15251000,4021,Sąd Okręgowy w Łodzi,VIII Wydział Pracy i Ubezpieczeń Społecznych
+971,15251000,5027,Sąd Okręgowy w Łodzi,X Wydział Gospodarczy
+972,15251000,5557,Sąd Okręgowy w Łodzi,XI Wydział Wizytacyjny
+973,15251000,6009,Sąd Okręgowy w Łodzi,XII Wydział Cywilny Rodzinny
+974,15251000,6527,Sąd Okręgowy w Łodzi,XIII Wydział Gospodarczy Odwoławczy
+975,15251000,9006,Sąd Okręgowy w Łodzi,XVIII Wydział Karny
+976,15251050,503,Sąd Rejonowy w Rawie Mazowieckiej,I Wydział Cywilny
+977,15251050,1006,Sąd Rejonowy w Rawie Mazowieckiej,II Wydział Karny
+978,15251050,1512,Sąd Rejonowy w Rawie Mazowieckiej,III Wydział Rodzinny i Nieletnich
+979,15251040,503,Sąd Rejonowy w Brzezinach,I Wydział Cywilny
+980,15251040,1006,Sąd Rejonowy w Brzezinach,II Wydział Karny
+981,15251040,1512,Sąd Rejonowy w Brzezinach,III Wydział Rodzinny i Nieletnich
+982,15251045,503,Sąd Rejonowy w Łęczycy,I Wydział Cywilny
+983,15251045,1006,Sąd Rejonowy w Łęczycy,II Wydział Karny
+984,15251045,1512,Sąd Rejonowy w Łęczycy,III Wydział Rodzinny i Nieletnich
+985,15251020,503,Sąd Rejonowy w Łowiczu,I Wydział Cywilny
+986,15251020,1006,Sąd Rejonowy w Łowiczu,II Wydział Karny
+987,15251020,1512,Sąd Rejonowy w Łowiczu,III Wydział Rodzinny i Nieletnich
+988,15251010,303,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,I Wydział Cywilny
+989,15251010,603,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,II Wydział Cywilny
+990,15251010,903,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,III Wydział Cywilny
+991,15251010,1206,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,IV Wydział Karny
+992,15251010,2712,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,IX Wydział Rodzinny i Nieletnich
+993,15251010,1506,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,V Wydział Karny
+994,15251010,1806,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,VI Wydział Karny
+995,15251010,2112,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,VII Wydział Rodzinny i Nieletnich
+996,15251010,2412,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,VIII Wydział Rodzinny i Nieletnich
+997,15251010,3021,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,X Wydział Pracy i Ubezpieczeń Społecznych
+998,15251010,3321,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,XI Wydział Pracy i Ubezpieczeń Społecznych
+999,15251010,3627,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,XII Wydział Gospodarczy
+1000,15251010,3927,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,XIII Wydział Gospodarczy
+1001,15251010,5106,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,XVII Wydział Karny
+1002,15251010,5403,Sąd Rejonowy dla Łodzi-Śródmieścia w Łodzi,XVIII Wydział Cywilny
+1003,15251015,503,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,I Wydział Cywilny
+1004,15251015,1003,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,II Wydział Cywilny
+1005,15251015,4551,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,II Wydział Cywilny. Sekcja Egzekucyjna
+1006,15251015,1506,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,III Wydział Karny
+1007,15251015,2006,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,IV Wydział Karny
+1008,15251015,2512,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,V Wydział Rodzinny i Nieletnich
+1009,15251015,3012,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,VI Wydział Rodzinny i Nieletnich
+1010,15251015,3506,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,VII Wydział Karny
+1011,15251015,4003,Sąd Rejonowy dla Łodzi-Widzewa w Łodzi,VIII Wydział Cywliny
+1012,15251035,503,Sąd Rejonowy w Zgierzu,I Wydział Cywilny
+1013,15251035,1006,Sąd Rejonowy w Zgierzu,II Wydział Karny
+1014,15251035,1512,Sąd Rejonowy w Zgierzu,III Wydział Rodzinny i Nieletnich
+1015,15251035,2015,Sąd Rejonowy w Zgierzu,IV Wydział Pracy
+1016,15251025,503,Sąd Rejonowy w Pabianicach,I Wydział Cywilny
+1017,15251025,1006,Sąd Rejonowy w Pabianicach,II Wydział Karny
+1018,15251025,1512,Sąd Rejonowy w Pabianicach,III Wydział Rodzinny i Nieletnich
+1019,15251025,2015,Sąd Rejonowy w Pabianicach,IV Wydział Pracy
+1020,15251030,503,Sąd Rejonowy w Skierniewicach,I Wydział Cywilny
+1021,15251030,1006,Sąd Rejonowy w Skierniewicach,II Wydział Karny
+1022,15251030,1512,Sąd Rejonowy w Skierniewicach,III Wydział Rodzinny i Nieletnich
+1023,15251030,2015,Sąd Rejonowy w Skierniewicach,IV Wydział Pracy
+1024,15251030,2527,Sąd Rejonowy w Skierniewicach,V Wydział Gospodarczy
+1025,15251005,503,Sąd Rejonowy w Kutnie,I Wydział Cywilny
+1026,15251005,1006,Sąd Rejonowy w Kutnie,II Wydział Karny
+1027,15251005,1512,Sąd Rejonowy w Kutnie,III Wydział Rodzinny i Nieletnich
+1028,15251005,2015,Sąd Rejonowy w Kutnie,IV Wydział Pracy
+1029,15252500,503,Sąd Okręgowy w Płocku,I Wydział Cywilny
+1030,15252500,1006,Sąd Okręgowy w Płocku,II Wydział Karny
+1031,15252500,1539,Sąd Okręgowy w Płocku,III Wydział Penitencjarny
+1032,15252500,2003,Sąd Okręgowy w Płocku,IV Wydział Cywilny Odwoławczy
+1033,15252500,2506,Sąd Okręgowy w Płocku,V Wydział Karny Odwoławczy
+1034,15252500,3021,Sąd Okręgowy w Płocku,VI Wydział Pracy i Ubezpieczeń Społecznych
+1035,15252520,503,Sąd Rejonowy w Płocku,I Wydział Cywilny
+1036,15252520,1006,Sąd Rejonowy w Płocku,II Wydział Karny
+1037,15252520,1512,Sąd Rejonowy w Płocku,III Wydział Rodzinny i Nieletnich
+1038,15252520,2021,Sąd Rejonowy w Płocku,IV Wydział Pracy i Ubezpieczeń Społecznych
+1039,15252520,2527,Sąd Rejonowy w Płocku,V Wydział Gospodarczy
+1040,15252520,3506,Sąd Rejonowy w Płocku,VII Wydział Karny
+1041,15252525,503,Sąd Rejonowy w Płońsku,I Wydział Cywilny
+1042,15252525,1006,Sąd Rejonowy w Płońsku,II Wydział Karny
+1043,15252525,1512,Sąd Rejonowy w Płońsku,III Wydział Rodzinny i Nieletnich
+1044,15252515,503,Sąd Rejonowy w Mławie,I Wydział Cywilny
+1045,15252515,1006,Sąd Rejonowy w Mławie,II Wydział Karny
+1046,15252515,1512,Sąd Rejonowy w Mławie,III Wydział Rodzinny i Nieletnich
+1047,15252515,2024,Sąd Rejonowy w Mławie,IV Wydział Ksiąg Wieczystych
+1048,15252515,4039,Sąd Rejonowy w Mławie,VIII Wydział Wykonywania Orzeczeń
+1049,15252540,503,Sąd Rejonowy w Sierpcu,I Wydział Cywilny
+1050,15252540,1006,Sąd Rejonowy w Sierpcu,II Wydział Karny
+1051,15252540,1512,Sąd Rejonowy w Sierpcu,III Wydział Rodzinny i Nieletnich
+1052,15252530,503,Sąd Rejonowy w Sochaczewie,I Wydział Cywilny
+1053,15252530,1006,Sąd Rejonowy w Sochaczewie,II Wydział Karny
+1054,15252530,1512,Sąd Rejonowy w Sochaczewie,III Wydział Rodzinny
+1055,15252535,503,Sąd Rejonowy w Żyrardowie,I Wydział Cywilny
+1056,15252535,1006,Sąd Rejonowy w Żyrardowie,II Wydział Karny
+1057,15252535,1512,Sąd Rejonowy w Żyrardowie,III Wydział Rodzinny i Nieletnich
+1058,15252535,2015,Sąd Rejonowy w Żyrardowie,IV Wydział Pracy
+1059,15252505,503,Sąd Rejonowy w Ciechanowie,I Wydział Cywilny
+1060,15252505,1006,Sąd Rejonowy w Ciechanowie,II Wydział Karny
+1061,15252505,1512,Sąd Rejonowy w Ciechanowie,III Wydział Rodzinny i Nieletnich
+1062,15252505,2015,Sąd Rejonowy w Ciechanowie,IV Wydział Pracy
+1063,15252505,3024,Sąd Rejonowy w Ciechanowie,VI Wydział Ksiąg Wieczystych
+1064,15252505,3539,Sąd Rejonowy w Ciechanowie,VII Wydział Wykonywania Orzeczeń
+1065,15252510,503,Sąd Rejonowy w Gostyninie,I Wydział Cywilny
+1066,15252510,1006,Sąd Rejonowy w Gostyninie,II Wydział Karny
+1067,15252510,1512,Sąd Rejonowy w Gostyninie,III Wydział Rodzinny i Nieletnich
+1068,15300000,503,Sąd Apelacyjny w Lublinie,I Wydział Cywilny
+1069,15300000,1006,Sąd Apelacyjny w Lublinie,II Wydział Karny
+1070,15300000,1521,Sąd Apelacyjny w Lublinie,III Wydział Pracy i Ubezpieczeń Społecznych
+1071,15300000,2057,Sąd Apelacyjny w Lublinie,IV Wydział Wizytacyjny
+1072,15301000,503,Sąd Okręgowy w Radomiu,I Wydział Cywilny
+1073,15301000,1006,Sąd Okręgowy w Radomiu,II Wydział Karny
+1074,15301000,1539,Sąd Okręgowy w Radomiu,III Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1075,15301000,2003,Sąd Okręgowy w Radomiu,IV Wydział Cywilny Odwoławczy
+1076,15301000,2506,Sąd Okręgowy w Radomiu,V Wydział Karny Odwoławczy
+1077,15301000,3021,Sąd Okręgowy w Radomiu,VI Wydział Pracy i Ubezpieczeń Społecznych
+1078,15301000,4027,Sąd Okręgowy w Radomiu,VIII Wydział Gospodarczy
+1079,15301035,503,Sąd Rejonowy w Szydłowcu,I Wydział Cywilny
+1080,15301035,1006,Sąd Rejonowy w Szydłowcu,II Wydział Karny
+1081,15301035,1512,Sąd Rejonowy w Szydłowcu,III Wydział Rodzinny i Nieletnich
+1082,15301025,503,Sąd Rejonowy w Zwoleniu,I Wydział Cywilny
+1083,15301025,1006,Sąd Rejonowy w Zwoleniu,II Wydział Karny
+1084,15301025,1512,Sąd Rejonowy w Zwoleniu,III Wydział Rodzinny i Nieletnich
+1085,15301025,3020003,Sąd Rejonowy w Zwoleniu,VI Zamiejscowy Wydział Cywilny z siedzibą w Lipsku
+1086,15301025,3520006,Sąd Rejonowy w Zwoleniu,VII Zamiejscowy Wydział Karny w Lipsku
+1087,15301025,4020012,Sąd Rejonowy w Zwoleniu,VIII Zamiejscowy Wydział Rodzinny i Nieletnich w Lipsku
+1088,15301030,503,Sąd Rejonowy w Lipsku,I Wydział Cywilny
+1089,15301030,1006,Sąd Rejonowy w Lipsku,II Wydział Karny
+1090,15301030,1512,Sąd Rejonowy w Lipsku,III Wydział Rodzinny i Nieletnich
+1091,15301005,503,Sąd Rejonowy w Grójcu,I Wydział Cywilny
+1092,15301005,1006,Sąd Rejonowy w Grójcu,II Wydział Karny
+1093,15301005,1512,Sąd Rejonowy w Grójcu,III Wydział Rodzinny i Nieletnich
+1094,15301005,3006,Sąd Rejonowy w Grójcu,VI Wydział Karny
+1095,15301020,503,Sąd Rejonowy w Radomiu,I Wydział Cywilny
+1096,15301020,1006,Sąd Rejonowy w Radomiu,II Wydział Karny
+1097,15301020,1512,Sąd Rejonowy w Radomiu,III Wydział Rodzinny i Nieletnich
+1098,15301020,2021,Sąd Rejonowy w Radomiu,IV Wydział Pracy i Ubezpieczeń Społecznych
+1099,15301020,2527,Sąd Rejonowy w Radomiu,V Wydział Gospodarczy
+1100,15301020,3503,Sąd Rejonowy w Radomiu,VII Wydział Cywilny
+1101,15301020,4006,Sąd Rejonowy w Radomiu,VIII Wydział Karny
+1102,15301020,5006,Sąd Rejonowy w Radomiu,X Wydział Karny
+1103,15301010,503,Sąd Rejonowy w Kozienicach,I Wydział Cywilny
+1104,15301010,1006,Sąd Rejonowy w Kozienicach,II Wydział Karny
+1105,15301010,1512,Sąd Rejonowy w Kozienicach,III Wydział Rodzinny i Nieletnich
+1106,15301015,503,Sąd Rejonowy w Przysusze,I Wydział Cywilny
+1107,15301015,1006,Sąd Rejonowy w Przysusze,II Wydział Karny
+1108,15301015,1512,Sąd Rejonowy w Przysusze,III Wydział Rodzinny i Nieletnich
+1109,15301015,3020003,Sąd Rejonowy w Przysusze,VI Zamiejscowy Wydział Cywilny z siedzibą w Szydłowcu
+1110,15301015,3520006,Sąd Rejonowy w Przysusze,VII Zamiejscowy Wydział Karny z siedzibą w Szydłowcu
+1111,15301015,4020012,Sąd Rejonowy w Przysusze,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Szydłowcu
+1112,15300500,503,Sąd Okręgowy w Lublinie,I Wydział Cywilny
+1113,15300500,1003,Sąd Okręgowy w Lublinie,II Wydział Cywilny Odwoławczy
+1114,15300500,1509,Sąd Okręgowy w Lublinie,III Wydział Cywilny Rodzinny
+1115,15300500,2006,Sąd Okręgowy w Lublinie,IV Wydział Karny
+1116,15300500,4527,Sąd Okręgowy w Lublinie,IX Wydział Gospodarczy
+1117,15300500,2506,Sąd Okręgowy w Lublinie,V Wydział Karny Odwoławczy
+1118,15300500,3039,Sąd Okręgowy w Lublinie,VI Wydział Penitencjarny
+1119,15300500,3521,Sąd Okręgowy w Lublinie,VII Wydział Pracy i Ubezpieczeń Społecznych
+1120,15300500,4021,Sąd Okręgowy w Lublinie,VIII Wydział Pracy i Ubezpieczeń Społecznych
+1121,15300500,5506,Sąd Okręgowy w Lublinie,XI Wydział Karny Odwoławczy
+1122,15300500,6027,Sąd Okręgowy w Lublinie,XII Wydział Własności Intelektualnej
+1123,15300555,503,Sąd Rejonowy w Rykach,I Wydział Cywilny
+1124,15300555,1006,Sąd Rejonowy w Rykach,II Wydział Karny
+1125,15300555,1512,Sąd Rejonowy w Rykach,III Wydział Rodzinny i Nieletnich
+1126,15300545,503,Sąd Rejonowy w Radzyniu Podlaskim,I Wydział Cywilny
+1127,15300545,1006,Sąd Rejonowy w Radzyniu Podlaskim,II Wydział Karny
+1128,15300545,1512,Sąd Rejonowy w Radzyniu Podlaskim,III Wydział Rodzinny i Nieletnich
+1129,15300550,503,Sąd Rejonowy w Opolu Lubelskim,I Wydział Cywilny
+1130,15300550,1006,Sąd Rejonowy w Opolu Lubelskim,II Wydział Karny
+1131,15300550,1512,Sąd Rejonowy w Opolu Lubelskim,III Wydział Rodzinny i Nieletnich
+1132,15300560,503,Sąd Rejonowy we Włodawie,I Wydział Cywilny
+1133,15300560,1006,Sąd Rejonowy we Włodawie,II Wydział Karny
+1134,15300560,1512,Sąd Rejonowy we Włodawie,III Wydział Rodzinny i Nieletnich
+1135,15300520,503,Sąd Rejonowy w Lubartowie,I Wydział Cywilny
+1136,15300520,1006,Sąd Rejonowy w Lubartowie,II Wydział Karny
+1137,15300520,1512,Sąd Rejonowy w Lubartowie,III Wydział Rodzinny i Nieletnich
+1138,15300525,503,Sąd Rejonowy Lublin-Wschód w Lublinie z siedzibą w Świdniku,I Wydział Cywilny
+1139,15300525,1006,Sąd Rejonowy Lublin-Wschód w Lublinie z siedzibą w Świdniku,II Wydział Karny
+1140,15300525,1506,Sąd Rejonowy Lublin-Wschód w Lublinie z siedzibą w Świdniku,III Wydział Karny
+1141,15300525,2012,Sąd Rejonowy Lublin-Wschód w Lublinie z siedzibą w Świdniku,IV Wydział Rodzinny i Nieletnich
+1142,15300525,4027,Sąd Rejonowy Lublin-Wschód w Lublinie z siedzibą w Świdniku,VIII Wydział Gospodarczy
+1143,15300515,503,Sąd Rejonowy w Kraśniku,I Wydział Cywilny
+1144,15300515,1006,Sąd Rejonowy w Kraśniku,II Wydział Karny
+1145,15300515,1512,Sąd Rejonowy w Kraśniku,III Wydział Rodzinny i Nieletnich
+1146,15300540,503,Sąd Rejonowy w Puławach,I Wydział Cywilny
+1147,15300540,1006,Sąd Rejonowy w Puławach,II Wydział Karny
+1148,15300540,1512,Sąd Rejonowy w Puławach,III Wydział Rodzinny i Nieletnich
+1149,15300540,2015,Sąd Rejonowy w Puławach,IV Wydział Pracy
+1150,15300530,503,Sąd Rejonowy Lublin-Zachód w Lublinie,I Wydział Cywilny
+1151,15300530,1003,Sąd Rejonowy Lublin-Zachód w Lublinie,II Wydział Cywilny
+1152,15300530,1506,Sąd Rejonowy Lublin-Zachód w Lublinie,III Wydział Karny
+1153,15300530,2006,Sąd Rejonowy Lublin-Zachód w Lublinie,IV Wydział Karny
+1154,15300530,4506,Sąd Rejonowy Lublin-Zachód w Lublinie,IX Wydział Karny
+1155,15300530,2512,Sąd Rejonowy Lublin-Zachód w Lublinie,V Wydział Rodzinny i Nieletnich
+1156,15300530,3003,Sąd Rejonowy Lublin-Zachód w Lublinie,VI Wydział Cywilny
+1157,15300530,3521,Sąd Rejonowy Lublin-Zachód w Lublinie,VII Wydział Pracy i Ubezpieczeń Społecznych
+1158,15300530,4003,Sąd Rejonowy Lublin-Zachód w Lublinie,VIII Wydział Cywilny
+1159,15300530,5024,Sąd Rejonowy Lublin-Zachód w Lublinie,X Wydział Ksiąg Wieczystych
+1160,15300535,503,Sąd Rejonowy w Łukowie,I Wydział Cywilny
+1161,15300535,1006,Sąd Rejonowy w Łukowie,II Wydział Karny
+1162,15300535,1512,Sąd Rejonowy w Łukowie,III Wydział Rodzinny
+1163,15300505,503,Sąd Rejonowy w Białej Podlaskiej,I Wydział Cywilny
+1164,15300505,1006,Sąd Rejonowy w Białej Podlaskiej,II Wydział Karny
+1165,15300505,1512,Sąd Rejonowy w Białej Podlaskiej,III Wydział Rodzinny i Nieletnich
+1166,15300505,2015,Sąd Rejonowy w Białej Podlaskiej,IV Wydział Pracy
+1167,15300505,3506,Sąd Rejonowy w Białej Podlaskiej,VII Wydział Karny
+1168,15300510,503,Sąd Rejonowy w Chełmie,I Wydział Cywilny
+1169,15300510,1006,Sąd Rejonowy w Chełmie,II Wydział Karny
+1170,15300510,1512,Sąd Rejonowy w Chełmie,III Wydział Rodzinny i Nieletnich
+1171,15300510,2015,Sąd Rejonowy w Chełmie,IV Wydział Pracy
+1172,15300510,524506,Sąd Rejonowy w Chełmie,IX Zamiejscowy Wydział Karny z siedzibą we Włodawie
+1173,15300510,3506,Sąd Rejonowy w Chełmie,VII Wydział Karny
+1174,15300510,524003,Sąd Rejonowy w Chełmie,VIII Zamiejscowy Wydział Cywilny z siedzibą we Włodawie
+1175,15300510,525012,Sąd Rejonowy w Chełmie,X Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą we Włodawie
+1176,15301500,503,Sąd Okręgowy w Siedlcach,I Wydział Cywilny
+1177,15301500,1006,Sąd Okręgowy w Siedlcach,II Wydział Karny
+1178,15301500,1539,Sąd Okręgowy w Siedlcach,III Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1179,15301500,2021,Sąd Okręgowy w Siedlcach,IV Wydział Pracy i Ubezpieczeń Społecznych
+1180,15301500,2503,Sąd Okręgowy w Siedlcach,V Wydział Cywilny Odwoławczy
+1181,15301515,503,Sąd Rejonowy w Siedlcach,I Wydział Cywilny
+1182,15301515,1006,Sąd Rejonowy w Siedlcach,II Wydział Karny
+1183,15301515,1512,Sąd Rejonowy w Siedlcach,III Wydział Rodzinny i Nieletnich
+1184,15301515,2021,Sąd Rejonowy w Siedlcach,IV Wydział Pracy i Ubezpieczeń Społecznych
+1185,15301515,2527,Sąd Rejonowy w Siedlcach,V Wydział Gospodarczy
+1186,15301515,3506,Sąd Rejonowy w Siedlcach,VII Wydział Karny
+1187,15301505,503,Sąd Rejonowy w Garwolinie,I Wydział Cywilny
+1188,15301505,1006,Sąd Rejonowy w Garwolinie,II Wydział Karny
+1189,15301505,1512,Sąd Rejonowy w Garwolinie,III Wydział Rodzinny i Nieletnich
+1190,15301505,2524,Sąd Rejonowy w Garwolinie,V Wydział Ksiąg Wieczystych
+1191,15301510,503,Sąd Rejonowy w Mińsku Mazowieckim,I Wydział Cywilny
+1192,15301510,1006,Sąd Rejonowy w Mińsku Mazowieckim,II Wydział Karny
+1193,15301510,1512,Sąd Rejonowy w Mińsku Mazowieckim,III Wydział Rodzinny i Nieletnich
+1194,15301520,503,Sąd Rejonowy w Węgrowie,I Wydział Cywilny
+1195,15301520,1006,Sąd Rejonowy w Węgrowie,II Wydział Karny
+1196,15301520,1512,Sąd Rejonowy w Węgrowie,III Wydział Rodzinny i Nieletnich
+1197,15301520,3020003,Sąd Rejonowy w Węgrowie,VI Zamiejscowy Wydział Cywilny z siedzibą w Sokołowie Podlaskim
+1198,15301520,3520006,Sąd Rejonowy w Węgrowie,VII Zamiejscowy Wydział Karny z siedzibą w Sokołowie Podlaskim
+1199,15301520,4020012,Sąd Rejonowy w Węgrowie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Sokołowie Podlaskim
+1200,15301525,503,Sąd Rejonowy w Sokołowie Podlaskim,I Wydział Cywilny
+1201,15301525,1006,Sąd Rejonowy w Sokołowie Podlaskim,II Wydział Karny
+1202,15301525,1512,Sąd Rejonowy w Sokołowie Podlaskim,III Wydział Rodzinny i Nieletnich
+1203,15302000,503,Sąd Okręgowy w Zamościu,I Wydział Cywilny
+1204,15302000,1006,Sąd Okręgowy w Zamościu,II Wydział Karny
+1205,15302000,1539,Sąd Okręgowy w Zamościu,III Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1206,15302000,2021,Sąd Okręgowy w Zamościu,IV Wydział Pracy i Ubezpieczeń Społecznych
+1207,15302025,503,Sąd Rejonowy w Krasnymstawie,I Wydział Cywilny
+1208,15302025,1006,Sąd Rejonowy w Krasnymstawie,II Wydział Karny
+1209,15302025,1512,Sąd Rejonowy w Krasnymstawie,III Wydział Rodzinny i Nieletnich
+1210,15302030,503,Sąd Rejonowy w Janowie Lubelskim,I Wydział Cywilny
+1211,15302030,1006,Sąd Rejonowy w Janowie Lubelskim,II Wydział Karny
+1212,15302030,1512,Sąd Rejonowy w Janowie Lubelskim,III Wydział Rodzinny i Nieletnich
+1213,15302020,503,Sąd Rejonowy w Zamościu,I Wydział Cywilny
+1214,15302020,1006,Sąd Rejonowy w Zamościu,II Wydział Karny
+1215,15302020,1512,Sąd Rejonowy w Zamościu,III Wydział Rodzinny i Nieletnich
+1216,15302020,2021,Sąd Rejonowy w Zamościu,IV Wydział Pracy i Ubezpieczeń Społecznych
+1217,15302020,2527,Sąd Rejonowy w Zamościu,V Wydział Gospodarczy
+1218,15302020,3506,Sąd Rejonowy w Zamościu,VII Wydział Karny
+1219,15302010,503,Sąd Rejonowy w Hrubieszowie,I Wydział Cywilny
+1220,15302010,1006,Sąd Rejonowy w Hrubieszowie,II Wydział Karny
+1221,15302010,1512,Sąd Rejonowy w Hrubieszowie,III Wydział Rodzinny i Nieletnich
+1222,15302015,503,Sąd Rejonowy w Tomaszowie Lubelskim,I Wydział Cywilny
+1223,15302015,1006,Sąd Rejonowy w Tomaszowie Lubelskim,II Wydział Karny
+1224,15302015,1512,Sąd Rejonowy w Tomaszowie Lubelskim,III Wydział Rodzinny i Nieletnich
+1225,15302005,503,Sąd Rejonowy w Biłgoraju,I Wydział Cywilny
+1226,15302005,1006,Sąd Rejonowy w Biłgoraju,II Wydział Karny
+1227,15302005,1512,Sąd Rejonowy w Biłgoraju,III Wydział Rodzinny i Nieletnich
+1228,15302005,3020003,Sąd Rejonowy w Biłgoraju,VI Zamiejscowy Wydział Cywilny z siedzibą w Janowie Lubelskim
+1229,15302005,3520006,Sąd Rejonowy w Biłgoraju,VII Zamiejscowy Wydział Karny z siedzibą w Janowie Lubelskim
+1230,15302005,4020012,Sąd Rejonowy w Biłgoraju,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Janowie Lubelskim
+1231,15350000,503,Sąd Apelacyjny w Poznaniu,I Wydział Cywilny i Własności Intelektualnej
+1232,15350000,1006,Sąd Apelacyjny w Poznaniu,II Wydział Karny
+1233,15350000,1521,Sąd Apelacyjny w Poznaniu,III Wydział Pracy i Ubezpieczeń Społecznych
+1234,15350000,2057,Sąd Apelacyjny w Poznaniu,IV Wydział Wizytacyjny
+1235,15350500,503,Sąd Okręgowy w Koninie,I Wydział Cywilny
+1236,15350500,1006,Sąd Okręgowy w Koninie,II Wydział Karny
+1237,15350500,1521,Sąd Okręgowy w Koninie,III Wydział Pracy i Ubezpieczeń Społecznych
+1238,15350505,503,Sąd Rejonowy w Kole,I Wydział Cywilny
+1239,15350505,1006,Sąd Rejonowy w Kole,II Wydział Karny
+1240,15350505,1512,Sąd Rejonowy w Kole,III Wydział Rodzinny i Nieletnich
+1241,15350510,503,Sąd Rejonowy w Koninie,I Wydział Cywilny
+1242,15350510,1006,Sąd Rejonowy w Koninie,II Wydział Karny
+1243,15350510,1512,Sąd Rejonowy w Koninie,III Wydział Rodzinny i Nieletnich
+1244,15350510,2021,Sąd Rejonowy w Koninie,IV Wydział Pracy i Ubezpieczeń Społecznych
+1245,15350510,2527,Sąd Rejonowy w Koninie,V Wydział Gospodarczy
+1246,15350520,503,Sąd Rejonowy w Słupcy,I Wydział Cywilny
+1247,15350520,1006,Sąd Rejonowy w Słupcy,II Wydział Karny
+1248,15350520,1512,Sąd Rejonowy w Słupcy,III Wydział Rodzinny i Nieletnich
+1249,15350515,503,Sąd Rejonowy w Turku,I Wydział Cywilny
+1250,15350515,1006,Sąd Rejonowy w Turku,II Wydział Karny
+1251,15350515,1512,Sąd Rejonowy w Turku,III Wydział Rodzinny i Nieletnich
+1252,15350515,2524,Sąd Rejonowy w Turku,V Wydział Ksiąg Wieczystych
+1253,15351500,503,Sąd Okręgowy w Zielonej Górze,I Wydział Cywilny
+1254,15351500,1006,Sąd Okręgowy w Zielonej Górze,II Wydział Karny
+1255,15351500,1539,Sąd Okręgowy w Zielonej Górze,III Wydział Penitencjarny
+1256,15351500,2021,Sąd Okręgowy w Zielonej Górze,IV Wydział Pracy i Ubezpieczeń Społecznych
+1257,15351500,3003,Sąd Okręgowy w Zielonej Górze,VI Wydział Cywilny Odwoławczy
+1258,15351500,3506,Sąd Okręgowy w Zielonej Górze,VII Wydział Karny Odwoławczy
+1259,15351500,4057,Sąd Okręgowy w Zielonej Górze,VIII Wydział Wizytacyjny
+1260,15351530,503,Sąd Rejonowy w Żarach,I Wydział Cywilny
+1261,15351530,1006,Sąd Rejonowy w Żarach,II Wydział Karny
+1262,15351530,1512,Sąd Rejonowy w Żarach,III Wydział Rodzinny i Nieletnich
+1263,15351530,2015,Sąd Rejonowy w Żarach,IV Wydział Pracy
+1264,15351530,2524,Sąd Rejonowy w Żarach,V Wydział Ksiąg Wieczystych
+1265,15351535,503,Sąd Rejonowy we Wschowie,I Wydział Cywilny
+1266,15351535,1006,Sąd Rejonowy we Wschowie,II Wydział Karny
+1267,15351535,1512,Sąd Rejonowy we Wschowie,III Wydział Rodzinny i Nieletnich
+1268,15351520,503,Sąd Rejonowy w Zielonej Górze,I Wydział Cywilny
+1269,15351520,1006,Sąd Rejonowy w Zielonej Górze,II Wydział Karny
+1270,15351520,1512,Sąd Rejonowy w Zielonej Górze,III Wydział Rodzinny i Nieletnich
+1271,15351520,2021,Sąd Rejonowy w Zielonej Górze,IV Wydział Pracy i Ubezpieczeń Społecznych
+1272,15351520,4551,Sąd Rejonowy w Zielonej Górze,IX Wydział Egzekucyjny
+1273,15351520,2527,Sąd Rejonowy w Zielonej Górze,V Wydział Gospodarczy
+1274,15351520,2627,Sąd Rejonowy w Zielonej Górze,V Wydział Gospodarczy. Sprawy Upadłościowe i Restrukturyzacyjne
+1275,15351520,3506,Sąd Rejonowy w Zielonej Górze,VII Wydział Karny
+1276,15351525,503,Sąd Rejonowy w Żaganiu,I Wydział Cywilny
+1277,15351525,1006,Sąd Rejonowy w Żaganiu,II Wydział Karny
+1278,15351525,1512,Sąd Rejonowy w Żaganiu,III Wydział Rodzinny i Nieletnich
+1279,15351525,2015,Sąd Rejonowy w Żaganiu,IV Wydział Pracy
+1280,15351525,2524,Sąd Rejonowy w Żaganiu,V Wydział Ksiąg Wieczystych
+1281,15351515,503,Sąd Rejonowy w Świebodzinie,I Wydział Cywilny
+1282,15351515,1006,Sąd Rejonowy w Świebodzinie,II Wydział Karny
+1283,15351515,1512,Sąd Rejonowy w Świebodzinie,III Wydział Rodzinny i Nieletnich
+1284,15351515,2015,Sąd Rejonowy w Świebodzinie,IV Wydział Pracy
+1285,15351515,523006,Sąd Rejonowy w Świebodzinie,VI Zamiejscowy Wydział Karny w Sulechowie
+1286,15351505,503,Sąd Rejonowy w Krośnie Odrzańskim,I Wydział Cywilny
+1287,15351505,1006,Sąd Rejonowy w Krośnie Odrzańskim,II Wydział Karny
+1288,15351505,1512,Sąd Rejonowy w Krośnie Odrzańskim,III Wydział Rodzinny i Nieletnich
+1289,15351505,2020006,Sąd Rejonowy w Krośnie Odrzańskim,IV Zamiejscowy Wydział Karny z siedzibą w Gubinie
+1290,15351510,503,Sąd Rejonowy w Nowej Soli,I Wydział Cywilny
+1291,15351510,1006,Sąd Rejonowy w Nowej Soli,II Wydział Karny
+1292,15351510,1512,Sąd Rejonowy w Nowej Soli,III Wydział Rodzinny i Nieletnich
+1293,15351510,2015,Sąd Rejonowy w Nowej Soli,IV Wydział Pracy
+1294,15351510,3020003,Sąd Rejonowy w Nowej Soli,VI Zamiejscowy Wydział Cywilny z siedzibą we Wschowie
+1295,15351510,3520006,Sąd Rejonowy w Nowej Soli,VII Zamiejscowy Wydział Karny z siedzibą we Wschowie
+1296,15351510,4020012,Sąd Rejonowy w Nowej Soli,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą we Wschowie
+1297,15351000,503,Sąd Okręgowy w Poznaniu,I Wydział Cywilny
+1298,15351000,1003,Sąd Okręgowy w Poznaniu,II Wydział Cywilny Odwoławczy
+1299,15351000,1506,Sąd Okręgowy w Poznaniu,III Wydział Karny
+1300,15351000,2006,Sąd Okręgowy w Poznaniu,IV Wydział Karny Odwoławczy
+1301,15351000,4527,Sąd Okręgowy w Poznaniu,IX Wydział Gospodarczy
+1302,15351000,2539,Sąd Okręgowy w Poznaniu,V Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1303,15351000,3015,Sąd Okręgowy w Poznaniu,VI Wydział Pracy
+1304,15351000,3518,Sąd Okręgowy w Poznaniu,VII Wydział Ubezpieczeń Społecznych
+1305,15351000,4018,Sąd Okręgowy w Poznaniu,VIII Wydział Ubezpieczeń Społecznych
+1306,15351000,5027,Sąd Okręgowy w Poznaniu,X Wydział Gospodarczy Odwoławczy
+1307,15351000,5557,Sąd Okręgowy w Poznaniu,XI Wydział Wizytacyjny
+1308,15351000,6003,Sąd Okręgowy w Poznaniu,XII Wydział Cywilny
+1309,15351000,6103,Sąd Okręgowy w Poznaniu,XII Wydział Cywilny. Sekcja
+1310,15351000,6520003,Sąd Okręgowy w Poznaniu,XIII Zamiejscowy Wydział Cywilny
+1311,15351000,7020003,Sąd Okręgowy w Poznaniu,XIV Zamiejscowy Wydział Cywilny
+1312,15351000,9527,Sąd Okręgowy w Poznaniu,XIX Wydział Własności intelektualnej
+1313,15351000,7503,Sąd Okręgowy w Poznaniu,XV Wydział Cywilny Odwoławczy
+1314,15351000,8006,Sąd Okręgowy w Poznaniu,XVI Wydział Karny
+1315,15351000,8506,Sąd Okręgowy w Poznaniu,XVII Wydział Karny Odwoławczy
+1316,15351000,9003,Sąd Okręgowy w Poznaniu,XVIII Wydział Cywilny
+1317,15351016,503,Sąd Rejonowy w Śremie,I Wydział Cywilny
+1318,15351016,1006,Sąd Rejonowy w Śremie,II Wydział Karny
+1319,15351016,1512,Sąd Rejonowy w Śremie,III Wydział Rodzinny i Nieletnich
+1320,15351022,503,Sąd Rejonowy w Rawiczu,I Wydział Cywilny
+1321,15351022,1006,Sąd Rejonowy w Rawiczu,II Wydział Karny
+1322,15351022,1512,Sąd Rejonowy w Rawiczu,III Wydział Rodzinny i Nieletnich
+1323,15351020,503,Sąd Rejonowy w Lesznie,I Wydział Cywilny
+1324,15351020,1006,Sąd Rejonowy w Lesznie,II Wydział Karny
+1325,15351020,1512,Sąd Rejonowy w Lesznie,III Wydział Rodzinny i Nieletnich
+1326,15351020,2021,Sąd Rejonowy w Lesznie,IV Wydział Pracy i Ubezpieczeń Społecznych
+1327,15351020,2527,Sąd Rejonowy w Lesznie,V Wydział Gospodarczy
+1328,15351021,503,Sąd Rejonowy w Gostyniu,I Wydział Cywilny
+1329,15351021,1006,Sąd Rejonowy w Gostyniu,II Wydział Karny
+1330,15351021,1512,Sąd Rejonowy w Gostyniu,III Wydział Rodzinny i Nieletnich
+1331,15351010,503,Sąd Rejonowy w Grodzisku Wielkopolskim,I Wydział Cywilny
+1332,15351010,1006,Sąd Rejonowy w Grodzisku Wielkopolskim,II Wydział Karny
+1333,15351010,1512,Sąd Rejonowy w Grodzisku Wielkopolskim,III Wydział Rodzinny i Nieletnich
+1334,15351010,2015,Sąd Rejonowy w Grodzisku Wielkopolskim,IV Wydział Pracy
+1335,15351011,503,Sąd Rejonowy w Nowym Tomyślu,I Wydział Cywilny
+1336,15351011,1006,Sąd Rejonowy w Nowym Tomyślu,II Wydział Karny
+1337,15351011,1512,Sąd Rejonowy w Nowym Tomyślu,III Wydział Rodzinny i Nieletnich
+1338,15351015,503,Sąd Rejonowy w Kościanie,I Wydział Cywilny
+1339,15351015,1006,Sąd Rejonowy w Kościanie,II Wydział Karny
+1340,15351015,1512,Sąd Rejonowy w Kościanie,III Wydział Rodzinny i Nieletnich
+1341,15351015,2015,Sąd Rejonowy w Kościanie,IV Wydział Pracy
+1342,15351012,503,Sąd Rejonowy w Wolsztynie,I Wydział Cywilny
+1343,15351012,1006,Sąd Rejonowy w Wolsztynie,II Wydział Karny
+1344,15351012,1512,Sąd Rejonowy w Wolsztynie,III Wydział Rodzinny i Nieletnich
+1345,15351035,503,Sąd Rejonowy Poznań-Nowe Miasto i Wilda w Poznaniu,I Wydział Cywilny
+1346,15351035,1003,Sąd Rejonowy Poznań-Nowe Miasto i Wilda w Poznaniu,II Wydział Cywilny
+1347,15351035,1506,Sąd Rejonowy Poznań-Nowe Miasto i Wilda w Poznaniu,III Wydział Karny
+1348,15351035,2012,Sąd Rejonowy Poznań-Nowe Miasto i Wilda w Poznaniu,IV Wydział Rodzinny i Nieletnich
+1349,15351035,2503,Sąd Rejonowy Poznań-Nowe Miasto i Wilda w Poznaniu,V Wydział Cywilny
+1350,15351035,3006,Sąd Rejonowy Poznań-Nowe Miasto i Wilda w Poznaniu,VI Wydział Karny
+1351,15351026,503,Sąd Rejonowy w Złotowie,I Wydział Cywilny
+1352,15351026,1006,Sąd Rejonowy w Złotowie,II Wydział Karny
+1353,15351026,1512,Sąd Rejonowy w Złotowie,III Wydział Rodzinny i Nieletnich
+1354,15351025,503,Sąd Rejonowy w Pile,I Wydział Cywilny
+1355,15351025,1006,Sąd Rejonowy w Pile,II Wydział Karny
+1356,15351025,1512,Sąd Rejonowy w Pile,III Wydział Rodzinny i Nieletnich
+1357,15351025,2015,Sąd Rejonowy w Pile,IV Wydział Pracy
+1358,15351025,2527,Sąd Rejonowy w Pile,V Wydział Gospodarczy
+1359,15351025,3024,Sąd Rejonowy w Pile,VI Wydział Ksiąg Wieczystych
+1360,15351030,503,Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu,I Wydział Cywilny
+1361,15351030,1003,Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu,II Wydział Cywilny
+1362,15351030,1506,Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu,III Wydział Karny
+1363,15351030,2012,Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu,IV Wydział Rodzinny i Nieletnich
+1364,15351030,4503,Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu,IX Wydział Cywilny
+1365,15351030,2521,Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu,V Wydział Pracy i Ubezpieczeń Społecznych
+1366,15351030,3021,Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu,VI Wydział Pracy i Ubezpieczeń Społecznych
+1367,15351030,4006,Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu,VIII Wydział Karny
+1368,15351005,503,Sąd Rejonowy w Gnieźnie,I Wydział Cywilny
+1369,15351005,1006,Sąd Rejonowy w Gnieźnie,II Wydział Karny
+1370,15351005,1512,Sąd Rejonowy w Gnieźnie,III Wydział Rodzinny i Nieletnich
+1371,15351005,2015,Sąd Rejonowy w Gnieźnie,IV Wydział Pracy
+1372,15351050,503,Sąd Rejonowy w Środzie Wielkopolskiej,I Wydział Cywilny
+1373,15351050,1006,Sąd Rejonowy w Środzie Wielkopolskiej,II Wydział Karny
+1374,15351050,1509,Sąd Rejonowy w Środzie Wielkopolskiej,III Wydział Rodzinny i Nieletnich
+1375,15351050,2015,Sąd Rejonowy w Środzie Wielkopolskiej,IV Wydział Pracy
+1376,15351050,2524,Sąd Rejonowy w Środzie Wielkopolskiej,V Wydział Ksiąg Wieczystych
+1377,15351051,503,Sąd Rejonowy we Wrześni,I Wydział Cywilny
+1378,15351051,1006,Sąd Rejonowy we Wrześni,II Wydział Karny
+1379,15351051,1512,Sąd Rejonowy we Wrześni,III Wydział Rodzinny i Nieletnich
+1380,15351055,503,Sąd Rejonowy w Trzciance,I Wydział Cywilny
+1381,15351055,1006,Sąd Rejonowy w Trzciance,II Wydział Karny
+1382,15351055,1509,Sąd Rejonowy w Trzciance,III Wydział Rodzinny i Nieletnich
+1383,15351055,2524,Sąd Rejonowy w Trzciance,V Wydział Ksiąg Wieczystych
+1384,15351040,503,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,I Wydział Cywilny
+1385,15351040,1003,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,II Wydział Cywilny
+1386,15351040,1506,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,III Wydział Karny
+1387,15351040,2012,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,IV Wydział Rodzinny i Nieletnich
+1388,15351040,4527,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,IX Wydział Gospodarczy
+1389,15351040,3503,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,VII Wydział Cywilny
+1390,15351040,4006,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,VIII Wydział Karny
+1391,15351040,5027,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,X Wydział Gospodarczy
+1392,15351040,5527,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,XI Wydział Gospodarczy do Spraw Upadłościowych i Restrukturyzacyjnych
+1393,15351040,6003,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,XII Wydział Cywilny
+1394,15351040,6027,Sąd Rejonowy Poznań-Stare Miasto w Poznaniu,XII Wydział Gospodarczy
+1395,15351046,503,Sąd Rejonowy w Obornikach,I Wydział Cywilny
+1396,15351046,1006,Sąd Rejonowy w Obornikach,II Wydział Karny
+1397,15351046,1512,Sąd Rejonowy w Obornikach,III Wydział Rodzinny i Nieletnich
+1398,15351045,503,Sąd Rejonowy w Szamotułach,I Wydział Cywilny
+1399,15351045,1006,Sąd Rejonowy w Szamotułach,II Wydział Karny
+1400,15351045,1509,Sąd Rejonowy w Szamotułach,III Wydział Rodzinny i Nieletnich
+1401,15351045,2015,Sąd Rejonowy w Szamotułach,IV Wydział Pracy
+1402,15351060,503,Sąd Rejonowy w Wągrowcu,I Wydział Cywilny
+1403,15351060,1006,Sąd Rejonowy w Wągrowcu,II Wydział Karny
+1404,15351060,1512,Sąd Rejonowy w Wągrowcu,III Wydział Rodzinny i Nieletnich
+1405,15351061,503,Sąd Rejonowy w Chodzieży,I Wydział Cywilny
+1406,15351061,1006,Sąd Rejonowy w Chodzieży,II Wydział Karny
+1407,15351061,1512,Sąd Rejonowy w Chodzieży,III Wydział Rodzinny i Nieletnich
+1408,15400000,503,Sąd Apelacyjny w Rzeszowie,I Wydział Cywilny
+1409,15400000,1006,Sąd Apelacyjny w Rzeszowie,II Wydział Karny
+1410,15400000,2057,Sąd Apelacyjny w Rzeszowie,II Wydział Wizytacji
+1411,15400000,1521,Sąd Apelacyjny w Rzeszowie,III Wydział Pracy i Ubezpieczeń Społecznych
+1412,15401000,503,Sąd Okręgowy w Rzeszowie,I Wydział Cywilny
+1413,15401000,1006,Sąd Okręgowy w Rzeszowie,II Wydział Karny
+1414,15401000,1106,Sąd Okręgowy w Rzeszowie,II Wydział Karny Sekcja ds. Penitencjarnych
+1415,15401000,1506,Sąd Okręgowy w Rzeszowie,III Wydział Karny-Odwoławczy
+1416,15401000,2021,Sąd Okręgowy w Rzeszowie,IV Wydział Pracy i Ubezpieczeń Społecznych
+1417,15401000,2503,Sąd Okręgowy w Rzeszowie,V Wydział Cywilny Odwoławczy
+1418,15401000,3027,Sąd Okręgowy w Rzeszowie,VI Wydział Gospodarczy
+1419,15401000,3557,Sąd Okręgowy w Rzeszowie,VII Wydział Wizytacyjny
+1420,15401025,503,Sąd Rejonowy w Ropczycach,I Wydział Cywilny
+1421,15401025,1006,Sąd Rejonowy w Ropczycach,II Wydział Karny
+1422,15401025,1512,Sąd Rejonowy w Ropczycach,III Wydział Rodzinny i Nieletnich
+1423,15401030,503,Sąd Rejonowy w Strzyżowie,I Wydział Cywilny
+1424,15401030,1006,Sąd Rejonowy w Strzyżowie,II Wydział Karny
+1425,15401030,1512,Sąd Rejonowy w Strzyżowie,III Wydział Rodzinny i Nieletnich
+1426,15401005,503,Sąd Rejonowy w Dębicy,I Wydział Cywilny
+1427,15401005,1006,Sąd Rejonowy w Dębicy,II Wydział Karny
+1428,15401005,2015,Sąd Rejonowy w Dębicy,III Wydział Pracy
+1429,15401005,1512,Sąd Rejonowy w Dębicy,III Wydział Rodzinny i Nieletnich
+1430,15401005,3020003,Sąd Rejonowy w Dębicy,VI Zamiejscowy Wydział Cywilny z siedzibą w Ropczycach
+1431,15401005,3520006,Sąd Rejonowy w Dębicy,VII Zamiejscowy Wydział Karny z siedzibą w Ropczycach
+1432,15401005,4020012,Sąd Rejonowy w Dębicy,VIII Zamiejscowy Wydział Rodzinny i Nieletnich w Ropczycach
+1433,15401020,503,Sąd Rejonowy w Leżajsku,I Wydział Cywilny
+1434,15401020,1006,Sąd Rejonowy w Leżajsku,II Wydział Karny
+1435,15401020,1512,Sąd Rejonowy w Leżajsku,III Wydział Rodzinny i Nieletnich
+1436,15401010,503,Sąd Rejonowy w Łańcucie,I Wydział Cywilny
+1437,15401010,1006,Sąd Rejonowy w Łańcucie,II Wydział Karny
+1438,15401010,1512,Sąd Rejonowy w Łańcucie,III Wydział Rodzinny i Nieletnich
+1439,15401015,503,Sąd Rejonowy w Rzeszowie,I Wydział Cywilny
+1440,15401015,1006,Sąd Rejonowy w Rzeszowie,II Wydział Karny
+1441,15401015,1512,Sąd Rejonowy w Rzeszowie,III Wydział Rodzinny i Nieletnich
+1442,15401015,2021,Sąd Rejonowy w Rzeszowie,IV Wydział Pracy i Ubezpieczeń Społecznych
+1443,15401015,2527,Sąd Rejonowy w Rzeszowie,V Wydział Gospodarczy
+1444,15401015,5006,Sąd Rejonowy w Rzeszowie,X Wydział Karny
+1445,15401015,5503,Sąd Rejonowy w Rzeszowie,XI Wydział Cywilny
+1446,15401015,6520003,Sąd Rejonowy w Rzeszowie,XIII Zamiejscowy Wydział Cywilny z siedzibą w Strzyżowie
+1447,15401015,7020006,Sąd Rejonowy w Rzeszowie,XIV Zamiejscowy Wydział Karny z siedzibą w Strzyżowie
+1448,15401015,7520012,Sąd Rejonowy w Rzeszowie,XV Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Strzyżowie
+1449,15400500,503,Sąd Okręgowy w Krośnie,I Wydział Cywilny
+1450,15400500,1006,Sąd Okręgowy w Krośnie,II Wydział Karny
+1451,15400500,1539,Sąd Okręgowy w Krośnie,III Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1452,15400500,2021,Sąd Okręgowy w Krośnie,IV Wydział Pracy i Ubezpieczeń Społecznych
+1453,15400520,503,Sąd Rejonowy w Sanoku,I Wydział Cywilny
+1454,15400520,1006,Sąd Rejonowy w Sanoku,II Wydział Karny
+1455,15400520,1512,Sąd Rejonowy w Sanoku,III Wydział Rodzinny i Nieletnich
+1456,15400520,2015,Sąd Rejonowy w Sanoku,IV Wydział Pracy
+1457,15400525,503,Sąd Rejonowy w Brzozowie,I Wydział Cywilny
+1458,15400525,1006,Sąd Rejonowy w Brzozowie,II Wydział Karny
+1459,15400525,1512,Sąd Rejonowy w Brzozowie,III Wydział Rodzinny i Nieletnich
+1460,15400515,503,Sąd Rejonowy w Lesku,I Wydział Cywilny
+1461,15400515,1006,Sąd Rejonowy w Lesku,II Wydział Karny
+1462,15400515,1512,Sąd Rejonowy w Lesku,III Wydział Rodzinny i Nieletnich
+1463,15400515,3020006,Sąd Rejonowy w Lesku,VI Zamiejscowy Wydział Karny z siedzibą w Ustrzykach Dolnych
+1464,15400505,503,Sąd Rejonowy w Jaśle,I Wydział Cywilny
+1465,15400505,1006,Sąd Rejonowy w Jaśle,II Wydział Karny
+1466,15400505,1512,Sąd Rejonowy w Jaśle,III Wydział Rodzinny i Nieletnich
+1467,15400510,503,Sąd Rejonowy w Krośnie,I Wydział Cywilny
+1468,15400510,1006,Sąd Rejonowy w Krośnie,II Wydział Karny
+1469,15400510,1512,Sąd Rejonowy w Krośnie,III Wydział Rodzinny i Nieletnich
+1470,15400510,2021,Sąd Rejonowy w Krośnie,IV Wydział Pracy i Ubezpieczeń Społecznych
+1471,15400510,4520012,Sąd Rejonowy w Krośnie,IX Wydział Rodzinny i Nieletnich z siedzibą w Brzozowie
+1472,15400510,2527,Sąd Rejonowy w Krośnie,V Wydział Gospodarczy
+1473,15400510,3520003,Sąd Rejonowy w Krośnie,VII Wydział Cywilny z siedzibą w Brzozowie
+1474,15400510,4020006,Sąd Rejonowy w Krośnie,VIII Wydział Karny z siedzibą w Brzozowie
+1475,15401500,503,Sąd Okręgowy w Tarnobrzegu,I Wydział Cywilny
+1476,15401500,1006,Sąd Okręgowy w Tarnobrzegu,II Wydział Karny
+1477,15401500,1521,Sąd Okręgowy w Tarnobrzegu,III Wydział Pracy i Ubezpieczeń Społecznych
+1478,15401515,503,Sąd Rejonowy w Tarnobrzegu,I Wydział Cywilny
+1479,15401515,1006,Sąd Rejonowy w Tarnobrzegu,II Wydział Karny
+1480,15401515,1512,Sąd Rejonowy w Tarnobrzegu,III Wydział Rodzinny i Nieletnich
+1481,15401515,2021,Sąd Rejonowy w Tarnobrzegu,IV Wydział Pracy i Ubezpieczeń Społecznych
+1482,15401515,2527,Sąd Rejonowy w Tarnobrzegu,V Wydział Gospodarczy
+1483,15401505,503,Sąd Rejonowy w Mielcu,I Wydział Cywilny
+1484,15401505,1006,Sąd Rejonowy w Mielcu,II Wydział Karny
+1485,15401505,1512,Sąd Rejonowy w Mielcu,III Wydział Rodzinny i Nieletnich
+1486,15401505,2015,Sąd Rejonowy w Mielcu,IV Wydział Pracy
+1487,15401505,3020003,Sąd Rejonowy w Mielcu,VI Zamiejscowy Wydział Cywilny z siedzibą w Kolbuszowej
+1488,15401505,3520006,Sąd Rejonowy w Mielcu,VII Zamiejscowy Wydział Karny z siedzibą w Kolbuszowej
+1489,15401505,4020012,Sąd Rejonowy w Mielcu,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Kolbuszowej
+1490,15401510,503,Sąd Rejonowy w Stalowej Woli,I Wydział Cywilny
+1491,15401510,1006,Sąd Rejonowy w Stalowej Woli,II Wydział Karny
+1492,15401510,1512,Sąd Rejonowy w Stalowej Woli,III Wydział Rodzinny i Nieletnich
+1493,15401510,2015,Sąd Rejonowy w Stalowej Woli,IV Wydział Pracy
+1494,15401520,503,Sąd Rejonowy w Nisku,I Wydział Cywilny
+1495,15401520,1006,Sąd Rejonowy w Nisku,II Wydział Karny
+1496,15401520,1512,Sąd Rejonowy w Nisku,III Wydział Rodzinny i Nieletnich
+1497,15401525,503,Sąd Rejonowy w Kolbuszowej,I Wydział Cywilny
+1498,15401525,1006,Sąd Rejonowy w Kolbuszowej,II Wydział Karny
+1499,15401525,1512,Sąd Rejonowy w Kolbuszowej,III Wydział Rodzinny i Nieletnich
+1500,15402000,503,Sąd Okręgowy w Przemyślu,I Wydział Cywilny
+1501,15402000,1006,Sąd Okręgowy w Przemyślu,II Wydział Karny
+1502,15402000,1521,Sąd Okręgowy w Przemyślu,III Wydział Pracy i Ubezpieczeń Społecznych
+1503,15402000,2527,Sąd Okręgowy w Przemyślu,IV Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1504,15402020,503,Sąd Rejonowy w Lubaczowie,I Wydział Cywilny
+1505,15402020,1006,Sąd Rejonowy w Lubaczowie,II Wydział Karny
+1506,15402020,1512,Sąd Rejonowy w Lubaczowie,III Wydział Rodzinny i Nieletnich
+1507,15402010,503,Sąd Rejonowy w Przemyślu,I Wydział Cywilny
+1508,15402010,1006,Sąd Rejonowy w Przemyślu,II Wydział Karny
+1509,15402010,1512,Sąd Rejonowy w Przemyślu,III Wydział Rodzinny i Nieletnich
+1510,15402010,2021,Sąd Rejonowy w Przemyślu,IV Wydział Pracy i Ubezpieczeń Społecznych
+1511,15402010,2527,Sąd Rejonowy w Przemyślu,V Wydział Gospodarczy
+1512,15402010,3024,Sąd Rejonowy w Przemyślu,VI Wydział Ksiąg wieczystych
+1513,15402015,503,Sąd Rejonowy w Przeworsku,I Wydział Cywilny
+1514,15402015,1006,Sąd Rejonowy w Przeworsku,II Wydział Karny
+1515,15402015,1512,Sąd Rejonowy w Przeworsku,III Wydział Rodzinny i Nieletnich
+1516,15402005,503,Sąd Rejonowy w Jarosławiu,I Wydział Cywilny
+1517,15402005,1006,Sąd Rejonowy w Jarosławiu,II Wydział Karny
+1518,15402005,1512,Sąd Rejonowy w Jarosławiu,III Wydział Rodzinny i Nieletnich
+1519,15402005,2015,Sąd Rejonowy w Jarosławiu,IV Wydział Pracy
+1520,15550000,503,Sąd Apelacyjny w Szczecinie,I Wydział Cywilny
+1521,15550000,1006,Sąd Apelacyjny w Szczecinie,II Wydział Karny
+1522,15550000,1521,Sąd Apelacyjny w Szczecinie,III Wydział Pracy i Ubezpieczeń Społecznych
+1523,15550500,503,Sąd Okręgowy w Gorzowie Wielkopolskim,I Wydział Cywilny
+1524,15550500,1006,Sąd Okręgowy w Gorzowie Wielkopolskim,II Wydział Karny
+1525,15550500,1539,Sąd Okręgowy w Gorzowie Wielkopolskim,III Wydział Penitencjarny
+1526,15550500,2006,Sąd Okręgowy w Gorzowie Wielkopolskim,IV Wydział Karny Odwoławczy
+1527,15550500,2503,Sąd Okręgowy w Gorzowie Wielkopolskim,V Wydział Cywilny Odwoławczy
+1528,15550500,3021,Sąd Okręgowy w Gorzowie Wielkopolskim,VI Wydział Pracy i Ubezpieczeń Społecznych
+1529,15550510,503,Sąd Rejonowy w Międzyrzeczu,I Wydział Cywilny
+1530,15550510,1006,Sąd Rejonowy w Międzyrzeczu,II Wydział Karny
+1531,15550510,1512,Sąd Rejonowy w Międzyrzeczu,III Wydział Rodzinny i Nieletnich
+1532,15550510,3020003,Sąd Rejonowy w Międzyrzeczu,VI Zamiejscowy Wydział Cywilny z siedzibą w Sulęcinie
+1533,15550510,3520006,Sąd Rejonowy w Międzyrzeczu,VII Zamiejscowy Wydział Karny z siedzibą w Sulęcinie
+1534,15550510,4020012,Sąd Rejonowy w Międzyrzeczu,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Sulęcinie
+1535,15550505,503,Sąd Rejonowy w Gorzowie Wielkopolskim,I Wydział Cywilny
+1536,15550505,1006,Sąd Rejonowy w Gorzowie Wielkopolskim,II Wydział Karny
+1537,15550505,1512,Sąd Rejonowy w Gorzowie Wielkopolskim,III Wydział Rodzinny i Nieletnich
+1538,15550505,2021,Sąd Rejonowy w Gorzowie Wielkopolskim,IV Wydział Pracy i Ubezpieczeń Społecznych
+1539,15550505,4539,Sąd Rejonowy w Gorzowie Wielkopolskim,IX Wydział Wykonywania Orzeczeń
+1540,15550505,2527,Sąd Rejonowy w Gorzowie Wielkopolskim,V Wydział Gospodarczy
+1541,15550505,3024,Sąd Rejonowy w Gorzowie Wielkopolskim,VI Wydział Ksiąg Wieczystych
+1542,15550505,3506,Sąd Rejonowy w Gorzowie Wielkopolskim,VII Wydział Karny
+1543,15550505,4051,Sąd Rejonowy w Gorzowie Wielkopolskim,VIII Wydział Egzekucyjny
+1544,15550505,5003,Sąd Rejonowy w Gorzowie Wielkopolskim,X Wydział Cywilny
+1545,15550525,503,Sąd Rejonowy w Sulęcinie,I Wydział Cywilny
+1546,15550525,1006,Sąd Rejonowy w Sulęcinie,II Wydział Karny
+1547,15550525,1512,Sąd Rejonowy w Sulęcinie,III Wydział Rodzinny i Nieletnich
+1548,15550520,503,Sąd Rejonowy w Strzelcach Krajeńskich,I Wydział Cywilny
+1549,15550520,1006,Sąd Rejonowy w Strzelcach Krajeńskich,II Wydział Karny
+1550,15550520,1512,Sąd Rejonowy w Strzelcach Krajeńskich,III Wydział Rodzinny i Nieletnich
+1551,15550515,503,Sąd Rejonowy w Słubicach,I Wydział Cywilny
+1552,15550515,1006,Sąd Rejonowy w Słubicach,II Wydział Karny
+1553,15550515,1512,Sąd Rejonowy w Słubicach,III Wydział Rodzinny i Nieletnich
+1554,15550515,2015,Sąd Rejonowy w Słubicach,IV Wydział Pracy
+1555,15551500,503,Sąd Okręgowy w Szczecinie,I Wydział Cywilny
+1556,15551500,1003,Sąd Okręgowy w Szczecinie,II Wydział Cywilny Odwoławczy
+1557,15551500,1506,Sąd Okręgowy w Szczecinie,III Wydział Karny
+1558,15551500,2006,Sąd Okręgowy w Szczecinie,IV Wydział Karny Odwoławczy
+1559,15551500,2539,Sąd Okręgowy w Szczecinie,V Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń
+1560,15551500,3021,Sąd Okręgowy w Szczecinie,VI Wydział Pracy i Ubezpieczeń Społecznych
+1561,15551500,3521,Sąd Okręgowy w Szczecinie,VII Wydział Pracy i Ubezpieczeń Społecznych
+1562,15551500,4027,Sąd Okręgowy w Szczecinie,VIII Wydział Gospodarczy
+1563,15551500,5009,Sąd Okręgowy w Szczecinie,X Wydział Cywilny Rodzinny
+1564,15551555,503,Sąd Rejonowy w Łobzie,I Wydział Cywilny
+1565,15551555,1006,Sąd Rejonowy w Łobzie,II Wydział Karny
+1566,15551555,1512,Sąd Rejonowy w Łobzie,III Wydział Rodzinny i Nieletnich
+1567,15551535,503,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,I Wydział Cywilny
+1568,15551535,1003,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,II Wydział Cywilny
+1569,15551535,1503,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,III Wydział Cywilny
+1570,15551535,2006,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,IV Wydział Karny
+1571,15551535,4551,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,IX Wydział Egzekucyjny
+1572,15551535,2506,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,V Wydział Karny
+1573,15551535,3006,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,VI Wydział Karny
+1574,15551535,3520006,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,VII Zamiejscowy Wydział Karny w Policach
+1575,15551535,4012,Sąd Rejonowy Szczecin-Prawobrzeże i Zachód w Szczecinie,VIII Wydział Rodzinny i Nieletnich
+1576,15551530,503,Sąd Rejonowy Szczecin-Centrum w Szczecinie,I Wydział Cywilny
+1577,15551530,1003,Sąd Rejonowy Szczecin-Centrum w Szczecinie,II Wydział Cywilny
+1578,15551530,1503,Sąd Rejonowy Szczecin-Centrum w Szczecinie,III Wydział Cywilny
+1579,15551530,2006,Sąd Rejonowy Szczecin-Centrum w Szczecinie,IV Wydział Karny
+1580,15551530,4521,Sąd Rejonowy Szczecin-Centrum w Szczecinie,IX Wydział Pracy i Ubezpieczeń Społecznych
+1581,15551530,2506,Sąd Rejonowy Szczecin-Centrum w Szczecinie,V Wydział Karny
+1582,15551530,3051,Sąd Rejonowy Szczecin-Centrum w Szczecinie,VI Wydział Egzekucyjny
+1583,15551530,3506,Sąd Rejonowy Szczecin-Centrum w Szczecinie,VII Wydział Karny
+1584,15551530,4012,Sąd Rejonowy Szczecin-Centrum w Szczecinie,VIII Wydział Rodzinny i Nieletnich
+1585,15551530,5027,Sąd Rejonowy Szczecin-Centrum w Szczecinie,X Wydział Gospodarczy
+1586,15551530,5527,Sąd Rejonowy Szczecin-Centrum w Szczecinie,XI Wydział Gospodarczy
+1587,15551525,503,Sąd Rejonowy w Stargardzie,I Wydział Cywilny
+1588,15551525,1006,Sąd Rejonowy w Stargardzie,II Wydział Karny
+1589,15551525,1512,Sąd Rejonowy w Stargardzie,III Wydział Rodzinny i Nieletnich
+1590,15551525,2015,Sąd Rejonowy w Stargardzie,IV Wydział Pracy
+1591,15551525,3520006,Sąd Rejonowy w Stargardzie,VII Zamiejscowy Wydział Karny w Pyrzycach
+1592,15551520,503,Sąd Rejonowy w Myśliborzu,I Wydział Cywilny
+1593,15551520,1006,Sąd Rejonowy w Myśliborzu,II Wydział Karny
+1594,15551520,1512,Sąd Rejonowy w Myśliborzu,III Wydział Rodzinny i Nieletnich
+1595,15551550,503,Sąd Rejonowy w Kamieniu Pomorskim,I Wydział Cywilny
+1596,15551550,1006,Sąd Rejonowy w Kamieniu Pomorskim,II Wydział Karny
+1597,15551550,1512,Sąd Rejonowy w Kamieniu Pomorskim,III Wydział Rodzinny i Nieletnich
+1598,15551545,503,Sąd Rejonowy w Choszcznie,I Wydział Cywilny
+1599,15551545,1006,Sąd Rejonowy w Choszcznie,II Wydział Karny
+1600,15551545,1512,Sąd Rejonowy w Choszcznie,III Wydział Rodzinny i Nieletnich
+1601,15551545,2015,Sąd Rejonowy w Choszcznie,IV Wydział Pracy
+1602,15551540,503,Sąd Rejonowy w Świnoujściu,I Wydział Cywilny
+1603,15551540,1006,Sąd Rejonowy w Świnoujściu,II Wydział Karny
+1604,15551540,1512,Sąd Rejonowy w Świnoujściu,III Wydział Rodzinny i Nieletnich
+1605,15551540,523003,Sąd Rejonowy w Świnoujściu,VI Zamiejscowy Wydział Cywilny z siedzibą w Kamieniu Pomorskim
+1606,15551540,523506,Sąd Rejonowy w Świnoujściu,VII Zamiejscowy Wydział Karny z siedzibą w Kamieniu Pomorskim
+1607,15551540,524012,Sąd Rejonowy w Świnoujściu,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Kamieniu Pomorskim
+1608,15551515,503,Sąd Rejonowy w Gryfinie,I Wydział Cywilny
+1609,15551515,1006,Sąd Rejonowy w Gryfinie,II Wydział Karny
+1610,15551515,1512,Sąd Rejonowy w Gryfinie,III Wydział Rodzinny i Nieletnich
+1611,15551515,3020006,Sąd Rejonowy w Gryfinie,VI Zamiejscowy Wydział Karny Sądu Rejonowego w Gryfinie z siedzibą w Chojnie
+1612,15551510,503,Sąd Rejonowy w Gryficach,I Wydział Cywilny
+1613,15551510,1006,Sąd Rejonowy w Gryficach,II Wydział Karny
+1614,15551510,1512,Sąd Rejonowy w Gryficach,III Wydział Rodzinny i Nieletnich
+1615,15551510,3020003,Sąd Rejonowy w Gryficach,VI Zamiejscowy Wydział Cywilny z siedzibą w Łobzie
+1616,15551510,3520006,Sąd Rejonowy w Gryficach,VII Zamiejscowy Wydział Karny z siedzibą w Łobzie
+1617,15551510,4020012,Sąd Rejonowy w Gryficach,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Łobzie
+1618,15551505,503,Sąd Rejonowy w Goleniowie,I Wydział Cywilny
+1619,15551505,1006,Sąd Rejonowy w Goleniowie,II Wydział Karny
+1620,15551505,1512,Sąd Rejonowy w Goleniowie,III Wydział Rodzinny i Nieletnich
+1621,15551505,2015,Sąd Rejonowy w Goleniowie,IV Wydział Pracy
+1622,15551505,2524,Sąd Rejonowy w Goleniowie,V Wydział Ksiąg Wieczystych
+1623,15551000,509,Sąd Okręgowy w Koszalinie,I Wydział Cywilny
+1624,15551000,1006,Sąd Okręgowy w Koszalinie,II Wydział Karny
+1625,15551000,1539,Sąd Okręgowy w Koszalinie,III Wydział Penitencjarny
+1626,15551000,2021,Sąd Okręgowy w Koszalinie,IV Wydział Pracy i Ubezpieczeń Społecznych
+1627,15551000,2506,Sąd Okręgowy w Koszalinie,V Wydział Karny Odwoławczy
+1628,15551000,3027,Sąd Okręgowy w Koszalinie,VI Wydział Gospodarczy
+1629,15551000,3503,Sąd Okręgowy w Koszalinie,VII Wydział Cywilny Odwoławczy
+1630,15551000,4057,Sąd Okręgowy w Koszalinie,VIII Wydział Wizytacyjny
+1631,15551020,503,Sąd Rejonowy w Koszalinie,I Wydział Cywilny
+1632,15551020,1006,Sąd Rejonowy w Koszalinie,II Wydział Karny
+1633,15551020,1512,Sąd Rejonowy w Koszalinie,III Wydział Rodzinny i Nieletnich
+1634,15551020,2021,Sąd Rejonowy w Koszalinie,IV Wydział Pracy i Ubezpieczeń Społecznych
+1635,15551020,2527,Sąd Rejonowy w Koszalinie,V Wydział Gospodarczy
+1636,15551020,3527,Sąd Rejonowy w Koszalinie,VII Wydział Gospodarczy
+1637,15551020,4003,Sąd Rejonowy w Koszalinie,VIII Wydział Cywilny
+1638,15551020,5006,Sąd Rejonowy w Koszalinie,X Wydział Karny
+1639,15551020,6020003,Sąd Rejonowy w Koszalinie,XII Zamiejscowy Wydział Cywilny zsiedzibą w Sławnie
+1640,15551020,6520006,Sąd Rejonowy w Koszalinie,XIII Zamiejscowy Wydział Karny zsiedzibą w Sławnie
+1641,15551020,7020012,Sąd Rejonowy w Koszalinie,XIV Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Sławnie
+1642,15551015,503,Sąd Rejonowy w Kołobrzegu,I Wydział Cywilny
+1643,15551015,1006,Sąd Rejonowy w Kołobrzegu,II Wydział Karny
+1644,15551015,1512,Sąd Rejonowy w Kołobrzegu,III Wydział Rodzinny i Nieletnich
+1645,15551015,2015,Sąd Rejonowy w Kołobrzegu,IV Wydział Pracy
+1646,15551010,503,Sąd Rejonowy w Drawsku Pomorskim,I Wydział Cywilny
+1647,15551010,1006,Sąd Rejonowy w Drawsku Pomorskim,II Wydział Karny
+1648,15551010,1512,Sąd Rejonowy w Drawsku Pomorskim,III Wydział Rodzinny i Nieletnich
+1649,15551010,2524,Sąd Rejonowy w Drawsku Pomorskim,V Wydział Ksiąg Wieczystych
+1650,15551035,503,Sąd Rejonowy w Sławnie,I Wydział Cywilny
+1651,15551035,1006,Sąd Rejonowy w Sławnie,II Wydział Karny
+1652,15551035,1512,Sąd Rejonowy w Sławnie,III Wydział Rodzinny i Nieletnich
+1653,15551030,503,Sąd Rejonowy w Wałczu,I Wydział Cywilny
+1654,15551030,1006,Sąd Rejonowy w Wałczu,II Wydział Karny
+1655,15551030,1512,Sąd Rejonowy w Wałczu,III Wydział Rodzinny i Nieletnich
+1656,15551025,503,Sąd Rejonowy w Szczecinku,I Wydział Cywilny
+1657,15551025,1006,Sąd Rejonowy w Szczecinku,II Wydział Karny
+1658,15551025,1512,Sąd Rejonowy w Szczecinku,III Wydział Rodzinny i Nieletnich
+1659,15551025,2015,Sąd Rejonowy w Szczecinku,IV Wydział Pracy
+1660,15551005,503,Sąd Rejonowy w Białogardzie,I Wydział Cywilny
+1661,15551005,1006,Sąd Rejonowy w Białogardzie,II Wydział Karny
+1662,15551005,1512,Sąd Rejonowy w Białogardzie,III Wydział Rodzinny i Nieletnich
+1663,15551005,2015,Sąd Rejonowy w Białogardzie,IV Wydział Pracy
+1664,15551005,3520006,Sąd Rejonowy w Białogardzie,VII Zamiejscowy Wydział Karny
+1665,15450000,503,Sąd Apelacyjny w Warszawie,I Wydział Cywilny
+1666,15450000,1006,Sąd Apelacyjny w Warszawie,II Wydział Karny
+1667,15450000,1521,Sąd Apelacyjny w Warszawie,III Wydział Pracy i Ubezpieczeń Społecznych
+1668,15450000,2503,Sąd Apelacyjny w Warszawie,V Wydział Cywilny
+1669,15450000,3003,Sąd Apelacyjny w Warszawie,VI Wydział Cywilny
+1670,15450000,3527,Sąd Apelacyjny w Warszawie,VII Wydział Gospodarczy
+1671,15450000,4003,Sąd Apelacyjny w Warszawie,VIII Wydział Cywilny
+1672,15450000,4006,Sąd Apelacyjny w Warszawie,VIII Wydział Karny
+1673,15450500,303,Sąd Okręgowy w Warszawie,I Wydział Cywilny
+1674,15450500,603,Sąd Okręgowy w Warszawie,II Wydział Cywilny
+1675,15450500,903,Sąd Okręgowy w Warszawie,III Wydział Cywilny
+1676,15450500,1203,Sąd Okręgowy w Warszawie,IV Wydział Cywilny
+1677,15450500,2706,Sąd Okręgowy w Warszawie,IX Wydział Karny
+1678,15450500,1503,Sąd Okręgowy w Warszawie,V Wydział Cywilny Odwoławczy
+1679,15450500,1803,Sąd Okręgowy w Warszawie,VI Wydział Cywilny
+1680,15450500,1903,Sąd Okręgowy w Warszawie,VI Wydział Cywilny II Instancja
+1681,15450500,2103,Sąd Okręgowy w Warszawie,VII Wydział Cywilny
+1682,15450500,2406,Sąd Okręgowy w Warszawie,VIII Wydział Karny
+1683,15450500,3006,Sąd Okręgowy w Warszawie,X Wydział Karny
+1684,15450500,3606,Sąd Okręgowy w Warszawie,XII Wydział Karny
+1685,15450500,3918,Sąd Okręgowy w Warszawie,XIII Wydział Ubezpieczeń
+1686,15450500,4018,Sąd Okręgowy w Warszawie,XIII Wydział Ubezpieczeń II Instancja
+1687,15450500,4118,Sąd Okręgowy w Warszawie,XIII Wydział Ubezpieczeń Sekcja
+1688,15450500,4218,Sąd Okręgowy w Warszawie,XIV Wydział Ubezpieczeń
+1689,15450500,4318,Sąd Okręgowy w Warszawie,XIV Wydział Ubezpieczeń II Instancja
+1690,15450500,4827,Sąd Okręgowy w Warszawie,XVI Wydział Gospodarczy
+1691,15450500,5127,Sąd Okręgowy w Warszawie,XVII Wydział Sąd Ochrony Konkurencji i Konsumenta
+1692,15450500,5406,Sąd Okręgowy w Warszawie,XVIII Wydział Karny
+1693,15450500,6027,Sąd Okręgowy w Warszawie,XX Wydział Gospodarczy
+1694,15450500,6315,Sąd Okręgowy w Warszawie,XXI Wydział Pracy
+1695,15450500,6415,Sąd Okręgowy w Warszawie,XXI Wydział Pracy II Instancja
+1696,15450500,6627,Sąd Okręgowy w Warszawie,XXII Wydział Sąd Wspólnotowych Znaków Towarowych i Wzorów Przemysłowych
+1697,15450500,6927,Sąd Okręgowy w Warszawie,XXIII Wydział Gospodarczy Odwoławczy
+1698,15450500,7203,Sąd Okręgowy w Warszawie,XXIV Wydział Cywilny
+1699,15450500,7503,Sąd Okręgowy w Warszawie,XXV Wydział Cywilny
+1700,15450500,7827,Sąd Okręgowy w Warszawie,XXVI Wydział Gospodarczy
+1701,15450500,8103,Sąd Okręgowy w Warszawie,XXVII Cywilny Odwoławczy
+1702,15450540,503,Sąd Rejonowy dla Warszawy-Żoliborza w Warszawie,I Wydział Cywilny
+1703,15450540,1003,Sąd Rejonowy dla Warszawy-Żoliborza w Warszawie,II Wydział Cywilny
+1704,15450540,1506,Sąd Rejonowy dla Warszawy-Żoliborza w Warszawie,III Wydział Karny
+1705,15450540,2006,Sąd Rejonowy dla Warszawy-Żoliborza w Warszawie,IV Wydział Karny
+1706,15450540,3012,Sąd Rejonowy dla Warszawy-Żoliborza w Warszawie,VI Wydział Rodzinny i Nieletnich
+1707,15450540,3521,Sąd Rejonowy dla Warszawy-Żoliborza w Warszawie,VII Wydział Pracy i Ubezpieczeń Społecznych
+1708,15450530,503,Sąd Rejonowy dla Warszawy-Śródmieścia w Warszawie,I Wydział Cywilny
+1709,15450530,1006,Sąd Rejonowy dla Warszawy-Śródmieścia w Warszawie,II Wydział Karny
+1710,15450530,1512,Sąd Rejonowy dla Warszawy-Śródmieścia w Warszawie,III Wydział Rodzinny i Nieletnich
+1711,15450530,2506,Sąd Rejonowy dla Warszawy-Śródmieścia w Warszawie,V Wydział Karny
+1712,15450530,3003,Sąd Rejonowy dla Warszawy-Śródmieścia w Warszawie,VI Wydział Cywilny
+1713,15450530,4021,Sąd Rejonowy dla Warszawy-Śródmieścia w Warszawie,VIII Wydział Pracy i Ubezpieczeń Społecznych
+1714,15450530,5006,Sąd Rejonowy dla Warszawy-Śródmieścia w Warszawie,X Wydział Karny
+1715,15450530,5506,Sąd Rejonowy dla Warszawy-Śródmieścia w Warszawie,XI Wydział Karny
+1716,15450535,503,Sąd Rejonowy dla Warszawy-Woli w Warszawie,I Wydział Cywilny
+1717,15450535,1003,Sąd Rejonowy dla Warszawy-Woli w Warszawie,II Wydział Cywilny
+1718,15450535,1506,Sąd Rejonowy dla Warszawy-Woli w Warszawie,III Wydział Karny
+1719,15450535,2006,Sąd Rejonowy dla Warszawy-Woli w Warszawie,IV Wydział Karny
+1720,15450535,2506,Sąd Rejonowy dla Warszawy-Woli w Warszawie,V Wydział Karny
+1721,15450535,3012,Sąd Rejonowy dla Warszawy-Woli w Warszawie,VI Wydział Rodzinny i Nieletnich
+1722,15450505,503,Sąd Rejonowy w Grodzisku Mazowieckim,I Wydział Cywilny
+1723,15450505,1006,Sąd Rejonowy w Grodzisku Mazowieckim,II Wydział Karny
+1724,15450505,1512,Sąd Rejonowy w Grodzisku Mazowieckim,III Wydział Rodzinny i Nieletnich
+1725,15450505,2024,Sąd Rejonowy w Grodzisku Mazowieckim,IV Wydział Ksiąg Wieczystych
+1726,15450510,503,Sąd Rejonowy w Piasecznie,I Wydział Cywilny
+1727,15450510,1006,Sąd Rejonowy w Piasecznie,II Wydział Karny
+1728,15450510,1512,Sąd Rejonowy w Piasecznie,III Wydział Rodzinny i Nieletnich
+1729,15450510,2024,Sąd Rejonowy w Piasecznie,IV Wydział Ksiąg wieczystych
+1730,15450520,503,Sąd Rejonowy dla Warszawy-Mokotowa w Warszawie,I Wydział Cywilny
+1731,15450520,1003,Sąd Rejonowy dla Warszawy-Mokotowa w Warszawie,II Wydział Cywilny
+1732,15450520,1506,Sąd Rejonowy dla Warszawy-Mokotowa w Warszawie,III Wydział Karny
+1733,15450520,2512,Sąd Rejonowy dla Warszawy-Mokotowa w Warszawie,V Wydział Rodzinny i Nieletnich
+1734,15450520,4006,Sąd Rejonowy dla Warszawy-Mokotowa w Warszawie,VIII Wydział Karny
+1735,15450520,7006,Sąd Rejonowy dla Warszawy-Mokotowa w Warszawie,XIV Wydział Karny
+1736,15450520,8003,Sąd Rejonowy dla Warszawy-Mokotowa w Warszawie,XVI Wydział Cywilny
+1737,15450525,503,Sąd Rejonowy dla m. st. Warszawy w Warszawie,I Wydział Cywilny
+1738,15450525,1003,Sąd Rejonowy dla m. st. Warszawy w Warszawie,II Wydział Cywilny
+1739,15450525,1506,Sąd Rejonowy dla m. st. Warszawy w Warszawie,III Wydział Karny
+1740,15450525,2006,Sąd Rejonowy dla m. st. Warszawy w Warszawie,IV Wydział Karny
+1741,15450525,4527,Sąd Rejonowy dla m. st. Warszawy w Warszawie,IX Wydział Gospodarczy
+1742,15450525,2506,Sąd Rejonowy dla m. st. Warszawy w Warszawie,V Wydział Karny
+1743,15450525,3012,Sąd Rejonowy dla m. st. Warszawy w Warszawie,VI Wydział Rodzinny i Nieletnich
+1744,15450525,3521,Sąd Rejonowy dla m. st. Warszawy w Warszawie,VII Wydział Pracy i Ubezpieczeń Społecznych
+1745,15450525,4027,Sąd Rejonowy dla m. st. Warszawy w Warszawie,VIII Wydział Gospodarczy
+1746,15450525,5027,Sąd Rejonowy dla m. st. Warszawy w Warszawie,X Wydział d/s Upadłościowych i Naprawczych
+1747,15450525,9563,Sąd Rejonowy dla m. st. Warszawy w Warszawie,XIX Wydział Gospodarczy
+1748,15450525,7527,Sąd Rejonowy dla m. st. Warszawy w Warszawie,XV Wydział Gospodarczy
+1749,15450525,8027,Sąd Rejonowy dla m. st. Warszawy w Warszawie,XVI Wydział Gospodarczy
+1750,15450525,8527,Sąd Rejonowy dla m. st. Warszawy w Warszawie,XVII Wydział Gospodarczy
+1751,15450525,9063,Sąd Rejonowy dla m. st. Warszawy w Warszawie,XVIII Wydział Gospodarczy
+1752,15450515,503,Sąd Rejonowy w Pruszkowie,I Wydział Cywilny
+1753,15450515,1006,Sąd Rejonowy w Pruszkowie,II Wydział Karny
+1754,15450515,1512,Sąd Rejonowy w Pruszkowie,III Wydział Rodzinny i Nieletnich
+1755,15450515,2506,Sąd Rejonowy w Pruszkowie,V Wydział Karny
+1756,15450515,3024,Sąd Rejonowy w Pruszkowie,VI Wydział Ksiąg wieczystych
+1757,15451000,503,Sąd Okręgowy Warszawa-Praga w Warszawie,I Wydział Cywilny
+1758,15451000,1003,Sąd Okręgowy Warszawa-Praga w Warszawie,II Wydział Cywilny
+1759,15451000,1503,Sąd Okręgowy Warszawa-Praga w Warszawie,III Wydział Cywilny
+1760,15451000,2003,Sąd Okręgowy Warszawa-Praga w Warszawie,IV Wydział Cywilny Odwoławczy
+1761,15451000,4557,Sąd Okręgowy Warszawa-Praga w Warszawie,IX Wydział Wizytacyjny
+1762,15451000,2506,Sąd Okręgowy Warszawa-Praga w Warszawie,V Wydział Karny
+1763,15451000,3006,Sąd Okręgowy Warszawa-Praga w Warszawie,VI Wydział Karny Odwoławczy
+1764,15451000,3521,Sąd Okręgowy Warszawa-Praga w Warszawie,VII Wydział Pracy i Ubezpieczeń Społecznych
+1765,15451000,3621,Sąd Okręgowy Warszawa-Praga w Warszawie,VII Wydział Pracy i Ubezpieczeń Społecznych II instancja
+1766,15451000,4039,Sąd Okręgowy Warszawa-Praga w Warszawie,VIII Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1767,15451000,5027,Sąd Okręgowy Warszawa-Praga w Warszawie,X Wydział Gospodarczy
+1768,15451020,503,Sąd Rejonowy dla Warszawy Pragi-Południe w Warszawie,I Wydział Cywilny
+1769,15451020,1003,Sąd Rejonowy dla Warszawy Pragi-Południe w Warszawie,II Wydział Cywilny
+1770,15451020,1506,Sąd Rejonowy dla Warszawy Pragi-Południe w Warszawie,III Wydział Karny
+1771,15451020,2006,Sąd Rejonowy dla Warszawy Pragi-Południe w Warszawie,IV Wydział Karny
+1772,15451020,2512,Sąd Rejonowy dla Warszawy Pragi-Południe w Warszawie,V Wydział Rodzinny i Nieletnich
+1773,15451020,3021,Sąd Rejonowy dla Warszawy Pragi-Południe w Warszawie,VI Wydział Pracy i Ubezpieczeń Społecznych
+1774,15451020,3503,Sąd Rejonowy dla Warszawy Pragi-Południe w Warszawie,VII Wydział Cywilny
+1775,15451010,503,Sąd Rejonowy w Nowym Dworze Mazowieckim,I Wydział Cywilny
+1776,15451010,1006,Sąd Rejonowy w Nowym Dworze Mazowieckim,II Wydział Karny
+1777,15451010,1512,Sąd Rejonowy w Nowym Dworze Mazowieckim,III Wydział Rodzinny i Nieletnich
+1778,15451015,503,Sąd Rejonowy w Otwocku,I Wydział Cywilny
+1779,15451015,1006,Sąd Rejonowy w Otwocku,II Wydział Karny
+1780,15451015,1512,Sąd Rejonowy w Otwocku,III Rodzinny i Nieletnich
+1781,15451025,503,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,I Wydział Cywilny
+1782,15451025,1003,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,II Wydział Cywilny
+1783,15451025,1506,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,III Wydział Karny
+1784,15451025,2006,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,IV Wydział Karny
+1785,15451025,4527,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,IX Wydział Gospodarczy do Spraw Upadłościowych
+1786,15451025,2512,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,V Wydział Rodzinny i Nieletnich
+1787,15451025,3021,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,VI Wydział Pracy i Ubezpieczeń Społecznych
+1788,15451025,3503,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,VII Wydział Cywilny
+1789,15451025,3527,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,VII Wydział Gospodarczy
+1790,15451025,4006,Sąd Rejonowy dla Warszawy Pragi-Północ w Warszawie,VIII Wydział Karny
+1791,15451030,503,Sąd Rejonowy w Wołominie,I Wydział Cywilny
+1792,15451030,1006,Sąd Rejonowy w Wołominie,II Wydział Karny
+1793,15451030,1512,Sąd Rejonowy w Wołominie,III Wydział Rodzinny i Nieletnich
+1794,15451030,2506,Sąd Rejonowy w Wołominie,V Wydział Karny
+1795,15451005,503,Sąd Rejonowy w Legionowie,I Wydział Cywilny
+1796,15451005,1006,Sąd Rejonowy w Legionowie,II Wydział Karny
+1797,15451005,1512,Sąd Rejonowy w Legionowie,III Wydział Rodzinny i Nieletnich
+1798,15500000,503,Sąd Apelacyjny we Wrocławiu,I Wydział Cywilny
+1799,15500000,1006,Sąd Apelacyjny we Wrocławiu,II Wydział Karny
+1800,15500000,1521,Sąd Apelacyjny we Wrocławiu,III Wydział Pracy i Ubezpieczeń Społecznych
+1801,15501000,503,Sąd Okręgowy w Legnicy,I Wydział Cywilny
+1802,15501000,1003,Sąd Okręgowy w Legnicy,II Wydział Cywilny Odwoławczy
+1803,15501000,1506,Sąd Okręgowy w Legnicy,III Wydział Karny
+1804,15501000,2006,Sąd Okręgowy w Legnicy,IV Wydział Karny Odwoławczy
+1805,15501000,2521,Sąd Okręgowy w Legnicy,V Wydział Pracy i Ubezpieczeń Społecznych
+1806,15501000,3027,Sąd Okręgowy w Legnicy,VI Wydział Gospodarczy
+1807,15501030,503,Sąd Rejonowy w Jaworze,I Wydział Cywilny
+1808,15501030,1006,Sąd Rejonowy w Jaworze,II Wydział Karny
+1809,15501030,1512,Sąd Rejonowy w Jaworze,III Wydział Rodzinny i Nieletnich
+1810,15501025,503,Sąd Rejonowy w Złotoryi,I Wydział Cywilny
+1811,15501025,1006,Sąd Rejonowy w Złotoryi,II Wydział Karny
+1812,15501025,1512,Sąd Rejonowy w Złotoryi,III Wydział Rodzinny i Nieletnich
+1813,15501025,523003,Sąd Rejonowy w Złotoryi,VI Zamiejscowy Wydział Cywilny z siedzibą w Jaworze
+1814,15501025,1023506,Sąd Rejonowy w Złotoryi,VII Zamiejscowy Wydział Karny z siedzibą w Jaworze
+1815,15501025,1524012,Sąd Rejonowy w Złotoryi,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Jaworze
+1816,15501005,503,Sąd Rejonowy w Głogowie,I Wydział Cywilny
+1817,15501005,1006,Sąd Rejonowy w Głogowie,II Wydział Karny
+1818,15501005,1512,Sąd Rejonowy w Głogowie,III Wydział Rodzinny i Nieletnich
+1819,15501005,2015,Sąd Rejonowy w Głogowie,IV Wydział Pracy
+1820,15501020,503,Sąd Rejonowy w Lubinie,I Wydział Cywilny
+1821,15501020,1006,Sąd Rejonowy w Lubinie,II Wydział Karny
+1822,15501020,1512,Sąd Rejonowy w Lubinie,III Wydział Rodzinny i Nieletnich
+1823,15501020,2015,Sąd Rejonowy w Lubinie,IV Wydział Pracy
+1824,15501015,503,Sąd Rejonowy w Legnicy,I Wydział Cywilny
+1825,15501015,1006,Sąd Rejonowy w Legnicy,II Wydział Karny
+1826,15501015,1512,Sąd Rejonowy w Legnicy,III Wydział Rodzinny i Nieletnich
+1827,15501015,2021,Sąd Rejonowy w Legnicy,IV Wydział Pracy i Ubezpieczeń Społecznych
+1828,15501015,2527,Sąd Rejonowy w Legnicy,V Wydział Gospodarczy
+1829,15501015,3503,Sąd Rejonowy w Legnicy,VII Wydział Cywilny
+1830,15501015,4006,Sąd Rejonowy w Legnicy,VIII Wydział Karny
+1831,15500500,503,Sąd Okręgowy w Jeleniej Górze,I Wydział Cywilny
+1832,15500500,1003,Sąd Okręgowy w Jeleniej Górze,II Wydział Cywilny Odwoławczy
+1833,15500500,1506,Sąd Okręgowy w Jeleniej Górze,III Wydział Karny
+1834,15500500,2039,Sąd Okręgowy w Jeleniej Górze,IV Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1835,15500500,3006,Sąd Okręgowy w Jeleniej Górze,VI Wydział Karny Odwoławczy
+1836,15500500,3521,Sąd Okręgowy w Jeleniej Górze,VII Wydział Pracy i Ubezpieczeń Społecznych
+1837,15500520,503,Sąd Rejonowy w Lubaniu,I Wydział Cywilny
+1838,15500520,1006,Sąd Rejonowy w Lubaniu,II Wydział Karny
+1839,15500520,1512,Sąd Rejonowy w Lubaniu,III Wydział Rodzinny i Nieletnich
+1840,15500520,2015,Sąd Rejonowy w Lubaniu,IV Wydział Pracy
+1841,15500520,523003,Sąd Rejonowy w Lubaniu,VI Zamiejscowy Wydział Cywilny z siedzibą w Lwówku Śląskim
+1842,15500520,1023506,Sąd Rejonowy w Lubaniu,VII Zamiejscowy Wydział Karny z siedzibą w Lwówku Śląskim
+1843,15500520,1524012,Sąd Rejonowy w Lubaniu,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Lwówku Śląskim
+1844,15500540,503,Sąd Rejonowy w Lwówku Śląskim,I Wydział Cywilny
+1845,15500540,1006,Sąd Rejonowy w Lwówku Śląskim,II Wydział Karny
+1846,15500540,1512,Sąd Rejonowy w Lwówku Śląskim,III Wydział Rodzinny i Nieletnich
+1847,15500535,503,Sąd Rejonowy w Kamiennej Górze,I Wydział Cywilny
+1848,15500535,1006,Sąd Rejonowy w Kamiennej Górze,II Wydział Karny
+1849,15500535,1512,Sąd Rejonowy w Kamiennej Górze,III Wydział Rodzinny i Nieletnich
+1850,15500530,503,Sąd Rejonowy w Zgorzelcu,I Wydział Cywilny
+1851,15500530,1006,Sąd Rejonowy w Zgorzelcu,II Wydział Karny
+1852,15500530,1512,Sąd Rejonowy w Zgorzelcu,III Wydział Rodzinny i Nieletnich
+1853,15500530,2015,Sąd Rejonowy w Zgorzelcu,IV Wydział Pracy
+1854,15500510,503,Sąd Rejonowy w Jeleniej Górze,I Wydział Cywilny
+1855,15500510,1006,Sąd Rejonowy w Jeleniej Górze,II Wydział Karny
+1856,15500510,1512,Sąd Rejonowy w Jeleniej Górze,III Wydział Rodzinny i Nieletnich
+1857,15500510,2021,Sąd Rejonowy w Jeleniej Górze,IV Wydział Pracy i Ubezpieczeń Społecznych
+1858,15500510,2527,Sąd Rejonowy w Jeleniej Górze,V Wydział Gospodarczy
+1859,15500505,503,Sąd Rejonowy w Bolesławcu,I Wydział Cywilny
+1860,15500505,1006,Sąd Rejonowy w Bolesławcu,II Wydział Karny
+1861,15500505,1512,Sąd Rejonowy w Bolesławcu,III Wydział Rodzinny i Nieletnich
+1862,15500505,2015,Sąd Rejonowy w Bolesławcu,IV Wydział Pracy
+1863,15502500,503,Sąd Okręgowy we Wrocławiu,I Wydział Cywilny
+1864,15502500,1003,Sąd Okręgowy we Wrocławiu,II Wydział Cywilny Odwoławczy
+1865,15502500,1506,Sąd Okręgowy we Wrocławiu,III Wydział Karny
+1866,15502500,2006,Sąd Okręgowy we Wrocławiu,IV Wydział Karny Odwoławczy
+1867,15502500,4518,Sąd Okręgowy we Wrocławiu,IX Wydział Ubezpieczeń Społecznych
+1868,15502500,2539,Sąd Okręgowy we Wrocławiu,V Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1869,15502500,3515,Sąd Okręgowy we Wrocławiu,VII Wydział Pracy
+1870,15502500,4021,Sąd Okręgowy we Wrocławiu,VIII Wydział Pracy i Ubezpieczeń Społecznych
+1871,15502500,4018,Sąd Okręgowy we Wrocławiu,VIII Wydział Ubezpieczeń Społecznych
+1872,15502500,5027,Sąd Okręgowy we Wrocławiu,X Wydział Gospodarczy
+1873,15502500,5527,Sąd Okręgowy we Wrocławiu,XI Wydział Gospodarczy Odwoławczy
+1874,15502500,6003,Sąd Okręgowy we Wrocławiu,XII Wydział Cywilny
+1875,15502500,6509,Sąd Okręgowy we Wrocławiu,XIII Wydział Cywilny Rodzinny
+1876,15502540,503,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,I Wydział Cywilny
+1877,15502540,1006,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,II Wydział Karny
+1878,15502540,1509,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,III Wydział Rodzinny i Nieletnich
+1879,15502540,2027,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,IV Wydział Gospodarczy
+1880,15502540,4536,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,IX Wydział Krajowego Rejestru Sądowego
+1881,15502540,2527,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,V Wydział Gospodarczy
+1882,15502540,3036,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,VI Wydział Krajowego Rejestru Sądowego
+1883,15502540,3533,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,VII Wydział Gospodarczy Rejestru Zastawów
+1884,15502540,4063,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,VIII Wydział Gospodarczy dla spraw Upadłościowych i Restrukturyzacyjnych
+1885,15502540,5006,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,X Wydział Karny
+1886,15502540,5503,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,XI Wydział Cywilny
+1887,15502540,6006,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,XII Wydział Karny
+1888,15502540,7003,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,XIV Wydział Cywilny
+1889,15502540,7527,Sąd Rejonowy Wrocław Fabryczna we Wrocławiu,XV Wydział Gospodarczy
+1890,15502535,503,Sąd Rejonowy w Wołowie,I Wydział Cywilny
+1891,15502535,1006,Sąd Rejonowy w Wołowie,II Wydział Karny
+1892,15502535,1512,Sąd Rejonowy w Wołowie,III Wydział Rodzinny i Nieletnich
+1893,15502530,503,Sąd Rejonowy w Trzebnicy,I Wydział Cywilny
+1894,15502530,1006,Sąd Rejonowy w Trzebnicy,II Wydział Karny
+1895,15502530,1512,Sąd Rejonowy w Trzebnicy,III Wydział Rodzinny i Nieletnich
+1896,15502530,522503,Sąd Rejonowy w Trzebnicy,V Zamiejscowy Wydział Cywilny z siedzibą w Miliczu
+1897,15502530,1023006,Sąd Rejonowy w Trzebnicy,VI Zamiejscowy Wydział Karny z siedzibą w Miliczu
+1898,15502530,1523512,Sąd Rejonowy w Trzebnicy,VII Wydział Rodzinny i Nieletnich z siedzibą w Miliczu
+1899,15502550,503,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,I Wydział Cywilny
+1900,15502550,1006,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,II Wydział Karny
+1901,15502550,1512,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,III Wydział Rodzinny i Nieletnich
+1902,15502550,2021,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,IV Wydział Pracy i Ubezpieczeń Społecznych
+1903,15502550,4503,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,IX Wydział Cywilny
+1904,15502550,2506,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,V Wydział Karny
+1905,15502550,3006,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,VI Wydział Karny
+1906,15502550,3503,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,VII Wydział Cywilny
+1907,15502550,4003,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,VIII Wydział Cywilny
+1908,15502550,5021,Sąd Rejonowy Wrocław Śródmieście we Wrocławiu,X Wydział Pracy i Ubezpieczeń Społecznych
+1909,15502545,503,Sąd Rejonowy Wrocław Krzyki we Wrocławiu,I Wydział Cywilny
+1910,15502545,1003,Sąd Rejonowy Wrocław Krzyki we Wrocławiu,II Wydział Cywilny
+1911,15502545,1512,Sąd Rejonowy Wrocław Krzyki we Wrocławiu,III Wydział Rodzinny i Nieletnich
+1912,15502545,2506,Sąd Rejonowy Wrocław Krzyki we Wrocławiu,V Wydział Karny
+1913,15502545,3003,Sąd Rejonowy Wrocław Krzyki we Wrocławiu,VI Wydział Cywilny
+1914,15502545,3506,Sąd Rejonowy Wrocław Krzyki we Wrocławiu,VII Wydział Karny
+1915,15502510,503,Sąd Rejonowy w Oleśnicy,I Wydział Cywilny
+1916,15502510,1006,Sąd Rejonowy w Oleśnicy,II Wydział Karny
+1917,15502510,1509,Sąd Rejonowy w Oleśnicy,III Wydział Rodzinny i Nieletnich
+1918,15502505,503,Sąd Rejonowy w Miliczu,I Wydział Cywilny
+1919,15502505,1006,Sąd Rejonowy w Miliczu,II Wydział Karny
+1920,15502505,1512,Sąd Rejonowy w Miliczu,III Wydział Rodzinny i Nieletnich
+1921,15502525,503,Sąd Rejonowy w Środzie Śląskiej,I Wydział Cywilny
+1922,15502525,1006,Sąd Rejonowy w Środzie Śląskiej,II Wydział Karny
+1923,15502525,1512,Sąd Rejonowy w Środzie Śląskiej,III Wydział Rodzinny i Nieletnich
+1924,15502525,520003,Sąd Rejonowy w Środzie Śląskiej,VI Zamiejscowy Wydział Cywilny z siedzibą w Wołowie
+1925,15502525,1020006,Sąd Rejonowy w Środzie Śląskiej,VII Zamiejscowy Wydział Karny z siedzibą w Wołowie
+1926,15502525,1520012,Sąd Rejonowy w Środzie Śląskiej,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Wołowie
+1927,15502520,503,Sąd Rejonowy w Strzelinie,I Wydział Cywilny
+1928,15502520,1006,Sąd Rejonowy w Strzelinie,II Wydział Karny
+1929,15502520,1512,Sąd Rejonowy w Strzelinie,III Wydział Rodzinny i Nieletnich
+1930,15502515,503,Sąd Rejonowy w Oławie,I Wydział Cywilny
+1931,15502515,1006,Sąd Rejonowy w Oławie,II Wydział Karny
+1932,15502515,1512,Sąd Rejonowy w Oławie,III Wydział Rodzinny i Nieletnich
+1933,15502515,523003,Sąd Rejonowy w Oławie,VI Zamiejscowy Wydział Cywilny z siedzibą w Strzelinie
+1934,15502515,1023506,Sąd Rejonowy w Oławie,VII Zamiejscowy Wydział Karny z siedzibą w Strzelinie
+1935,15502515,1524012,Sąd Rejonowy w Oławie,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Strzelinie
+1936,15501500,503,Sąd Okręgowy w Opolu,I Wydział Cywilny
+1937,15501500,1003,Sąd Okręgowy w Opolu,II Wydział Cywilny Odwoławczy
+1938,15501500,1506,Sąd Okręgowy w Opolu,III Wydział Karny
+1939,15501500,2039,Sąd Okręgowy w Opolu,IV Wydział Penitencjarny
+1940,15501500,2521,Sąd Okręgowy w Opolu,V Wydział Pracy i Ubezpieczeń Społecznych
+1941,15501500,3027,Sąd Okręgowy w Opolu,VI Wydział Gospodarczy
+1942,15501500,3506,Sąd Okręgowy w Opolu,VII Wydział Karny Odwoławczy
+1943,15501550,503,Sąd Rejonowy w Oleśnie,I Wydział Cywilny
+1944,15501550,1006,Sąd Rejonowy w Oleśnie,II Wydział Karny
+1945,15501550,1512,Sąd Rejonowy w Oleśnie,III Wydział Rodzinny i Nieletnich
+1946,15501545,503,Sąd Rejonowy w Strzelcach Opolskich,I Wydział Cywilny
+1947,15501545,1006,Sąd Rejonowy w Strzelcach Opolskich,II Wydział Karny
+1948,15501545,1512,Sąd Rejonowy w Strzelcach Opolskich,III Wydział Rodzinny i Nieletnich
+1949,15501540,503,Sąd Rejonowy w Prudniku,I Wydział Cywilny
+1950,15501540,1006,Sąd Rejonowy w Prudniku,II Wydział Karny
+1951,15501540,1512,Sąd Rejonowy w Prudniku,III Wydział Rodzinny i Nieletnich
+1952,15501540,523003,Sąd Rejonowy w Prudniku,VI Zamiejscowy Wydział Cywilny z siedzibą w Głubczycach
+1953,15501540,1023506,Sąd Rejonowy w Prudniku,VII Zamiejscowy Wydział Karny z siedzibą w Głubczycach
+1954,15501540,1524012,Sąd Rejonowy w Prudniku,VIII Zamiejscowy Wydział Rodzinny i Nieletnich z siedzibą w Głubczycach
+1955,15501555,503,Sąd Rejonowy w Głubczycach,I Wydział Cywilny
+1956,15501555,1006,Sąd Rejonowy w Głubczycach,II Wydział Karny
+1957,15501555,1512,Sąd Rejonowy w Głubczycach,III Wydział Rodzinny i Nieletnich
+1958,15501515,503,Sąd Rejonowy w Kędzierzynie Koźlu,I Wydział Cywilny
+1959,15501515,1006,Sąd Rejonowy w Kędzierzynie Koźlu,II Wydział Karny
+1960,15501515,1512,Sąd Rejonowy w Kędzierzynie Koźlu,III Wydział Rodzinny i Nieletnich
+1961,15501515,2015,Sąd Rejonowy w Kędzierzynie Koźlu,VI Wydział Pracy
+1962,15501505,503,Sąd Rejonowy w Brzegu,I Wydział Cywilny
+1963,15501505,1006,Sąd Rejonowy w Brzegu,II Wydział Karny
+1964,15501505,1509,Sąd Rejonowy w Brzegu,III Wydział Rodzinny
+1965,15501535,503,Sąd Rejonowy w Opolu,I Wydział Cywilny
+1966,15501535,1006,Sąd Rejonowy w Opolu,II Wydział Karny
+1967,15501535,1512,Sąd Rejonowy w Opolu,III Wydział Rodzinny i Nieletnich
+1968,15501535,2018,Sąd Rejonowy w Opolu,IV Wydział Pracy i Ubezpieczeń Społecznych
+1969,15501535,4503,Sąd Rejonowy w Opolu,IX Wydział Cywilny
+1970,15501535,2527,Sąd Rejonowy w Opolu,V Wydział Gospodarczy
+1971,15501535,3506,Sąd Rejonowy w Opolu,VII Wydział Karny
+1972,15501525,503,Sąd Rejonowy w Nysie,I Wydział Cywilny
+1973,15501525,1006,Sąd Rejonowy w Nysie,II Wydział Karny
+1974,15501525,1512,Sąd Rejonowy w Nysie,III Wydział Rodzinny i Nieletnich
+1975,15501525,2015,Sąd Rejonowy w Nysie,VI Wydział Pracy
+1976,15501520,503,Sąd Rejonowy w Kluczborku,I Wydział Cywilny
+1977,15501520,1006,Sąd Rejonowy w Kluczborku,II Wydział Karny
+1978,15501520,1512,Sąd Rejonowy w Kluczborku,III Wydział Rodzinny i Nieletnich
+1979,15501520,522503,Sąd Rejonowy w Kluczborku,V Zamiejscowy Wydział Cywilny
+1980,15501520,1023006,Sąd Rejonowy w Kluczborku,VI Zamiejscowy Wydział Karny
+1981,15501520,1523512,Sąd Rejonowy w Kluczborku,VII Zamiejscowy Wydział Rodzinny i Nieletnich
+1982,15502000,503,Sąd Okręgowy w Świdnicy,I Wydział Cywilny
+1983,15502000,1003,Sąd Okręgowy w Świdnicy,II Wydział Cywilny Odwoławczy
+1984,15502000,1506,Sąd Okręgowy w Świdnicy,III Wydział Karny
+1985,15502000,2006,Sąd Okręgowy w Świdnicy,IV Wydział Karny Odwoławczy
+1986,15502000,2539,Sąd Okręgowy w Świdnicy,V Wydział Penitencjarny i Nadzoru nad Wykonywaniem Orzeczeń Karnych
+1987,15502000,1521,Sąd Okręgowy w Świdnicy,VII Wydział Pracy i Ubezpieczeń Społecznych
+1988,15502025,503,Sąd Rejonowy w Ząbkowicach Śląskich,I Wydział Cywilny
+1989,15502025,1006,Sąd Rejonowy w Ząbkowicach Śląskich,II Wydział Karny
+1990,15502025,1512,Sąd Rejonowy w Ząbkowicach Śląskich,III Wydział Rodzinny i Nieletnich
+1991,15502025,2015,Sąd Rejonowy w Ząbkowicach Śląskich,IV Wydział Pracy
+1992,15502020,503,Sąd Rejonowy w Wałbrzychu,I Wydział Cywilny
+1993,15502020,1006,Sąd Rejonowy w Wałbrzychu,II Wydział Karny
+1994,15502020,1506,Sąd Rejonowy w Wałbrzychu,III Wydział Karny
+1995,15502020,2012,Sąd Rejonowy w Wałbrzychu,IV Wydział Rodzinny i Nieletnich
+1996,15502020,2515,Sąd Rejonowy w Wałbrzychu,V Wydział Pracy
+1997,15502020,3027,Sąd Rejonowy w Wałbrzychu,VI Wydział Gospodarczy
+1998,15502020,4003,Sąd Rejonowy w Wałbrzychu,VIII Wydział Cywilny
+1999,15502015,503,Sąd Rejonowy w Świdnicy,I Wydział Cywilny
+2000,15502015,1006,Sąd Rejonowy w Świdnicy,II Wydział Karny
+2001,15502015,1512,Sąd Rejonowy w Świdnicy,III Wydział Rodzinny i Nieletnich
+2002,15502015,2021,Sąd Rejonowy w Świdnicy,IV Wydział Pracy i Ubezpieczeń Społecznych
+2003,15502015,3006,Sąd Rejonowy w Świdnicy,VI Wydział Karny
+2004,15502010,503,Sąd Rejonowy w Kłodzku,I Wydział Cywilny
+2005,15502010,1006,Sąd Rejonowy w Kłodzku,II Wydział Karny
+2006,15502010,1512,Sąd Rejonowy w Kłodzku,III Wydział Rodzinny i Nieletnich
+2007,15502010,2015,Sąd Rejonowy w Kłodzku,IV Wydział Pracy
+2008,15502010,3006,Sąd Rejonowy w Kłodzku,VI Wydział Karny
+2009,15502005,503,Sąd Rejonowy w Dzierżoniowie,I Wydział Cywilny
+2010,15502005,1006,Sąd Rejonowy w Dzierżoniowie,II Wydział Karny
+2011,15502005,1512,Sąd Rejonowy w Dzierżoniowie,III Wydział Rodzinny i Nieletnich
+2012,15502005,2527,Sąd Rejonowy w Dzierżoniowie,V Wydział Gospodarczy
+2013,15502005,2015,Sąd Rejonowy w Dzierżoniowie,VI Wydział Pracy

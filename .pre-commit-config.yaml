@@ -28,4 +28,9 @@ repos:
         name: Ruff Formatter
         args: [juddges, scripts, dashboards, tests]
 
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.23.1
+    hooks:
+      - id: gitleaks
+
 exclude: 'data/|dvc.lock'
