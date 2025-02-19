@@ -1,5 +1,6 @@
 """
 SFT script based on https://huggingface.co/blog/unsloth-trl
+The script is purposed to run on a single node with multiple GPUs.
 """
 
 import os
@@ -34,12 +35,16 @@ from juddges.utils.config import resolve_config
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
+state = PartialState()
+
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="fine_tuning.yaml")
 def main(cfg: DictConfig) -> None:
     cfg_dict = resolve_config(cfg)
-    logger.info(f"config:\n{pformat(cfg_dict)}")
     config = FineTuningConfig(**cfg_dict)
+
+    if state.is_main_process:
+        logger.info(f"config:\n{pformat(config.model_dump())}")
 
     if config.training_args["report_to"] == "wandb":
         os.environ["WANDB_ENTITY"] = config.wandb_entity
@@ -48,23 +53,23 @@ def main(cfg: DictConfig) -> None:
     output_dir = Path(config.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    dataset = load_dataset(config.dataset.name, split="train", num_proc=NUM_PROC)
-    model_pack = get_model(
-        config.model,
-        device_map={"": PartialState().process_index},
-    )
-    model_pack.model.config.use_cache = False
+    with state.local_main_process_first():
+        model_pack = get_model(
+            config.model,
+            use_cache=False,
+        )
 
-    dataset = prepare_dataset(
-        dataset=dataset,
-        dataset_prompt_field=config.dataset.prompt_field,
-        dataset_context_field=config.dataset.context_field,
-        dataset_output_field=config.dataset.output_field,
-        truncate_context=config.truncate_context,
-        tokenizer=model_pack.tokenizer,
-        max_length=config.model.max_seq_length,
-        num_proc=NUM_PROC,
-    )
+        dataset = load_dataset(config.dataset.name, split="train", num_proc=NUM_PROC)
+        dataset = prepare_dataset(
+            dataset=dataset,
+            dataset_prompt_field=config.dataset.prompt_field,
+            dataset_context_field=config.dataset.context_field,
+            dataset_output_field=config.dataset.output_field,
+            truncate_context=config.truncate_context,
+            tokenizer=model_pack.tokenizer,
+            max_length=config.model.max_seq_length,
+            num_proc=NUM_PROC,
+        )
 
     trainer = get_trainer(
         model_pack.model,
@@ -75,6 +80,8 @@ def main(cfg: DictConfig) -> None:
     )
     trainer.train()
     trainer.save_model()
+
+    state.wait_for_everyone()
 
 
 def prepare_dataset(
@@ -127,15 +134,7 @@ def get_trainer(
         **config.training_args,
     )
 
-    if config.use_peft and config.model.use_unsloth:
-        from unsloth import FastLanguageModel
-
-        model = FastLanguageModel.get_peft_model(
-            model,
-            **config.peft_args,
-        )
-        peft_config = None
-    elif config.use_peft:
+    if config.use_peft:
         peft_config = LoraConfig(**config.peft_args)
     else:
         peft_config = None

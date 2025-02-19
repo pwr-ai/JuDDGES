@@ -46,7 +46,7 @@ class TextEncoderForEval:
         return tokenized
 
 
-class TextEncoderForOpenAIEval:
+class TextEncoderForEvalPlainTextFormat:
     def __init__(self, truncator: ContextTruncatorTiktoken):
         self.truncator = truncator
 
