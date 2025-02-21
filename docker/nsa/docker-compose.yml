@@ -7,13 +7,14 @@ services:
       - nsa_dbdata:/data/db
     command: --wiredTigerCacheSizeGB 8
 
-  mongodb-restore:
+  mongodb_experiment:
     image: mongo:latest
     ports:
       - '27017:27017'
     volumes:
-      - nsa_dbdata_restore:/data/db
+      - nsa_dbdata_experiment:/data/db
     command: --wiredTigerCacheSizeGB 8
+
 volumes:
   nsa_dbdata:
-  nsa_dbdata_restore:
+  nsa_dbdata_experiment:
