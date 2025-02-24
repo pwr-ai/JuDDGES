@@ -16,15 +16,15 @@ test:
 
 all: check test
 
-install: cuda := 121
+install: cuda := 124
 install:
 	pip install -r requirements.txt --find-links https://download.pytorch.org/whl/cu$(cuda)
-	pip install flash-attn --no-build-isolation
+	pip install flash-attn==2.6.3 --no-build-isolation
 
 install_cpu:
 	pip install --find-links https://download.pytorch.org/whl/cpu -r requirements.txt
 
-install_unsloth: cuda := 12.1
+install_unsloth: cuda := 124
 install_unsloth:
 	conda install \
 		pytorch-cuda=$(cuda) \
