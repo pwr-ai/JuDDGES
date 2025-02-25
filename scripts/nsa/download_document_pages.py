@@ -26,7 +26,6 @@ def main(
     db_uri: str = typer.Option(..., envvar="DB_URI"),
     log_file: Path = typer.Option(None, help="Log file to save the logs to."),
 ) -> None:
-    log_file.parent.mkdir(parents=True, exist_ok=True)
     setup_loguru(extra={"script": __file__}, log_file=log_file)
     logger.info("Running download_document_pages.py with args:\n" + str(locals()))
 

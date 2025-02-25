@@ -19,23 +19,23 @@ class IncorrectPage(Exception):
     pass
 
 
+class NoNumberOfDocumentsFound(Exception):
+    pass
+
+
 class NSAScraper:
     def __init__(
-        self, user_agent: str, proxy_config: dict[str, str] | None = None, wait: bool = True
+        self, user_agent: str, proxy_config: dict[str, str] | None = None, wait: bool = False
     ) -> None:
         self.wait = wait
         self.browser = mechanicalsoup.StatefulBrowser(
             user_agent=user_agent,
             requests_adapters={
                 "https://": HTTPAdapter(
-                    max_retries=Retry(
-                        total=5, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504, 403, 429]
-                    )
+                    max_retries=Retry(total=50, status_forcelist=[500, 502, 503, 504, 403, 429])
                 ),
                 "http://": HTTPAdapter(
-                    max_retries=Retry(
-                        total=5, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504, 403, 429]
-                    )
+                    max_retries=Retry(total=50, status_forcelist=[500, 502, 503, 504, 403, 429])
                 ),
             },
         )
@@ -50,7 +50,8 @@ class NSAScraper:
         tries=15,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
     )
-    def search_documents_for_date(self, date):
+    def search_documents_for_date(self, date: str) -> dict[int, list[str] | None] | None:
+        final_num_documents = self.get_num_docs_for_date(date)
         self._browser_open("https://orzeczenia.nsa.gov.pl/cbo")
         self.browser.select_form()
         self.browser["odDaty"] = date
@@ -59,6 +60,10 @@ class NSAScraper:
         if self._any_documents_found(self.browser):
             documents = self._retrieve_documents()
             num_documents = sum(map(lambda x: len(x) if x else 0, documents.values()))
+            if num_documents != final_num_documents:
+                raise IncorrectNumberOfDocumentsFound(
+                    f"Found {num_documents} documents on {len(documents)} pages. Expected {final_num_documents} documents."
+                )
             logger.info(f"Found {num_documents} documents on {len(documents)} pages.")
             return documents
         else:
@@ -72,6 +77,28 @@ class NSAScraper:
     def get_page_for_doc(self, doc_id: str) -> str:
         self._browser_open(f"https://orzeczenia.nsa.gov.pl/{doc_id}")
         return self.browser.page.prettify()
+
+    @retry(
+        tries=15,
+        exceptions=(
+            RequestException,
+            HTTPError,
+            IncorrectNumberOfDocumentsFound,
+            IncorrectPage,
+            NoNumberOfDocumentsFound,
+        ),
+    )
+    def get_num_docs_for_date(self, date: str) -> int:
+        self._browser_open("https://orzeczenia.nsa.gov.pl/cbo")
+        self.browser.select_form()
+        self.browser["odDaty"] = date
+        self.browser["doDaty"] = date
+        self._browser_submit_selected()
+        if self._any_documents_found(self.browser):
+            num_documents = self._extract_document_count(self.browser.page.prettify())
+            return num_documents
+        else:
+            return 0
 
     def _browser_open(self, url: str) -> None:
         response = self.browser.open(url, verify=False, timeout=60)
@@ -142,3 +169,11 @@ class NSAScraper:
                     filtered_links.append(href)
 
         return filtered_links
+
+    def _extract_document_count(self, text: str) -> int:
+        pattern = r"Znaleziono\s+(\d+)\s+orzeczeń"
+        match = re.search(pattern, text)
+        if match:
+            return int(match.group(1))
+        else:
+            raise NoNumberOfDocumentsFound(f"No document count found in text: {text}")

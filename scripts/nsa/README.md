@@ -54,8 +54,10 @@ Scripts will use already scraped data from the database, so you don't need to se
   | `--scrap-dates-iterations` | Number of iterations to scrap dates                 | `1`            |
   | `--cleanup-iterations`   | Number of cleanup iterations to perform              | `1`            |
   | `--log-file`            | Path for the log file                        | `{PROJECT_ROOT}/logs/nsa/full_procedure_YYYYMMDD_HHMMSS.log` |
+  | `--find-remove-changed-document-lists-iterations` | Number of iterations to find and remove changed document lists | `0`            |
 
 - **Pipeline Steps:**
+  0. Runs `find_remove_changed_document_lists.py` to find and remove changed document lists. (Disabled by default, use `--find-remove-changed-document-lists-iterations` to enable.)
   1. Runs `scrap_documents_list.py` to get initial document list
   2. For each cleanup iteration:
      - Runs `drop_dates_with_duplicated_documents.py` to remove duplicates
@@ -72,6 +74,27 @@ Scripts will use already scraped data from the database, so you don't need to se
 ---
 
 ## Script Descriptions and Order of Execution
+
+### 0. **`find_remove_changed_document_lists.py`**
+
+- **Purpose:** Finds and removes changed document lists in the `dates` collection in MongoDB. It acquire number of documents for each date and saves it to the `dates_num_docs` collection. Then it compares number of documents for each date with the previous number of documents and if they are changed, it removes the date from the `dates` collection. **It is recommended to run this script only to update the dataset fully. Do not run it in the middle of the pipeline as it will remove newly scraped document lists.**
+- **Usage:**
+  ```bash
+  python find_remove_changed_document_lists.py [OPTIONS]
+  ```
+- **Arguments:**
+  | Argument                  | Description                                          | Default        |
+  |--------------------------|------------------------------------------------------|----------------|
+  | `--proxy-address`        | Proxy address for scraping (required)                | None           |
+  | `--db-uri`              | MongoDB URI (required)                               | None           |
+  | `--start-date`          | Start date for scraping (YYYY-MM-DD)                | `1981-01-01`   |
+  | `--end-date`            | End date for scraping (YYYY-MM-DD)                  | Yesterday's date in Poland |
+  | `--min-interval-between-checks` | Minimum interval between checks in days       | `30`           |
+  | `--num-elements-to-check` | Number of elements to check for each date           | `3`            |
+  | `--max-checks-per-date`  | Maximum number of checks per date if the number of documents is the same | `3` |
+  | `--n-jobs`              | Number of parallel workers                           | `30`           |
+  | `--log-file`            | Path for the log file (None to disable)                             | None           |
+
 
 ### 1. **`scrap_documents_list.py`**
 

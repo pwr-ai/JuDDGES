@@ -26,7 +26,12 @@ def main(
         None, help="End date for scraping (YYYY-MM-DD). Defaults to yesterday's date in Poland."
     ),
     n_jobs: int = typer.Option(25, help="Number of parallel workers"),
-    scrap_dates_iterations: int = typer.Option(1, help="Number of iterations to scrap dates."),
+    find_remove_changed_document_lists_iterations: int = typer.Option(
+        0, help="Number of iterations to find and remove changed document lists. Defaults to 0."
+    ),
+    scrap_dates_iterations: int = typer.Option(
+        1, help="Number of iterations to scrap dates. Defaults to 1."
+    ),
     cleanup_iterations: int = typer.Option(
         1, help="Number of cleanup iterations to perform. Defaults to 1."
     ),
@@ -34,7 +39,6 @@ def main(
         LOG_FILE, help=f"Log file to save the logs to. Defaults to {LOG_FILE}"
     ),
 ) -> None:
-    log_file.parent.mkdir(parents=True, exist_ok=True)
     setup_loguru(extra={"script": __file__}, log_file=str(log_file))
     logger.info("Running full procedure with args:\n" + str(locals()))
 
@@ -55,11 +59,14 @@ def main(
     if end_date:
         scrap_documents_list_args.extend(["--end-date", end_date])
 
-    # Define the pipeline steps
     pipeline = [
-        ("scrap_documents_list.py", scrap_documents_list_args)
-        for _ in range(scrap_dates_iterations)
+        ("find_remove_changed_document_lists.py", scrap_documents_list_args)
+        for _ in range(find_remove_changed_document_lists_iterations)
     ]
+
+    for _ in range(scrap_dates_iterations):
+        pipeline.append(("scrap_documents_list.py", scrap_documents_list_args))
+
     for _ in range(cleanup_iterations):
         pipeline.extend(
             [

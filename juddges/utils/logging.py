@@ -5,6 +5,8 @@ from loguru import logger
 
 
 def setup_loguru(extra: dict[str, Any] | None = None, log_file: Path | None = None):
+    if log_file:
+        log_file.parent.mkdir(parents=True, exist_ok=True)
     logger.remove()
     logger.configure(extra=extra)  # Default values
     format_log = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | " "<level>{level: <8}</level> | "
