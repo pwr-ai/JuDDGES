@@ -2,18 +2,15 @@ import json
 import os
 from pathlib import Path
 from pprint import pformat
-from typing import Any
 
 import hydra
 import torch
 from datasets import load_dataset
 from loguru import logger
 from omegaconf import DictConfig
-from openai import BaseModel
-from pydantic import Field
 from vllm import LLM, SamplingParams
 
-from juddges.config import DatasetConfig, LLMConfig
+from juddges.config import PredictConfig
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.text_encoder import TextEncoderForEvalPlainTextFormat
 from juddges.settings import CONFIG_PATH
@@ -22,20 +19,6 @@ from juddges.utils.config import resolve_config
 torch.set_float32_matmul_precision("high")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
-
-
-class PredictConfig(BaseModel, extra="forbid"):
-    model: LLMConfig
-    dataset: DatasetConfig
-    device_map: str
-    output_file: Path
-    truncate_context: bool
-    generate_kwargs: dict[str, Any] = Field(default_factory=dict)
-    random_seed: int
-
-    @property
-    def corrected_max_seq_length(self) -> int:
-        return self.model.max_seq_length - self.dataset.max_output_tokens
 
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")

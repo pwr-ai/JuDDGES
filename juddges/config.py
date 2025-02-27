@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class LLMConfig(BaseModel, extra="forbid"):
@@ -56,3 +56,16 @@ class FineTuningConfig(BaseModel, extra="forbid"):
     @property
     def use_peft(self) -> bool:
         return self.peft_args is not None
+
+
+class PredictConfig(BaseModel, extra="forbid"):
+    model: LLMConfig
+    dataset: DatasetConfig
+    device_map: str
+    output_file: Path
+    truncate_context: bool
+    generate_kwargs: dict[str, Any] = Field(default_factory=dict)
+    random_seed: int
+
+    def get_max_input_length(self, max_position_embeddings: int) -> int:
+        return max_position_embeddings - self.dataset.max_output_tokens

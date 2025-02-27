@@ -2,18 +2,15 @@ import json
 import os
 from pathlib import Path
 from pprint import pformat
-from typing import Any
 
 import hydra
 import torch
 from datasets import load_dataset
 from loguru import logger
 from omegaconf import DictConfig
-from openai import BaseModel
-from pydantic import Field
 from transformers import set_seed
 
-from juddges.config import DatasetConfig, LLMConfig
+from juddges.config import PredictConfig
 from juddges.models.factory import get_model
 from juddges.models.predict import predict_with_llm
 from juddges.preprocessing.text_encoder import TextEncoderForEval
@@ -27,19 +24,6 @@ NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
 if NUM_PROC > 1:
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-
-class PredictConfig(BaseModel, extra="forbid"):
-    model: LLMConfig
-    dataset: DatasetConfig
-    device_map: str
-    output_file: Path
-    truncate_context: bool
-    generate_kwargs: dict[str, Any] = Field(default_factory=dict)
-    random_seed: int
-
-    def get_max_input_length(self, max_position_embeddings: int) -> int:
-        return max_position_embeddings - self.dataset.max_output_tokens
 
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
