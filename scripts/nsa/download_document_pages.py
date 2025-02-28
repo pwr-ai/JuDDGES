@@ -12,7 +12,6 @@ from random_user_agent.user_agent import UserAgent
 from tqdm import tqdm
 
 from juddges.data.nsa.scraper import NSAScraper
-from juddges.settings import NSA_DATA_PATH
 from juddges.utils.logging import setup_loguru
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -31,12 +30,13 @@ def main(
 
     client = pymongo.MongoClient(db_uri)
     db = client["nsa"]
+    dates_col = db["dates"]
     docs_col = db["document_pages"]
     errors_col = db["document_pages_errors"]
 
     # Due to potential errors do it twice
     for _ in range(RETRY_COUNT):
-        to_download = get_filtered_docs_is_to_download(docs_col)
+        to_download = get_filtered_docs_is_to_download(docs_col, dates_col)
         logger.info(f"Downloading {len(to_download)} pages")
         download_pages(docs_col, errors_col, n_jobs, proxy_address, to_download)
 
@@ -85,15 +85,15 @@ def download_pages(
     logger.info("Finished scraping pages")
 
 
-def get_filtered_docs_is_to_download(docs_col: Collection) -> list[str]:
-    docs_ids_to_download = get_docs_ids_to_download()
+def get_filtered_docs_is_to_download(docs_col: Collection, dates_col: Collection) -> list[str]:
+    docs_ids_to_download = get_docs_ids_to_download(dates_col)
     random.shuffle(docs_ids_to_download)
     to_download = filter_done(docs_ids_to_download, docs_col)
     return to_download
 
 
-def get_docs_ids_to_download() -> list[str]:
-    df = pd.read_json(NSA_DATA_PATH / "documents.json")
+def get_docs_ids_to_download(dates_col: Collection) -> list[str]:
+    df = pd.DataFrame(dates_col.find())
     df = df.explode("document_ids")
     df = df[~df["document_ids"].isna()]
     duplicated = df[df.duplicated(subset="document_ids", keep=False)].sort_values("document_ids")

@@ -25,17 +25,25 @@ class NoNumberOfDocumentsFound(Exception):
 
 class NSAScraper:
     def __init__(
-        self, user_agent: str, proxy_config: dict[str, str] | None = None, wait: bool = False
+        self, user_agent: str, proxy_config: dict[str, str] | None = None, wait: bool = True
     ) -> None:
         self.wait = wait
         self.browser = mechanicalsoup.StatefulBrowser(
             user_agent=user_agent,
             requests_adapters={
                 "https://": HTTPAdapter(
-                    max_retries=Retry(total=50, status_forcelist=[500, 502, 503, 504, 403, 429])
+                    max_retries=Retry(
+                        total=10,
+                        backoff_factor=0.1,
+                        status_forcelist=[500, 502, 503, 504, 403, 429],
+                    )
                 ),
                 "http://": HTTPAdapter(
-                    max_retries=Retry(total=50, status_forcelist=[500, 502, 503, 504, 403, 429])
+                    max_retries=Retry(
+                        total=10,
+                        backoff_factor=0.1,
+                        status_forcelist=[500, 502, 503, 504, 403, 429],
+                    )
                 ),
             },
         )

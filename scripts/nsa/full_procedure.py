@@ -29,6 +29,10 @@ def main(
     find_remove_changed_document_lists_iterations: int = typer.Option(
         0, help="Number of iterations to find and remove changed document lists. Defaults to 0."
     ),
+    redownload_days_back: int = typer.Option(
+        730,
+        help="Days back to redownload pages from. Set to 0 to disable redownloading. Defaults to 730 (2 years).",
+    ),
     scrap_dates_iterations: int = typer.Option(
         1, help="Number of iterations to scrap dates. Defaults to 1."
     ),
@@ -39,7 +43,7 @@ def main(
         LOG_FILE, help=f"Log file to save the logs to. Defaults to {LOG_FILE}"
     ),
 ) -> None:
-    setup_loguru(extra={"script": __file__}, log_file=str(log_file))
+    setup_loguru(extra={"script": __file__}, log_file=log_file)
     logger.info("Running full procedure with args:\n" + str(locals()))
 
     base_args = [
@@ -73,6 +77,14 @@ def main(
                 ("drop_dates_with_duplicated_documents.py", ["--db-uri", db_uri]),
                 ("scrap_documents_list.py", scrap_documents_list_args),
             ]
+        )
+
+    if redownload_days_back > 0:
+        pipeline.append(
+            (
+                "drop_docs_to_redownload.py",
+                ["--db-uri", db_uri, "--redownload-days-back", str(redownload_days_back)],
+            )
         )
 
     pipeline.append(("download_document_pages.py", base_args))
