@@ -64,7 +64,11 @@ class BatchDatabaseUpdate:
     - Update is called specified documents.
     """
 
-    def __init__(self, mongo_uri: str, update_func: Callable[[dict[str, Any]], dict]) -> None:
+    def __init__(
+        self,
+        mongo_uri: str,
+        update_func: Callable[[dict[str, Any]], dict] | None = None,
+    ) -> None:
         self.mongo_uri = mongo_uri
         self.update_func = update_func
 
@@ -72,8 +76,12 @@ class BatchDatabaseUpdate:
         update_batch: list[UpdateOne] = []
 
         for doc in documents:
-            update_data = self.update_func(doc)
-            update_batch.append(UpdateOne({"_id": doc["_id"]}, {"$set": update_data}))
+            if self.update_func is not None:
+                update_data = self.update_func(doc)
+            else:
+                update_data = doc
+
+            update_batch.append(UpdateOne({"_id": doc["_id"]}, {"$set": update_data}, upsert=True))
 
         collection = get_mongo_collection(mongo_uri=self.mongo_uri)
 

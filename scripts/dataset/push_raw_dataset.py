@@ -29,7 +29,12 @@ def main(
     num_rows = ds["train"].num_rows
     logger.info(f"Loaded dataset size: {num_rows}")
 
-    ds.push_to_hub(repo_id, max_shard_size=MAX_SHARD_SIZE, revision=branch)
+    ds.push_to_hub(
+        repo_id,
+        max_shard_size=MAX_SHARD_SIZE,
+        commit_message=commit_message,
+        revision=branch,
+    )
 
     # Card creation
 
@@ -46,7 +51,11 @@ def main(
         card_data,
         template_path=DATASET_CARD_TEMPLATE,
     )
-    card.push_to_hub(repo_id, revision=branch)
+    card.push_to_hub(
+        repo_id,
+        revision=branch,
+        commit_message=commit_message,
+    )
 
     api = HfApi()
     api.upload_folder(
