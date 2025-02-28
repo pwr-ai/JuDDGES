@@ -46,8 +46,8 @@ Scripts will use already scraped data from the database, so you don't need to se
 
   | Argument                  | Description                                          | Default        |
   |--------------------------|------------------------------------------------------|----------------|
-  | `--proxy-address`        | Proxy address for scraping (required)                | None           |
-  | `--db-uri`              | MongoDB URI (required)                               | None           |
+  | `--proxy-address`        | Proxy address for scraping (required)                |            |
+  | `--db-uri`              | MongoDB URI (required)                               |            |
   | `--start-date`          | Start date for scraping (YYYY-MM-DD)                | `1981-01-01`   |
   | `--end-date`            | End date for scraping (YYYY-MM-DD)                  | Yesterday’s date in Poland      |
   | `--n-jobs`              | Number of parallel workers                           | `25`           |
@@ -55,6 +55,8 @@ Scripts will use already scraped data from the database, so you don't need to se
   | `--cleanup-iterations`   | Number of cleanup iterations to perform              | `1`            |
   | `--log-file`            | Path for the log file                        | `{PROJECT_ROOT}/logs/nsa/full_procedure_YYYYMMDD_HHMMSS.log` |
   | `--find-remove-changed-document-lists-iterations` | Number of iterations to find and remove changed document lists | `0`            |
+  | `--redownload-days-back` | Days back to redownload pages from. Set to `0` to disable redownloading. | `730`   (2 years)         |
+
 
 - **Pipeline Steps:**
   0. Runs `find_remove_changed_document_lists.py` to find and remove changed document lists. (Disabled by default, use `--find-remove-changed-document-lists-iterations` to enable.)
@@ -62,11 +64,12 @@ Scripts will use already scraped data from the database, so you don't need to se
   2. For each cleanup iteration:
      - Runs `drop_dates_with_duplicated_documents.py` to remove duplicates
      - Re-runs `scrap_documents_list.py` to update the document list
-  3. Runs `download_document_pages.py` to fetch document pages
-  4. For each cleanup iteration:
+  3. Runs `drop_docs_to_redownload.py` to remove documents from the given number of days back to download again. Set `redownload_days_back` to `0` to disable this step.
+  4. Runs `download_document_pages.py` to fetch document pages
+  5. For each cleanup iteration:
      - Runs `drop_duplicated_document_pages.py` to remove duplicate pages
      - Re-runs `download_document_pages.py` to update pages
-  5. Runs final processing:
+  6. Runs final processing:
      - `save_pages_from_db_to_file.py` to export pages to files
      - `extract_data_from_pages.py` to process the data
 
@@ -77,7 +80,7 @@ Scripts will use already scraped data from the database, so you don't need to se
 
 ### 0. **`find_remove_changed_document_lists.py`**
 
-- **Purpose:** Finds and removes changed document lists in the `dates` collection in MongoDB. It acquire number of documents for each date and saves it to the `dates_num_docs` collection. Then it compares number of documents for each date with the previous number of documents and if they are changed, it removes the date from the `dates` collection. **It is recommended to run this script only to update the dataset fully. Do not run it in the middle of the pipeline as it will remove newly scraped document lists.**
+- **Purpose:** Finds and removes changed document lists in the `dates` collection in MongoDB. It acquire number of documents for each date and saves it to the `dates_num_docs` collection. Then it compares number of documents for each date with the previous number of documents and if they are changed, it removes the date from the `dates` collection. **It is recommended to run this script only to update the dataset fully. Do not run it in the middle of the pipeline as it will remove newly scraped document lists.**  To enable this step in `full_procedure.py`, set `find_remove_changed_document_lists_iterations` to positive number eg. `1`. It is disabled by default ie. `0`.
 - **Usage:**
   ```bash
   python find_remove_changed_document_lists.py [OPTIONS]
@@ -85,15 +88,15 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Arguments:**
   | Argument                  | Description                                          | Default        |
   |--------------------------|------------------------------------------------------|----------------|
-  | `--proxy-address`        | Proxy address for scraping (required)                | None           |
-  | `--db-uri`              | MongoDB URI (required)                               | None           |
+  | `--proxy-address`        | Proxy address for scraping (required)                |            |
+  | `--db-uri`              | MongoDB URI (required)                               |            |
   | `--start-date`          | Start date for scraping (YYYY-MM-DD)                | `1981-01-01`   |
   | `--end-date`            | End date for scraping (YYYY-MM-DD)                  | Yesterday's date in Poland |
   | `--min-interval-between-checks` | Minimum interval between checks in days       | `30`           |
   | `--num-elements-to-check` | Number of elements to check for each date           | `3`            |
   | `--max-checks-per-date`  | Maximum number of checks per date if the number of documents is the same | `3` |
   | `--n-jobs`              | Number of parallel workers                           | `30`           |
-  | `--log-file`            | Path for the log file (None to disable)                             | None           |
+  | `--log-file`            | Path for the log file (None to disable)              | None           |
 
 
 ### 1. **`scrap_documents_list.py`**
@@ -107,8 +110,8 @@ Scripts will use already scraped data from the database, so you don't need to se
 
   | Argument         | Description                                    | Default                    |
   |------------------|------------------------------------------------|----------------------------|
-  | `--proxy-address`| Proxy address for scraping (required).         | None                       |
-  | `--db-uri`       | MongoDB URI.                                   | None                       |
+  | `--proxy-address`| Proxy address for scraping (required).         |                        |
+  | `--db-uri`       | MongoDB URI.                                   |                        |
   | `--start-date`   | Start date for scraping (YYYY-MM-DD).          | `1981-01-01`               |
   | `--end-date`     | End date for scraping (YYYY-MM-DD). (last day will be included) | Yesterday’s date in Poland |
   | `--n-jobs`       | Number of parallel workers.                    | `30`                       |
@@ -133,14 +136,29 @@ Scripts will use already scraped data from the database, so you don't need to se
 
   | Argument         | Description                    | Default |
   |------------------|--------------------------------|---------|
-  | `--db-uri`       | MongoDB URI.                   | None    |
+  | `--db-uri`       | MongoDB URI.                   |     |
   | `--log-file`     | Path for the log file (None to disable)         | None                       |
 
 - **Output:** Cleans up the `dates` collection by deleting dates with duplicate document entries.
 
 ---
 
-### 3. **`download_document_pages.py`**
+### 3. (optional) **`drop_docs_to_redownload.py`**
+
+- **Purpose:** Removes documents from the given number of days back to download again. It is done due to the fact that some documents are changed. To enable this step in `full_procedure.py`, set `redownload_days_back` to positive number eg. `720`, to disable set it to `0`.
+- **Usage:**
+  ```bash
+  python drop_docs_to_redownload.py [OPTIONS]
+  ```
+- **Arguments:**
+  | Argument         | Description                                    | Default |
+  |------------------|------------------------------------------------|---------|
+  | `--db-uri`       | MongoDB URI.                                   |     |
+  | `--redownload-days-back` | Days back to redownload pages from. | `720` (2 years) |
+  | `--log-file`     | Path for the log file (None to disable)         | None                       |
+
+
+### 4. **`download_document_pages.py`**
 
 - **Purpose:** Downloads document pages (raw HTML) using IDs retrieved from the `documents.json`
   file.
@@ -152,8 +170,8 @@ Scripts will use already scraped data from the database, so you don't need to se
 
   | Argument         | Description                                    | Default |
   |------------------|------------------------------------------------|---------|
-  | `--proxy-address`| Proxy address for scraping (required).         | None    |
-  | `--db-uri`       | MongoDB URI.                                   | None    |
+  | `--proxy-address`| Proxy address for scraping (required).         |            |
+  | `--db-uri`       | MongoDB URI.                                   |            |
   | `--n-jobs`       | Number of parallel workers.                    | `25`    |
   | `--log-file`     | Path for the log file (None to disable)         | None                       |
 
@@ -162,7 +180,7 @@ Scripts will use already scraped data from the database, so you don't need to se
 
 ---
 
-### 4. (optional) **`drop_duplicated_document_pages.py`**
+### 5. (optional) **`drop_duplicated_document_pages.py`**
 
 - **Purpose:** Identifies and removes duplicate pages from the `document_pages` collection in
   MongoDB.
@@ -176,14 +194,14 @@ Scripts will use already scraped data from the database, so you don't need to se
 
   | Argument         | Description                    | Default |
   |------------------|--------------------------------|---------|
-  | `--db-uri`       | MongoDB URI.                   | None    |
+  | `--db-uri`       | MongoDB URI.                   |            |
   | `--log-file`     | Path for the log file (None to disable)         | None                       |
 
 - **Output:** Cleans up the `document_pages` collection by deleting duplicate pages.
 
 ---
 
-### 5. **`save_pages_from_db_to_file.py`**
+### 6. **`save_pages_from_db_to_file.py`**
 
 - **Purpose:** Exports document pages and errors from MongoDB to Parquet files for further
   processing.
@@ -195,14 +213,14 @@ Scripts will use already scraped data from the database, so you don't need to se
 
   | Argument         | Description                    | Default |
   |------------------|--------------------------------|---------|
-  | `--db-uri`       | MongoDB URI.                   | None    |
+  | `--db-uri`       | MongoDB URI.                   |            |
   | `--log-file`     | Path for the log file (None to disable)         | None                       |
 
 - **Output:** Saves pages to `pages/pages_chunk_*.parquet` in `data/datasets/nsa`.
 
 ---
 
-### 6. **`extract_data_from_pages.py`**
+### 7. **`extract_data_from_pages.py`**
 
 - **Purpose:** Extracts structured data from downloaded document pages.
 - **Usage:**

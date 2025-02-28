@@ -13,10 +13,10 @@ setup_loguru(extra={"script": __file__})
 
 def main(
     db_uri: str = typer.Option(..., envvar="DB_URI"),
-    log_file: Path = typer.Option(None, help="Log file to save the logs to."),
     redownload_days_back: int = typer.Option(
         720, help="Days back to redownload pages from. Defaults to 720 (2 years)."
     ),
+    log_file: Path = typer.Option(None, help="Log file to save the logs to."),
 ) -> None:
     setup_loguru(extra={"script": __file__}, log_file=log_file)
     logger.info("Running drop_docs_to_redownload.py with args:\n" + str(locals()))
