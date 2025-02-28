@@ -28,6 +28,7 @@ MAX_CONCURRENT_WORKERS = 10
 BATCH_SIZE = 50
 COURT_ID_2_NAME_FILE = "data/datasets/pl/court_id_2_name.csv"
 MONGO_URI = os.environ["MONGO_URI"]
+MONGO_DB_NAME = os.environ["MONGO_DB_NAME"]
 COLLECTION_NAME = "pl-court"
 
 REPO_ID = "JuDDGES/pl-court-raw"
@@ -122,7 +123,11 @@ def fetch_judgment_data(
 
 @task(retries=3, retry_delay_seconds=10, log_prints=True)
 def get_most_recent_last_update_date() -> datetime | None:
-    collection = get_mongo_collection(collection_name=COLLECTION_NAME)
+    collection = get_mongo_collection(
+        mongo_uri=MONGO_URI,
+        mongo_db=MONGO_DB_NAME,
+        collection_name=COLLECTION_NAME,
+    )
     latest_doc = collection.find_one(sort=[("lastUpdate", -1)])
 
     if latest_doc and "lastUpdate" in latest_doc:
@@ -174,8 +179,11 @@ def fetch_judgment_details(judgment_id: str) -> dict[str, Any]:
 
 
 class SaveOrUpdateJudgements:
-    def __init__(self, mongo_uri: str) -> None:
-        self.update_db = BatchDatabaseUpdate(mongo_uri=mongo_uri)
+    def __init__(self) -> None:
+        self.update_db = BatchDatabaseUpdate(
+            mongo_uri=MONGO_URI,
+            mongo_db_name=MONGO_DB_NAME,
+        )
 
     @task(name="store_judgements", log_prints=True)
     def __call__(self, judgements: list[dict[str, Any]]) -> None:
@@ -186,7 +194,11 @@ class SaveOrUpdateJudgements:
 
 @task
 def dump_dataset(chunk_size: int, file_name: Path, start_offset: int, num_docs: int) -> None:
-    collection = get_mongo_collection(collection_name=COLLECTION_NAME)
+    collection = get_mongo_collection(
+        mongo_uri=MONGO_URI,
+        mongo_db=MONGO_DB_NAME,
+        collection_name=COLLECTION_NAME,
+    )
     query = {"content": {"$ne": None}}
     for offset in trange(start_offset, num_docs, chunk_size, desc="Chunks"):
         docs = list(

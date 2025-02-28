@@ -67,9 +67,13 @@ class BatchDatabaseUpdate:
     def __init__(
         self,
         mongo_uri: str,
+        mongo_db_name: str,
+        mongo_collection_name: str,
         update_func: Callable[[dict[str, Any]], dict] | None = None,
     ) -> None:
         self.mongo_uri = mongo_uri
+        self.mongo_db_name = mongo_db_name
+        self.mongo_collection_name = mongo_collection_name
         self.update_func = update_func
 
     def __call__(self, documents: list[dict[str, Any]]) -> BulkWriteResult:
@@ -83,7 +87,11 @@ class BatchDatabaseUpdate:
 
             update_batch.append(UpdateOne({"_id": doc["_id"]}, {"$set": update_data}, upsert=True))
 
-        collection = get_mongo_collection(mongo_uri=self.mongo_uri)
+        collection = get_mongo_collection(
+            mongo_uri=self.mongo_uri,
+            mongo_db=self.mongo_db_name,
+            collection_name=self.mongo_collection_name,
+        )
 
         try:
             write_results = collection.bulk_write(update_batch, ordered=False)
