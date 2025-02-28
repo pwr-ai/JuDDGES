@@ -1,4 +1,5 @@
 import asyncio
+import os
 import shutil
 import subprocess
 from datetime import datetime
@@ -7,26 +8,26 @@ from typing import Any
 
 import pandas as pd
 from datasets import load_dataset
-from dotenv import dotenv_values, load_dotenv
+from dotenv import load_dotenv
 from huggingface_hub import DatasetCard, DatasetCardData, HfApi
 from loguru import logger
-from prefect import flow, get_client, runtime, task, unmapped
-from prefect.client.schemas.filters import FlowRunFilter
-from prefect.client.schemas.sorting import FlowRunSort
-from prefect.task_runners import ThreadPoolTaskRunner
 from tqdm import tqdm, trange
 
 from juddges.data.database import BatchDatabaseUpdate, get_mongo_collection
 from juddges.data.pl_court_api import PolishCourtAPI
 from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
 from juddges.settings import PL_JUDGEMENTS_PATH, PL_JUDGEMENTS_PATH_RAW
+from prefect import flow, get_client, runtime, task, unmapped
+from prefect.client.schemas.filters import FlowRunFilter
+from prefect.client.schemas.sorting import FlowRunSort
+from prefect.task_runners import ThreadPoolTaskRunner
 
 load_dotenv()
 
 MAX_CONCURRENT_WORKERS = 10
 BATCH_SIZE = 50
 COURT_ID_2_NAME_FILE = "data/datasets/pl/court_id_2_name.csv"
-MONGO_URI = dotenv_values()["MONGO_URI"]
+MONGO_URI = os.environ["MONGO_URI"]
 COLLECTION_NAME = "pl-court"
 
 REPO_ID = "JuDDGES/pl-court-raw"
@@ -76,7 +77,7 @@ def update_pl_court_data(date_from: str | None = None, batch_size: int = BATCH_S
         num_docs=n_judgements,
     )
 
-    # push_dataset_to_hub()
+    push_dataset_to_hub()
 
 
 class MapCourtDepartmentIds2Names:
