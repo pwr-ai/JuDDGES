@@ -1,0 +1,10 @@
+.highlight {
+    /* Highlight style for search matches */
+    background-color: #FFD700;
+    color: black;
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* Add more custom styles for search judgements here */

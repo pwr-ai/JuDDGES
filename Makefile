@@ -1,5 +1,5 @@
-lint_dirs := juddges scripts dashboards tests
-mypy_dirs := juddges scripts dashboards tests
+lint_dirs := juddges scripts tests
+mypy_dirs := juddges scripts tests
 
 fix:
 	pre-commit run --all-files
