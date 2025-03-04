@@ -44,7 +44,7 @@ def process_highlights(item: Dict[str, Any]) -> str:
     for term in highlight_terms:
         escaped_term = term.replace("[", "\\[").replace("]", "\\]")
         pattern = f"({escaped_term})"
-        replacement = f"<span class='highlight'>\\1</span>"
+        replacement = "<span class='highlight'>\\1</span>"
         full_text = re.sub(pattern, replacement, full_text, flags=re.IGNORECASE)
 
     return full_text
