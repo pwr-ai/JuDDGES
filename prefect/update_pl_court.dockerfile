@@ -15,6 +15,13 @@ USER juddges_user
 ENV HOME=/home/juddges_user
 ENV PYTHONPATH=/juddges
 
+# Install git-lfs to handle hf-hub
+RUN apt-get update && apt-get install -y git-lfs && git lfs install
+
+# create home to keep default cache dirs
+RUN mkdir -p /home/juddges
+ENV HOME=/home/juddges
+
 WORKDIR /juddges
 
 # install requirements

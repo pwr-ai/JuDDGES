@@ -1,0 +1,56 @@
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+
+import pyarrow.parquet as pq
+from huggingface_hub import DatasetCard, upload_folder
+
+
+def push_dataset_dir_to_hub(
+    dataset_path: Path | str,
+    card: DatasetCard,
+    card_assets: Path | str | None,
+    repo_id: str,
+    commit_message: str,
+) -> None:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
+
+        dataset_path = Path(dataset_path)
+        assert all(ds_file.name.endswith(".parquet") for ds_file in dataset_path.glob("*.parquet"))
+        shutil.copytree(
+            dataset_path,
+            tmp_path / "data",
+            dirs_exist_ok=True,
+        )
+
+        readme_path = tmp_path / "README.md"
+        card.save(readme_path)
+
+        if card_assets is not None:
+            card_assets = Path(card_assets)
+            assets_dir = tmp_path / card_assets.name
+            shutil.copytree(
+                card_assets,
+                assets_dir,
+                dirs_exist_ok=True,
+            )
+
+        print(f"Pushing dataset to {repo_id} with commit message: {commit_message}")
+        res = subprocess.run(["tree", tmp_path], capture_output=True, text=True, check=True)
+        print(res.stdout)
+
+        upload_folder(
+            folder_path=tmp_path,
+            repo_id=repo_id,
+            repo_type="dataset",
+            commit_message=commit_message,
+        )
+
+
+def get_parquet_num_rows(dataset_path: Path | str) -> int:
+    dataset_path = Path(dataset_path)
+    dataset = pq.ParquetDataset(dataset_path)
+    total_rows = sum(piece.metadata.num_rows for piece in dataset.pieces)
+    return total_rows
