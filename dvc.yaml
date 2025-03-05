@@ -143,7 +143,6 @@ stages:
       dataset=${item.model_dataset.dataset}
       model=${item.model_dataset.model}
       random_seed=${item.seed}
-      output_file=data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/predict.py
       - configs/predict.yaml
