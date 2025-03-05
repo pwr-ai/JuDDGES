@@ -193,53 +193,19 @@ stages:
       - data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
 
   ### ---------------------------- Evaluation ---------------------------- ###
-  evaluate_pl:
+  evaluate: # use with NUM_PROC
     matrix:
-      dataset:
-        - pl-court-instruct
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned
-        - Unsloth-Mistral-7B-Instruct-v0.3
-        - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
-        - Bielik-7B-Instruct-v0.1
-        - Bielik-7B-Instruct-v0.1-fine-tuned
-        - trurl-13B-academic
-        - qra-13b
-        - Bielik-11B-v2.2-Instruct
-        - Bielik-11B-v2.2-Instruct-fine-tuned
+      <<: *sft_models
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      --output-file data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
       --num-proc=-1
     deps:
       - scripts/sft/evaluate.py
-      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
     outs:
-      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
-
-  evaluate_en:
-    matrix:
-      dataset:
-        - en-court-instruct
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
-      seed: ${seeds}
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
-      --num-proc=-1
-    deps:
-      - scripts/sft/evaluate.py
-      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
-    outs:
-      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
+      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/metrics_${item.seed}.json
 
   evaluate_api_models:
     matrix:
