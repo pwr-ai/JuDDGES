@@ -3269,3 +3269,112 @@ stages:
       hash: md5
       md5: 0b0853473cd29f03a9f498da602ec711
       size: 1232839
+  predict@model_dataset0-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl-court-frankowe-instruct
+      model=llama_3.1_8b_instruct random_seed=42
+    deps:
+    - path: configs/model/llama_3.1_8b_instruct.yaml
+      hash: md5
+      md5: b2e83ce967242bd6586815b53d868fcd
+      size: 149
+    - path: configs/predict.yaml
+      hash: md5
+      md5: b8083d667ab268648ac340c96d50bb9c
+      size: 558
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 8a9d51ac1aec5a6acbed83ee7ad337c0
+      size: 3067
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl-court-frankowe-instruct/llama_3.1_8b_instruct/outputs_42.json
+      hash: md5
+      md5: 1427e40525b8c09bd9a92c88f0f518af
+      size: 4250611
+  predict@model_dataset3-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl-court-frankowe-instruct
+      model=pllum_12b_instruct random_seed=42
+    deps:
+    - path: configs/model/pllum_12b_instruct.yaml
+      hash: md5
+      md5: da63cfb5002b8768e0b037a42467d4d4
+      size: 146
+    - path: configs/predict.yaml
+      hash: md5
+      md5: b8083d667ab268648ac340c96d50bb9c
+      size: 558
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 8a9d51ac1aec5a6acbed83ee7ad337c0
+      size: 3067
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl-court-frankowe-instruct/pllum_12b_instruct/outputs_42.json
+      hash: md5
+      md5: 13262d72de7d6ac749b7f272a30cf257
+      size: 4335569
+  predict@model_dataset1-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl-court-frankowe-instruct
+      model=llama_3.2_3b_instruct random_seed=42
+    deps:
+    - path: configs/model/llama_3.2_3b_instruct.yaml
+      hash: md5
+      md5: 73b192c37c435e02409a989e0e0094ed
+      size: 149
+    - path: configs/predict.yaml
+      hash: md5
+      md5: b8083d667ab268648ac340c96d50bb9c
+      size: 558
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 8a9d51ac1aec5a6acbed83ee7ad337c0
+      size: 3067
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl-court-frankowe-instruct/llama_3.2_3b_instruct/outputs_42.json
+      hash: md5
+      md5: 733604c170ead27c779e3575e28cfac4
+      size: 4189042
+  predict@model_dataset2-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl-court-frankowe-instruct
+      model=mistral_nemo_instruct_2407 random_seed=42
+    deps:
+    - path: configs/model/mistral_nemo_instruct_2407.yaml
+      hash: md5
+      md5: 3737ee590c709dbfdfc85e1ffec7a692
+      size: 153
+    - path: configs/predict.yaml
+      hash: md5
+      md5: b8083d667ab268648ac340c96d50bb9c
+      size: 558
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 8a9d51ac1aec5a6acbed83ee7ad337c0
+      size: 3067
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl-court-frankowe-instruct/mistral_nemo_instruct_2407/outputs_42.json
+      hash: md5
+      md5: 60469452a69aaa75b6325d20b1ccc5b7
+      size: 4159865
+  predict@model_dataset4-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl-court-frankowe-instruct
+      model=phi_4 random_seed=42
+    deps:
+    - path: configs/model/phi_4.yaml
+      hash: md5
+      md5: 80a181058838059a50023be895a6fc22
+      size: 132
+    - path: configs/predict.yaml
+      hash: md5
+      md5: b8083d667ab268648ac340c96d50bb9c
+      size: 558
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: 8a9d51ac1aec5a6acbed83ee7ad337c0
+      size: 3067
+    outs:
+    - path: data/experiments/predict/raw/pl-court-frankowe-instruct/phi_4/outputs_42.json
+      hash: md5
+      md5: 4179209ecc9c9a7d464728af06f1b6e5
+      size: 4314792

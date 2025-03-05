@@ -106,7 +106,7 @@ stages:
       - data/datasets/pl/sprawy_frankowe/test.jsonl
       - data/datasets/pl/sprawy_frankowe/dataset_info.json
 
-  ### Fine-tuning ###
+  ### ---------------------------- Fine-tuning ---------------------------- ###
   sft:
     matrix: &sft_models
       model_dataset:
@@ -133,7 +133,7 @@ stages:
     outs:
       - data/experiments/peft-fine-tune/${item.model_dataset.model}/${item.model_dataset.dataset}/
 
-  ### Prediction ###
+  ### ---------------------------- Prediction ---------------------------- ###
   predict:
     matrix:
       <<: *sft_models
@@ -192,7 +192,7 @@ stages:
     outs:
       - data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
 
-  ### Evaluation ###
+  ### ---------------------------- Evaluation ---------------------------- ###
   evaluate_pl:
     matrix:
       dataset:

@@ -45,22 +45,51 @@ while [ $# -gt 0 ]; do
             stage="$2"
             shift 2
             ;;
+        -r|--random_seed)
+            random_seed="$2"
+            shift 2
+            ;;
         *)
             echo "Invalid option: $1" >&2
-            echo "Usage: $0 --model <model> --dataset <dataset> --stage <stage>" >&2
-            echo "   or: $0 -m <model> -d <dataset> -s <stage>" >&2
-            echo "Example: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft" >&2
+            if [ "$stage" = "predict" ] || [ -z "$stage" ]; then
+                echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed>" >&2
+                echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed>" >&2
+            else
+                echo "Usage: $0 --model <model> --dataset <dataset> --stage sft [--random_seed <seed>]" >&2
+                echo "   or: $0 -m <model> -d <dataset> -s sft [-r <seed>]" >&2
+            fi
+            echo "Example for sft: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft" >&2
+            echo "Example for predict: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage predict --random_seed 42" >&2
             exit 1
             ;;
     esac
 done
 
+# Check if random_seed is provided for predict stage
+if [ -z "$random_seed" ]; then
+    # For predict stage, random_seed is obligatory
+    if [ "$stage" = "predict" ]; then
+        echo "Error: random_seed parameter is required for predict stage" >&2
+        echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed>" >&2
+        echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed>" >&2
+        exit 1
+    fi
+elif [ "$stage" = "sft" ] && [ -n "$random_seed" ]; then
+    echo "Warning: random_seed parameter has no effect for sft stage, but will be stored in wandb metadata"
+fi
+
 # check if all parameters are provided
 if [ -z "$model" ] || [ -z "$dataset" ] || [ -z "$stage" ]; then
     echo "Model (--model), dataset (--dataset) and stage (--stage) parameters are required" >&2
-    echo "Usage: $0 --model <model> --dataset <dataset> --stage <stage>" >&2
-    echo "   or: $0 -m <model> -d <dataset> -s <stage>" >&2
-    echo "Example: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft" >&2
+    if [ "$stage" = "predict" ] || [ -z "$stage" ]; then
+        echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed>" >&2
+        echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed>" >&2
+    else
+        echo "Usage: $0 --model <model> --dataset <dataset> --stage sft [--random_seed <seed>]" >&2
+        echo "   or: $0 -m <model> -d <dataset> -s sft [-r <seed>]" >&2
+    fi
+    echo "Example for sft: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft" >&2
+    echo "Example for predict: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage predict --random_seed 42" >&2
     exit 1
 fi
 
@@ -75,6 +104,7 @@ export NUM_PROC=$SLURM_CPUS_PER_GPU
 export PYTHONPATH=$PYTHONPATH:.
 export model
 export dataset
+export random_seed
 
 cd $WORKDIR
 
@@ -94,7 +124,7 @@ else
     export COMMAND="python scripts/sft/predict.py \
         model=${model} \
         dataset=${dataset} \
-        random_seed=42
+        random_seed=${random_seed}
     "
 fi
 
