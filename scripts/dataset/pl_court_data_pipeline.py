@@ -2,25 +2,29 @@ import asyncio
 import os
 import shutil
 import subprocess
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import pymongo
 from datasets import load_dataset
 from dotenv import load_dotenv
-from huggingface_hub import DatasetCard, DatasetCardData, HfApi
+from huggingface_hub import DatasetCard, DatasetCardData, Repository
 from loguru import logger
 from tqdm import tqdm, trange
 
 from juddges.data.database import BatchDatabaseUpdate, get_mongo_collection
-from juddges.data.pl_court_api import PolishCourtAPI
+from juddges.data.pl_court_api import DataNotFoundError, PolishCourtAPI
 from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
 from juddges.settings import PL_JUDGEMENTS_PATH, PL_JUDGEMENTS_PATH_RAW
+from juddges.utils.pipeline import RetryOnException
 from prefect import flow, get_client, runtime, task, unmapped
 from prefect.client.schemas.filters import FlowRunFilter
 from prefect.client.schemas.sorting import FlowRunSort
 from prefect.task_runners import ThreadPoolTaskRunner
+from prefect.tasks import exponential_backoff
 
 load_dotenv()
 
@@ -39,7 +43,10 @@ DATASET_CARD_TEMPLATE_ASSETS = PL_JUDGEMENTS_PATH / "readme/raw/README_files"
 
 
 @flow(task_runner=ThreadPoolTaskRunner(max_workers=MAX_CONCURRENT_WORKERS), log_prints=True)
-def update_pl_court_data(date_from: str | None = None, batch_size: int = BATCH_SIZE) -> None:
+def update_pl_court_data(
+    date_from: str | None = None,
+    batch_size: int = BATCH_SIZE,
+) -> None:
     latest_successful_flow_date = _get_recent_successful_flow_date()
     if latest_successful_flow_date is not None:
         date_from = latest_successful_flow_date
@@ -105,7 +112,10 @@ class ParseDoc:
 
     @task(name="parse_xml_content")
     def __call__(self, doc: dict[str, Any]) -> dict[str, Any]:
-        return self.parser(doc["content"])
+        if doc["content"] is not None:
+            return self.parser(doc["content"])
+        else:
+            return {}
 
 
 @task(name="fetch_judgment_data")
@@ -114,14 +124,19 @@ def fetch_judgment_data(
     court_department_id_mapper: MapCourtDepartmentIds2Names,
     doc_parser: ParseDoc,
 ) -> dict[str, Any]:
-    judgement = fetch_judgment_content(judgment_id=judgment["id"])
-    judgement |= fetch_judgment_details(judgment_id=judgment["id"])
-    judgement |= court_department_id_mapper(doc=judgement)
-    judgement |= doc_parser(doc=judgement)
-    return judgement
+    judgment |= court_department_id_mapper(doc=judgment)
+    judgment |= fetch_judgment_details(judgment_id=judgment["id"])
+    judgment |= fetch_judgment_content(judgment_id=judgment["id"])
+    judgment |= doc_parser(doc=judgment)
+    return judgment
 
 
-@task(retries=3, retry_delay_seconds=10, log_prints=True)
+@task(
+    retries=3,
+    retry_delay_seconds=exponential_backoff(backoff_factor=10),
+    retry_jitter_factor=0.5,
+    log_prints=True,
+)
 def get_most_recent_last_update_date() -> datetime | None:
     collection = get_mongo_collection(
         mongo_uri=MONGO_URI,
@@ -145,7 +160,12 @@ def get_most_recent_last_update_date() -> datetime | None:
     return None
 
 
-@task(retries=3, retry_delay_seconds=10, log_prints=True)
+@task(
+    retries=3,
+    retry_delay_seconds=exponential_backoff(backoff_factor=10),
+    retry_jitter_factor=0.5,
+    log_prints=True,
+)
 def fetch_number_of_judgements(date_from: str) -> int:
     api = PolishCourtAPI()
     params = {
@@ -154,7 +174,11 @@ def fetch_number_of_judgements(date_from: str) -> int:
     return api.get_number_of_judgements(params=params)
 
 
-@task(retries=3, retry_delay_seconds=10)
+@task(
+    retries=3,
+    retry_delay_seconds=exponential_backoff(backoff_factor=10),
+    retry_jitter_factor=0.5,
+)
 def fetch_judgment_metadata(offset: int, batch_size: int, date_from: str) -> list[dict[str, Any]]:
     api = PolishCourtAPI()
     params = {
@@ -166,16 +190,32 @@ def fetch_judgment_metadata(offset: int, batch_size: int, date_from: str) -> lis
     return api.get_judgements(params=params)
 
 
-@task(retries=3, retry_delay_seconds=10)
+@task(
+    retries=3,
+    retry_delay_seconds=exponential_backoff(backoff_factor=10),
+    retry_jitter_factor=0.5,
+)
 def fetch_judgment_content(judgment_id: str) -> dict[str, Any]:
     api = PolishCourtAPI()
-    return api.get_content(id=judgment_id)
+    try:
+        return api.get_content(id=judgment_id)
+    except DataNotFoundError as e:
+        logger.error(f"Error fetching judgment content for {judgment_id}: {e}")
+        return {"content": None}
 
 
-@task(retries=3, retry_delay_seconds=10)
+@task(
+    retries=3,
+    retry_delay_seconds=exponential_backoff(backoff_factor=10),
+    retry_jitter_factor=0.5,
+)
 def fetch_judgment_details(judgment_id: str) -> dict[str, Any]:
     api = PolishCourtAPI()
-    return api.get_details(id=judgment_id)
+    try:
+        return api.get_cleaned_details(id=judgment_id)
+    except DataNotFoundError as e:
+        logger.error(f"Error fetching judgment details for {judgment_id}: {e}")
+        return dict.fromkeys(api.schema["details"], None)
 
 
 class SaveOrUpdateJudgements:
@@ -185,14 +225,30 @@ class SaveOrUpdateJudgements:
             mongo_db_name=MONGO_DB_NAME,
         )
 
-    @task(name="store_judgements", log_prints=True)
+    @task(
+        name="store_judgements",
+        retries=3,
+        retry_delay_seconds=exponential_backoff(backoff_factor=60),
+        retry_jitter_factor=1.0,
+        retry_condition_fn=RetryOnException(pymongo.errors.ConnectionFailure),
+        log_prints=True,
+    )
     def __call__(self, judgements: list[dict[str, Any]]) -> None:
         for judgement in judgements:
-            judgement["_id"] = judgement.pop("@id")
+            try:
+                judgement["_id"] = judgement.pop("@id")
+            except KeyError:
+                judgement["_id"] = judgement.pop("id")
         self.update_db(judgements)
 
 
-@task
+@task(
+    retries=3,
+    retry_delay_seconds=exponential_backoff(backoff_factor=60),
+    retry_jitter_factor=1.0,
+    retry_condition_fn=RetryOnException(pymongo.errors.ConnectionFailure),
+    log_prints=True,
+)
 def dump_dataset(chunk_size: int, file_name: Path, start_offset: int, num_docs: int) -> None:
     collection = get_mongo_collection(
         mongo_uri=MONGO_URI,
@@ -236,19 +292,14 @@ def generate_dataset_card() -> None:
 
 @task
 def push_dataset_to_hub() -> None:
-    commit_message = f"Dataset update {runtime.flow_run.start_time.to_date_string()}"
+    commit_message = f"Dataset update {runtime.flow_run.scheduled_start_time.to_date_string()}"
     ds = load_dataset("parquet", name="pl_judgements", data_dir=PL_JUDGEMENTS_PATH_RAW)
 
     num_rows = ds["train"].num_rows
     logger.info(f"Loaded dataset size: {num_rows}")
-
-    ds.push_to_hub(
-        repo_id=REPO_ID,
-        max_shard_size=MAX_SHARD_SIZE,
-        commit_message=commit_message,
-    )
-
     assert 100_000 < num_rows < 1_000_000
+
+    # Create dataset card
     card_data = DatasetCardData(
         language="pl",
         multilinguality="monolingual",
@@ -261,23 +312,34 @@ def push_dataset_to_hub() -> None:
         card_data,
         template_path=DATASET_CARD_TEMPLATE,
     )
-    card.push_to_hub(
-        repo_id=REPO_ID,
-        commit_message=commit_message,
-    )
 
-    api = HfApi()
-    api.upload_folder(
-        folder_path=DATASET_CARD_TEMPLATE_ASSETS,
-        path_in_repo=DATASET_CARD_TEMPLATE_ASSETS.name,
-        repo_id=REPO_ID,
-        repo_type="dataset",
-        commit_message=commit_message,
-    )
+    # Create a temporary directory to prepare all files
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        # Clone the repository
+        repo = Repository(
+            local_dir=tmp_dir,
+            repo_id=REPO_ID,
+            repo_type="dataset",
+        )
 
+        # Push dataset files
+        ds.save_to_disk(tmp_dir)
 
-@push_dataset_to_hub.on_completion
-def push_dataset_to_hub_completion() -> None:
+        # Save dataset card
+        card.save(Path(tmp_dir) / "README.md")
+
+        # Copy card assets
+        if DATASET_CARD_TEMPLATE_ASSETS.exists():
+            shutil.copytree(
+                DATASET_CARD_TEMPLATE_ASSETS,
+                Path(tmp_dir) / DATASET_CARD_TEMPLATE_ASSETS.name,
+                dirs_exist_ok=True,
+            )
+
+        # Push everything in a single commit
+        repo.push_to_hub(commit_message=commit_message)
+
+    # Cleanup
     shutil.rmtree(PL_JUDGEMENTS_PATH_RAW)
 
 

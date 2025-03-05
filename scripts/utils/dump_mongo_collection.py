@@ -19,6 +19,8 @@ load_dotenv()
 
 def main(
     mongo_uri: str = typer.Option(..., envvar="MONGO_URI"),
+    mongo_db: str = typer.Option(...),
+    collection_name: str = typer.Option(...),
     batch_size: int = typer.Option(BATCH_SIZE),
     chunk_size: int = typer.Option(CHUNK_SIZE),
     file_name: Path = typer.Option(..., exists=False),
@@ -26,7 +28,11 @@ def main(
 ) -> None:
     file_name.parent.mkdir(exist_ok=True, parents=True)
 
-    collection = get_mongo_collection(mongo_uri=mongo_uri)
+    collection = get_mongo_collection(
+        mongo_uri=mongo_uri,
+        mongo_db=mongo_db,
+        collection_name=collection_name,
+    )
 
     if filter_empty_content:
         query = {"content": {"$ne": None}}
