@@ -1,0 +1,7 @@
+name: CYFRAGOVPL/PLLuM-12B-instruct
+tokenizer_name: ${.name}
+adapter_path: null
+batch_size: 1
+padding: longest
+use_4bit: false
+use_unsloth: false

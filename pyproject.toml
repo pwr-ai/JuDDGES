@@ -15,3 +15,9 @@ plugins = "numpy.typing.mypy_plugin"
 [[tool.mypy.overrides]]
 module = ["pyarrow.*", "datasets.*", "sentence_transformers.*"]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0.0"
+pythonpath = ["."]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
