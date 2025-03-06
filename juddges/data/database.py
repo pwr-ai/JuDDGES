@@ -87,10 +87,27 @@ class MongoInterface:
         self,
         file_name: Path,
         shard_size: int,
+        clean_legacy_shards: bool = False,
         filter_query: dict[str, Any] | None = None,
         verbose: bool = True,
     ) -> None:
         assert self.collection is not None, "Collection not initialized"
+
+        if shard_size <= 0:
+            raise ValueError(f"shard_size must be positive, got {shard_size}")
+
+        file_name.parent.mkdir(parents=True, exist_ok=True)
+        shard_file_pattern = f"{file_name.stem}_*.{file_name.suffix.lstrip('.')}"
+        matching_files = list(file_name.parent.glob(shard_file_pattern))
+        if matching_files and not clean_legacy_shards:
+            raise FileExistsError(
+                f"Cannot dump collection to {file_name.parent}, "
+                f"the following files already exist: {matching_files}"
+            )
+        elif matching_files:
+            for file in matching_files:
+                if file.stem.startswith(file_name.stem):
+                    file.unlink()
 
         if filter_query is None:
             query = {}

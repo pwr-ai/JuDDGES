@@ -1,5 +1,4 @@
 import shutil
-import subprocess
 import tempfile
 from pathlib import Path
 
@@ -36,10 +35,6 @@ def push_dataset_dir_to_hub(
                 assets_dir,
                 dirs_exist_ok=True,
             )
-
-        print(f"Pushing dataset to {repo_id} with commit message: {commit_message}")
-        res = subprocess.run(["tree", tmp_path], capture_output=True, text=True, check=True)
-        print(res.stdout)
 
         upload_folder(
             folder_path=tmp_path,
