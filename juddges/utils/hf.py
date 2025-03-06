@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-import pyarrow.parquet as pq
+import pyarrow.dataset as ds
 from huggingface_hub import DatasetCard, upload_folder
 
 
@@ -51,6 +51,15 @@ def push_dataset_dir_to_hub(
 
 def get_parquet_num_rows(dataset_path: Path | str) -> int:
     dataset_path = Path(dataset_path)
-    dataset = pq.ParquetDataset(dataset_path)
-    total_rows = sum(piece.metadata.num_rows for piece in dataset.pieces)
+    if not dataset_path.exists():
+        raise ValueError("Dataset path does not exist")
+
+    if dataset_path.is_dir() and not list(dataset_path.glob("*.parquet")):
+        raise ValueError("Dataset path does not contain any parquet files")
+
+    dataset = ds.dataset(dataset_path)
+    total_rows = sum(
+        rg.num_rows for fragment in dataset.get_fragments() for rg in fragment.row_groups
+    )
+
     return total_rows
