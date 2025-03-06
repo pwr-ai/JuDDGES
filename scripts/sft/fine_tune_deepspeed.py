@@ -27,7 +27,7 @@ from transformers import (
 from trl import SFTConfig, SFTTrainer
 
 from juddges.config import FineTuningConfig
-from juddges.data.datasets.utils import create_chat
+from juddges.data.datasets.utils import format_to_conversations
 from juddges.models.factory import get_model
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.settings import CONFIG_PATH
@@ -38,7 +38,7 @@ NUM_PROC = int(os.getenv("NUM_PROC", 1))
 state = PartialState()
 
 
-@hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="fine_tuning.yaml")
+@hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="peft_fine_tuning.yaml")
 def main(cfg: DictConfig) -> None:
     cfg_dict = resolve_config(cfg)
     config = FineTuningConfig(**cfg_dict)
@@ -67,16 +67,16 @@ def main(cfg: DictConfig) -> None:
             dataset_output_field=config.dataset.output_field,
             truncate_context=config.truncate_context,
             tokenizer=model_pack.tokenizer,
-            max_length=config.model.max_seq_length,
+            max_length=config.max_context_size,
             num_proc=NUM_PROC,
         )
 
     trainer = get_trainer(
-        model_pack.model,
-        model_pack.tokenizer,
-        dataset,
-        config,
-        NUM_PROC,
+        model=model_pack.model,
+        tokenizer=model_pack.tokenizer,
+        dataset=dataset,
+        config=config,
+        num_proc=NUM_PROC,
     )
     trainer.train()
     trainer.save_model()
@@ -109,14 +109,13 @@ def prepare_dataset(
         )
 
     dataset = dataset.map(
-        lambda x: create_chat(x, dataset_prompt_field, dataset_context_field, dataset_output_field),
+        lambda x: format_to_conversations(
+            x, dataset_prompt_field, dataset_context_field, dataset_output_field
+        ),
         remove_columns=dataset.column_names,
-        desc="Formatting to chat",
+        desc="Formatting to converational format",
     )
-    dataset = dataset.map(
-        lambda x: {"messages": tokenizer.apply_chat_template(x["messages"], tokenize=False)},
-        desc="Applying chat template",
-    )
+
     return dataset
 
 
@@ -128,8 +127,7 @@ def get_trainer(
     num_proc: int | None,
 ) -> Trainer:
     sft_config = SFTConfig(
-        dataset_text_field="messages",
-        max_seq_length=config.model.max_seq_length,
+        max_seq_length=config.max_context_size,
         dataset_num_proc=num_proc,
         **config.training_args,
     )
@@ -141,9 +139,9 @@ def get_trainer(
 
     trainer = SFTTrainer(
         model=model,
+        processing_class=tokenizer,
         args=sft_config,
         train_dataset=dataset,
-        tokenizer=tokenizer,
         peft_config=peft_config,
     )
 

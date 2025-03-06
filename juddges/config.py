@@ -45,6 +45,7 @@ class RawDatasetConfig(BaseModel, extra="forbid"):
 class FineTuningConfig(BaseModel, extra="forbid"):
     model: LLMConfig
     dataset: DatasetConfig
+    max_context_size: int
     training_args: dict[str, Any]
     peft_args: dict[str, Any] | None
     truncate_context: bool

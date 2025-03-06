@@ -28,7 +28,7 @@ export SIF_IMAGE_PATH
 export WORKDIR
 
 export NODES=($(scontrol show hostnames $SLURM_JOB_NODELIST | tr '\n' '\n'))
-export WORLD_SIZE=$(($SLURM_GPUS_PER_NODE * $SLURM_NNODES))
+export WORLD_SIZE=$(($SLURM_GPUS_ON_NODE * $SLURM_JOB_NUM_NODES))
 
 # =====Parse command line arguments=====
 while [ $# -gt 0 ]; do

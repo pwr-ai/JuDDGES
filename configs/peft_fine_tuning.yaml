@@ -38,6 +38,7 @@ peft_args:
   bias: "none" # Supports any, but = "none" is optimized
   target_modules: "all-linear"
 
+max_context_size: 32_000
 truncate_context: True
 wandb_entity: graph-ml-lab-wust
 wandb_project: juddges-fine-tune

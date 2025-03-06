@@ -122,6 +122,8 @@ stages:
           model: phi_4
         - dataset: en-appealcourt-coded-instruct
           model: llama_3.1_8b_instruct
+        - dataset: en-appealcourt-coded-instruct
+          model: mistral_nemo_instruct_2407
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py
       dataset=${item.model_dataset.dataset}
