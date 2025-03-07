@@ -21,6 +21,7 @@ from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 from juddges.utils.misc import sort_dataset_by_input_length
 
+torch.set_float32_matmul_precision("high")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
@@ -45,6 +46,16 @@ class PredictConfig(BaseModel, extra="forbid"):
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
 @torch.inference_mode()
 def main(cfg: DictConfig) -> None:
+    """Performs inference on a given dataset using given model.
+    The outputs are saved to a file in the following JSONL format:
+    [
+        {
+            "answer": str,
+            "gold": str
+        },
+        ...
+    ]
+    """
     config = PredictConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
@@ -65,8 +76,8 @@ def main(cfg: DictConfig) -> None:
 
         FastLanguageModel.for_inference(model_pack.model)
     else:
-        model_pack.model.compile()
         model_pack.model.eval()
+        # model_pack.model.compile() # might cause libcuda.so not found error
 
     if config.model.batch_size > 1 and config.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
