@@ -50,7 +50,6 @@ def main(cfg: DictConfig) -> None:
         config.dataset_name,
         columns=["judgement_id", "text"],
     )["train"]
-    ds = ds.select(range(100))
     ds = ds.filter(lambda item: item["text"] is not None)
 
     model = SentenceTransformer(
