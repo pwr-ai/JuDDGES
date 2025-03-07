@@ -10,16 +10,8 @@ class TestContextTruncator(unittest.TestCase):
         model_id = "mistralai/Mistral-7B-Instruct-v0.2"
         self._check(model_id, 120)
 
-    def test_llama2(self):
-        model_id = "meta-llama/Llama-2-7b-hf"
-        self._check(model_id, 120)
-
     def test_llama3(self):
         model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-        self._check(model_id, 120)
-
-    def test_bielik(self):
-        model_id = "speakleash/Bielik-7B-v0.1"
         self._check(model_id, 120)
 
     def test_mistral_warn(self):

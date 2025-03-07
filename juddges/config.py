@@ -11,6 +11,7 @@ class LLMConfig(BaseModel, extra="forbid"):
     tokenizer_name: str
     adapter_path: Path | None
     max_seq_length: int
+    padding_side: str = "left"
     padding: str | bool
     batch_size: int
     use_4bit: bool

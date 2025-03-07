@@ -156,3 +156,6 @@ secrets.env
 outputs/
 wandb/
 *.db
+slurm/.commands.sh
+logs/
+slurm/juddges.sif

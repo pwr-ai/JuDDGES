@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from juddges.config import DatasetConfig
 from juddges.preprocessing.context_truncator import ContextTruncatorTiktoken
-from juddges.preprocessing.text_encoder import TextEncoderForOpenAIEval
+from juddges.preprocessing.text_encoder import TextEncoderForEvalPlainTextFormat
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 
@@ -55,7 +55,7 @@ def main(cfg: DictConfig) -> None:
     gold_outputs = [item["output"] for item in ds]
 
     truncator = ContextTruncatorTiktoken(model=config.model_version, max_length=config.max_seq_len)
-    encoder = TextEncoderForOpenAIEval(truncator=truncator)
+    encoder = TextEncoderForEvalPlainTextFormat(truncator=truncator)
     ds = ds.map(encoder, num_proc=NUM_PROC)
 
     predictor = OpenAIPredictor(config=config)
