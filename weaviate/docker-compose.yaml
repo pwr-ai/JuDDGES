@@ -11,6 +11,10 @@ services:
     image: cr.weaviate.io/semitechnologies/weaviate:1.26.4
     depends_on:
       - t2v-transformers
+    environment:
+      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
+      ENABLE_MODULES: 'text2vec-transformers'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
     ports:
       - 8080:8080
       - 50051:50051
