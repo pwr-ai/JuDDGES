@@ -7,15 +7,18 @@ from datasets import load_dataset
 from dotenv import load_dotenv
 from loguru import logger
 from tqdm.auto import tqdm
-
-from juddges.data.weaviate_db import WeaviateJudgementsDatabase
 from weaviate.util import generate_uuid5
 
-load_dotenv()
+from juddges.data.weaviate_db import WeaviateJudgementsDatabase
+from juddges.settings import ROOT_PATH
+from juddges.utils.date_utils import process_judgement_dates
+
+load_dotenv(dotenv_path=ROOT_PATH / ".env", override=True)
+
 WV_HOST = os.environ["WV_HOST"]
-WV_PORT = os.getenv("WV_PORT", "8080")
-WV_GRPC_PORT = os.getenv("WV_GRPC_PORT", "50051")
-WV_API_KEY = os.getenv("WV_API_KEY", None)
+WV_PORT = os.environ["WV_PORT"]
+WV_GRPC_PORT = os.environ["WV_GRPC_PORT"]
+WV_API_KEY = os.environ["WV_API_KEY"]
 
 BATCH_SIZE = 64
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
@@ -34,13 +37,18 @@ def main(
             total=math.ceil(len(dataset) / batch_size),
             desc="Uploading batches",
         ):
-            records = [
-                {
-                    "properties": {key: batch[key][i] for key in batch.keys()},
-                    "uuid": generate_uuid5(batch["judgement_id"][i]),
-                }
-                for i in range(len(batch["judgement_id"]))
-            ]
+            records = []
+            for i in range(len(batch["judgement_id"])):
+                properties = {key: batch[key][i] for key in batch.keys()}
+                # Process dates to RFC3339 format
+                properties = process_judgement_dates(properties)
+                records.append(
+                    {
+                        "properties": properties,
+                        "uuid": generate_uuid5(batch["judgement_id"][i]),
+                    }
+                )
+
             db.insert_batch(
                 collection=db.judgements_collection,
                 objects=records,

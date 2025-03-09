@@ -1,4 +1,3 @@
-name: weaviate
 services:
   weaviate:
     command:
@@ -8,30 +7,46 @@ services:
       - '8080'
       - --scheme
       - http
-    image: cr.weaviate.io/semitechnologies/weaviate:1.26.4
+    image: cr.weaviate.io/semitechnologies/weaviate:1.29.0
     depends_on:
       - t2v-transformers
-    environment:
-      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
-      ENABLE_MODULES: 'text2vec-transformers'
-      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
     ports:
       - 8080:8080
       - 50051:50051
     volumes:
-      - ./weaviate_data:/var/lib/weaviate
-    restart: on-failure:0
-    env_file:
-      - path: .env
-        required: true
-    cpu_count: 14
-    mem_limit: 60g
+      - juddges_weaviate_data:/var/lib/weaviate
+    env_file: .env
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '10'
+          memory: '60G'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   t2v-transformers:
-    build:
-      context: .
-      dockerfile: hf_transformers.dockerfile
-      args:
-        - MODEL_NAME=sdadas/mmlw-roberta-large
+    image: t2v-transformers:latest
     environment:
       ENABLE_CUDA: 0 # Set to 1 to enable
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '4'
+          memory: '8G'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  juddges_weaviate_data:
