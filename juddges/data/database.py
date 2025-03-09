@@ -3,14 +3,15 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Generator, Iterator
 
-import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 from loguru import logger
 from pymongo import MongoClient, UpdateOne
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
 from pymongo.errors import BulkWriteError
 from pymongo.results import BulkWriteResult
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
 
 def get_mongo_collection(
@@ -89,6 +90,7 @@ class MongoInterface:
         shard_size: int,
         clean_legacy_shards: bool = False,
         filter_query: dict[str, Any] | None = None,
+        fields_to_ignore: list[str] | None = None,
         verbose: bool = True,
     ) -> None:
         assert self.collection is not None, "Collection not initialized"
@@ -112,32 +114,82 @@ class MongoInterface:
         if filter_query is None:
             query = {}
         else:
-            query = filter_query
+            query = filter_query.copy()
 
-        total_num_docs = self.collection.count_documents(query)
-        for offset in trange(0, total_num_docs, shard_size, desc="Chunks", disable=not verbose):
-            docs = list(
-                tqdm(
-                    self.collection.find(query, {"embedding": 0}, batch_size=self.batch_size)
-                    .skip(offset)
-                    .limit(shard_size),
-                    total=shard_size,
-                    leave=False,
-                    desc="Documents in chunk",
-                    disable=not verbose,
+        if fields_to_ignore is not None:
+            ignore_mongo_id = "_id" in fields_to_ignore
+            projection = {field_name: 0 for field_name in fields_to_ignore if field_name != "_id"}
+        else:
+            projection = {}
+
+        logger.info(
+            f"Dumping collection {self.collection_name} with query {query} and projection {projection}"
+        )
+        cursor = self.collection.find(
+            filter=query,
+            projection=projection,
+            batch_size=self.batch_size or shard_size,
+            no_cursor_timeout=True,
+        ).sort([("$natural", 1)])
+
+        shard_idx = 0
+        last_id = None
+
+        try:
+            while True:
+                if last_id is not None:
+                    # Create a new query with the updated _id
+                    current_query = query.copy()
+                    current_query["_id"] = {"$gt": last_id}
+                    current_cursor = (
+                        self.collection.find(
+                            filter=current_query,
+                            projection=projection,
+                            batch_size=self.batch_size or shard_size,
+                            no_cursor_timeout=True,
+                        )
+                        .sort([("$natural", 1)])
+                        .limit(shard_size)
+                    )
+                else:
+                    current_cursor = cursor.limit(shard_size)
+
+                docs = list(
+                    tqdm(
+                        current_cursor,
+                        total=shard_size,
+                        leave=False,
+                        desc="Documents in chunk",
+                        disable=not verbose,
+                    )
                 )
-            )
-            shard_idx = offset // shard_size
-            dumped_f_name = self._save_docs_shard(docs, file_name, shard_idx)
-            logger.info(f"Dumped {shard_idx}-th batch of documents to {dumped_f_name}")
+                if not docs:
+                    break
+
+                last_id = docs[-1]["_id"]
+
+                if ignore_mongo_id:
+                    for doc in docs:
+                        doc.pop("_id")
+
+                dumped_f_name = self._save_docs_shard(docs, file_name, shard_idx)
+                logger.info(f"Dumped {shard_idx}-th batch of documents to {dumped_f_name}")
+                shard_idx += 1
+        finally:
+            cursor.close()
 
     @staticmethod
     def _save_docs_shard(
-        docs: list[dict[str, Any]], file_name: Path, shard_idx: int | None
+        docs: list[dict[str, Any]],
+        file_name: Path,
+        shard_idx: int | None,
     ) -> Path:
         if shard_idx is not None:
             file_name = file_name.with_name(f"{file_name.stem}_{shard_idx:02d}{file_name.suffix}")
-        pd.DataFrame(docs).to_parquet(file_name)
+
+        table = pa.Table.from_pylist(docs)
+        pq.write_table(table, file_name)
+
         return file_name
 
 
