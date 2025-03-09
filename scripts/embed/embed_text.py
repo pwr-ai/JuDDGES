@@ -13,7 +13,7 @@ from sentence_transformers import SentenceTransformer
 from transformers import PreTrainedTokenizer
 from transformers.utils import is_flash_attn_2_available
 
-from juddges.config import EmbeddingModelConfig, RawDatasetConfig
+from juddges.config import EmbeddingModelConfig
 from juddges.preprocessing.text_chunker import TextSplitter
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
@@ -26,7 +26,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false" if (NUM_PROC > 1) else "true"
 
 
 class EmbeddingConfig(BaseModel, extra="forbid"):
-    dataset: RawDatasetConfig
+    dataset_name: str
     embedding_model: EmbeddingModelConfig
     length_adjust_mode: Literal["truncate", "chunk"]
     truncation_tokens: int | None = None
@@ -47,10 +47,9 @@ def main(cfg: DictConfig) -> None:
     config.output_dir.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(
-        config.dataset.format,
-        data_dir=str(config.dataset.root_dir),
-        columns=["_id", "text"],
-    )
+        config.dataset_name,
+        columns=["judgement_id", "text"],
+    )["train"]
     ds = ds.filter(lambda item: item["text"] is not None)
 
     model = SentenceTransformer(
@@ -62,7 +61,7 @@ def main(cfg: DictConfig) -> None:
 
     if config.chunk_config is not None:
         ds = chunk_dataset(dataset=ds, config=config, tokenizer=model.tokenizer)
-        text_column = "text_chunk"
+        text_column = "chunk_text"
     else:
         text_column = "text"
 
@@ -92,11 +91,11 @@ def chunk_dataset(
     # todo: To be verified
     assert config.chunk_config is not None
     split_worker = TextSplitter(**config.chunk_config, tokenizer=tokenizer)
-    ds = dataset.select_columns(["_id", "text"]).map(
+    ds = dataset.select_columns(["judgement_id", "text"]).map(
         split_worker,
         batched=True,
         num_proc=NUM_PROC,
-        remove_columns=["_id", "text"],
+        remove_columns=["judgement_id", "text"],
         desc="Chunking documents",
     )
     logger.info(f"Dataset split into {ds.num_rows} chunks")
