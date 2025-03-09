@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 import typer
-from datasets import load_dataset
+from datasets import load_from_disk
 from dotenv import load_dotenv
 from loguru import logger
 from tqdm.auto import tqdm
@@ -12,7 +12,7 @@ from juddges.data.weaviate_db import WeaviateJudgementsDatabase
 from weaviate.util import generate_uuid5
 
 load_dotenv()
-WV_HOST = os.getenv("WV_HOST", "localhost")
+WV_HOST = os.environ["WV_HOST"]
 WV_PORT = os.getenv("WV_PORT", "8080")
 WV_GRPC_PORT = os.getenv("WV_GRPC_PORT", "50051")
 WV_API_KEY = os.getenv("WV_API_KEY", None)
@@ -32,7 +32,7 @@ def main(
         "The script will upload local embeddings to the database, "
         "make sure they are the same as in the inference module of the database."
     )
-    embs = load_dataset(str(embeddings_dir))["train"]
+    embs = load_from_disk(str(embeddings_dir))
     embs = embs.map(
         lambda item: {
             "uuid": WeaviateJudgementsDatabase.uuid_from_judgement_chunk_id(
@@ -60,14 +60,16 @@ def main(
             objects = [
                 {
                     "properties": {
-                        "judgment_id": batch["_id"][i],
+                        "judgment_id": batch["judgement_id"][i],
                         "chunk_id": batch["chunk_id"][i],
                         "chunk_text": batch["text_chunk"][i],
                     },
-                    "uuid": generate_uuid5(f"{batch['_id'][i]}_chunk_{batch['chunk_id'][i]}"),
+                    "uuid": generate_uuid5(
+                        f"{batch['judgement_id'][i]}_chunk_{batch['chunk_id'][i]}"
+                    ),
                     "vector": batch["embedding"][i],
                 }
-                for i in range(len(batch["_id"]))
+                for i in range(len(batch["judgement_id"]))
             ]
             db.insert_batch(
                 collection=db.judgement_chunks_collection,
