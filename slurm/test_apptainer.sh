@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=juddges_sft
+#SBATCH --job-name=test_apptainer_image
 #SBATCH --output=logs/%j-%x.log
 #SBATCH --time=00:10:00
 #SBATCH --nodes=1
@@ -22,6 +22,7 @@ set -a # Enable automatic export of all variables
 source ./slurm/.env
 set +a # Disable automatic export after loading
 
+export WORKDIR
 export HF_TOKEN
 export SIF_IMAGE_PATH
 
@@ -36,13 +37,17 @@ from juddges.utils import load_and_resolve_config
 from juddges.models.factory import get_model
 from juddges.config import LLMConfig
 
-llm_config = LLMConfig(**load_and_resolve_config("configs/model/llama_3.1_8b_instruct.yaml"))
+llm_config = LLMConfig(**load_and_resolve_config(\"configs/model/llama_3.1_8b_instruct.yaml\"))
 print(llm_config)
 
 model_pack = get_model(llm_config)
 print(model_pack.model)
 EOF
 )
+
+COMMAND="python -c '$SCRIPT'"
+
+cd "$WORKDIR"
 
 srun --kill-on-bad-exit=1 \
     --jobid $SLURM_JOB_ID \

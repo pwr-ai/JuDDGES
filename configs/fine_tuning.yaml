@@ -11,7 +11,7 @@ model:
 training_args:
   run_name: ${run_name}
   output_dir: ${output_dir}
-  num_train_epochs: 1
+  num_train_epochs: 3
   per_device_train_batch_size: 1
   gradient_accumulation_steps: 16
   gradient_checkpointing: True
@@ -28,7 +28,7 @@ training_args:
   report_to: "wandb"
   seed: 46
   packing: True
-  torch_compile: True
+  torch_compile: False # setting to True might cause libcuda.so errors
 
 peft_args:
   r: 8

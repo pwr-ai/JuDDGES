@@ -77,7 +77,7 @@ def main(cfg: DictConfig) -> None:
         FastLanguageModel.for_inference(model_pack.model)
     else:
         model_pack.model.eval()
-        model_pack.model.compile()
+        # model_pack.model.compile() # might cause libcuda.so not found error
 
     if config.model.batch_size > 1 and config.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")

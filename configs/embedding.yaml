@@ -1,10 +1,10 @@
 defaults:
   - embedding_model: ???
-  - dataset: pl-court-raw
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
+dataset_name: ???
 length_adjust_mode: chunk
 chunk_config:
   chunk_size: ${embedding_model.max_seq_length}
@@ -13,7 +13,7 @@ chunk_config:
   chunk_overlap: 32
 batch_size: 64
 
-output_dir: data/embeddings/${dataset.name}/${hydra:runtime.choices.embedding_model}/all_embeddings
+output_dir: data/embeddings/${dataset_name}/${hydra:runtime.choices.embedding_model}/all_embeddings
 
 hydra:
   output_subdir: null

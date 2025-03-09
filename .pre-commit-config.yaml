@@ -17,16 +17,15 @@ repos:
         name: Check yaml
         args: [--allow-multiple-documents]
 
-
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.10
     hooks:
       - id: ruff
         name: Ruff Linter
-        args: [--fix, --exit-non-zero-on-fix, juddges, scripts, dashboards, tests]
+        args: [--fix, --exit-non-zero-on-fix, juddges, scripts, tests]
       - id: ruff-format
         name: Ruff Formatter
-        args: [juddges, scripts, dashboards, tests]
+        args: [juddges, scripts, tests]
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.23.3

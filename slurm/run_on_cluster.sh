@@ -2,16 +2,15 @@
 
 #SBATCH --job-name=juddges_sft
 #SBATCH --output=logs/%j-%x.log
-#SBATCH --time=72:00:00
+#SBATCH --time=48:00:00
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=1
-#SBATCH --cpus-per-gpu=8
-#SBATCH --mem=64G
+#SBATCH --gpus-per-node=4
+#SBATCH --cpus-per-gpu=4
+#SBATCH --mem=128G
 # NOTE: You can reconfigure the above parameters to your needs in the sbatch call.
 # NOTE: All env variables must be exported to be available after calling srun.
 # NOTE: You may need to specify some NCCL args in .env file depending on your cluster configuration
 
-echo "[$(date)] Running job on host: $(hostname)"
 
 # =====Provide these user-specific env variables through .env file=====
 if [ ! -f ./slurm/.env ]; then
@@ -41,22 +40,32 @@ while [ $# -gt 0 ]; do
             dataset="$2"
             shift 2
             ;;
+        -s|--stage)
+            stage="$2"
+            shift 2
+            ;;
         *)
             echo "Invalid option: $1" >&2
-            echo "Usage: $0 --model <model> --dataset <dataset>" >&2
-            echo "   or: $0 -m <model> -d <dataset>" >&2
-            echo "Example: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct" >&2
+            echo "Usage: $0 --model <model> --dataset <dataset> --stage <stage>" >&2
+            echo "   or: $0 -m <model> -d <dataset> -s <stage>" >&2
+            echo "Example: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft" >&2
             exit 1
             ;;
     esac
 done
 
-# check if both parameters are provided
-if [ -z "$model" ] || [ -z "$dataset" ]; then
-    echo "Both model (--model) and dataset (--dataset) parameters are required" >&2
-    echo "Usage: $0 --model <model> --dataset <dataset>" >&2
-    echo "   or: $0 -m <model> -d <dataset>" >&2
-    echo "Example: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct" >&2
+# check if all parameters are provided
+if [ -z "$model" ] || [ -z "$dataset" ] || [ -z "$stage" ]; then
+    echo "Model (--model), dataset (--dataset) and stage (--stage) parameters are required" >&2
+    echo "Usage: $0 --model <model> --dataset <dataset> --stage <stage>" >&2
+    echo "   or: $0 -m <model> -d <dataset> -s <stage>" >&2
+    echo "Example: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft" >&2
+    exit 1
+fi
+
+# validate stage parameter
+if [ "$stage" != "sft" ] && [ "$stage" != "predict" ]; then
+    echo "Invalid stage parameter. Allowed values: sft, predict" >&2
     exit 1
 fi
 
@@ -68,18 +77,27 @@ export dataset
 
 cd $WORKDIR
 
-export SFT_COMMAND="accelerate launch \
-    --num_processes=$WORLD_SIZE \
-    --num_machines=1 \
-    --use-deepspeed \
-    --mixed_precision=bf16 \
-    --dynamo_backend=no \
-    scripts/sft/fine_tune_deepspeed.py \
+if [ "$stage" = "sft" ]; then
+    export COMMAND="accelerate launch \
+        --num_processes=$WORLD_SIZE \
+        --num_machines=1 \
+        --use-deepspeed \
+        --zero-stage 2 \
+        --mixed_precision=bf16 \
+        --dynamo_backend=no \
+        scripts/sft/fine_tune_deepspeed.py \
+            model=${model} \
+            dataset=${dataset} \
+    "
+else
+    export COMMAND="python scripts/sft/predict.py \
         model=${model} \
         dataset=${dataset} \
-"
+        random_seed=42
+    "
+fi
 
-echo "Running the following command with apptainer: $SFT_COMMAND"
+echo "Running the following command with apptainer: $COMMAND"
 
 srun --kill-on-bad-exit=1 \
     --jobid $SLURM_JOB_ID \
@@ -90,7 +108,7 @@ srun --kill-on-bad-exit=1 \
         --bind "$HOME:$HOME" \
         --nv \
         "$SIF_IMAGE_PATH" \
-        bash -c "$SFT_COMMAND"
+        bash -c "$COMMAND"
 
 EXIT_CODE=$?
 exit $EXIT_CODE
