@@ -3,18 +3,26 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, ClassVar
 
-import weaviate
 import weaviate.classes.config as wvcc
-from weaviate.auth import Auth, _APIKey
+from dotenv import load_dotenv
+from loguru import logger
+from weaviate.classes.init import Auth
+
+import weaviate
+from juddges.settings import ROOT_PATH
+
+load_dotenv(ROOT_PATH / ".env", override=True)
+
+logger.info(f"Environment variables loaded from {ROOT_PATH / '.env'} file")
 
 
 class WeaviateDatabase(ABC):
     def __init__(
         self,
-        host: str = os.getenv("WV_URL", "localhost"),
-        port: str = os.getenv("WV_PORT", "8080"),
-        grpc_port: str = os.getenv("WV_GRPC_PORT", "50051"),
-        api_key: str | None = os.getenv("WV_API_KEY", None),
+        host: str = os.environ["WV_URL"],
+        port: str = os.environ["WV_PORT"],
+        grpc_port: str = os.environ["WV_GRPC_PORT"],
+        api_key: str = os.environ["WV_API_KEY"],
     ):
         self.host = host
         self.port = port
@@ -24,10 +32,13 @@ class WeaviateDatabase(ABC):
         self.client: weaviate.WeaviateClient
 
     def __enter__(self) -> "WeaviateDatabase":
-        self.client = weaviate.connect_to_local(
-            host=self.host,
-            port=self.port,
+        self.client = weaviate.connect_to_custom(
+            http_host=self.host,
+            http_port=self.port,
+            http_secure=False,
+            grpc_host=self.host,
             grpc_port=self.grpc_port,
+            grpc_secure=False,
             auth_credentials=self.api_key,
         )
         self.create_collections()
@@ -41,9 +52,11 @@ class WeaviateDatabase(ABC):
         self.__exit__(None, None, None)
 
     @property
-    def api_key(self) -> _APIKey | None:
+    def api_key(self):
         if self.__api_key is not None:
+            logger.info(f"API key: {self.__api_key[:5]}...")
             return Auth.api_key(self.__api_key)
+        logger.error("No API key provided")
         return None
 
     @abstractmethod
@@ -61,7 +74,9 @@ class WeaviateDatabase(ABC):
                 if wv_batch.number_errors > 0:
                     break
             if wv_batch.number_errors > 0:
-                errors = [err.message for err in collection.batch.results.objs.errors.values()]
+                errors = [
+                    err.message for err in collection.batch.results.objs.errors.values()
+                ]
                 raise ValueError(f"Error ingesting batch: {errors}")
 
     def get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:

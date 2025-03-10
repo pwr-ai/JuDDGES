@@ -7,9 +7,9 @@ from datasets import load_from_disk
 from dotenv import load_dotenv
 from loguru import logger
 from tqdm.auto import tqdm
+from weaviate.util import generate_uuid5
 
 from juddges.data.weaviate_db import WeaviateJudgementsDatabase
-from weaviate.util import generate_uuid5
 
 load_dotenv()
 WV_HOST = os.environ["WV_HOST"]
@@ -24,15 +24,25 @@ logger.info(f"Connecting to Weaviate at {WV_HOST}:{WV_PORT} (gRPC: {WV_GRPC_PORT
 
 
 def main(
-    embeddings_dir: Path = typer.Option(...),
+    embeddings_dir: Path = typer.Option(
+        "data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings"
+    ),
     batch_size: int = typer.Option(BATCH_SIZE),
     upsert: bool = typer.Option(False),
+    max_embeddings: int = typer.Option(
+        None, help="Maximum number of embeddings to process"
+    ),
 ) -> None:
     logger.warning(
         "The script will upload local embeddings to the database, "
         "make sure they are the same as in the inference module of the database."
     )
-    embs = load_from_disk(str(embeddings_dir))
+    embs = load_from_disk(str(embeddings_dir))["train"]
+
+    if max_embeddings is not None:
+        logger.info(f"Limiting number of embeddings to {max_embeddings}")
+        embs = embs.select(range(min(max_embeddings, len(embs))))
+
     embs = embs.map(
         lambda item: {
             "uuid": WeaviateJudgementsDatabase.uuid_from_judgement_chunk_id(
@@ -60,16 +70,16 @@ def main(
             objects = [
                 {
                     "properties": {
-                        "judgment_id": batch["judgement_id"][i],
+                        "judgment_id": batch["_id"][i],
                         "chunk_id": batch["chunk_id"][i],
                         "chunk_text": batch["text_chunk"][i],
                     },
                     "uuid": generate_uuid5(
-                        f"{batch['judgement_id'][i]}_chunk_{batch['chunk_id'][i]}"
+                        f"{batch['_id'][i]}_chunk_{batch['chunk_id'][i]}"
                     ),
                     "vector": batch["embedding"][i],
                 }
-                for i in range(len(batch["judgement_id"]))
+                for i in range(len(batch["_id"]))
             ]
             db.insert_batch(
                 collection=db.judgement_chunks_collection,

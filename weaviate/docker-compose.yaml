@@ -11,7 +11,7 @@ services:
     depends_on:
       - t2v-transformers
     ports:
-      - 8080:8080
+      - 8084:8080
       - 50051:50051
     volumes:
       - juddges_weaviate_data:/var/lib/weaviate
