@@ -1,5 +1,7 @@
 import math
+import multiprocessing
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import typer
@@ -18,9 +20,31 @@ WV_GRPC_PORT = os.getenv("WV_GRPC_PORT", "50051")
 WV_API_KEY = os.getenv("WV_API_KEY", None)
 
 BATCH_SIZE = 64
-NUM_PROC = int(os.getenv("NUM_PROC", 1))
-
+logger.info(f"Using batch size: {BATCH_SIZE}")
+NUM_PROC = multiprocessing.cpu_count() - 2
+logger.info(f"Using {NUM_PROC} processes for embedding ingestion")
+MAX_WORKERS = int(os.getenv("MAX_WORKERS", int(NUM_PROC / 2)))
+logger.info(f"Using {MAX_WORKERS} workers for parallel ingestion")
 logger.info(f"Connecting to Weaviate at {WV_HOST}:{WV_PORT} (gRPC: {WV_GRPC_PORT})")
+
+
+def process_batch(db, batch):
+    objects = [
+        {
+            "properties": {
+                "judgment_id": batch["_id"][i],
+                "chunk_id": batch["chunk_id"][i],
+                "chunk_text": batch["text_chunk"][i],
+            },
+            "uuid": generate_uuid5(f"{batch['_id'][i]}_chunk_{batch['chunk_id'][i]}"),
+            "vector": batch["embedding"][i],
+        }
+        for i in range(len(batch["_id"]))
+    ]
+    db.insert_batch(
+        collection=db.judgement_chunks_collection,
+        objects=objects,
+    )
 
 
 def main(
@@ -31,6 +55,10 @@ def main(
     upsert: bool = typer.Option(False),
     max_embeddings: int = typer.Option(
         None, help="Maximum number of embeddings to process"
+    ),
+    cpu_count: int = typer.Option(
+        NUM_PROC,
+        help="Number of CPUs to use for parallel ingestion, defaults to NUM_PROC",
     ),
 ) -> None:
     logger.warning(
@@ -56,35 +84,38 @@ def main(
         if not upsert:
             logger.info("upsert disabled - uploading only new embeddings")
             uuids = set(db.get_uuids(db.judgement_chunks_collection))
-            embs = embs.filter(lambda item: item["uuid"] not in uuids)
+            embs = embs.filter(
+                lambda item: item["uuid"] not in uuids,
+                num_proc=NUM_PROC,
+                desc="Filtering out already uploaded embeddings",
+            )
         else:
             logger.info(
                 "upsert enabled - uploading all embeddings (automatically updating already uploaded)"
             )
 
-        for batch in tqdm(
-            embs.iter(batch_size=batch_size),
-            total=math.ceil(len(embs) / batch_size),
-            desc="Uploading batches",
-        ):
-            objects = [
-                {
-                    "properties": {
-                        "judgment_id": batch["_id"][i],
-                        "chunk_id": batch["chunk_id"][i],
-                        "chunk_text": batch["text_chunk"][i],
-                    },
-                    "uuid": generate_uuid5(
-                        f"{batch['_id'][i]}_chunk_{batch['chunk_id'][i]}"
-                    ),
-                    "vector": batch["embedding"][i],
-                }
-                for i in range(len(batch["_id"]))
-            ]
-            db.insert_batch(
-                collection=db.judgement_chunks_collection,
-                objects=objects,
-            )
+        if cpu_count is None:
+            cpu_count = NUM_PROC
+
+        if cpu_count > 0:
+            with ThreadPoolExecutor(max_workers=cpu_count) as executor:
+                futures = [
+                    executor.submit(process_batch, db, batch)
+                    for batch in tqdm(
+                        embs.iter(batch_size=batch_size),
+                        total=math.ceil(len(embs) / batch_size),
+                        desc="Uploading batches in parallel",
+                    )
+                ]
+                for future in as_completed(futures):
+                    future.result()  # Raise exceptions if any
+        else:
+            for batch in tqdm(
+                embs.iter(batch_size=batch_size),
+                total=math.ceil(len(embs) / batch_size),
+                desc="Uploading batches",
+            ):
+                process_batch(db, batch)
 
 
 if __name__ == "__main__":
