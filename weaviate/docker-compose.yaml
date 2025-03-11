@@ -14,7 +14,7 @@ services:
       - 8084:8080
       - 50051:50051
     volumes:
-      - juddges_weaviate_data:/var/lib/weaviate
+      - legal_ai_weaviate_data:/var/lib/weaviate
     env_file: .env
     deploy:
       restart_policy:
@@ -49,4 +49,5 @@ services:
         max-file: "3"
 
 volumes:
-  juddges_weaviate_data:
+  legal_ai_weaviate_data:
+    driver: local
