@@ -11,6 +11,7 @@ from loguru import logger
 from omegaconf import DictConfig
 from openai import BaseModel
 from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
 from transformers import PreTrainedTokenizer
 from transformers.utils import is_flash_attn_2_available
 
@@ -83,14 +84,40 @@ def main(cfg: DictConfig) -> None:
         assert config.truncation_tokens <= config.embedding_model.max_seq_length
         model.max_seq_length = config.truncation_tokens
 
-    embedder = Embedder(model, text_column)
-    ds = ds.map(
-        embedder,
-        batched=True,
-        batch_size=config.batch_size,
-        num_proc=NUM_PROC,
-        desc="Embedding chunks",
+    # Start multi-GPU processing pool
+    pool = model.start_multi_process_pool()
+
+    logger.info(
+        f"Embedding dataset with {config.batch_size} batch size using multiple GPUs"
     )
+    texts = ds[text_column]
+
+    batch_size = 100 * config.batch_size
+
+    # Calculate total number of batches
+    total_batches = (len(texts) + batch_size - 1) // batch_size
+
+    # Process embeddings with progress bar
+    embeddings = []
+    for i in tqdm(
+        range(0, len(texts), batch_size),
+        total=total_batches,
+        desc="Calculating embeddings",
+    ):
+        batch_texts = texts[i : i + batch_size]
+        batch_embeddings = model.encode_multi_process(
+            batch_texts,
+            pool,
+            batch_size=config.batch_size,
+            chunk_size=config.batch_size,
+        )
+        embeddings.extend(batch_embeddings)
+
+    ds = ds.add_column("embedding", embeddings)
+
+    # Stop the multi-GPU pool
+    model.stop_multi_process_pool(pool)
+
     ds.save_to_disk(str(config.output_dir))
 
     with open(config.output_dir / "config.yaml", "w") as f:
@@ -114,23 +141,9 @@ def chunk_dataset(
         remove_columns=["judgement_id", "text"],
         desc="Chunking documents",
     )
+    ds.save_to_disk(str(config.output_dir / "chunked"))
     logger.info(f"Dataset split into {ds.num_rows} chunks")
     return ds
-
-
-class Embedder:
-    def __init__(self, model: SentenceTransformer, text_column: str) -> None:
-        self.model = model
-        self.text_column = text_column
-
-    def __call__(self, items: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "embedding": self.model.encode(
-                items[self.text_column],
-                show_progress_bar=False,
-                batch_size=len(items[self.text_column]),
-            )
-        }
 
 
 if __name__ == "__main__":
