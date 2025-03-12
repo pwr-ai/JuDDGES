@@ -125,19 +125,16 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
                     name="judgement_date",
                     data_type=wvcc.DataType.DATE,
                     index_filterable=True,
-                    index_searchable=True,
                 ),
                 wvcc.Property(
                     name="publication_date",
                     data_type=wvcc.DataType.DATE,
                     index_filterable=True,
-                    index_searchable=True,
                 ),
                 wvcc.Property(
                     name="last_update",
                     data_type=wvcc.DataType.DATE,
                     index_filterable=True,
-                    index_searchable=True,
                 ),
                 wvcc.Property(
                     name="court_id",
@@ -221,7 +218,6 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
                     name="num_pages",
                     data_type=wvcc.DataType.INT,
                     index_filterable=True,
-                    index_searchable=True,
                 ),
                 wvcc.Property(
                     name="full_text",
@@ -233,7 +229,6 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
                     name="volume_number",
                     data_type=wvcc.DataType.INT,
                     index_filterable=True,
-                    index_searchable=True,
                 ),
                 wvcc.Property(
                     name="volume_type",
@@ -311,7 +306,6 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
                     name="chunk_id",
                     data_type=wvcc.DataType.INT,
                     index_filterable=True,
-                    index_searchable=True,
                 ),
                 wvcc.Property(
                     name="chunk_text",

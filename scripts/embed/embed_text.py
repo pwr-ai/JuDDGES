@@ -1,4 +1,5 @@
 import os
+import pickle
 from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Literal
@@ -92,33 +93,34 @@ def main(cfg: DictConfig) -> None:
     )
     texts = ds[text_column]
 
-    batch_size = 100 * config.batch_size
-
     # Calculate total number of batches
-    total_batches = (len(texts) + batch_size - 1) // batch_size
+    total_batches = (len(texts) + config.batch_size - 1) // config.batch_size
 
     # Process embeddings with progress bar
     embeddings = []
     for i in tqdm(
-        range(0, len(texts), batch_size),
+        range(0, len(texts), config.batch_size),
         total=total_batches,
         desc="Calculating embeddings",
     ):
-        batch_texts = texts[i : i + batch_size]
+        batch_texts = texts[i : i + config.batch_size]
         batch_embeddings = model.encode_multi_process(
-            batch_texts,
-            pool,
-            batch_size=config.batch_size,
-            chunk_size=config.batch_size,
+            batch_texts, pool, batch_size=config.batch_size
         )
         embeddings.extend(batch_embeddings)
+
+    # save embeddings to disk
+    with open(config.output_dir / "embeddings.pkl", "wb") as f:
+        pickle.dump(embeddings, f)
 
     ds = ds.add_column("embedding", embeddings)
 
     # Stop the multi-GPU pool
     model.stop_multi_process_pool(pool)
 
+    logger.info(f"Saving dataset to {config.output_dir}")
     ds.save_to_disk(str(config.output_dir))
+    logger.info(f"Dataset saved to {config.output_dir}")
 
     with open(config.output_dir / "config.yaml", "w") as f:
         yaml.dump(config.model_dump(), f)
