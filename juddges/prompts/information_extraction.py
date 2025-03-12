@@ -15,7 +15,7 @@ Based on the user input prepare schema containing variables with their short des
 Be precise about variable names, format names using snake_case.
 If user asks irrelevant question always return empty JSON.
 As example:
-User: I want extract age, gender, and plea from the judgement
+User: I want extract age, gender, and plea from the judgment
 Agent:
     age: integer
     gender: male or female
@@ -66,7 +66,7 @@ Format response as JSON, ensuring all schema fields are included:
 """
 
 EXAMPLE_SCHEMA = """verdict_date: date as ISO 8601
-verdict: string, text representing verdict of the judgement
+verdict: string, text representing verdict of the judgment
 verdict_summary: string, short summary of the verdict
 verdict_id: string
 court: string
@@ -137,7 +137,9 @@ def prepare_information_extraction_chain(
     log_to_mlflow: bool = False,
 ) -> RunnableSequence:
     model = ChatOpenAI(model=model_name, temperature=0)
-    human_message_template = HumanMessagePromptTemplate.from_template(EXTRACTION_PROMPT_TEMPLATE)
+    human_message_template = HumanMessagePromptTemplate.from_template(
+        EXTRACTION_PROMPT_TEMPLATE
+    )
     _prompt = ChatPromptTemplate(
         messages=[human_message_template],
         input_variables=["TEXT", "LANGUAGE", "SCHEMA"],
@@ -153,7 +155,9 @@ def prepare_information_extraction_chain(
 
 def prepare_schema_chain(model_name: str = "gpt-3.5-turbo") -> RunnableSequence:
     model = ChatOpenAI(model=model_name, temperature=0)
-    human_message_template = HumanMessagePromptTemplate.from_template(SCHEMA_PROMPT_TEMPLATE)
+    human_message_template = HumanMessagePromptTemplate.from_template(
+        SCHEMA_PROMPT_TEMPLATE
+    )
     _prompt = ChatPromptTemplate(
         messages=[human_message_template],
         input_variables=["TEXT", "LANGUAGE", "SCHEMA"],

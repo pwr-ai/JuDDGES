@@ -10,8 +10,8 @@ from juddges.settings import TEXT_EMBEDDING_MODEL
 
 
 @st.cache_resource
-def get_judgements_collection(collection_name: str = "pl-court") -> Collection:
-    """Get MongoDB collection for judgements."""
+def get_judgments_collection(collection_name: str = "pl-court") -> Collection:
+    """Get MongoDB collection for judgments."""
     return get_mongo_collection(collection_name=collection_name)
 
 

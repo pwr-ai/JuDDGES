@@ -42,20 +42,20 @@ def convert_date_to_rfc3339(date_str: str) -> str:
         )
 
 
-def process_judgement_dates(judgement: dict) -> dict:
+def process_judgment_dates(judgment: dict) -> dict:
     """
-    Process a judgement dictionary to convert all date fields to RFC3339.
+    Process a judgment dictionary to convert all date fields to RFC3339.
 
     Args:
-        judgement: Dictionary containing judgement data
+        judgment: Dictionary containing judgment data
 
     Returns:
-        dict: Processed judgement with dates in RFC3339 format
+        dict: Processed judgment with dates in RFC3339 format
     """
-    date_fields = ["publication_date", "judgement_date", "last_update"]
+    date_fields = ["publication_date", "judgment_date", "last_update"]
 
     for field in date_fields:
-        if field in judgement and judgement[field]:
-            judgement[field] = convert_date_to_rfc3339(judgement[field])
+        if field in judgment and judgment[field]:
+            judgment[field] = convert_date_to_rfc3339(judgment[field])
 
-    return judgement
+    return judgment

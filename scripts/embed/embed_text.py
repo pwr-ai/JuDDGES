@@ -53,7 +53,7 @@ def main(cfg: DictConfig) -> None:
 
     ds = load_dataset(
         config.dataset_name,
-        columns=["judgement_id", "full_text"],
+        columns=["judgment_id", "full_text"],
     )["train"]
 
     ds = ds.rename_column("full_text", "text")
@@ -136,11 +136,11 @@ def chunk_dataset(
     split_worker = TextSplitter(**config.chunk_config, tokenizer=tokenizer)
     logger.info(f"Chunking dataset with {config.chunk_config}")
     logger.info(f"Dataset columns: {dataset.column_names}")
-    ds = dataset.select_columns(["judgement_id", "text"]).map(
+    ds = dataset.select_columns(["judgment_id", "text"]).map(
         split_worker,
         batched=True,
         num_proc=NUM_PROC,
-        remove_columns=["judgement_id", "text"],
+        remove_columns=["judgment_id", "text"],
         desc="Chunking documents",
     )
     ds.save_to_disk(str(config.output_dir / "chunked"))

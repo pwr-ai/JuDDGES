@@ -3,10 +3,10 @@ import streamlit as st
 from juddges.dashboards.components.search_results import display_search_results
 from juddges.dashboards.utils.search_utils import (
     get_embedding_model,
-    get_judgements_collection,
+    get_judgments_collection,
 )
 from juddges.retrieval.mongo_hybrid_search import run_hybrid_search
-from juddges.retrieval.mongo_term_based_search import search_judgements
+from juddges.retrieval.mongo_term_based_search import search_judgments
 from juddges.settings import ROOT_PATH
 
 # Load CSS
@@ -33,7 +33,7 @@ else:
     st.header("Search is based on term-based search with highlighting")
 
 # Initialize collections and models
-judgements_collection = get_judgements_collection(judgement_collection_name)
+judgements_collection = get_judgments_collection(judgement_collection_name)
 if use_hybrid_search:
     model = get_embedding_model()
 
@@ -43,7 +43,9 @@ with st.form(key="search_form"):
         "What you are looking for in the judgements?",
         value="kredyty hipoteczne franki szwajcarskie",
     )
-    max_judgements = st.slider("Max judgements to show", min_value=1, max_value=20, value=5)
+    max_judgements = st.slider(
+        "Max judgements to show", min_value=1, max_value=20, value=5
+    )
     submit_button = st.form_submit_button(label="Search")
 
 # Process search
@@ -58,6 +60,6 @@ if submit_button:
                 limit=max_judgements,
             )
         else:
-            items = search_judgements(query=query, max_docs=max_judgements)
+            items = search_judgments(query=query, max_docs=max_judgements)
 
         display_search_results(items)

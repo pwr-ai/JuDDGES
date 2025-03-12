@@ -11,7 +11,7 @@ from weaviate.util import generate_uuid5
 
 from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.settings import ROOT_PATH
-from juddges.utils.date_utils import process_judgement_dates
+from juddges.utils.date_utils import process_judgment_dates
 
 load_dotenv(dotenv_path=ROOT_PATH / ".env", override=True)
 
@@ -38,19 +38,19 @@ def main(
             desc="Uploading batches",
         ):
             records = []
-            for i in range(len(batch["judgement_id"])):
+            for i in range(len(batch["judgment_id"])):
                 properties = {key: batch[key][i] for key in batch.keys()}
                 # Process dates to RFC3339 format
-                properties = process_judgement_dates(properties)
+                properties = process_judgment_dates(properties)
                 records.append(
                     {
                         "properties": properties,
-                        "uuid": generate_uuid5(batch["judgement_id"][i]),
+                        "uuid": generate_uuid5(batch["judgment_id"][i]),
                     }
                 )
 
             db.insert_batch(
-                collection=db.judgements_collection,
+                collection=db.judgments_collection,
                 objects=records,
             )
 

@@ -43,21 +43,27 @@ class PolishCourtAPI:
         if params is None:
             params = {}
         elif "limit" in params.keys():
-            logger.warning("Setting limit to query the number of judgements has no effect!")
+            logger.warning(
+                "Setting limit to query the number of judgements has no effect!"
+            )
 
         params |= {"limit": 0}
         endpoint = f"{self.url}/judgements"
         res = requests.get(endpoint, params=params)
         res.raise_for_status()
-        total_judgements = xmltodict.parse(res.content.decode("utf-8"))["judgements"]["@total"]
+        total_judgements = xmltodict.parse(res.content.decode("utf-8"))["judgements"][
+            "@total"
+        ]
 
         return int(total_judgements)
 
-    def get_judgements(self, params: dict[str, Any]) -> list[dict[str, Any]]:
+    def get_judgments(self, params: dict[str, Any]) -> list[dict[str, Any]]:
         endpoint = f"{self.url}/judgements"
         res = requests.get(endpoint, params=params)
         res.raise_for_status()
-        judgements = xmltodict.parse(res.content.decode("utf-8"))["judgements"]["judgement"]
+        judgements = xmltodict.parse(res.content.decode("utf-8"))["judgements"][
+            "judgement"
+        ]
 
         assert isinstance(judgements, list)
 

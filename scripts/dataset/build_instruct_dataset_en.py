@@ -9,7 +9,7 @@ from datasets import load_dataset
 from dotenv import load_dotenv
 from loguru import logger
 
-from juddges.settings import PL_JUDGEMENTS_PATH_INSTRUCT
+from juddges.settings import PL_JUDGMENTS_PATH_INSTRUCT
 
 load_dotenv()
 
@@ -53,10 +53,12 @@ date_pattern = re.compile(date_pattern)
 
 # todo: In the future one might make this single script (for any language) with configurable preprocessing
 def main(
-    dataset_dir: str = typer.Option(SOURCE_DATASET_PATH, help="Path to the dataset directory"),
+    dataset_dir: str = typer.Option(
+        SOURCE_DATASET_PATH, help="Path to the dataset directory"
+    ),
     repo_id: Optional[str] = typer.Option(None),
     target_dir: Path = typer.Option(
-        PL_JUDGEMENTS_PATH_INSTRUCT,
+        PL_JUDGMENTS_PATH_INSTRUCT,
         help="Path to the target directory",
     ),
     test_size: int = typer.Option(2_000, help="Size of the test set"),
@@ -97,7 +99,9 @@ def main(
     )
 
     logger.info("Generating instructions...")
-    ds = ds.map(to_instruction_fmt, num_proc=num_jobs, remove_columns=ds["train"].column_names)
+    ds = ds.map(
+        to_instruction_fmt, num_proc=num_jobs, remove_columns=ds["train"].column_names
+    )
     ds = ds["train"].train_test_split(test_size=test_size, seed=random_seed)
 
     logger.info("Built dataset with following parameters: {ds_info}", ds_info=str(ds))
