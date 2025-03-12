@@ -93,16 +93,16 @@ class WeaviateDatabase(ABC):
                 raise
 
 
-class WeaviateJudgementsDatabase(WeaviateDatabase):
-    JUDGMENTS_COLLECTION: ClassVar[str] = "judgements"
-    JUDGMENT_CHUNKS_COLLECTION: ClassVar[str] = "judgement_chunks"
+class WeaviateJudgmentsDatabase(WeaviateDatabase):
+    JUDGMENTS_COLLECTION: ClassVar[str] = "judgments"
+    JUDGMENT_CHUNKS_COLLECTION: ClassVar[str] = "judgment_chunks"
 
     @property
-    def judgements_collection(self) -> weaviate.collections.Collection:
+    def judgments_collection(self) -> weaviate.collections.Collection:
         return self.client.collections.get(self.JUDGMENTS_COLLECTION)
 
     @property
-    def judgement_chunks_collection(self) -> weaviate.collections.Collection:
+    def judgment_chunks_collection(self) -> weaviate.collections.Collection:
         return self.client.collections.get(self.JUDGMENT_CHUNKS_COLLECTION)
 
     def create_collections(self) -> None:
@@ -110,7 +110,7 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
             name=self.JUDGMENTS_COLLECTION,
             properties=[
                 wvcc.Property(
-                    name="judgement_id",
+                    name="judgment_id",
                     data_type=wvcc.DataType.TEXT,
                     index_filterable=True,
                     index_searchable=True,
@@ -122,7 +122,7 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
                     index_searchable=True,
                 ),
                 wvcc.Property(
-                    name="judgement_date",
+                    name="judgment_date",
                     data_type=wvcc.DataType.DATE,
                     index_filterable=True,
                 ),
@@ -149,7 +149,7 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
                     index_searchable=True,
                 ),
                 wvcc.Property(
-                    name="judgement_type",
+                    name="judgment_type",
                     data_type=wvcc.DataType.TEXT,
                     index_filterable=True,
                     index_searchable=True,
@@ -324,5 +324,5 @@ class WeaviateJudgementsDatabase(WeaviateDatabase):
         )
 
     @staticmethod
-    def uuid_from_judgement_chunk_id(judgement_id: str, chunk_id: int) -> str:
-        return weaviate.util.generate_uuid5(f"{judgement_id}_chunk_{chunk_id}")
+    def uuid_from_judgment_chunk_id(judgment_id: str, chunk_id: int) -> str:
+        return weaviate.util.generate_uuid5(f"{judgment_id}_chunk_{chunk_id}")

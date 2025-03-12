@@ -9,7 +9,7 @@ from loguru import logger
 from tqdm.auto import tqdm
 from weaviate.util import generate_uuid5
 
-from juddges.data.weaviate_db import WeaviateJudgementsDatabase
+from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.settings import ROOT_PATH
 from juddges.utils.date_utils import process_judgement_dates
 
@@ -31,7 +31,7 @@ def main(
     batch_size: int = typer.Option(BATCH_SIZE),
 ) -> None:
     dataset = load_dataset(str(dataset_name))["train"]
-    with WeaviateJudgementsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
+    with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
         for batch in tqdm(
             dataset.iter(batch_size=batch_size),
             total=math.ceil(len(dataset) / batch_size),

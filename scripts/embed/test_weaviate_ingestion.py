@@ -7,13 +7,13 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from juddges.data.weaviate_db import WeaviateJudgementsDatabase
+from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.settings import ROOT_PATH
 
 console = Console()
 
 
-def print_schema(db: WeaviateJudgementsDatabase) -> None:
+def print_schema(db: WeaviateJudgmentsDatabase) -> None:
     """Print the schema of both collections."""
     console.print("\n[bold blue]Weaviate Schema[/bold blue]")
 
@@ -39,7 +39,7 @@ def print_schema(db: WeaviateJudgementsDatabase) -> None:
         progress.stop_task(task)
 
 
-def print_collection_stats(db: WeaviateJudgementsDatabase) -> None:
+def print_collection_stats(db: WeaviateJudgmentsDatabase) -> None:
     """Print statistics about the collections."""
     console.print("\n[bold blue]Collection Statistics[/bold blue]")
 
@@ -49,11 +49,11 @@ def print_collection_stats(db: WeaviateJudgementsDatabase) -> None:
         task = progress.add_task("Calculating statistics...", start=False)
         progress.start_task(task)
 
-        console.print("[green]Fetching judgements collection...[/green]")
-        judgements_collection = db.client.collections.get(db.JUDGMENTS_COLLECTION)
-        judgements_count = len(judgements_collection)
+        console.print("[green]Fetching judgments collection...[/green]")
+        judgments_collection = db.client.collections.get(db.JUDGMENTS_COLLECTION)
+        judgments_count = len(judgments_collection)
         console.print(
-            f"[green]Judgements collection fetched. Count: {judgements_count:,}[/green]"
+            f"[green]Judgments collection fetched. Count: {judgments_count:,}[/green]"
         )
 
         console.print("[green]Fetching chunks collection...[/green]")
@@ -67,7 +67,7 @@ def print_collection_stats(db: WeaviateJudgementsDatabase) -> None:
         table.add_column("Collection", style="cyan")
         table.add_column("Count", style="magenta")
 
-        table.add_row(db.JUDGMENTS_COLLECTION, f"{judgements_count:,}")
+        table.add_row(db.JUDGMENTS_COLLECTION, f"{judgments_count:,}")
         table.add_row(db.JUDGMENT_CHUNKS_COLLECTION, f"{chunks_count:,}")
 
         console.print(table)
@@ -75,7 +75,7 @@ def print_collection_stats(db: WeaviateJudgementsDatabase) -> None:
         progress.stop_task(task)
 
 
-def run_sample_queries(db: WeaviateJudgementsDatabase) -> None:
+def run_sample_queries(db: WeaviateJudgmentsDatabase) -> None:
     """Run sample queries to verify search functionality."""
     console.print("\n[bold blue]Sample Queries[/bold blue]")
 
@@ -85,16 +85,16 @@ def run_sample_queries(db: WeaviateJudgementsDatabase) -> None:
         task = progress.add_task("Running sample queries...", start=False)
         progress.start_task(task)
 
-        # Query on judgements collection
-        judgements = db.judgements_collection
-        response = judgements.query.fetch_objects(limit=3)
+        # Query on judgments collection
+        judgments = db.judgments_collection
+        response = judgments.query.fetch_objects(limit=3)
 
-        console.print("[yellow]Sample Judgements:[/yellow]")
+        console.print("[yellow]Sample Judgments:[/yellow]")
         for obj in response.objects:
             print(obj.properties)
 
         # Semantic search on chunks
-        chunks = db.judgement_chunks_collection
+        chunks = db.judgment_chunks_collection
         query = "Sprawa dotyczy narkotyków"  # Case involves drugs
         response = chunks.query.hybrid(query=query, limit=3)
 
@@ -118,7 +118,7 @@ def main() -> None:
         f"Connecting to Weaviate at {os.environ['WV_URL']}:{os.environ['WV_PORT']} (gRPC: {os.environ['WV_GRPC_PORT']})"
     )
 
-    with WeaviateJudgementsDatabase(
+    with WeaviateJudgmentsDatabase(
         os.environ["WV_URL"],
         os.environ["WV_PORT"],
         os.environ["WV_GRPC_PORT"],

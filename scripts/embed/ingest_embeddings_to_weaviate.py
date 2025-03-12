@@ -12,7 +12,7 @@ from loguru import logger
 from tqdm.auto import tqdm
 from weaviate.util import generate_uuid5
 
-from juddges.data.weaviate_db import WeaviateJudgementsDatabase
+from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.settings import ROOT_PATH
 
 # Configure logger to include timestamps and line numbers
@@ -48,16 +48,16 @@ logger.debug(f"Connecting to Weaviate at {WV_HOST}:{WV_PORT} (gRPC: {WV_GRPC_POR
 def validate_batch(batch):
     """Validate batch data before processing."""
     try:
-        assert len(batch["judgement_id"]) > 0, "Batch is empty"
-        assert len(batch["judgement_id"]) == len(
+        assert len(batch["judgment_id"]) > 0, "Batch is empty"
+        assert len(batch["judgment_id"]) == len(
             batch["chunk_id"]
-        ), "Mismatched lengths between judgement_id and chunk_id"
-        assert len(batch["judgement_id"]) == len(
+        ), "Mismatched lengths between judgment_id and chunk_id"
+        assert len(batch["judgment_id"]) == len(
             batch["chunk_text"]
-        ), "Mismatched lengths between judgement_id and chunk_text"
-        assert len(batch["judgement_id"]) == len(
+        ), "Mismatched lengths between judgment_id and chunk_text"
+        assert len(batch["judgment_id"]) == len(
             batch["embedding"]
-        ), "Mismatched lengths between judgement_id and embedding"
+        ), "Mismatched lengths between judgment_id and embedding"
 
         # Validate embedding dimensions
         embedding_shape = np.array(batch["embedding"][0]).shape
@@ -66,8 +66,8 @@ def validate_batch(batch):
 
         # Check for null values
         assert all(
-            id_ is not None for id_ in batch["judgement_id"]
-        ), "Found null judgement_id"
+            id_ is not None for id_ in batch["judgment_id"]
+        ), "Found null judgment_id"
         assert all(
             chunk is not None for chunk in batch["chunk_text"]
         ), "Found null chunk_text"
@@ -84,7 +84,7 @@ def validate_batch(batch):
 
 def process_batch(db, batch):
     """Process and insert a batch of embeddings into Weaviate."""
-    logger.debug(f"Processing batch of size {len(batch['judgement_id'])}")
+    logger.debug(f"Processing batch of size {len(batch['judgment_id'])}")
 
     if not validate_batch(batch):
         logger.error("Skipping invalid batch")
@@ -94,16 +94,16 @@ def process_batch(db, batch):
         objects = [
             {
                 "properties": {
-                    "judgement_id": batch["judgement_id"][i],
+                    "judgment_id": batch["judgment_id"][i],
                     "chunk_id": batch["chunk_id"][i],
                     "chunk_text": batch["chunk_text"][i],
                 },
                 "uuid": generate_uuid5(
-                    f"{batch['judgement_id'][i]}_chunk_{batch['chunk_id'][i]}"
+                    f"{batch['judgment_id'][i]}_chunk_{batch['chunk_id'][i]}"
                 ),
                 "vector": batch["embedding"][i],
             }
-            for i in range(len(batch["judgement_id"]))
+            for i in range(len(batch["judgment_id"]))
         ]
 
         logger.info(f"Created {len(objects)} objects for insertion")
@@ -114,7 +114,7 @@ def process_batch(db, batch):
         if len(objects) > 0:
             try:
                 db.insert_batch(
-                    collection=db.judgement_chunks_collection,
+                    collection=db.judgment_chunks_collection,
                     objects=objects,
                 )
                 logger.info(
@@ -163,6 +163,11 @@ def main(
         ), f"Embeddings directory not found: {embeddings_dir}"
 
         embs = load_from_disk(str(embeddings_dir))
+        if "judgement_id" in embs.column_names:
+            logger.warning(
+                "judgement_id column found in dataset, renaming to judgment_id to avoid conflicts"
+            )
+            embs = embs.rename_columns({"judgement_id": "judgment_id"})
         logger.info(f"Loaded dataset with {len(embs)} embeddings")
         logger.info(f"Dataset columns: {embs.column_names}")
 
@@ -172,23 +177,24 @@ def main(
 
         embs = embs.map(
             lambda item: {
-                "uuid": WeaviateJudgementsDatabase.uuid_from_judgement_chunk_id(
-                    judgement_id=item["judgement_id"], chunk_id=item["chunk_id"]
+                "uuid": WeaviateJudgmentsDatabase.uuid_from_judgment_chunk_id(
+                    judgment_id=item["judgment_id"],
+                    chunk_id=item["chunk_id"],
                 )
             },
             num_proc=NUM_PROC,
             desc="Generating UUIDs",
         )
 
-        with WeaviateJudgementsDatabase(
+        with WeaviateJudgmentsDatabase(
             WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY
         ) as db:
-            initial_count = len(db.get_uuids(db.judgement_chunks_collection))
+            initial_count = len(db.get_uuids(db.judgment_chunks_collection))
             logger.info(f"Initial number of objects in collection: {initial_count}")
 
             if not upsert:
                 logger.info("upsert disabled - uploading only new embeddings")
-                uuids = set(db.get_uuids(db.judgement_chunks_collection))
+                uuids = set(db.get_uuids(db.judgment_chunks_collection))
                 logger.info(f"Found {len(uuids)} existing UUIDs in database")
 
                 original_len = len(embs)
@@ -233,7 +239,7 @@ def main(
                 ):
                     process_batch(db, batch)
 
-            final_count = len(db.get_uuids(db.judgement_chunks_collection))
+            final_count = len(db.get_uuids(db.judgment_chunks_collection))
             logger.info(f"Final number of objects in collection: {final_count}")
             logger.info(f"Added {final_count - initial_count} new objects")
 
