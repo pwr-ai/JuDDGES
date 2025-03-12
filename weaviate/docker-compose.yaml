@@ -1,3 +1,6 @@
+name: legal_ai
+
+
 services:
   weaviate:
     command:
@@ -16,6 +19,7 @@ services:
     volumes:
       - legal_ai_weaviate_data:/var/lib/weaviate
     env_file: .env
+    restart: on-failure
     deploy:
       restart_policy:
         condition: on-failure
@@ -34,6 +38,7 @@ services:
     image: t2v-transformers:latest
     environment:
       ENABLE_CUDA: 0 # Set to 1 to enable
+    restart: on-failure
     deploy:
       restart_policy:
         condition: on-failure
