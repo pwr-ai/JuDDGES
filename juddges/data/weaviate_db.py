@@ -291,7 +291,7 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                     index_searchable=True,
                 ),
             ],
-            vectorizer_config=wvcc.Configure.Vectorizer.text2vec_transformers(),
+            vectorizer_config=wvcc.Configure.Vectorizer.none(),
         )
         self._safe_create_collection(
             name=self.JUDGMENT_CHUNKS_COLLECTION,

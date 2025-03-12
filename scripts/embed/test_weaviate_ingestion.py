@@ -13,6 +13,20 @@ from juddges.settings import ROOT_PATH
 console = Console()
 
 
+def print_collections(db: WeaviateJudgmentsDatabase) -> None:
+    """Print all collections in the database."""
+    console.print("\n[bold blue]All Collections[/bold blue]")
+    collections = db.client.collections.list_all()
+
+    table = Table(title="Collections")
+    table.add_column("Collection Name", style="cyan")
+
+    for collection in collections:
+        table.add_row(collection)
+
+    console.print(table)
+
+
 def print_schema(db: WeaviateJudgmentsDatabase) -> None:
     """Print the schema of both collections."""
     console.print("\n[bold blue]Weaviate Schema[/bold blue]")
@@ -124,6 +138,9 @@ def main() -> None:
         os.environ["WV_GRPC_PORT"],
         os.environ["WV_API_KEY"],
     ) as db:
+        # Print all collections
+        print_collections(db)
+
         # Print schema
         print_schema(db)
 
