@@ -107,6 +107,13 @@ def run_sample_queries(db: WeaviateJudgmentsDatabase) -> None:
         for obj in response.objects:
             print(obj.properties)
 
+        console.print("\n[yellow]Sample Filtered Judgments by Court:[/yellow]")
+        response = judgments.query.fetch_objects(
+            limit=3
+        )
+        for obj in response.objects:
+            print(obj.properties)
+
         # Semantic search on chunks
         chunks = db.judgment_chunks_collection
         query = "Sprawa dotyczy narkotyków"  # Case involves drugs

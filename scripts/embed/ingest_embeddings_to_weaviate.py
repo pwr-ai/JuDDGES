@@ -1,3 +1,4 @@
+import gc
 import math
 import multiprocessing
 import os
@@ -84,46 +85,37 @@ def validate_batch(batch):
 
 def process_batch(db, batch):
     """Process and insert a batch of embeddings into Weaviate."""
-    logger.debug(f"Processing batch of size {len(batch['judgment_id'])}")
-
-    if not validate_batch(batch):
-        logger.error("Skipping invalid batch")
-        return
-
     try:
+        if not validate_batch(batch):
+            logger.error("Skipping invalid batch")
+            return
+
         objects = [
             {
                 "properties": {
-                    "judgment_id": batch["judgment_id"][i],
-                    "chunk_id": batch["chunk_id"][i],
-                    "chunk_text": batch["chunk_text"][i],
+                    "judgment_id": jid,
+                    "chunk_id": cid,
+                    "chunk_text": text,
                 },
-                "uuid": generate_uuid5(
-                    f"{batch['judgment_id'][i]}_chunk_{batch['chunk_id'][i]}"
-                ),
-                "vector": batch["embedding"][i],
+                "uuid": generate_uuid5(f"{jid}_chunk_{cid}"),
+                "vector": emb,
             }
-            for i in range(len(batch["judgment_id"]))
+            for jid, cid, text, emb in zip(
+                batch["judgment_id"],
+                batch["chunk_id"],
+                batch["chunk_text"],
+                batch["embedding"],
+            )
         ]
 
-        logger.info(f"Created {len(objects)} objects for insertion")
-        logger.debug(
-            f"Sample object: {str(objects[0])[:15] + '...' if objects else 'No objects'}"
-        )
+        if objects:
+            db.insert_batch(collection=db.judgment_chunks_collection, objects=objects)
+            logger.info(f"Successfully inserted {len(objects)} objects")
 
-        if len(objects) > 0:
-            try:
-                db.insert_batch(
-                    collection=db.judgment_chunks_collection,
-                    objects=objects,
-                )
-                logger.info(
-                    f"Successfully inserted {len(objects)} objects into {db.JUDGMENT_CHUNKS_COLLECTION}"
-                )
-            except Exception as e:
-                logger.error(f"Failed to insert batch: {str(e)}")
-                logger.debug(f"Failed batch objects: {objects}")
-                raise
+        # Help garbage collection
+        del objects
+        gc.collect()
+
     except Exception as e:
         logger.error(f"Error processing batch: {str(e)}")
         raise
@@ -215,8 +207,8 @@ def main(
             logger.info(f"Processing {total_batches} batches with size {batch_size}")
 
             if NUM_PROC > 1:
-                logger.info(f"Using parallel processing with {NUM_PROC} workers")
-                with ThreadPoolExecutor(max_workers=NUM_PROC) as executor:
+                logger.info(f"Using parallel processing with {MAX_WORKERS} workers")
+                with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
                     futures = [
                         executor.submit(process_batch, db, batch)
                         for batch in tqdm(
@@ -238,6 +230,9 @@ def main(
                     desc="Uploading batches sequentially",
                 ):
                     process_batch(db, batch)
+                    # Clean up batch after processing
+                    del batch
+                    gc.collect()
 
             final_count = len(db.get_uuids(db.judgment_chunks_collection))
             logger.info(f"Final number of objects in collection: {final_count}")
