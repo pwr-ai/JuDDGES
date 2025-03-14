@@ -19,7 +19,7 @@ from juddges.utils.logging import setup_loguru
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 START_DATE = "1981-01-01"
-END_DATE = (datetime.now(ZoneInfo("Europe/Warsaw")) - timedelta(days=1)).strftime("%Y-%m-%d")
+END_DATE = (datetime.now(ZoneInfo("Europe/Warsaw")) - timedelta(days=14)).strftime("%Y-%m-%d")
 
 
 def main(
@@ -28,7 +28,7 @@ def main(
     db_uri: str = typer.Option(..., envvar="DB_URI"),
     start_date: str = typer.Option(START_DATE, help="Start date for scraping (YYYY-MM-DD)."),
     end_date: str = typer.Option(
-        END_DATE, help="End date for scraping (YYYY-MM-DD). Defaults to yesterday's date in Poland."
+        END_DATE, help="End date for scraping (YYYY-MM-DD). Defaults to two weeks ago in Poland."
     ),
     min_interval_between_checks: int = typer.Option(
         30, help="Minimum interval between checks in days."

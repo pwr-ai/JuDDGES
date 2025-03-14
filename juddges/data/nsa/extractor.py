@@ -4,87 +4,92 @@ import pandas as pd
 from mpire import WorkerPool
 import re
 from bs4 import BeautifulSoup, Tag
+from pandas import Timestamp
+import pyarrow as pa
+import pytz
 
 
 DESCRIPTION_MAP = {
-    "id": "ID in the NSA database",
-    "Sygnatura": "Docket number",
-    "Powołane przepisy": "The cited provisions",
-    "Sygn. powiązane": "Related docket numbers",
-    "Sędziowie": "Judges",
-    "Data orzeczenia": "The day of the judgment",
-    "Rodzaj orzeczenia": "Type of decision",
-    "przewodniczący": "Presiding judge",
-    "sprawozdawca": "Judge rapporteur",
-    "ustawa": "Law",
-    "dziennik_ustaw": "Journal of laws",
-    "art": "Article",
-    "Data wpływu": "Date of submission",
-    "Sąd": "Court",
-    "Symbol z opisem": "Type of case with the detailed description",
-    "Hasła tematyczne": "Keywords",
-    "Skarżony organ": "Challenged authority",
-    "Treść wyniku": "Nature of the verdict",
-    "Publikacja w u.z.o.": "Published in official collection of judgments Jurisprudence of the Voivodeship Administrative Courts and the Supreme Administrative Court",
-    "Info. o glosach": "Information on glosa(s)",
-    "Sentencja": "Sentence of the judgment",
-    "Uzasadnienie": "Reasons for judgment",
-    "Tezy": "Theses",
-    "Zdanie odrębne": "Dissenting opinion",
-    "Prawomocność": "Finality",
+    "id": "unique identifier of the judgment",
+    "Sygnatura": "signature of judgment (unique within court)",
+    "Powołane przepisy": "textual representation of the legal bases for the judgment (with references to online repository)",
+    "Sygn. powiązane": "related docket numbers",
+    "Sędziowie": "list of judge names participating in the judgment",
+    "Data orzeczenia": "date of judgment",
+    "Rodzaj orzeczenia": "type of the judgment (one of)",
+    "przewodniczący": "chairman judge name",
+    "sprawozdawca": "judge rapporteur",
+    "ustawa": "law",
+    "dziennik_ustaw": "journal of laws",
+    "art": "article",
+    "link": "link to the law",
+    "Data wpływu": "date of submission",
+    "Sąd": "name of the court where the judgment was made",
+    "Symbol z opisem": "type of case with the detailed description",
+    "Hasła tematyczne": "list of phrases representing the themes/topics of the judgment",
+    "Skarżony organ": "challenged authority",
+    "Treść wyniku": "decision",
+    "Publikacja w u.z.o.": "published in official collection of judgments jurisprudence of the voivodeship administrative courts and the supreme administrative court",
+    "Info. o glosach": "information on glosa(s)",
+    "Sentencja": "full text of the judgment",
+    "Uzasadnienie": "reasons for judgment",
+    "Tezy": "thesis of the judgment",
+    "Zdanie odrębne": "dissenting opinion",
+    "Prawomocność": "finality",
 }
 
 FIELD_MAP = {
-    "id": "id",
-    "Sygnatura": "docket_no",
-    "Powołane przepisy": "cited_provisions",
-    "Sygn. powiązane": "related_dockets",
+    "id": "judgment_id",
+    "Sygnatura": "docket_number",
+    "Powołane przepisy": "text_legal_bases",
+    "Sygn. powiązane": "related_docket_numbers",
     "Sędziowie": "judges",
     "Data orzeczenia": "judgment_date",
-    "Rodzaj orzeczenia": "decision_type",
+    "Rodzaj orzeczenia": "judgment_type",
     "przewodniczący": "presiding_judge",
-    "sprawozdawca": "rapporteur",
+    "sprawozdawca": "judge_rapporteur",
     "ustawa": "law",
     "dziennik_ustaw": "journal",
     "art": "article",
+    "link": "link",
     "Data wpływu": "submission_date",
-    "Sąd": "court",
-    "Symbol z opisem": "case_type",
+    "Sąd": "court_name",
+    "Symbol z opisem": "case_type_description",
     "Hasła tematyczne": "keywords",
     "Skarżony organ": "challenged_authority",
-    "Treść wyniku": "verdict",
-    "Publikacja w u.z.o.": "published_in_collection",
-    "Info. o glosach": "glosa_info",
-    "Sentencja": "sentence",
-    "Uzasadnienie": "reasons",
-    "Tezy": "theses",
+    "Treść wyniku": "decision",
+    "Publikacja w u.z.o.": "official_collection",
+    "Info. o glosach": "glosa_information",
+    "Sentencja": "full_text",
+    "Uzasadnienie": "reasons_for_judgment",
+    "Tezy": "thesis",
     "Zdanie odrębne": "dissenting_opinion",
     "Prawomocność": "finality",
 }
 
 
 ORDER = [
-    "id",
-    "docket_no",
-    "decision_type",
+    "judgment_id",
+    "docket_number",
+    "judgment_type",
     "finality",
     "judgment_date",
     "submission_date",
-    "court",
+    "court_name",
     "judges",
     "presiding_judge",
-    "rapporteur",
-    "case_type",
+    "judge_rapporteur",
+    "case_type_description",
     "keywords",
-    "related_dockets",
+    "related_docket_numbers",
     "challenged_authority",
-    "verdict",
-    "cited_provisions",
-    "published_in_collection",
-    "glosa_info",
-    "theses",
-    "sentence",
-    "reasons",
+    "decision",
+    "text_legal_bases",
+    "official_collection",
+    "glosa_information",
+    "thesis",
+    "full_text",
+    "reasons_for_judgment",
     "dissenting_opinion",
 ]
 
@@ -97,10 +102,65 @@ LIST_TYPE_FIELDS = {
     "Publikacja w u.z.o.",
 }
 
+WARSAW_TZ = pytz.timezone("Europe/Warsaw")
+
+PYARROW_SCHEMA = pa.schema(
+    [
+        ("judgment_id", pa.string()),
+        ("docket_number", pa.string(), True),
+        ("judgment_type", pa.string(), True),
+        ("finality", pa.string(), True),
+        ("judgment_date", pa.timestamp("s", tz=WARSAW_TZ), True),
+        ("submission_date", pa.timestamp("s", tz=WARSAW_TZ), True),
+        ("court_name", pa.string(), True),
+        ("judges", pa.list_(pa.string()), True),
+        ("presiding_judge", pa.string(), True),
+        ("judge_rapporteur", pa.string(), True),
+        ("case_type_description", pa.list_(pa.string()), True),
+        ("keywords", pa.list_(pa.string()), True),
+        (
+            "related_docket_numbers",
+            pa.list_(
+                pa.struct(
+                    [
+                        ("judgment_id", pa.string()),
+                        ("docket_number", pa.string()),
+                        ("judgment_date", pa.timestamp("s", tz=WARSAW_TZ)),
+                        ("judgment_type", pa.string()),
+                    ]
+                )
+            ),
+            True,
+        ),
+        ("challenged_authority", pa.string(), True),
+        ("decision", pa.list_(pa.string()), True),
+        (
+            "text_legal_bases",
+            pa.list_(
+                pa.struct(
+                    [
+                        ("link", pa.string()),
+                        ("article", pa.string()),
+                        ("journal", pa.string()),
+                        ("law", pa.string()),
+                    ]
+                )
+            ),
+            True,
+        ),
+        ("official_collection", pa.list_(pa.string()), True),
+        ("glosa_information", pa.list_(pa.string()), True),
+        ("thesis", pa.large_string(), True),
+        ("full_text", pa.large_string(), True),
+        ("reasons_for_judgment", pa.large_string(), True),
+        ("dissenting_opinion", pa.large_string(), True),
+    ]
+)
+
 
 class NSADataExtractor:
     def __init__(self) -> None:
-        assert (set(FIELD_MAP.values()) - set(ORDER)) == {"journal", "law", "article"}
+        assert (set(FIELD_MAP.values()) - set(ORDER)) == {"journal", "law", "article", "link"}
         assert (set(ORDER) - set(FIELD_MAP.values())) == set()
 
     def extract_data_from_pages(
@@ -113,7 +173,11 @@ class NSADataExtractor:
                 for page, doc_id in zip(pages, doc_ids, strict=True)
             )
             for item in pool.map(
-                self.extract_data, args, progress_bar=True, iterable_len=len(pages)
+                self.extract_data,
+                args,
+                progress_bar=True,
+                iterable_len=len(pages),
+                progress_bar_options={"desc": "Extracting data from pages"},
             ):
                 extracted_data.append(item)
         return extracted_data
@@ -124,10 +188,21 @@ class NSADataExtractor:
         extracted_data = self.extract_data_from_pages(pages, doc_ids, n_jobs)
         return pd.DataFrame(extracted_data, columns=ORDER)
 
+    def extract_data_from_pages_to_pyarrow(
+        self, pages: Iterable[str], doc_ids: Iterable[str], n_jobs: int | None = None
+    ) -> pa.Table:
+        extracted_data = self.extract_data_from_pages(pages, doc_ids, n_jobs)
+        table = pa.Table.from_pylist(extracted_data, schema=self.pyarrow_schema)
+        return table.select(ORDER)
+
+    @property
+    def pyarrow_schema(self) -> pa.Schema:
+        return PYARROW_SCHEMA
+
     def extract_data(self, page: str, doc_id: str) -> dict[str, Any]:
         soup = BeautifulSoup(page, "html.parser")  # 'page' contains the HTML
         extracted_data = (
-            {"id": doc_id}
+            {FIELD_MAP["id"]: doc_id}
             | self._extract_number_and_type(soup)
             | self._extract_table(soup)
             | self._extract_text_sections(soup)
@@ -142,13 +217,13 @@ class NSADataExtractor:
             number_and_type = " " + number_and_type
         if len(number_and_type.split(" - ")) != 2:
             print(number_and_type)
-        number, judgement_type = number_and_type.split(" - ")
-        number, judgement_type = number.strip(), judgement_type.strip()
+        number, judgment_type = number_and_type.split(" - ")
+        number, judgment_type = number.strip(), judgment_type.strip()
         if not number:
             number = None
-        if not judgement_type:
-            judgement_type = None
-        return {FIELD_MAP["Sygnatura"]: number, FIELD_MAP["Rodzaj orzeczenia"]: judgement_type}
+        if not judgment_type:
+            judgment_type = None
+        return {FIELD_MAP["Sygnatura"]: number, FIELD_MAP["Rodzaj orzeczenia"]: judgment_type}
 
     def _extract_text_sections(self, soup: BeautifulSoup) -> dict[str, Any]:
         extracted_data = {}
@@ -184,6 +259,11 @@ class NSADataExtractor:
                     extracted_data |= self._extract_date_finality(value)
                 else:
                     extracted_data[FIELD_MAP[label_text]] = value_text
+        for date_field in ["Data orzeczenia", "Data wpływu"]:
+            if FIELD_MAP[date_field] in extracted_data:
+                extracted_data[FIELD_MAP[date_field]] = self._to_datetime(
+                    extracted_data[FIELD_MAP[date_field]]
+                )
         return extracted_data
 
     def _extract_text_data_with_br_tags(self, value: str) -> list[str]:
@@ -233,7 +313,7 @@ class NSADataExtractor:
                 current[FIELD_MAP["art"]] = (
                     chunk[1].get_text(strip=True) if len(chunk) > 1 else None
                 )
-                current["Link"] = chunk[0]["href"] if isinstance(chunk[0], Tag) else None
+                current[FIELD_MAP["link"]] = chunk[0]["href"] if isinstance(chunk[0], Tag) else None
         if current:
             regulations.append(current)
         return regulations
@@ -245,22 +325,22 @@ class NSADataExtractor:
             if number_type_date.startswith("- ") and " - " not in number_type_date:
                 number_type_date = " " + number_type_date
             assert " z " in number_type_date
-            number, judgement_type, date = re.match(
-                r"(.*) - (.*) z (.*)", number_type_date
-            ).groups()
+            number, judgment_type, date = re.match(r"(.*) - (.*) z (.*)", number_type_date).groups()
             link = a["href"]
             if not number:
                 number = None
-            if not judgement_type:
-                judgement_type = None
+            if not judgment_type:
+                judgment_type = None
             if not date:
                 date = None
+            else:
+                date = self._to_datetime(date)
             related.append(
                 {
                     FIELD_MAP["Sygnatura"]: number,
-                    FIELD_MAP["Rodzaj orzeczenia"]: judgement_type,
+                    FIELD_MAP["Rodzaj orzeczenia"]: judgment_type,
                     FIELD_MAP["Data orzeczenia"]: date,
-                    "Link": link,
+                    FIELD_MAP["id"]: link,
                 }
             )
         return related
@@ -285,9 +365,13 @@ class NSADataExtractor:
     def _extract_date_finality(self, value: Tag) -> dict[str, Any]:
         date = dict()
         date_value = value.find_all("td")[0].get_text(strip=True)
-        judgement_type = value.find_all("td")[1].get_text(strip=True)
-        if len(judgement_type) == 0:
-            judgement_type = None
+        judgment_type = value.find_all("td")[1].get_text(strip=True)
+        if len(judgment_type) == 0:
+            judgment_type = None
         date[FIELD_MAP["Data orzeczenia"]] = date_value
-        date[FIELD_MAP["Prawomocność"]] = judgement_type
+        date[FIELD_MAP["Prawomocność"]] = judgment_type
         return date
+
+    def _to_datetime(self, date_str: str) -> Timestamp:
+        date = pd.to_datetime(date_str)
+        return WARSAW_TZ.localize(date)

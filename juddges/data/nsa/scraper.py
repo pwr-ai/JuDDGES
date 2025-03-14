@@ -55,7 +55,7 @@ class NSAScraper:
         self.browser.close()
 
     @retry(
-        tries=15,
+        tries=5,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
     )
     def search_documents_for_date(self, date: str) -> dict[int, list[str] | None] | None:
@@ -79,7 +79,7 @@ class NSAScraper:
             return None
 
     @retry(
-        tries=15,
+        tries=5,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
     )
     def get_page_for_doc(self, doc_id: str) -> str:
@@ -87,7 +87,7 @@ class NSAScraper:
         return self.browser.page.prettify()
 
     @retry(
-        tries=15,
+        tries=5,
         exceptions=(
             RequestException,
             HTTPError,
@@ -147,7 +147,7 @@ class NSAScraper:
         return documents
 
     @retry(
-        tries=15,
+        tries=5,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
     )
     def _retrieve_documents_from_page(self, page_id: int) -> list[str] | None:

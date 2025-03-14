@@ -23,7 +23,7 @@ def main(
         "1981-01-01", help="Start date for scraping (YYYY-MM-DD). Defaults to 1981-01-01."
     ),
     end_date: Optional[str] = typer.Option(
-        None, help="End date for scraping (YYYY-MM-DD). Defaults to yesterday's date in Poland."
+        None, help="End date for scraping (YYYY-MM-DD). Defaults to two weeks ago in Poland."
     ),
     n_jobs: int = typer.Option(25, help="Number of parallel workers"),
     find_remove_changed_document_lists_iterations: int = typer.Option(
@@ -99,8 +99,7 @@ def main(
 
     pipeline.extend(
         [
-            ("save_pages_from_db_to_file.py", ["--db-uri", db_uri]),
-            ("extract_data_from_pages.py", ["--n-jobs", str(n_jobs)]),
+            ("extract_data_from_pages.py", ["--db-uri", db_uri, "--n-jobs", str(n_jobs)]),
         ]
     )
 
