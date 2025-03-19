@@ -2855,23 +2855,27 @@ stages:
       size: 1812429
   raw_dataset_readme:
     cmd: jupyter nbconvert --no-input --to markdown --execute 'nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb'
-      --output-dir data/datasets/pl/readme/raw --output README
+      --output-dir data/datasets/pl/pl-court-raw --output README
     deps:
-    - path: data/datasets/pl/raw
+    - path: data/datasets/pl/pl-court-raw/data/
       hash: md5
-      md5: 9e5114c2bf231731799061e55cedf35c.dir
-      size: 11108852541
-      nfiles: 18
+      md5: 912b44fe534363e74b1004d8b5579547.dir
+      size: 11182612872
+      nfiles: 9
     - path: nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb
       hash: md5
-      md5: f0b1094594d15a419bc84a92b76dd89c
-      size: 76541
+      md5: a6c0c410ff54055d44abb5e2c4325a59
+      size: 77542
     outs:
-    - path: data/datasets/pl/readme/raw/
+    - path: data/datasets/pl/pl-court-raw/README.md
       hash: md5
-      md5: a8e5f325ead91075a922c8532061003e.dir
-      size: 479985
-      nfiles: 8
+      md5: 771166f1443bbcb79a8caddc85101fa6
+      size: 64910
+    - path: data/datasets/pl/pl-court-raw/README_files/
+      hash: md5
+      md5: c13c669db18f0f6309f06dc502b730ba.dir
+      size: 223681
+      nfiles: 5
   sft_unsloth@en-court-instruct-Unsloth-Llama-3-8B-Instruct:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_llm.py dataset=en-court-instruct
       model=Unsloth-Llama-3-8B-Instruct

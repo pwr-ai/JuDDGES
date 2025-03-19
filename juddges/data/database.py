@@ -11,7 +11,7 @@ from pymongo.collection import Collection
 from pymongo.cursor import Cursor
 from pymongo.errors import BulkWriteError
 from pymongo.results import BulkWriteResult
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 
 def get_mongo_collection(
@@ -94,6 +94,7 @@ class MongoInterface:
         verbose: bool = True,
     ) -> None:
         assert self.collection is not None, "Collection not initialized"
+        assert file_name.suffix == ".parquet", "File must have .parquet extension"
 
         if shard_size <= 0:
             raise ValueError(f"shard_size must be positive, got {shard_size}")
@@ -117,66 +118,30 @@ class MongoInterface:
             query = filter_query.copy()
 
         if fields_to_ignore is not None:
-            ignore_mongo_id = "_id" in fields_to_ignore
-            projection = {field_name: 0 for field_name in fields_to_ignore if field_name != "_id"}
+            projection = {field_name: 0 for field_name in fields_to_ignore}
         else:
             projection = {}
 
         logger.info(
             f"Dumping collection {self.collection_name} with query {query} and projection {projection}"
         )
-        cursor = self.collection.find(
-            filter=query,
-            projection=projection,
-            batch_size=self.batch_size or shard_size,
-            no_cursor_timeout=True,
-        ).sort([("$natural", 1)])
 
+        num_docs = self.collection.count_documents(query)
         shard_idx = 0
-        last_id = None
-
-        try:
-            while True:
-                if last_id is not None:
-                    # Create a new query with the updated _id
-                    current_query = query.copy()
-                    current_query["_id"] = {"$gt": last_id}
-                    current_cursor = (
-                        self.collection.find(
-                            filter=current_query,
-                            projection=projection,
-                            batch_size=self.batch_size or shard_size,
-                            no_cursor_timeout=True,
-                        )
-                        .sort([("$natural", 1)])
-                        .limit(shard_size)
-                    )
-                else:
-                    current_cursor = cursor.limit(shard_size)
-
-                docs = list(
-                    tqdm(
-                        current_cursor,
-                        total=shard_size,
-                        leave=False,
-                        desc="Documents in chunk",
-                        disable=not verbose,
-                    )
+        for offset in trange(0, num_docs, shard_size, desc="Chunks"):
+            docs = list(
+                tqdm(
+                    self.collection.find(query, projection, batch_size=self.batch_size)
+                    .skip(offset)
+                    .limit(shard_size),
+                    total=shard_size,
+                    leave=False,
+                    desc="Downloading shard",
                 )
-                if not docs:
-                    break
-
-                last_id = docs[-1]["_id"]
-
-                if ignore_mongo_id:
-                    for doc in docs:
-                        doc.pop("_id")
-
-                dumped_f_name = self._save_docs_shard(docs, file_name, shard_idx)
-                logger.info(f"Dumped {shard_idx}-th batch of documents to {dumped_f_name}")
-                shard_idx += 1
-        finally:
-            cursor.close()
+            )
+            dumped_f_name = self._save_docs_shard(docs, file_name, shard_idx)
+            logger.info(f"Dumped {shard_idx}-th batch of documents to {dumped_f_name}")
+            shard_idx += 1
 
     @staticmethod
     def _save_docs_shard(

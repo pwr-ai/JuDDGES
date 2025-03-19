@@ -7,10 +7,10 @@ import weaviate
 from weaviate.collections.classes.grpc import MetadataQuery
 
 load_dotenv()
-WV_HOST = os.getenv("WV_URL", "localhost")
-WV_PORT = int(os.getenv("WV_PORT", 8080))
-WV_GRPC_PORT = int(os.getenv("WV_GRPC_PORT", 50051))
-WV_API_KEY = os.getenv("WV_API_KEY", None)
+WV_HOST = os.environ["WV_URL"]
+WV_PORT = int(os.environ["WV_PORT"])
+WV_GRPC_PORT = int(os.environ["WV_GRPC_PORT"])
+WV_API_KEY = os.environ["WV_API_KEY"]
 
 QUERY_PROMPT = "zapytanie: {query}"
 
@@ -21,9 +21,9 @@ with weaviate.connect_to_local(
     grpc_port=WV_GRPC_PORT,
     auth_credentials=weaviate.auth.Auth.api_key(WV_API_KEY),
 ) as client:
-    coll = client.collections.get("judgement_chunks")
+    coll = client.collections.get("judgment_chunks")
     response = coll.query.hybrid(
-        query=QUERY_PROMPT.format(query="oskarżony handlował narkotykami"),
+        query=QUERY_PROMPT.format(query="drug dealer"),
         limit=2,
         return_metadata=MetadataQuery(distance=True),
     )

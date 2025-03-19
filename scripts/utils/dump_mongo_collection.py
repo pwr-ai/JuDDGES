@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from juddges.data.database import MongoInterface
 
 BATCH_SIZE = 100
-SHARD_SIZE = 25_000
+SHARD_SIZE = 50_000
 
 load_dotenv()
 
@@ -23,7 +23,7 @@ def main(
 ) -> None:
     filter_query = {}
     if filter_empty_content:
-        filter_query["content"] = {"$ne": None}
+        filter_query["full_text"] = {"$exists": True}
 
     fields_to_ignore = ["embedding"]
     if ignore_mongo_id:

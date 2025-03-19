@@ -1,44 +1,133 @@
+"""
+Push raw dataset to Hugging Face.
+Partially based on https://github.com/huggingface/datasets/blob/14fb15ade27dd8a2cdc4e5992e8d1b9fd1347f1c/src/datasets/arrow_dataset.py#L5401
+"""
+
+import subprocess
 from pathlib import Path
-from typing import Optional
 
 import typer
-from datasets import load_dataset
+from datasets import disable_caching, enable_caching, load_dataset
 from dotenv import load_dotenv
-from huggingface_hub import DatasetCard, DatasetCardData, HfApi
+from huggingface_hub import (
+    CommitOperationAdd,
+    CommitOperationDelete,
+    DatasetCardData,
+    HfApi,
+)
+from huggingface_hub.errors import RepositoryNotFoundError
 from loguru import logger
+from tabulate import tabulate
 
 from juddges.settings import PL_JUDGEMENTS_PATH_RAW
 
 load_dotenv()
 
-MAX_SHARD_SIZE = "4GB"
+DATASET_CARD_TEMPLATE = Path("nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb")
+DATASET_CARD_PATH = Path("data/datasets/pl/pl-court-raw/README.md")
+DATASET_CARD_ASSETS = Path("data/datasets/pl/pl-court-raw/README_files")
 
-DATASET_CARD_TEMPLATE = Path("data/datasets/pl/readme/raw/README.md")
-DATASET_CARD_TEMPLATE_FILES = Path("data/datasets/pl/readme/raw/README_files")
+DEFAULT_DATA_DIR_IN_REPO = PL_JUDGEMENTS_PATH_RAW.name
+DEFAULT_ASSETS_DIR_IN_REPO = DATASET_CARD_ASSETS.name
 
 
 def main(
-    dataset_dir: Path = typer.Option(PL_JUDGEMENTS_PATH_RAW, help="Path to the dataset directory"),
-    repo_id: Optional[str] = typer.Option(...),
-    branch: Optional[str] = typer.Option(None, help="Branch to push the dataset to"),
-    commit_message: Optional[str] = typer.Option(None, help="Commit message"),
+    repo_id: str = typer.Option(
+        ...,
+        help="Repository ID",
+    ),
+    data_files_dir: Path = typer.Option(
+        PL_JUDGEMENTS_PATH_RAW,
+        help="Path to the dataset directory",
+    ),
+    dataset_card_path: Path = typer.Option(
+        DATASET_CARD_PATH,
+        help="Path to the dataset card",
+    ),
+    dataset_card_assets: Path = typer.Option(
+        DATASET_CARD_ASSETS,
+        help="Path to the dataset card assets",
+    ),
+    commit_message: str = typer.Option(
+        ...,
+        help="Commit message",
+    ),
 ) -> None:
-    logger.info("Loading dataset...")
-    ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
+    assert data_files_dir.exists()
+    assert list(data_files_dir.glob("*.parquet"))
 
-    num_rows = ds["train"].num_rows
-    logger.info(f"Loaded dataset size: {num_rows}")
+    api = HfApi()
 
-    ds.push_to_hub(
+    try:
+        api.repo_info(repo_id=repo_id, repo_type="dataset")
+    except RepositoryNotFoundError:
+        logger.error(f"Repository {repo_id} does not exist")
+        raise typer.Abort()
+
+    prepare_dataset_card(data_files_dir)
+
+    # Replace old data files with new ones
+    deletions = []
+    for f_name in api.list_repo_files(
         repo_id,
-        max_shard_size=MAX_SHARD_SIZE,
-        commit_message=commit_message,
-        revision=branch,
+        repo_type="dataset",
+    ):
+        if f_name.startswith(f"{DEFAULT_DATA_DIR_IN_REPO}/") or f_name.startswith(
+            f"{DEFAULT_ASSETS_DIR_IN_REPO}/"
+        ):
+            deletions.append(CommitOperationDelete(path_in_repo=f_name))
+
+    additions = []
+    for file_path in data_files_dir.glob("*.parquet"):
+        additions.append(
+            CommitOperationAdd(
+                path_in_repo=f"{DEFAULT_DATA_DIR_IN_REPO}/{file_path.name}",
+                path_or_fileobj=file_path,
+            )
+        )
+
+    # Replace readme and readme assets with new ones
+    deletions.append(CommitOperationDelete(path_in_repo="README.md"))
+
+    additions.append(
+        CommitOperationAdd(
+            path_in_repo="README.md",
+            path_or_fileobj=dataset_card_path,
+        )
     )
 
-    # Card creation
+    for f_name in dataset_card_assets.glob("*"):
+        additions.append(
+            CommitOperationAdd(
+                path_in_repo=f"README_files/{f_name.name}",
+                path_or_fileobj=f_name,
+            )
+        )
 
-    assert 100_000 < num_rows < 1_000_000
+    operations = deletions + additions
+
+    operations_table = [(op.path_in_repo, type(op).__name__) for op in operations]
+    print("\nProposed changes:")
+    print(tabulate(operations_table, headers=["Path", "Operation"], tablefmt="grid"))
+
+    if not typer.confirm("Do you want to proceed with these changes?"):
+        raise typer.Abort()
+
+    api.create_commit(
+        repo_id=repo_id,
+        repo_type="dataset",
+        operations=operations,
+        commit_message=commit_message,
+    )
+
+
+def prepare_dataset_card(data_files_dir: Path) -> Path:
+    disable_caching()
+    dataset_info = load_dataset("parquet", data_dir=data_files_dir)["train"].info
+    enable_caching()
+
+    generate_dataset_card()
+
     card_data = DatasetCardData(
         language="pl",
         multilinguality="monolingual",
@@ -46,26 +135,41 @@ def main(
         source_datasets=["original"],
         pretty_name="Polish Court Judgments Raw",
         tags=["polish court"],
-    )
-    card = DatasetCard.from_template(
-        card_data,
-        template_path=DATASET_CARD_TEMPLATE,
-    )
-    card.push_to_hub(
-        repo_id,
-        revision=branch,
-        commit_message=commit_message,
+        configs=[
+            {
+                "config_name": "default",
+                "data_files": [{"split": "train", "path": f"{DEFAULT_DATA_DIR_IN_REPO}/train_*"}],
+            }
+        ],
+        dataset_info=dataset_info._to_yaml_dict(),
     )
 
-    api = HfApi()
-    api.upload_folder(
-        folder_path=DATASET_CARD_TEMPLATE_FILES,
-        path_in_repo=DATASET_CARD_TEMPLATE_FILES.name,
-        repo_id=repo_id,
-        repo_type="dataset",
-        commit_message=commit_message,
-        revision=branch,
-    )
+    with DATASET_CARD_PATH.open("r") as f:
+        card_content = f.read()
+
+    card_content = f"---\n{card_data}\n---\n\n{card_content}"
+
+    with DATASET_CARD_PATH.open("w") as f:
+        f.write(card_content)
+
+
+def generate_dataset_card() -> Path:
+    logger.info("Generating dataset card...")
+    cmd = [
+        "jupyter",
+        "nbconvert",
+        "--no-input",
+        "--to",
+        "markdown",
+        "--execute",
+        str(DATASET_CARD_TEMPLATE),
+        "--output-dir",
+        str(DATASET_CARD_PATH.parent),
+        "--output",
+        DATASET_CARD_PATH.stem,
+    ]
+    subprocess.run(cmd, check=True)
+    return DATASET_CARD_PATH
 
 
 if __name__ == "__main__":
