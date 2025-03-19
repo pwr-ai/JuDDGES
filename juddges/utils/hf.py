@@ -1,8 +1,10 @@
 import shutil
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 import pyarrow.dataset as ds
+from datasets import disable_caching, enable_caching
 from huggingface_hub import DatasetCard, upload_folder
 
 
@@ -58,3 +60,10 @@ def get_parquet_num_rows(dataset_path: Path | str) -> int:
     )
 
     return total_rows
+
+
+@contextmanager
+def disable_caching_ctx():
+    disable_caching()
+    yield
+    enable_caching()

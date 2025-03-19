@@ -1,5 +1,4 @@
 import os
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -7,15 +6,14 @@ from typing import Any
 import pandas as pd
 import pymongo
 from dotenv import load_dotenv
-from huggingface_hub import DatasetCard, DatasetCardData
 from loguru import logger
 from requests import HTTPError
 
 from juddges.data.database import MongoInterface
 from juddges.data.pl_court_api import DataNotFoundError, PolishCourtAPI
+from juddges.data.pl_court_repo import prepare_dataset_card_and_push_data_to_hf_repo
 from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
 from juddges.settings import PL_JUDGEMENTS_PATH, PL_JUDGEMENTS_PATH_RAW
-from juddges.utils.hf import get_parquet_num_rows, push_dataset_dir_to_hub
 from juddges.utils.pipeline import RetryOnException, get_recent_successful_flow_date
 from prefect import flow, runtime, task, unmapped
 from prefect.task_runners import ThreadPoolTaskRunner
@@ -30,10 +28,11 @@ MONGO_URI = os.environ["MONGO_URI"]
 MONGO_DB_NAME = os.environ["MONGO_DB_NAME"]
 MONGO_COLLECTION_NAME = "pl-court"
 
+SHARD_SIZE = 50_000
 REPO_ID = "JuDDGES/pl-court-raw"
-SHARD_SIZE = 25_000
-DATASET_CARD_TEMPLATE = PL_JUDGEMENTS_PATH / "readme/raw/README.md"
-DATASET_CARD_TEMPLATE_ASSETS = PL_JUDGEMENTS_PATH / "readme/raw/README_files"
+DATASET_CARD_TEMPLATE = Path("nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb")
+DATASET_CARD_PATH = PL_JUDGEMENTS_PATH / "pl-court-raw" / "README.md"
+DATASET_CARD_ASSETS = PL_JUDGEMENTS_PATH / "pl-court-raw" / "README_files"
 
 
 @flow(task_runner=ThreadPoolTaskRunner(max_workers=MAX_CONCURRENT_WORKERS), log_prints=True)
@@ -134,17 +133,11 @@ def get_most_recent_last_update_date() -> datetime | None:
         db_name=MONGO_DB_NAME,
         collection_name=MONGO_COLLECTION_NAME,
     ) as db:
-        latest_doc = db.collection.find_one(sort=[("lastUpdate", -1)])
+        latest_doc = db.collection.find_one(sort=[("last_update", -1)])
 
-    if latest_doc and "lastUpdate" in latest_doc:
-        last_update = latest_doc["lastUpdate"]
-        if not isinstance(last_update, datetime):
-            try:
-                last_update = datetime.fromisoformat(last_update)
-            except (ValueError, TypeError):
-                logger.warning(f"Could not parse lastUpdate: {last_update}")
-                return None
-
+    if latest_doc and "last_update" in latest_doc:
+        last_update = latest_doc["last_update"]
+        assert isinstance(last_update, datetime)
         return last_update
 
     logger.info("No previous documents found, using default date")
@@ -206,7 +199,7 @@ def fetch_judgment_details(judgment_id: str) -> dict[str, Any]:
         return api.get_cleaned_details(id=judgment_id)
     except DataNotFoundError as e:
         logger.error(f"Error fetching judgment details for {judgment_id}: {e}")
-        return dict.fromkeys(api.schema["details"], None)
+        return dict.fromkeys(api.api_schema["details"], None)
 
 
 @task(
@@ -217,12 +210,8 @@ def fetch_judgment_details(judgment_id: str) -> dict[str, Any]:
     log_prints=True,
 )
 def save_or_update_judgments_in_db(judgements: list[dict[str, Any]]) -> None:
-    for judgement in judgements:
-        try:
-            judgement["_id"] = judgement.pop("@id")
-        except KeyError:
-            judgement["_id"] = judgement.pop("id")
-
+    api = PolishCourtAPI()
+    judgements = [api.map_doc_to_universal_schema(doc=doc) for doc in judgements]
     with MongoInterface(
         uri=MONGO_URI,
         db_name=MONGO_DB_NAME,
@@ -250,24 +239,6 @@ def dump_dataset(file_name: Path, shard_size: int) -> None:
         db.dump_collection(file_name=file_name, shard_size=shard_size, filter_query=query)
 
 
-@task
-def generate_dataset_card() -> None:
-    cmd = [
-        "jupyter",
-        "nbconvert",
-        "--no-input",
-        "--to",
-        "markdown",
-        "--execute",
-        "nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb",
-        "--output-dir",
-        "data/datasets/pl/readme/raw",
-        "--output",
-        "README",
-    ]
-    subprocess.run(cmd, check=True)
-
-
 @task(
     retries=3,
     retry_delay_seconds=exponential_backoff(backoff_factor=60),
@@ -275,29 +246,13 @@ def generate_dataset_card() -> None:
 )
 def push_dataset_to_hub() -> None:
     commit_message = f"Dataset update {runtime.flow_run.scheduled_start_time.to_date_string()}"
-
-    num_rows = get_parquet_num_rows(PL_JUDGEMENTS_PATH_RAW)
-    assert 100_000 < num_rows < 1_000_000
-
-    card_data = DatasetCardData(
-        language="pl",
-        multilinguality="monolingual",
-        size_categories="100K<n<1M",
-        source_datasets=["original"],
-        pretty_name="Polish Court Judgments Raw",
-        tags=["polish court"],
-    )
-    card = DatasetCard.from_template(
-        card_data,
-        template_path=DATASET_CARD_TEMPLATE,
-    )
-
-    push_dataset_dir_to_hub(
-        dataset_path=PL_JUDGEMENTS_PATH_RAW,
-        card=card,
-        card_assets=DATASET_CARD_TEMPLATE_ASSETS,
+    prepare_dataset_card_and_push_data_to_hf_repo(
         repo_id=REPO_ID,
         commit_message=commit_message,
+        data_files_dir=PL_JUDGEMENTS_PATH_RAW,
+        dataset_card_template=DATASET_CARD_TEMPLATE,
+        dataset_card_path=DATASET_CARD_PATH,
+        dataset_card_assets=DATASET_CARD_ASSETS,
     )
 
 
