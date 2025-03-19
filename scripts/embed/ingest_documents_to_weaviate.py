@@ -10,11 +10,11 @@ from datasets import load_dataset
 from dotenv import load_dotenv
 from loguru import logger
 from tqdm.auto import tqdm
-from weaviate.util import generate_uuid5
 
 from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.settings import ROOT_PATH
 from juddges.utils.date_utils import process_judgment_dates
+from weaviate.util import generate_uuid5
 
 # Configure logger
 logger.add(
@@ -110,9 +110,7 @@ def main(
         logger.info(f"Dataset loaded with columns: {dataset.column_names}")
         total_batches = math.ceil(len(dataset) / batch_size)
 
-        with WeaviateJudgmentsDatabase(
-            WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY
-        ) as db:
+        with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
             initial_count = len(db.get_uuids(db.judgments_collection))
             logger.info(f"Initial number of documents in collection: {initial_count}")
 
@@ -129,9 +127,7 @@ def main(
                         batch_embeddings = get_batch_embeddings(
                             batch["judgment_id"], embeddings_dict
                         )
-                        futures.append(
-                            executor.submit(process_batch, db, batch, batch_embeddings)
-                        )
+                        futures.append(executor.submit(process_batch, db, batch, batch_embeddings))
 
                     for future in as_completed(futures):
                         try:
@@ -146,9 +142,7 @@ def main(
                     desc="Uploading batches sequentially",
                 ):
                     # Get embeddings only for current batch
-                    batch_embeddings = get_batch_embeddings(
-                        batch["judgment_id"], embeddings_dict
-                    )
+                    batch_embeddings = get_batch_embeddings(batch["judgment_id"], embeddings_dict)
                     process_batch(db, batch, batch_embeddings)
 
             final_count = len(db.get_uuids(db.judgments_collection))
