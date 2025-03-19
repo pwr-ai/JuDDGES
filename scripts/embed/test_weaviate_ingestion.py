@@ -6,6 +6,7 @@ from rich import print
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+from sentence_transformers import SentenceTransformer
 
 from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.settings import ROOT_PATH
@@ -105,23 +106,39 @@ def run_sample_queries(db: WeaviateJudgmentsDatabase) -> None:
 
         console.print("[yellow]Sample Judgments:[/yellow]")
         for obj in response.objects:
+            assert obj.properties.get("judgment_id"), "judgment_id is not set"
             print(obj.properties)
 
         console.print("\n[yellow]Sample Filtered Judgments by Court:[/yellow]")
-        response = judgments.query.fetch_objects(
-            limit=3
-        )
+        response = judgments.query.fetch_objects(limit=3, include_vector=True)
         for obj in response.objects:
+            assert obj.properties.get("judgment_id"), "judgment_id is not set"
+            assert obj.vector is not None and len(obj.vector) > 0, "Vector is empty"
+            print(obj.properties)
+            print(obj.vector)
+
+        # Hybrid search on judgments collection
+        query = "Sprawa dotyczy narkotyków"  # Case involves drugs
+        model = SentenceTransformer("sdadas/mmlw-roberta-large")
+        query_vector = model.encode(query)
+
+        response = judgments.query.hybrid(query=query, vector=query_vector, limit=3)
+
+        console.print("\n[yellow]Sample Hybrid Search Results on Judgments:[/yellow]")
+        console.print(f"Query: {query}")
+        for obj in response.objects:
+            assert obj.properties.get("judgment_id"), "judgment_id is not set"
             print(obj.properties)
 
         # Semantic search on chunks
         chunks = db.judgment_chunks_collection
-        query = "Sprawa dotyczy narkotyków"  # Case involves drugs
+
         response = chunks.query.hybrid(query=query, limit=3)
 
-        console.print("\n[yellow]Sample Semantic Search Results:[/yellow]")
+        console.print("\n[yellow]Sample Semantic Search Results on Chunks:[/yellow]")
         console.print(f"Query: {query}")
         for obj in response.objects:
+            assert obj.properties.get("judgment_id"), "judgment_id is not set"
             print(obj.properties)
 
         progress.stop_task(task)
