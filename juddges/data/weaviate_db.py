@@ -3,13 +3,13 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, ClassVar
 
-import weaviate.classes.config as wvcc
 from dotenv import load_dotenv
 from loguru import logger
-from weaviate.classes.init import Auth
 
 import weaviate
+import weaviate.classes.config as wvcc
 from juddges.settings import ROOT_PATH
+from weaviate.classes.init import Auth
 
 logger.info(f"Environment variables loaded from {ROOT_PATH / '.env'} file")
 load_dotenv(ROOT_PATH / ".env", override=True)
@@ -72,9 +72,7 @@ class WeaviateDatabase(ABC):
                 if wv_batch.number_errors > 0:
                     break
             if wv_batch.number_errors > 0:
-                errors = [
-                    err.message for err in collection.batch.results.objs.errors.values()
-                ]
+                errors = [err.message for err in collection.batch.results.objs.errors.values()]
                 raise ValueError(f"Error ingesting batch: {errors}")
 
     def get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:
@@ -104,6 +102,24 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
     @property
     def judgment_chunks_collection(self) -> weaviate.collections.Collection:
         return self.client.collections.get(self.JUDGMENT_CHUNKS_COLLECTION)
+
+    @property
+    def judgments_properties(self) -> list[str]:
+        """Get list of property names for the judgments collection.
+
+        Returns:
+            list[str]: List of property names in the judgments collection.
+        """
+        return [prop.name for prop in self.judgments_collection.config.get().properties]
+
+    @property
+    def judgment_chunks_properties(self) -> list[str]:
+        """Get list of property names for the judgment chunks collection.
+
+        Returns:
+            list[str]: List of property names in the judgment chunks collection.
+        """
+        return [prop.name for prop in self.judgment_chunks_collection.config.get().properties]
 
     def create_collections(self) -> None:
         self._safe_create_collection(

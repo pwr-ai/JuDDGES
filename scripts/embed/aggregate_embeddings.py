@@ -50,9 +50,7 @@ def mean_average_embeddings(df: pl.DataFrame) -> tuple[list[str], Tensor]:
     num_unique_docs = df.select(pl.col("judgment_id")).n_unique()
     embs = torch.empty(num_unique_docs, emb_dim, dtype=torch.float)
 
-    for i, (id_, x) in tqdm(
-        enumerate(df.group_by(["judgment_id"])), total=num_unique_docs
-    ):
+    for i, (id_, x) in tqdm(enumerate(df.group_by(["judgment_id"])), total=num_unique_docs):
         ids.append(id_[0])
         chunk_lengths = torch.tensor(np.stack(x["chunk_len"].to_numpy()))  # type: ignore
         chunk_lengths = chunk_lengths / chunk_lengths.sum()

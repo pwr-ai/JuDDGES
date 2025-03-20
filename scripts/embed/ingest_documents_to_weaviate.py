@@ -32,7 +32,7 @@ WV_GRPC_PORT = os.environ["WV_GRPC_PORT"]
 WV_API_KEY = os.environ["WV_API_KEY"]
 
 BATCH_SIZE = 32
-NUM_PROC = multiprocessing.cpu_count() - 2
+NUM_PROC = int(os.getenv("NUM_PROC", multiprocessing.cpu_count() - 2))
 MAX_WORKERS = int(os.getenv("MAX_WORKERS", int(NUM_PROC / 2)))
 
 logger.debug(f"Using batch size: {BATCH_SIZE}")
@@ -61,7 +61,9 @@ def process_batch(db, batch, batch_embeddings):
                 logger.warning(f"No embedding found for judgment_id: {judgment_id}")
                 continue
 
-            properties = {key: batch[key][i] for key in batch.keys()}
+            properties = {
+                key: batch[key][i] for key in batch.keys() if key in db.judgment_properties
+            }
             properties = process_judgment_dates(properties)
 
             records.append(
@@ -103,7 +105,7 @@ def main(
         # Load embeddings
         target_file = embeddings_dir.parent / "agg_embeddings.pt"
         logger.info(f"Loading embeddings from {target_file}")
-        embeddings_dict = torch.load(target_file)
+        embeddings_dict = torch.load(target_file, weights_only=True)
         logger.info(f"Loaded embeddings for {len(embeddings_dict)} documents")
 
         dataset = load_dataset(str(dataset_name))["train"]
@@ -111,8 +113,15 @@ def main(
         total_batches = math.ceil(len(dataset) / batch_size)
 
         with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
+            logger.info("Checking number of documents in collection...")
             initial_count = len(db.get_uuids(db.judgments_collection))
             logger.info(f"Initial number of documents in collection: {initial_count}")
+
+            if set(db.judgment_properties) != set(dataset.column_names):
+                logger.warning(
+                    "Dataset columns do not match judgment properties (uploading only matching columns): "
+                    f"{set(db.judgment_properties)} != {set(dataset.column_names)}"
+                )
 
             if MAX_WORKERS > 1:
                 logger.info(f"Using parallel processing with {MAX_WORKERS} workers")
