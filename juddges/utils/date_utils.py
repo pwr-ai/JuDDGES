@@ -23,7 +23,7 @@ def convert_date_to_rfc3339(date_str: str | None) -> str | None:
         return None
 
     try:
-        date = dt_parse(date_str)
+        date = dt_parse(date_str, tzinfos=TZ_MAP)
         if not date.tzinfo:
             date = date.replace(tzinfo=TZ_MAP["CET"])
         
