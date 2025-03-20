@@ -62,7 +62,7 @@ def process_batch(db, batch, batch_embeddings):
                 continue
 
             properties = {
-                key: batch[key][i] for key in batch.keys() if key in db.judgment_properties
+                key: batch[key][i] for key in batch.keys() if key in db.judgments_properties
             }
             properties = process_judgment_dates(properties)
 
@@ -114,13 +114,13 @@ def main(
 
         with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
             logger.info("Checking number of documents in collection...")
-            initial_count = len(db.get_uuids(db.judgments_collection))
+            initial_count = db.get_collection_size(db.judgments_collection)
             logger.info(f"Initial number of documents in collection: {initial_count}")
 
-            if set(db.judgment_properties) != set(dataset.column_names):
+            if set(db.judgments_properties) != set(dataset.column_names):
                 logger.warning(
-                    "Dataset columns do not match judgment properties (uploading only matching columns): "
-                    f"{set(db.judgment_properties)} != {set(dataset.column_names)}"
+                    "Dataset columns do not match judgment properties, ignoring extra columns: "
+                    f"{set(dataset.column_names) - set(db.judgments_properties)}"
                 )
 
             if MAX_WORKERS > 1:
@@ -154,7 +154,7 @@ def main(
                     batch_embeddings = get_batch_embeddings(batch["judgment_id"], embeddings_dict)
                     process_batch(db, batch, batch_embeddings)
 
-            final_count = len(db.get_uuids(db.judgments_collection))
+            final_count = db.get_collection_size(db.judgments_collection)
             logger.info(f"Final number of documents in collection: {final_count}")
             logger.info(f"Added {final_count - initial_count} new documents")
 
