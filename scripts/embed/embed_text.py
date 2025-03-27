@@ -39,9 +39,7 @@ class EmbeddingConfig(BaseModel, extra="forbid"):
 
 
 @torch.inference_mode()
-@hydra.main(
-    version_base="1.3", config_path=str(CONFIG_PATH), config_name="embedding.yaml"
-)
+@hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="embedding.yaml")
 def main(cfg: DictConfig) -> None:
     cfg_dict = resolve_config(cfg)
     logger.info(f"config:\n{cfg_dict}")
@@ -88,9 +86,7 @@ def main(cfg: DictConfig) -> None:
     # Start multi-GPU processing pool
     pool = model.start_multi_process_pool()
 
-    logger.info(
-        f"Embedding dataset with {config.batch_size} batch size using multiple GPUs"
-    )
+    logger.info(f"Embedding dataset with {config.batch_size} batch size using multiple GPUs")
     texts = ds[text_column]
 
     # Calculate total number of batches

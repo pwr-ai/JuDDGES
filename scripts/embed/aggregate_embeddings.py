@@ -40,19 +40,17 @@ def mean_average_embeddings(df: pl.DataFrame) -> tuple[list[str], Tensor]:
     """Aggregates embeddings by taking the mean of document's chunks weighted by their sizes.
 
     Args:
-        df (pl.DataFrame): dataframe with columns ["judgement_id", "chunk_len", "embeddings"]
+        df (pl.DataFrame): dataframe with columns ["judgment_id", "chunk_len", "embeddings"]
 
     Returns:
         tuple[list[str], Tensor]: tuple of list of ids and aggregated embeddings
     """
     ids = []
     emb_dim = df["embedding"][0].shape[0]
-    num_unique_docs = df.select(pl.col("judgement_id")).n_unique()
+    num_unique_docs = df.select(pl.col("judgment_id")).n_unique()
     embs = torch.empty(num_unique_docs, emb_dim, dtype=torch.float)
 
-    for i, (id_, x) in tqdm(
-        enumerate(df.group_by(["judgement_id"])), total=num_unique_docs
-    ):
+    for i, (id_, x) in tqdm(enumerate(df.group_by(["judgment_id"])), total=num_unique_docs):
         ids.append(id_[0])
         chunk_lengths = torch.tensor(np.stack(x["chunk_len"].to_numpy()))  # type: ignore
         chunk_lengths = chunk_lengths / chunk_lengths.sum()

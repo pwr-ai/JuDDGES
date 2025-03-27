@@ -11,10 +11,10 @@ from datasets import load_from_disk
 from dotenv import load_dotenv
 from loguru import logger
 from tqdm.auto import tqdm
-from weaviate.util import generate_uuid5
 
 from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.settings import ROOT_PATH
+from weaviate.util import generate_uuid5
 
 # Configure logger to include timestamps and line numbers
 logger.add(
@@ -66,15 +66,9 @@ def validate_batch(batch):
         assert len(embedding_shape) == 1, f"Invalid embedding shape: {embedding_shape}"
 
         # Check for null values
-        assert all(
-            id_ is not None for id_ in batch["judgment_id"]
-        ), "Found null judgment_id"
-        assert all(
-            chunk is not None for chunk in batch["chunk_text"]
-        ), "Found null chunk_text"
-        assert all(
-            emb is not None for emb in batch["embedding"]
-        ), "Found null embedding"
+        assert all(id_ is not None for id_ in batch["judgment_id"]), "Found null judgment_id"
+        assert all(chunk is not None for chunk in batch["chunk_text"]), "Found null chunk_text"
+        assert all(emb is not None for emb in batch["embedding"]), "Found null embedding"
 
         return True
     except AssertionError as e:
@@ -127,9 +121,7 @@ def main(
     ),
     batch_size: int = typer.Option(BATCH_SIZE),
     upsert: bool = typer.Option(False),
-    max_embeddings: int = typer.Option(
-        None, help="Maximum number of embeddings to process"
-    ),
+    max_embeddings: int = typer.Option(None, help="Maximum number of embeddings to process"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ) -> None:
     if debug:
@@ -150,9 +142,7 @@ def main(
 
         # Validate input directory
         embeddings_path = Path(embeddings_dir)
-        assert (
-            embeddings_path.exists()
-        ), f"Embeddings directory not found: {embeddings_dir}"
+        assert embeddings_path.exists(), f"Embeddings directory not found: {embeddings_dir}"
 
         embs = load_from_disk(str(embeddings_dir))
         if "judgement_id" in embs.column_names:
@@ -178,9 +168,7 @@ def main(
             desc="Generating UUIDs",
         )
 
-        with WeaviateJudgmentsDatabase(
-            WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY
-        ) as db:
+        with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
             initial_count = len(db.get_uuids(db.judgment_chunks_collection))
             logger.info(f"Initial number of objects in collection: {initial_count}")
 
@@ -195,9 +183,7 @@ def main(
                     num_proc=NUM_PROC,
                     desc="Filtering out already uploaded embeddings",
                 )
-                logger.info(
-                    f"Filtered out {original_len - len(embs)} existing embeddings"
-                )
+                logger.info(f"Filtered out {original_len - len(embs)} existing embeddings")
             else:
                 logger.info(
                     "upsert enabled - uploading all embeddings (automatically updating already uploaded)"
