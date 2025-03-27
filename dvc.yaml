@@ -51,14 +51,15 @@ stages:
       model:
         - mmlw-roberta-large
     cmd: >-
-      PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=${item.model}
+      PYTHONPATH=. python scripts/embed/embed_text.py
+      embedding_model=${item.model}
+      dataset_name=JuDDGES/pl-court-raw
     deps:
       - scripts/embed/embed_text.py
       - configs/embedding.yaml
       - configs/embedding_model/${item.model}.yaml
-      - data/datasets/pl/raw
     outs:
-      - data/embeddings/pl-court-raw/${item.model}/all_embeddings
+      - data/embeddings/JuDDGES__pl-court-raw/${item.model}/all_embeddings
 
   aggregate_embeddings:
     matrix:

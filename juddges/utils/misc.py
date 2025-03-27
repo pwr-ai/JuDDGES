@@ -1,10 +1,12 @@
 import re
+from pathlib import Path
 from typing import Any
 
 import torch
 import yaml
 from datasets import Dataset
 from loguru import logger
+from tqdm.auto import trange
 
 yaml_pattern: re.Pattern = re.compile(r"```(?:ya?ml)?(?P<yaml>[^`]*)", re.MULTILINE | re.DOTALL)
 
@@ -61,3 +63,16 @@ def log_size_change(func):
         return result
 
     return wrapper
+
+
+def save_dataset_as_parquet_shards(ds: Dataset, num_shards: int, output_dir: Path) -> None:
+    """Saves a dataset as parquet shards.
+
+    Args:
+        ds (Dataset): dataset to save
+        output_dir (Path): output directory
+    """
+    logger.info(f"Saving {ds.num_rows} rows into {num_shards} shards to {output_dir}")
+    for index in trange(num_shards, desc="Saving shards"):
+        shard = ds.shard(index=index, num_shards=num_shards, contiguous=True)
+        shard.to_parquet(f"{output_dir}/{index:03d}.parquet")

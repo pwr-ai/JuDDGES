@@ -5,14 +5,22 @@ from transformers import PreTrainedTokenizer
 
 
 class TextSplitter:
+    CHUNK_ID_COL: str = "chunk_id"
+    CHUNK_LEN_COL: str = "chunk_len"
+    CHUNK_TEXT_COL: str = "chunk_text"
+
     def __init__(
         self,
+        id_col: str,
+        text_col: str,
         chunk_size: int,
         chunk_overlap: int | None = None,
         min_split_chars: int | None = None,
         take_n_first_chunks: int | None = None,
         tokenizer: PreTrainedTokenizer | None = None,
     ) -> None:
+        self.id_col = id_col
+        self.text_col = text_col
         if tokenizer:
             self.splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
                 tokenizer,
@@ -31,7 +39,7 @@ class TextSplitter:
         chunk_lens: list[int] = []
         chunks: list[str] = []
 
-        for id_, text in zip(txt["judgment_id"], txt["text"]):
+        for id_, text in zip(txt[self.id_col], txt[self.text_col]):
             current_chunks = self._split_text(text)
 
             if self.take_n_first_chunks:
@@ -43,10 +51,10 @@ class TextSplitter:
             chunk_ids.extend(range(len(current_chunks)))
 
         return {
-            "judgment_id": ids,
-            "chunk_id": chunk_ids,
-            "chunk_len": chunk_lens,
-            "chunk_text": chunks,
+            self.id_col: ids,
+            self.CHUNK_ID_COL: chunk_ids,
+            self.CHUNK_LEN_COL: chunk_lens,
+            self.CHUNK_TEXT_COL: chunks,
         }
 
     def _split_text(self, text: str) -> list[str]:
