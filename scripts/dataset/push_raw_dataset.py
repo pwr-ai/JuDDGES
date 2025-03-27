@@ -18,9 +18,7 @@ DATASET_CARD_TEMPLATE_FILES = Path("data/datasets/pl/readme/raw/README_files")
 
 
 def main(
-    dataset_dir: Path = typer.Option(
-        PL_JUDGMENTS_PATH_RAW, help="Path to the dataset directory"
-    ),
+    dataset_dir: Path = typer.Option(PL_JUDGMENTS_PATH_RAW, help="Path to the dataset directory"),
     repo_id: Optional[str] = typer.Option(...),
     branch: Optional[str] = typer.Option(None, help="Branch to push the dataset to"),
     commit_message: Optional[str] = typer.Option(None, help="Commit message"),

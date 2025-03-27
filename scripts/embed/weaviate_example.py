@@ -2,9 +2,9 @@ import os
 from pprint import pprint
 
 from dotenv import load_dotenv
-from weaviate.collections.classes.grpc import MetadataQuery
 
 import weaviate
+from weaviate.collections.classes.grpc import MetadataQuery
 
 load_dotenv()
 WV_HOST = os.getenv("WV_URL", "localhost")

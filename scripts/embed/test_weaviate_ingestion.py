@@ -67,16 +67,12 @@ def print_collection_stats(db: WeaviateJudgmentsDatabase) -> None:
         console.print("[green]Fetching judgments collection...[/green]")
         judgments_collection = db.client.collections.get(db.JUDGMENTS_COLLECTION)
         judgments_count = len(judgments_collection)
-        console.print(
-            f"[green]Judgments collection fetched. Count: {judgments_count:,}[/green]"
-        )
+        console.print(f"[green]Judgments collection fetched. Count: {judgments_count:,}[/green]")
 
         console.print("[green]Fetching chunks collection...[/green]")
         chunks_collection = db.client.collections.get(db.JUDGMENT_CHUNKS_COLLECTION)
         chunks_count = len(chunks_collection)
-        console.print(
-            f"[green]Chunks collection fetched. Count: {chunks_count:,}[/green]"
-        )
+        console.print(f"[green]Chunks collection fetched. Count: {chunks_count:,}[/green]")
 
         table = Table(title="Document Counts")
         table.add_column("Collection", style="cyan")

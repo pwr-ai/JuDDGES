@@ -26,7 +26,7 @@ def convert_date_to_rfc3339(date_str: str | None) -> str | None:
         date = dt_parse(date_str, tzinfos=TZ_MAP)
         if not date.tzinfo:
             date = date.replace(tzinfo=TZ_MAP["CET"])
-        
+
         return date.isoformat()
     except (ParserError, OverflowError) as e:
         raise ValueError(f"Failed to convert date '{date_str}' to RFC3339 format: {str(e)}")
