@@ -15,7 +15,7 @@ def display_search_results(items: List[Dict]) -> None:
     Args:
         items: List of search result items to display
     """
-    st.header(f"Judgements - Results ({len(items)})")
+    st.header(f"judgments - Results ({len(items)})")
 
     # Custom CSS for cards
     st.markdown(

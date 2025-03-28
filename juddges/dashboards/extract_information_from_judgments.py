@@ -28,18 +28,18 @@ st.info(
 )
 
 st.header("Data source")
-source_option = st.selectbox("Choose the source of the judgement text:", ["API", "Plain text"])
+source_option = st.selectbox("Choose the source of the judgment text:", ["API", "Plain text"])
 
 if source_option == "API":
     api = PolishCourtAPI()
-    judgement_url = st.text_input(
-        "Enter the judgement URL:",
+    judgment_url = st.text_input(
+        "Enter the judgment URL:",
         "https://orzeczenia.wroclaw.sa.gov.pl/details/$N/155000000001006_II_AKa_000334_2019_Uz_2020-02-06_001",
     )
-    judgement_id = judgement_url.strip().split("/")[-1]
-    judgement_text = api.get_content(id=judgement_id)
+    judgment_id = judgment_url.strip().split("/")[-1]
+    judgment_text = api.get_content(id=judgment_id)
 else:
-    judgement_text = st.text_area("Enter the judgement text here:", height=500)
+    judgment_text = st.text_area("Enter the judgment text here:", height=500)
 
 st.header("Schema extraction/definition")
 schema_query = st.text_input(
@@ -70,17 +70,17 @@ llm_extraction = st.selectbox(
     "Select the LLM model",
     [GPT_4o, GPT_4o_MINI, GPT_4_0125_PREVIEW, GPT_4_1106_PREVIEW, GPT_3_5_TURBO_1106],
 )
-language = st.selectbox("Enter the language of the judgement text:", ["Polish", "English"])
+language = st.selectbox("Enter the language of the judgment text:", ["Polish", "English"])
 
 
 if st.button("Extract information"):
-    with st.spinner("Extracting information from the judgement text..."):
+    with st.spinner("Extracting information from the judgment text..."):
         chain = prepare_information_extraction_chain(model_name=llm_extraction)
         retrieved_informations = chain.invoke(
-            {"LANGUAGE": language, "TEXT": judgement_text, "SCHEMA": schema_text}
+            {"LANGUAGE": language, "TEXT": judgment_text, "SCHEMA": schema_text}
         )
         col_left, col_right = st.columns(2)
 
-        col_left.write(judgement_text)
+        col_left.write(judgment_text)
         col_right.write(retrieved_informations)
         col_right.write(yaml.dump(retrieved_informations, allow_unicode=True, sort_keys=False))
