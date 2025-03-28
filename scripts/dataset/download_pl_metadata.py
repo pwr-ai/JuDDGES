@@ -6,7 +6,12 @@ from loguru import logger
 from mpire.pool import WorkerPool
 from pymongo.errors import BulkWriteError
 from requests import HTTPError
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 from juddges.data.database import get_mongo_collection
 from juddges.data.pl_court_api import PolishCourtAPI
@@ -24,13 +29,13 @@ def main(
     limit: Optional[int] = typer.Option(None),
 ) -> None:
     api = PolishCourtAPI()
-    total_judgements = api.get_number_of_judgements()
-    logger.info(f"Total judgements found: {total_judgements}")
+    total_judgments = api.get_number_of_judgments()
+    logger.info(f"Total judgments found: {total_judgments}")
 
     if limit is not None:
-        total_judgements = min(total_judgements, limit)
+        total_judgments = min(total_judgments, limit)
 
-    offsets = list(range(0, total_judgements, batch_size))
+    offsets = list(range(0, total_judgments, batch_size))
     download_metadata = MetadataDownloader(mongo_uri, batch_size)
     with WorkerPool(n_jobs=n_jobs) as pool:
         pool.map_unordered(download_metadata, offsets, progress_bar=True)
@@ -55,20 +60,20 @@ class MetadataDownloader:
             "offset": offset,
         }
         api = PolishCourtAPI()
-        judgements = api.get_judgements(params)
+        judgments = api.get_judgments(params)
 
-        for item in judgements:
+        for item in judgments:
             item["_id"] = item.pop("id")
 
         # ignore when come across duplicated documents
         try:
-            collection.insert_many(judgements, ordered=False)
+            collection.insert_many(judgments, ordered=False)
         except BulkWriteError as err:
             if any(x["code"] != 11000 for x in err.details["writeErrors"]):
                 raise
             else:
                 logger.warning(
-                    "found {num_duplicated} judgements duplicated",
+                    "found {num_duplicated} judgments duplicated",
                     num_duplicated=len(err.details["writeErrors"]),
                 )
 

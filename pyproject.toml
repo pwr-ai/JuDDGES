@@ -1,3 +1,9 @@
+[tool.poetry]
+name = "juddges"
+version = "0.0.1"
+description = "Juddges is a tool for managing and analyzing judgements."
+authors = ["Lukasz Augustyniak <lukasz.augustyniak@pwr.edu.p>"]
+
 [tool.ruff]
 line-length = 100
 extend-include = ["*.ipynb"]
@@ -10,7 +16,7 @@ select = ["E4", "E7", "E9", "F", "I"]
 python_version = "3.11"
 strict = true
 untyped_calls_exclude = ["pymongo"]
-plugins = "numpy.typing.mypy_plugin"
+plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
 module = ["pyarrow.*", "datasets.*", "sentence_transformers.*"]
@@ -21,3 +27,61 @@ minversion = "8.0.0"
 pythonpath = ["."]
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+accelerate = ">=1.2.1"
+bitsandbytes = ">=0.45.0"
+chardet = ">=5.2.0"
+datasets = ">=3.1.0"
+deepdiff = ">=7.0.1"
+deepspeed = ">=0.15.4"
+langchain = ">=0.3.9"
+langchain-community = ">=0.3.8"
+langchain-core = ">=0.3.21"
+langchain-openai = ">=0.2.10"
+langchain-text-splitters = ">=0.3.2"
+lightning_fabric = ">=2.3.1"
+loguru = ">=0.7.3"
+mlflow = ">=2.11.3"
+mpire = ">=2.10.0"
+openpyxl = ">=3.1.2"
+pandas = ">=2.2.1"
+peft = ">=0.14.0"
+polars = ">=0.20.15"
+pydantic = ">=2.7.4,<3.0.0"
+pyarrow = ">=15.0.0"
+pymongo = ">=4.3.3"
+python-dotenv = ">=1.0.1"
+pytz = ">=2024.1"
+PyYAML = ">=6.0.1"
+requests = ">=2.31.0"
+rich = ">=13.7.0"
+seaborn = ">=0.13.2"
+sentence-transformers = ">=3.0.0"
+tenacity = ">=8.2.3"
+tensorboard = ">=2.16.2"
+tiktoken = ">=0.7.0"
+torch = ">=2.5.1"
+torchmetrics = ">=1.4.0"
+torch_geometric = ">=2.5.3"
+transformers = ">=4.46.3"
+trl = ">=0.12.2"
+typer = ">=0.9.0"
+wandb = ">=0.19.0"
+weaviate-client = ">=4.8.1"
+vllm = ">=0.6.4.post1"
+xmltodict = ">=0.13.0"
+xlsxwriter = ">=3.2.0"
+
+[tool.poetry.group.dev.dependencies]
+coverage = ">=7.4.3"
+dvc = {version = ">=3.48.3", extras = ["s3"]}
+jupyterlab = ">=4.3.1"
+mlflow = ">=2.11.3"
+mypy = ">=1.8.0"
+nbdev = ">=2.3.34"
+pre-commit = ">=3.7.1"
+psycopg2-binary = ">=2.9.9"
+pytest = ">=8.0.2"
+streamlit = ">=1.40.2"
