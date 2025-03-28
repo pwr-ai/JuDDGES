@@ -1,15 +1,15 @@
 import os
 import re
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar
+from typing import Any, ClassVar, List, Optional
 
+import weaviate.classes.config as wvcc
 from dotenv import load_dotenv
 from loguru import logger
+from weaviate.classes.init import Auth
 
 import weaviate
-import weaviate.classes.config as wvcc
 from juddges.settings import ROOT_PATH
-from weaviate.classes.init import Auth
 
 logger.info(f"Environment variables loaded from {ROOT_PATH / '.env'} file")
 load_dotenv(ROOT_PATH / ".env", override=True)
@@ -28,65 +28,59 @@ class WeaviateDatabase(ABC):
         self.grpc_port = grpc_port
         self.__api_key = api_key
 
-        self.client: weaviate.WeaviateClient
+        self.client: weaviate.WeaviateAsyncClient
 
-    def __enter__(self) -> "WeaviateDatabase":
-        self.client = weaviate.connect_to_custom(
+    async def __aenter__(self) -> "WeaviateDatabase":
+        self.client = weaviate.use_async_with_custom(
             http_host=self.host,
             http_port=self.port,
             http_secure=False,
             grpc_host=self.host,
             grpc_port=self.grpc_port,
             grpc_secure=False,
-            auth_credentials=self._api_key,
+            auth_credentials=self.api_key,
         )
-        self.create_collections()
+        await self.client.connect()
+        await self.create_collections()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        if hasattr(self, "client"):
-            self.client.close()
+    async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+        if self.client and self.client.is_connected():
+            await self.client.close()
+
+    async def close(self) -> None:
+        await self.__aexit__(None, None, None)
 
     @property
-    def _api_key(self) -> Auth | None:
+    def api_key(self):
         if self.__api_key is not None:
             return Auth.api_key(self.__api_key)
         logger.error("No API key provided")
         return None
 
     @abstractmethod
-    def create_collections(self) -> None:
+    async def create_collections(self) -> None:
         pass
 
-    def get_collection_size(self, collection: str | weaviate.collections.Collection) -> int:
-        if isinstance(collection, str):
-            coll = self.client.collections.get(collection)
-        else:
-            coll = collection
-        return coll.aggregate.over_all(total_count=True).total_count
-
-    def insert_batch(
+    async def insert_batch(
         self,
         collection: weaviate.collections.Collection,
         objects: list[dict[str, Any]],
-        continue_on_error: bool = False,
     ) -> None:
-        with collection.batch.dynamic() as wv_batch:
-            for obj in objects:
-                wv_batch.add_object(**obj)
-                if wv_batch.number_errors > 0 and not continue_on_error:
-                    break
-
-        if wv_batch.number_errors > 0:
-            errors = [err.message for err in collection.batch.results.objs.errors.values()]
+        response = await collection.data.insert_many(objects)
+        if response.has_errors:
+            errors = [err.message for err in response.errors]
             raise ValueError(f"Error ingesting batch: {errors}")
 
-    def get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:
-        return [str(obj.uuid) for obj in collection.iterator(return_properties=[])]
+    async def get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:
+        result = []
+        async for obj in collection.iterator(return_properties=[]):
+            result.append(str(obj.uuid))
+        return result
 
-    def _safe_create_collection(self, *args: Any, **kwargs: Any) -> None:
+    async def _safe_create_collection(self, *args: Any, **kwargs: Any) -> None:
         try:
-            self.client.collections.create(*args, **kwargs)
+            await self.client.collections.create(*args, **kwargs)
         except weaviate.exceptions.UnexpectedStatusCodeError as err:
             if (
                 re.search(r"class name (\w+?) already exists", err.message)
@@ -110,25 +104,27 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
         return self.client.collections.get(self.JUDGMENT_CHUNKS_COLLECTION)
 
     @property
-    def judgments_properties(self) -> list[str]:
+    async def judgments_properties(self) -> list[str]:
         """Get list of property names for the judgments collection.
 
         Returns:
             list[str]: List of property names in the judgments collection.
         """
-        return [prop.name for prop in self.judgments_collection.config.get().properties]
+        config = await self.judgments_collection.config.get()
+        return [prop.name for prop in config.properties]
 
     @property
-    def judgment_chunks_properties(self) -> list[str]:
+    async def judgment_chunks_properties(self) -> list[str]:
         """Get list of property names for the judgment chunks collection.
 
         Returns:
             list[str]: List of property names in the judgment chunks collection.
         """
-        return [prop.name for prop in self.judgment_chunks_collection.config.get().properties]
+        config = await self.judgment_chunks_collection.config.get()
+        return [prop.name for prop in config.properties]
 
-    def create_collections(self) -> None:
-        self._safe_create_collection(
+    async def create_collections(self) -> None:
+        await self._safe_create_collection(
             name=self.JUDGMENTS_COLLECTION,
             properties=[
                 wvcc.Property(
@@ -315,7 +311,7 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
             ],
             vectorizer_config=wvcc.Configure.Vectorizer.none(),
         )
-        self._safe_create_collection(
+        await self._safe_create_collection(
             name=self.JUDGMENT_CHUNKS_COLLECTION,
             properties=[
                 wvcc.Property(
@@ -345,6 +341,73 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
             ],
         )
 
+    async def update_judgments_vectorizer(
+        self, vectorizer_type: str = "text2vec_transformers"
+    ) -> None:
+        """Update the vectorizer configuration for the judgments collection.
+
+        Args:
+            vectorizer_type (str, optional): Type of vectorizer to use.
+                Defaults to "text2vec_transformers".
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If an unsupported vectorizer type is provided.
+        """
+        logger.info(
+            f"Updating vectorizer for {self.JUDGMENTS_COLLECTION} to {vectorizer_type}"
+        )
+
+        if vectorizer_type == "text2vec_transformers":
+            vectorizer_config = wvcc.Configure.Vectorizer.text2vec_transformers()
+        elif vectorizer_type == "none":
+            vectorizer_config = wvcc.Configure.Vectorizer.none()
+        else:
+            raise ValueError(f"Unsupported vectorizer type: {vectorizer_type}")
+
+        try:
+            await self.judgments_collection.config.update_vectorizer(
+                vectorizer_config=vectorizer_config
+            )
+            logger.info(
+                f"Successfully updated vectorizer for {self.JUDGMENTS_COLLECTION}"
+            )
+        except Exception as e:
+            logger.error(f"Failed to update vectorizer: {str(e)}")
+            raise
+
     @staticmethod
     def uuid_from_judgment_chunk_id(judgment_id: str, chunk_id: int) -> str:
         return weaviate.util.generate_uuid5(f"{judgment_id}_chunk_{chunk_id}")
+
+
+async def main():
+    """Run the update vectorizer functionality."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Update Weaviate vectorizer configuration"
+    )
+    parser.add_argument(
+        "--vectorizer",
+        type=str,
+        default="text2vec_transformers",
+        choices=["text2vec_transformers", "none"],
+        help="Vectorizer type to use (default: text2vec_transformers)",
+    )
+    args = parser.parse_args()
+
+    try:
+        async with WeaviateJudgmentsDatabase() as db:
+            await db.update_judgments_vectorizer(vectorizer_type=args.vectorizer)
+    except Exception as e:
+        logger.error(f"Error updating vectorizer: {e}")
+        raise
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(main())
