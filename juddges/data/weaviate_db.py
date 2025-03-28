@@ -368,7 +368,8 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
             raise ValueError(f"Unsupported vectorizer type: {vectorizer_type}")
 
         try:
-            await self.judgments_collection.config.update_vectorizer(
+            # Update the collection configuration
+            await self.judgments_collection.config.update(
                 vectorizer_config=vectorizer_config
             )
             logger.info(
@@ -381,33 +382,3 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
     @staticmethod
     def uuid_from_judgment_chunk_id(judgment_id: str, chunk_id: int) -> str:
         return weaviate.util.generate_uuid5(f"{judgment_id}_chunk_{chunk_id}")
-
-
-async def main():
-    """Run the update vectorizer functionality."""
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Update Weaviate vectorizer configuration"
-    )
-    parser.add_argument(
-        "--vectorizer",
-        type=str,
-        default="text2vec_transformers",
-        choices=["text2vec_transformers", "none"],
-        help="Vectorizer type to use (default: text2vec_transformers)",
-    )
-    args = parser.parse_args()
-
-    try:
-        async with WeaviateJudgmentsDatabase() as db:
-            await db.update_judgments_vectorizer(vectorizer_type=args.vectorizer)
-    except Exception as e:
-        logger.error(f"Error updating vectorizer: {e}")
-        raise
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    asyncio.run(main())
