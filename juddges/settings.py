@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import langchain
 import mlflow
 import tiktoken
 from sqlalchemy import create_engine
@@ -66,7 +67,7 @@ def get_sqlalchemy_engine() -> Engine:
 
 def prepare_langchain_cache() -> None:
     import langchain
-    from langchain.cache import SQLAlchemyMd5Cache
+    from langchain_community.cache import SQLAlchemyMd5Cache
 
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 
