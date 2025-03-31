@@ -15,7 +15,7 @@ logger.info(f"Environment variables loaded from {ROOT_PATH / '.env'} file")
 load_dotenv(ROOT_PATH / ".env", override=True)
 
 
-class WeaviateDatabase(ABC):
+class WeaviateDatabase(ABC): 
     def __init__(
         self,
         host: str = os.environ["WV_URL"],
@@ -340,44 +340,6 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                 )
             ],
         )
-
-    async def update_judgments_vectorizer(
-        self, vectorizer_type: str = "text2vec_transformers"
-    ) -> None:
-        """Update the vectorizer configuration for the judgments collection.
-
-        Args:
-            vectorizer_type (str, optional): Type of vectorizer to use.
-                Defaults to "text2vec_transformers".
-
-        Returns:
-            None
-
-        Raises:
-            ValueError: If an unsupported vectorizer type is provided.
-        """
-        logger.info(
-            f"Updating vectorizer for {self.JUDGMENTS_COLLECTION} to {vectorizer_type}"
-        )
-
-        if vectorizer_type == "text2vec_transformers":
-            vectorizer_config = wvcc.Configure.Vectorizer.text2vec_transformers()
-        elif vectorizer_type == "none":
-            vectorizer_config = wvcc.Configure.Vectorizer.none()
-        else:
-            raise ValueError(f"Unsupported vectorizer type: {vectorizer_type}")
-
-        try:
-            # Update the collection configuration
-            await self.judgments_collection.config.update(
-                vectorizer_config=vectorizer_config
-            )
-            logger.info(
-                f"Successfully updated vectorizer for {self.JUDGMENTS_COLLECTION}"
-            )
-        except Exception as e:
-            logger.error(f"Failed to update vectorizer: {str(e)}")
-            raise
 
     @staticmethod
     def uuid_from_judgment_chunk_id(judgment_id: str, chunk_id: int) -> str:
