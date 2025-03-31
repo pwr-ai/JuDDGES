@@ -31,7 +31,7 @@ plt.switch_backend("agg")
 MIN_THRESHOLD = 5
 
 
-async def main(overwrite: bool = True):
+async def main(overwrite: bool = False):
     """
     Main execution function.
 
@@ -49,8 +49,6 @@ async def main(overwrite: bool = True):
     merged_output_path = ARTICLE_111_DATA_PATH / "all_judgments_merged.pkl"
     filtered_output_path = ARTICLE_111_DATA_PATH / "filtered_judgments.pkl"
     score_dist_path = ARTICLE_111_DATA_PATH / "search_score_distributions.png"
-    score_viz_path = ARTICLE_111_DATA_PATH / "score_distribution.png"
-    extracted_data_path = ARTICLE_111_DATA_PATH / "extracted_judgment_data.pkl"
     judgments_with_extraction_path = (
         ARTICLE_111_DATA_PATH / "judgments_with_extraction.pkl"
     )
@@ -105,13 +103,15 @@ async def main(overwrite: bool = True):
         filtered_df.to_pickle(filtered_output_path)
 
         # Extract information from filtered judgments
-        judgments_with_extraction, extracted_data = await extract_judgment_information(
+        judgments_with_extraction = await extract_judgment_information(
             filtered_df, AGITATION_SCHEMA
         )
 
-        # # Save extracted information
-        pd.DataFrame(extracted_data).to_pickle(extracted_data_path)
         judgments_with_extraction.to_pickle(judgments_with_extraction_path)
+
+        logger.info(
+            f"Successfully extracted information from {len(judgments_with_extraction)} judgments and saved to {judgments_with_extraction_path}"
+        )
 
 
 if __name__ == "__main__":

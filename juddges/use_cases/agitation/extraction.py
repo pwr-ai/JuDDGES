@@ -19,7 +19,9 @@ MODEL_NAME = GPT_4o
 LANGUAGE = "polish"  # Polish language for judgments
 
 
-async def extract_judgment_information(df, schema, batch_size=LLM_BATCH_SIZE):
+async def extract_judgment_information(
+    df: pd.DataFrame, schema: dict, batch_size: int = LLM_BATCH_SIZE
+) -> pd.DataFrame:
     """
     Extract structured information from judgment texts using LLM.
 
