@@ -4,6 +4,8 @@ Functions for extracting structured information from judgment texts.
 
 import pandas as pd
 from loguru import logger
+from more_itertools import chunked
+from tqdm import tqdm
 
 from juddges.llms import GPT_4o
 from juddges.prompts.information_extraction import prepare_information_extraction_chain
@@ -27,7 +29,7 @@ async def extract_judgment_information(df, schema, batch_size=LLM_BATCH_SIZE):
         batch_size: Number of judgments to process in each batch
 
     Returns:
-        Tuple of (DataFrame with extraction results, list of extracted data)
+        DataFrame with extracted information
     """
 
     logger.info(
@@ -38,68 +40,25 @@ async def extract_judgment_information(df, schema, batch_size=LLM_BATCH_SIZE):
     extraction_chain = prepare_information_extraction_chain(model_name=MODEL_NAME)
 
     # Process judgments in batches to avoid memory issues
-    all_judgments_data = []
+    extracted_data = []
 
-    # Create a copy of the dataframe to add extraction results
-    judgments_with_extraction = df.copy()
-    judgments_with_extraction["extracted_info"] = None
+    judgments_properties = df.properties.tolist()
 
     # Use tqdm to show progress
-    for i in range(0, len(df), batch_size):
-        batch = df.iloc[i : i + batch_size]
-        logger.info(
-            f"Processing batch {i//batch_size + 1}/{(len(df) + batch_size - 1)//batch_size}"
-        )
-
-        batch_inputs = []
-        batch_indices = []
-
-        for idx, (_, judgment) in enumerate(batch.iterrows()):
-            # Get the full text from the judgment
-            content = judgment.properties["full_text"]
-            if not content:
-                continue
-
-            batch_inputs.append(
+    for batch in tqdm(
+        chunked(judgments_properties, batch_size), total=len(df) / batch_size
+    ):
+        extracted_data += extraction_chain.batch(
+            [
                 {
-                    "TEXT": content[:MAX_TEXT_LENGTH],
+                    "TEXT": prop["full_text"][:MAX_TEXT_LENGTH],
                     "SCHEMA": schema,
                     "LANGUAGE": LANGUAGE,
                 }
-            )
-            batch_indices.append(i + idx)
+                for prop in batch
+            ]
+        )
 
-        # Skip empty batches
-        if not batch_inputs:
-            logger.warning("Skipping empty batch")
-            continue
+    df["extracted_informations"] = extracted_data
 
-        # Process the batch
-        try:
-            batch_results = extraction_chain.batch(batch_inputs)
-
-            # Process each result
-            for result, (_, judgment), idx in zip(
-                batch_results, batch.iterrows(), batch_indices
-            ):
-                if result:
-                    # Add metadata to the result
-                    result.update(
-                        {
-                            "judgment_id": judgment.get("judgment_id"),
-                            "court_name": judgment.get("properties.court_name"),
-                            "docket_number": judgment.get("properties.docket_number"),
-                            "judgment_date": judgment.get("properties.judgment_date"),
-                        }
-                    )
-
-                    all_judgments_data.append(result)
-
-                    # Add extraction result to the dataframe
-                    df_idx = batch.index[idx - i]
-                    judgments_with_extraction.loc[df_idx, "extracted_info"] = result
-        except Exception as e:
-            logger.error(f"Error processing batch: {e}")
-            continue
-
-    return judgments_with_extraction, all_judgments_data
+    return df

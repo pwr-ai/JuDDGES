@@ -23,6 +23,19 @@ RETURN_PROPERTIES = [
     "docket_number",
     "judgment_date",
     "legal_bases",
+    "judgment_date",
+    "publication_date",
+    "court_id",
+    "department_id",
+    "judgment_type",
+    "excerpt",
+    "content",
+    "presiding_judge",
+    "judges",
+    "keywords",
+    "department_name",
+    "text_legal_bases",
+    "thesis",
 ]
 
 RETURN_METADATA = [
