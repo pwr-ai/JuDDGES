@@ -11,20 +11,23 @@ from typing import Dict, List
 import matplotlib.pyplot as plt
 import pandas as pd
 from loguru import logger
+from sentence_transformers import SentenceTransformer
 from settings import ARTICLE_111_DATA_PATH, prepare_langchain_cache
 from tqdm import tqdm
 
 from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.llms import GPT_4o
-from juddges.prompts.information_extraction import prepare_information_extraction_chain
+from juddges.prompts.information_extraction import \
+    prepare_information_extraction_chain
 from juddges.prompts.schemas.agitation import AGITATION_SCHEMA
 
 BATCH_SIZE = 100
 LLM_BATCH_SIZE = 10
-MAX_OBJECTS = 10000
+MAX_OBJECTS = 10_000
 MAX_TEXT_LENGTH = 150000
 
 QUERY_COLUMN = "query"
+
 
 # Configure matplotlib for non-interactive use
 plt.switch_backend("agg")
@@ -57,7 +60,7 @@ AGITATION_QUERIES = {
 }
 
 
-async def get_all_art111_judgments(
+async def bm25_judgment_search(
     db: WeaviateJudgmentsDatabase, queries: List[str], max_objects: int = MAX_OBJECTS
 ) -> pd.DataFrame:
     """
@@ -184,6 +187,7 @@ async def get_all_art111_judgments(
                 {
                     **judgment_dict,
                     QUERY_COLUMN: query,
+                    "search_type": "bm25",
                 }
             )
 
@@ -245,7 +249,7 @@ def deduplicate_judgments(judgments: List[Dict]) -> List[Dict]:
     return deduplicated_judgments
 
 
-async def semantic_search_digital_materials(
+async def semantic_judgment_search(
     db: WeaviateJudgmentsDatabase, queries: List[str], max_objects: int = MAX_OBJECTS
 ) -> pd.DataFrame:
     """
@@ -259,6 +263,8 @@ async def semantic_search_digital_materials(
     Returns:
         DataFrame containing judgment data with query information
     """
+    model = SentenceTransformer("sdadas/mmlw-roberta-large")
+
     logger.info("Performing semantic search for digital campaign materials")
 
     all_judgments = {}  # Dictionary with query as key
@@ -276,13 +282,13 @@ async def semantic_search_digital_materials(
 
         while True:
             # Embed the query
-            vector = await db.embeddings.embed_query(query)
-
+            vector = model.encode(query)
             # Query the judgments collection using vector search
             search = db.judgments_collection.query.near_vector(
-                vector=vector,
+                near_vector=vector,
                 limit=BATCH_SIZE,
                 certainty=0.5,
+                distance=0.5,
                 offset=offset,
                 include_vector=True,
                 return_metadata=[
@@ -320,7 +326,8 @@ async def semantic_search_digital_materials(
             # Process judgments and collect scores
             for judgment in batch_judgments:
                 query_judgments.append(judgment)
-                query_scores.append(judgment.metadata.score)
+                # Use distance as the score for near_vector search
+                query_scores.append(judgment.metadata.distance)
 
             # Update offset for next batch
             offset += BATCH_SIZE
@@ -359,6 +366,7 @@ async def semantic_search_digital_materials(
                 {
                     **judgment_dict,
                     QUERY_COLUMN: query,
+                    "search_type": "vector",
                 }
             )
 
@@ -377,140 +385,116 @@ async def semantic_search_digital_materials(
     return judgments_df
 
 
-async def main():
+async def extract_judgment_information(df, batch_size=LLM_BATCH_SIZE):
+    """
+    Extract structured information from judgment texts using LLM.
 
+    Args:
+        df: DataFrame containing judgment data
+        batch_size: Number of judgments to process in each batch
+
+    Returns:
+        Tuple of (DataFrame with extraction results, list of extracted data)
+    """
+    # Choose the model for information extraction
+    MODEL_NAME = GPT_4o
+    LANGUAGE = "polish"  # Polish language for judgments
+
+    logger.info(f"Starting information extraction using {MODEL_NAME} model")
+
+    # Create the extraction chain
+    extraction_chain = prepare_information_extraction_chain(model_name=MODEL_NAME)
+
+    # Process judgments in batches to avoid memory issues
+    all_judgments_data = []
+
+    # Create a copy of the dataframe to add extraction results
+    judgments_with_extraction = df.copy()
+    judgments_with_extraction["extracted_info"] = None
+
+    # Use tqdm to show progress
+    for i in range(0, len(df), batch_size):
+        batch = df[i : i + batch_size]
+        logger.info(
+            f"Processing batch {i//batch_size + 1}/{(len(df) + batch_size - 1)//batch_size}"
+        )
+
+        batch_inputs = []
+        batch_indices = []
+        for idx, judgment in enumerate(batch):
+            content = judgment.properties.get("full_text", "")
+            if not content:
+                continue
+
+            batch_inputs.append(
+                {
+                    "TEXT": content[
+                        :MAX_TEXT_LENGTH
+                    ],  # Limit text length to avoid token limits
+                    "SCHEMA": AGITATION_SCHEMA,
+                    "LANGUAGE": LANGUAGE,
+                }
+            )
+            batch_indices.append(i + idx)
+
+        # Skip empty batches
+        if not batch_inputs:
+            logger.warning("Skipping empty batch")
+            continue
+
+        # Process the batch
+        try:
+            batch_results = extraction_chain.batch(batch_inputs)
+
+            # Combine extraction results with judgment metadata
+            for result, judgment, idx in zip(batch_results, batch, batch_indices):
+                if result:
+                    # Add metadata to the result
+                    result.update(
+                        {
+                            "judgment_id": judgment.properties.get("judgment_id"),
+                            "court_name": judgment.properties.get("court_name"),
+                            "docket_number": judgment.properties.get("docket_number"),
+                            "judgment_date": judgment.properties.get("judgment_date"),
+                        }
+                    )
+
+                    # Enhance extraction with regex pattern matching for digital platforms
+                    content = judgment.properties.get(
+                        "content", ""
+                    ) or judgment.properties.get("full_text", "")
+
+                    all_judgments_data.append(result)
+
+                    # Add extraction result to the dataframe
+                    judgments_with_extraction.loc[idx, "extracted_info"] = result
+        except Exception as e:
+            logger.error(f"Error processing batch: {e}")
+            continue
+
+    return judgments_with_extraction, all_judgments_data
+
+
+async def main():
     prepare_langchain_cache()
 
     """Main execution function"""
     async with WeaviateJudgmentsDatabase() as db:
         # Get all Article 111 § 1 judgments
-        bm25_judgments_df = await get_all_art111_judgments(
+        bm25_judgments_df = await bm25_judgment_search(
             db, AGITATION_QUERIES["bm25_queries"]
         )
 
         # Get all Article 111 § 1 judgments
-        vector_judgments_df = await get_all_art111_judgments(
+        vector_judgments_df = await semantic_judgment_search(
             db, AGITATION_QUERIES["vector_queries"]
         )
 
         df = pd.concat([bm25_judgments_df, vector_judgments_df])
+        df.reset_index(drop=True, inplace=True)
         df.to_pickle(ARTICLE_111_DATA_PATH / "all_judgments.pkl")
-        # Choose the model for information extraction
-        MODEL_NAME = GPT_4o
-        LANGUAGE = "polish"  # Polish language for judgments
 
-        logger.info(f"Starting information extraction using {MODEL_NAME} model")
-
-        # Create the extraction chain
-        extraction_chain = prepare_information_extraction_chain(model_name=MODEL_NAME)
-
-        # Process judgments in batches to avoid memory issues
-        batch_size = LLM_BATCH_SIZE
-        all_judgments_data = []
-
-        # Create a copy of the dataframe to add extraction results
-        judgments_with_extraction = df.copy()
-        judgments_with_extraction["extracted_info"] = None
-
-        # Use tqdm to show progress
-        for i in range(0, len(df), batch_size):
-            batch = df[i : i + batch_size]
-            logger.info(
-                f"Processing batch {i//batch_size + 1}/{(len(df) + batch_size - 1)//batch_size}"
-            )
-
-            batch_inputs = []
-            batch_indices = []
-            for idx, judgment in enumerate(batch):
-                content = judgment.properties.get("full_text", "")
-                if not content:
-                    continue
-
-                batch_inputs.append(
-                    {
-                        "TEXT": content[
-                            :MAX_TEXT_LENGTH
-                        ],  # Limit text length to avoid token limits
-                        "SCHEMA": AGITATION_SCHEMA,
-                        "LANGUAGE": LANGUAGE,
-                    }
-                )
-                batch_indices.append(i + idx)
-
-            # Skip empty batches
-            if not batch_inputs:
-                logger.warning("Skipping empty batch")
-                continue
-
-            # Process the batch
-            try:
-                batch_results = extraction_chain.batch(batch_inputs)
-
-                # Combine extraction results with judgment metadata
-                for result, judgment, idx in zip(batch_results, batch, batch_indices):
-                    if result:
-                        # Add metadata to the result
-                        result.update(
-                            {
-                                "judgment_id": judgment.properties.get("judgment_id"),
-                                "court_name": judgment.properties.get("court_name"),
-                                "docket_number": judgment.properties.get(
-                                    "docket_number"
-                                ),
-                                "judgment_date": judgment.properties.get(
-                                    "judgment_date"
-                                ),
-                            }
-                        )
-
-                        # Enhance extraction with regex pattern matching for digital platforms
-                        content = judgment.properties.get(
-                            "content", ""
-                        ) or judgment.properties.get("full_text", "")
-
-                        all_judgments_data.append(result)
-
-                        # Add extraction result to the dataframe
-                        judgments_with_extraction.loc[idx, "extracted_info"] = result
-            except Exception as e:
-                logger.error(f"Error processing batch: {e}")
-                continue
-
-        # Save all extracted data to CSV
-        if all_judgments_data:
-            extracted_df = pd.DataFrame(all_judgments_data)
-            output_path = ARTICLE_111_DATA_PATH / "extracted_agitation_data.csv"
-            extracted_df.to_csv(output_path, index=False)
-            logger.info(
-                f"Saved {len(all_judgments_data)} processed judgments to {output_path}"
-            )
-
-            # Save the enhanced dataframe with extraction results
-            enhanced_output_path = (
-                ARTICLE_111_DATA_PATH / "judgments_with_extraction.pkl"
-            )
-            judgments_with_extraction.to_pickle(enhanced_output_path)
-            logger.info(
-                f"Saved judgments with extraction results to {enhanced_output_path}"
-            )
-
-        else:
-            logger.warning("No structured data was extracted from judgments")
-
-        # Calculate platform statistics
-        all_digital_judgments = []
-        platform_counts = {}
-
-        for platform, judgments in digital_materials.items():
-            platform_counts[platform] = len(judgments)
-            # Collect unique judgments across all platforms
-            for judgment in judgments:
-                judgment_id = judgment.properties.get("judgment_id")
-                if judgment_id not in [
-                    j.properties.get("judgment_id") for j in all_digital_judgments
-                ]:
-                    judgment.properties["digital_platform"] = platform
-                    all_digital_judgments.append(judgment)
+        # await extract_judgment_information(df)
 
 
 if __name__ == "__main__":
