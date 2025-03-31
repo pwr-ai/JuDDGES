@@ -6,9 +6,11 @@ Script to analyze electoral judgments focusing on digital campaign materials
 under Article 111 § 1 of the Electoral Code.
 """
 import asyncio
+import os
 from typing import Dict, List
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from loguru import logger
 from sentence_transformers import SentenceTransformer
@@ -17,8 +19,7 @@ from tqdm import tqdm
 
 from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
 from juddges.llms import GPT_4o
-from juddges.prompts.information_extraction import \
-    prepare_information_extraction_chain
+from juddges.prompts.information_extraction import prepare_information_extraction_chain
 from juddges.prompts.schemas.agitation import AGITATION_SCHEMA
 
 BATCH_SIZE = 100
@@ -72,6 +73,13 @@ async def bm25_judgment_search(
     Returns:
         List of judgment dictionaries
     """
+    output_path = ARTICLE_111_DATA_PATH / "all_judgments_bm25.pkl"
+
+    # Check if the file already exists
+    if os.path.exists(output_path):
+        logger.info(f"Loading existing BM25 judgments from {output_path}")
+        return pd.read_pickle(output_path)
+
     logger.info("Searching for all Article 111 § 1 judgments using BM25 search")
 
     # Define multiple search queries instead of regex patterns
@@ -181,7 +189,6 @@ async def bm25_judgment_search(
 
             judgment_dict = judgment.__dict__
             judgment_dict["uuid"] = str(judgment_dict["uuid"])
-            judgment_dict.pop("uuid")
 
             data.append(
                 {
@@ -192,7 +199,7 @@ async def bm25_judgment_search(
             )
 
     judgments_df = pd.DataFrame(data)
-    judgments_df.to_pickle(ARTICLE_111_DATA_PATH / "all_judgments_bm25.pkl")
+    judgments_df.to_pickle(output_path)
 
     return judgments_df
 
@@ -263,6 +270,13 @@ async def semantic_judgment_search(
     Returns:
         DataFrame containing judgment data with query information
     """
+    output_path = ARTICLE_111_DATA_PATH / "all_judgments_vector.pkl"
+
+    # Check if the file already exists
+    if os.path.exists(output_path):
+        logger.info(f"Loading existing vector judgments from {output_path}")
+        return pd.read_pickle(output_path)
+
     model = SentenceTransformer("sdadas/mmlw-roberta-large")
 
     logger.info("Performing semantic search for digital campaign materials")
@@ -287,7 +301,6 @@ async def semantic_judgment_search(
             search = db.judgments_collection.query.near_vector(
                 near_vector=vector,
                 limit=BATCH_SIZE,
-                certainty=0.5,
                 distance=0.5,
                 offset=offset,
                 include_vector=True,
@@ -360,7 +373,6 @@ async def semantic_judgment_search(
         for judgment in judgments:
             judgment_dict = judgment.__dict__
             judgment_dict["uuid"] = str(judgment_dict["uuid"])
-            judgment_dict.pop("uuid")
 
             data.append(
                 {
@@ -371,16 +383,7 @@ async def semantic_judgment_search(
             )
 
     judgments_df = pd.DataFrame(data)
-    judgments_df.to_pickle(ARTICLE_111_DATA_PATH / "all_judgments_vector.pkl")
-
-    # Log statistics
-    total_judgments = len(judgments_df)
-    unique_judgments = judgments_df["judgment_id"].nunique()
-    logger.info(f"Total judgments retrieved: {total_judgments}")
-    logger.info(f"Unique judgments: {unique_judgments}")
-    logger.info(
-        f"Duplicate rate: {(total_judgments - unique_judgments) / total_judgments * 100:.2f}%"
-    )
+    judgments_df.to_pickle(output_path)
 
     return judgments_df
 
@@ -400,7 +403,9 @@ async def extract_judgment_information(df, batch_size=LLM_BATCH_SIZE):
     MODEL_NAME = GPT_4o
     LANGUAGE = "polish"  # Polish language for judgments
 
-    logger.info(f"Starting information extraction using {MODEL_NAME} model")
+    logger.info(
+        f"Starting information extraction using {MODEL_NAME} model on {len(df)} judgments"
+    )
 
     # Create the extraction chain
     extraction_chain = prepare_information_extraction_chain(model_name=MODEL_NAME)
@@ -414,23 +419,23 @@ async def extract_judgment_information(df, batch_size=LLM_BATCH_SIZE):
 
     # Use tqdm to show progress
     for i in range(0, len(df), batch_size):
-        batch = df[i : i + batch_size]
+        batch = df.iloc[i : i + batch_size]
         logger.info(
             f"Processing batch {i//batch_size + 1}/{(len(df) + batch_size - 1)//batch_size}"
         )
 
         batch_inputs = []
         batch_indices = []
-        for idx, judgment in enumerate(batch):
-            content = judgment.properties.get("full_text", "")
+
+        for idx, (_, judgment) in enumerate(batch.iterrows()):
+            # Get the full text from the judgment
+            content = judgment.get("properties.full_text", "")
             if not content:
                 continue
 
             batch_inputs.append(
                 {
-                    "TEXT": content[
-                        :MAX_TEXT_LENGTH
-                    ],  # Limit text length to avoid token limits
+                    "TEXT": content[:MAX_TEXT_LENGTH],
                     "SCHEMA": AGITATION_SCHEMA,
                     "LANGUAGE": LANGUAGE,
                 }
@@ -446,28 +451,26 @@ async def extract_judgment_information(df, batch_size=LLM_BATCH_SIZE):
         try:
             batch_results = extraction_chain.batch(batch_inputs)
 
-            # Combine extraction results with judgment metadata
-            for result, judgment, idx in zip(batch_results, batch, batch_indices):
+            # Process each result
+            for result, (_, judgment), idx in zip(
+                batch_results, batch.iterrows(), batch_indices
+            ):
                 if result:
                     # Add metadata to the result
                     result.update(
                         {
-                            "judgment_id": judgment.properties.get("judgment_id"),
-                            "court_name": judgment.properties.get("court_name"),
-                            "docket_number": judgment.properties.get("docket_number"),
-                            "judgment_date": judgment.properties.get("judgment_date"),
+                            "judgment_id": judgment.get("judgment_id"),
+                            "court_name": judgment.get("properties.court_name"),
+                            "docket_number": judgment.get("properties.docket_number"),
+                            "judgment_date": judgment.get("properties.judgment_date"),
                         }
                     )
-
-                    # Enhance extraction with regex pattern matching for digital platforms
-                    content = judgment.properties.get(
-                        "content", ""
-                    ) or judgment.properties.get("full_text", "")
 
                     all_judgments_data.append(result)
 
                     # Add extraction result to the dataframe
-                    judgments_with_extraction.loc[idx, "extracted_info"] = result
+                    df_idx = batch.index[idx - i]
+                    judgments_with_extraction.loc[df_idx, "extracted_info"] = result
         except Exception as e:
             logger.error(f"Error processing batch: {e}")
             continue
@@ -490,11 +493,232 @@ async def main():
             db, AGITATION_QUERIES["vector_queries"]
         )
 
-        df = pd.concat([bm25_judgments_df, vector_judgments_df])
-        df.reset_index(drop=True, inplace=True)
-        df.to_pickle(ARTICLE_111_DATA_PATH / "all_judgments.pkl")
+        # Plot score distributions for both search types
+        plot_search_score_distributions(bm25_judgments_df, vector_judgments_df)
 
-        # await extract_judgment_information(df)
+        # Merge results
+        merged_df = merge_judgment_results(bm25_judgments_df, vector_judgments_df)
+
+        # Count total judgments before deduplication
+        total_before = len(bm25_judgments_df) + len(vector_judgments_df)
+        total_after = len(merged_df)
+        duplicate_count = total_before - total_after
+        duplicate_percentage = (duplicate_count / total_before) * 100
+
+        logger.info(f"Total judgments before deduplication: {total_before}")
+        logger.info(f"Total judgments after deduplication: {total_after}")
+        logger.info(
+            f"Duplicates removed: {duplicate_count} ({duplicate_percentage:.2f}%)"
+        )
+
+        # Visualize score distribution to help determine thresholds
+        visualize_score_distribution(merged_df)
+
+        # Save all results before filtering
+        merged_df.to_pickle(ARTICLE_111_DATA_PATH / "all_judgments_merged.pkl")
+
+        # Filter with recommended threshold (adjust based on visualization)
+        filtered_df = merged_df[merged_df["relevance_score"] >= 0.6]
+        logger.info(f"Filtered from {len(merged_df)} to {len(filtered_df)} judgments")
+
+        # Save filtered results
+        filtered_df.to_pickle(ARTICLE_111_DATA_PATH / "filtered_judgments.pkl")
+
+        # Extract information from filtered judgments only
+        # This will be more efficient than processing all judgments
+        # judgments_with_extraction, extracted_data = await extract_judgment_information(
+        #     filtered_df
+        # )
+
+        # # Save extracted information
+        # pd.DataFrame(extracted_data).to_pickle(
+        #     ARTICLE_111_DATA_PATH / "extracted_judgment_data.pkl"
+        # )
+        # judgments_with_extraction.to_pickle(
+        #     ARTICLE_111_DATA_PATH / "judgments_with_extraction.pkl"
+        # )
+
+
+def plot_search_score_distributions(bm25_df, vector_df):
+    """
+    Plot score distributions for BM25 and vector search to help determine thresholds.
+
+    Args:
+        bm25_df: DataFrame with BM25 search results
+        vector_df: DataFrame with vector search results
+    """
+    logger.info("Generating score distribution visualizations for search methods")
+
+    plt.figure(figsize=(12, 10))
+
+    # Extract scores
+    bm25_scores = bm25_df["metadata"].apply(lambda x: x.score)
+    vector_distances = vector_df["metadata"].apply(lambda x: x.distance)
+
+    # BM25 scores (higher is better)
+    plt.subplot(2, 1, 1)
+    plt.hist(bm25_scores, bins=30, alpha=0.7, color="blue")
+    plt.axvline(
+        x=bm25_scores.quantile(0.5),
+        color="red",
+        linestyle="--",
+        label=f"Median: {bm25_scores.quantile(0.5):.4f}",
+    )
+    plt.axvline(
+        x=bm25_scores.quantile(0.75),
+        color="green",
+        linestyle="--",
+        label=f"75th percentile: {bm25_scores.quantile(0.75):.4f}",
+    )
+    plt.title("BM25 Score Distribution")
+    plt.xlabel("Score (higher is better)")
+    plt.ylabel("Count")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+
+    # Vector distances (lower is better)
+    plt.subplot(2, 1, 2)
+    plt.hist(vector_distances, bins=30, alpha=0.7, color="purple")
+    plt.axvline(
+        x=vector_distances.quantile(0.5),
+        color="red",
+        linestyle="--",
+        label=f"Median: {vector_distances.quantile(0.5):.4f}",
+    )
+    plt.axvline(
+        x=vector_distances.quantile(0.25),
+        color="green",
+        linestyle="--",
+        label=f"25th percentile: {vector_distances.quantile(0.25):.4f}",
+    )
+    plt.title("Vector Distance Distribution")
+    plt.xlabel("Distance (lower is better)")
+    plt.ylabel("Count")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(ARTICLE_111_DATA_PATH / "search_score_distributions.png")
+    plt.close()
+
+    logger.info(
+        f"Search score distributions saved to {ARTICLE_111_DATA_PATH / 'search_score_distributions.png'}"
+    )
+
+
+def merge_judgment_results(bm25_df, vector_df):
+    """
+    Merge BM25 and vector search results with deduplication.
+
+    Returns:
+        DataFrame with combined results and relevance scores
+    """
+    logger.info("Merging BM25 and vector search results")
+
+    # Concatenate dataframes
+    combined_df = pd.concat([bm25_df, vector_df])
+
+    # Normalize scores between search types
+    for search_type in ["bm25", "vector"]:
+        mask = combined_df["search_type"] == search_type
+        if mask.any():
+            score_column = (
+                "metadata.score" if search_type == "bm25" else "metadata.distance"
+            )
+            score_data = pd.json_normalize(combined_df.loc[mask, "metadata"])
+
+            # Handle different scoring directions (higher is better for BM25, lower is better for vector)
+            if search_type == "bm25":
+                max_score = score_data["score"].max()
+                if max_score > 0:
+                    combined_df.loc[mask, "normalized_score"] = (
+                        score_data["score"] / max_score
+                    )
+            else:
+                # For vector search, invert the distance (1 - normalized distance)
+                max_dist = score_data["distance"].max()
+                if max_dist > 0:
+                    combined_df.loc[mask, "normalized_score"] = 1 - (
+                        score_data["distance"] / max_dist
+                    )
+
+    # Group by judgment_id to deduplicate
+    grouped = (
+        combined_df.groupby("judgment_id")
+        .agg(
+            {
+                "normalized_score": "mean",
+                QUERY_COLUMN: lambda x: list(set(x)),
+                "search_type": lambda x: list(set(x)),
+                "properties.court_name": "first",
+                "properties.docket_number": "first",
+                "properties.judgment_date": "first",
+                "properties.full_text": "first",
+            }
+        )
+        .reset_index()
+    )
+
+    # Add query count as a relevance signal
+    grouped["query_count"] = grouped[QUERY_COLUMN].apply(len)
+
+    # Calculate combined relevance score
+    grouped["relevance_score"] = grouped["normalized_score"] * (
+        1 + grouped["query_count"] / 10
+    )
+
+    logger.info(
+        f"Merged {len(bm25_df)} BM25 and {len(vector_df)} vector results into {len(grouped)} unique judgments"
+    )
+
+    return grouped.sort_values("relevance_score", ascending=False)
+
+
+def visualize_score_distribution(merged_df):
+    """Create visualization to help determine appropriate thresholds."""
+    logger.info("Generating score distribution visualizations")
+
+    plt.figure(figsize=(15, 10))
+
+    # Score distributions
+    plt.subplot(2, 2, 1)
+    plt.hist(merged_df["normalized_score"], bins=20)
+    plt.title("Distribution of Normalized Scores")
+    plt.xlabel("Score")
+    plt.ylabel("Count")
+
+    plt.subplot(2, 2, 2)
+    plt.hist(merged_df["relevance_score"], bins=20)
+    plt.title("Distribution of Relevance Scores")
+    plt.xlabel("Score")
+    plt.ylabel("Count")
+
+    # Cumulative distribution
+    plt.subplot(2, 2, 3)
+    counts, bins = np.histogram(merged_df["relevance_score"], bins=50)
+    plt.stairs(np.cumsum(counts) / len(merged_df), bins)
+    plt.title("Cumulative Distribution of Relevance Scores")
+    plt.xlabel("Score Threshold")
+    plt.ylabel("Proportion of Judgments Retained")
+    plt.grid(True)
+
+    # Query count distribution
+    plt.subplot(2, 2, 4)
+    plt.hist(
+        merged_df["query_count"], bins=range(1, merged_df["query_count"].max() + 2)
+    )
+    plt.title("Distribution of Query Matches per Judgment")
+    plt.xlabel("Number of Queries Matched")
+    plt.ylabel("Count")
+    plt.xticks(range(1, merged_df["query_count"].max() + 1))
+
+    plt.tight_layout()
+    plt.savefig(ARTICLE_111_DATA_PATH / "score_distribution.png")
+    plt.close()
+
+    logger.info(
+        f"Score visualization saved to {ARTICLE_111_DATA_PATH / 'score_distribution.png'}"
+    )
 
 
 if __name__ == "__main__":
