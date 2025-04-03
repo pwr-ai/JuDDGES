@@ -51,7 +51,6 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Sample item keys: {list(sample_item.keys())}")
     logger.info(f"Sample item content: {sample_item}")
 
-    ds = ds.select(range(1_000))
     ds = ds.filter(lambda item: item[TEXT_COL] is not None, num_proc=NUM_PROC)
     model = SentenceTransformer(
         config.embedding_model.name,

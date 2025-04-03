@@ -127,6 +127,9 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
         """
         return [prop.name for prop in self.judgment_chunks_collection.config.get().properties]
 
+    def get_collection(self, collection_name: str) -> weaviate.collections.Collection:
+        return self.client.collections.get(collection_name)
+
     def create_collections(self) -> None:
         self._safe_create_collection(
             name=self.JUDGMENTS_COLLECTION,
