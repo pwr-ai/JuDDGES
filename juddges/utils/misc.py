@@ -75,4 +75,4 @@ def save_dataset_as_parquet_shards(ds: Dataset, num_shards: int, output_dir: Pat
     logger.info(f"Saving {ds.num_rows} rows into {num_shards} shards to {output_dir}")
     for index in trange(num_shards, desc="Saving shards"):
         shard = ds.shard(index=index, num_shards=num_shards, contiguous=True)
-        shard.to_parquet(f"{output_dir}/{index:03d}.parquet")
+        shard.to_parquet(f"{output_dir}/shard_{index:03d}.parquet")

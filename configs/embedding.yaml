@@ -11,10 +11,10 @@ chunk_config:
   take_n_first_chunks: 16
   chunk_overlap: 128
 
-batch_size: 1024
+batch_size: 4096
 num_output_shards: 10
 
-embeddings_root_dir: data/embedding
+output_dir: null
 
 hydra:
   output_subdir: null

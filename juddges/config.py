@@ -57,3 +57,23 @@ class FineTuningConfig(BaseModel, extra="forbid"):
     @property
     def use_peft(self) -> bool:
         return self.peft_args is not None
+
+
+class EmbeddingConfig(BaseModel, extra="forbid"):
+    CHUNK_EMBEDDINGS_DIR: str = "chunk_embeddings"
+    AGG_EMBEDDINGS_DIR: str = "agg_embeddings"
+
+    output_dir: Path
+    dataset_name: str
+    embedding_model: EmbeddingModelConfig
+    chunk_config: dict[str, Any] = None
+    batch_size: int
+    num_output_shards: int
+
+    @property
+    def chunk_embeddings_dir(self) -> Path:
+        return self.output_dir / self.CHUNK_EMBEDDINGS_DIR
+
+    @property
+    def agg_embeddings_dir(self) -> Path:
+        return self.output_dir / self.AGG_EMBEDDINGS_DIR

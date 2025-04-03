@@ -54,12 +54,16 @@ stages:
       PYTHONPATH=. python scripts/embed/embed_text.py
       embedding_model=${item.model}
       dataset_name=JuDDGES/pl-court-raw
+      output_dir=data/embeddings/pl-court-raw/${item.model}
     deps:
       - scripts/embed/embed_text.py
       - configs/embedding.yaml
       - configs/embedding_model/${item.model}.yaml
     outs:
-      - data/embeddings/JuDDGES__pl-court-raw/${item.model}/all_embeddings
+      - data/embeddings/pl-court-raw/${item.model}/chunk_embeddings:
+          cache: false
+      - data/embeddings/pl-court-raw/${item.model}/agg_embeddings:
+          cache: false
 
   aggregate_embeddings:
     matrix:

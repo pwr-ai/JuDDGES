@@ -64,30 +64,31 @@ stages:
       size: 5203
   embed@mmlw-roberta-large:
     cmd: PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=mmlw-roberta-large
+      dataset_name=JuDDGES/pl-court-raw output_dir=data/embeddings/pl-court-raw/mmlw-roberta-large
     deps:
     - path: configs/embedding.yaml
       hash: md5
-      md5: 9a163f8656c6efa150fd7f939bb32e49
-      size: 477
+      md5: 0e6208b3b3bc737f6f7d01a7ba95e2c2
+      size: 386
     - path: configs/embedding_model/mmlw-roberta-large.yaml
       hash: md5
       md5: 22f36cfd196c0fdc3cfd8a036d52b606
       size: 52
-    - path: data/datasets/pl/raw
-      hash: md5
-      md5: 622ba21868561c26fb6877ad95bfb5c5.dir
-      size: 10234505621
-      nfiles: 17
     - path: scripts/embed/embed_text.py
       hash: md5
-      md5: d9f127f2e92afa40f23ebcd6cf540cb9
-      size: 3743
+      md5: eb28f54c2da67a4dbbf620e5a2384e0c
+      size: 5096
     outs:
-    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings
       hash: md5
-      md5: a8a4a370199cce269899df89f4e33fdc.dir
-      size: 23430894782
-      nfiles: 51
+      md5: d23be52cb8d5a14c58845a0b752ce27f.dir
+      size: 20137162
+      nfiles: 10
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/chunk_embeddings
+      hash: md5
+      md5: 0ad83c43e6227560187ea1cf71ce0335.dir
+      size: 17609307
+      nfiles: 10
   evaluate_api_models@en-court-instruct-open_ai_gpt-4o-997:
     cmd: PYTHONPATH=. python scripts/sft/evaluate.py --output-file data/experiments/predict/en-court-instruct/open_ai_gpt-4o/outputs_997.json
       --num-proc=-1
