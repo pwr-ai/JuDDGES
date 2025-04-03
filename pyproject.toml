@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "juddges"
+name="juddges"
 version = "0.0.1"
 description = "Juddges is a tool for managing and analyzing judgements."
 authors = ["Lukasz Augustyniak <lukasz.augustyniak@pwr.edu.p>"]
