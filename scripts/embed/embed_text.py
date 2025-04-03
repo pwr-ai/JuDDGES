@@ -1,5 +1,4 @@
 import os
-from multiprocessing import cpu_count
 from pathlib import Path
 from pprint import pformat
 from typing import Any
@@ -12,6 +11,7 @@ from loguru import logger
 from omegaconf import DictConfig
 from openai import BaseModel
 from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
 from transformers import PreTrainedTokenizer
 from transformers.utils import is_flash_attn_2_available
 
@@ -24,8 +24,7 @@ from juddges.utils.misc import save_dataset_as_parquet_shards
 ID_COL: str = "judgment_id"
 TEXT_COL: str = "full_text"
 
-NUM_PROC = int(os.getenv("NUM_PROC", cpu_count() - 2))
-NUM_GPUS = min(torch.cuda.device_count(), NUM_PROC)
+NUM_PROC = int(os.getenv("NUM_PROC", 1))
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 os.environ["TOKENIZERS_PARALLELISM"] = "false" if (NUM_PROC > 1) else "true"
 
@@ -68,16 +67,10 @@ def main(cfg: DictConfig) -> None:
 
     ds = load_dataset(
         config.dataset_name,
-        columns=[ID_COL, TEXT_COL],
+        columns=["judgement_id", "text"],
     )["train"]
+    ds = ds.filter(lambda item: item["text"] is not None)
 
-    logger.info(f"Dataset columns: {ds.column_names}")
-    sample_item = ds[0]
-    logger.info(f"Sample item keys: {list(sample_item.keys())}")
-    logger.info(f"Sample item content: {sample_item}")
-
-    ds = ds.select(range(1_000))
-    ds = ds.filter(lambda item: item[TEXT_COL] is not None, num_proc=NUM_PROC)
     model = SentenceTransformer(
         config.embedding_model.name,
         device=DEVICE,
@@ -85,17 +78,28 @@ def main(cfg: DictConfig) -> None:
     )
     model.compile()
 
-    logger.info("Chunking dataset")
-    chunk_ds = chunk_dataset(dataset=ds, config=config, tokenizer=model.tokenizer)
+    if config.chunk_config is not None:
+        ds = chunk_dataset(dataset=ds, config=config, tokenizer=model.tokenizer)
+        text_column = "chunk_text"
+    else:
+        text_column = "text"
 
-    embedder = Embedder(model=model, column_to_embed=TextSplitter.CHUNK_TEXT_COL)
-    chunk_ds = chunk_ds.map(
+    if config.truncation_tokens is not None:
+        assert config.truncation_tokens <= config.embedding_model.max_seq_length
+        model.max_seq_length = config.truncation_tokens
+
+    embedder = Embedder(model, text_column)
+    ds = ds.map(
         embedder,
         batched=True,
         batch_size=config.batch_size,
-        num_proc=1,
+        num_proc=None,
+        desc="Embedding chunks",
     )
-    save_dataset_as_parquet_shards(chunk_ds, config.num_output_shards, config.chunk_embeddings_dir)
+    ds.save_to_disk(str(config.output_dir))
+
+    with open(config.output_dir / "config.yaml", "w") as f:
+        yaml.dump(config.model_dump(), f)
 
 
 def chunk_dataset(
@@ -104,59 +108,31 @@ def chunk_dataset(
     tokenizer: PreTrainedTokenizer | None = None,
 ) -> Dataset:
     assert config.chunk_config is not None
-    split_worker = TextSplitter(
-        id_col=ID_COL,
-        text_col=TEXT_COL,
-        **config.chunk_config,
-        tokenizer=tokenizer,
-    )
-    logger.info(f"Chunking dataset with {config.chunk_config}")
-    logger.info(f"Dataset columns: {dataset.column_names}")
-    chunk_ds = dataset.select_columns([ID_COL, TEXT_COL]).map(
+    split_worker = TextSplitter(**config.chunk_config, tokenizer=tokenizer)
+    ds = dataset.select_columns(["judgement_id", "text"]).map(
         split_worker,
         batched=True,
         num_proc=NUM_PROC,
-        remove_columns=[ID_COL, TEXT_COL],
+        remove_columns=["judgement_id", "text"],
         desc="Chunking documents",
     )
-    logger.info(
-        f"Dataset with {dataset.num_rows} judgments split into {chunk_ds.num_rows} chunks with columns: {chunk_ds.column_names}"
-    )
-    return chunk_ds
+    logger.info(f"Dataset split into {ds.num_rows} chunks")
+    return ds
 
 
 class Embedder:
-    def __init__(self, model: SentenceTransformer, column_to_embed: str) -> None:
+    def __init__(self, model: SentenceTransformer, text_column: str) -> None:
         self.model = model
-        self.column_to_embed = column_to_embed
+        self.text_column = text_column
 
-    def __call__(self, items: dict[str, list[Any]]) -> dict[str, Any]:
-        process = psutil.Process()
-        initial_memory = process.memory_info().rss / 1024 / 1024 / 1024  # Convert to GB
-        logger.info(f"Initial memory usage: {initial_memory:.2f} GB")
-
-        pool: dict[str, Any] | None = None
-        try:
-            # It'll take processes equal to NUM_GPUS or 4 in case of CPU
-            pool = self.model.start_multi_process_pool()
-            embeddings = self.model.encode_multi_process(
-                sentences=items[self.column_to_embed],
-                pool=pool,
-                batch_size=len(items[self.column_to_embed]),
+    def __call__(self, items: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "embedding": self.model.encode(
+                items[self.text_column],
+                show_progress_bar=False,
+                batch_size=len(items[self.text_column]),
             )
-            final_memory = process.memory_info().rss / 1024 / 1024 / 1024  # Convert to GB
-            logger.info(f"Final memory usage: {final_memory:.2f} GB")
-            logger.info(f"Memory difference: {final_memory - initial_memory:.2f} GB")
-        except Exception as e:
-            logger.error(f"Error embedding dataset: {e}")
-            raise e
-        else:
-            return {
-                "embedding": embeddings,
-            }
-        finally:
-            if pool is not None:
-                self.model.stop_multi_process_pool(pool)
+        }
 
 
 if __name__ == "__main__":
