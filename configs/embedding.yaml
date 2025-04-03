@@ -8,7 +8,6 @@ dataset_name: ???
 chunk_config:
   chunk_size: ${embedding_model.max_seq_length}
   min_split_chars: 50
-  min_split_chars: 50
   take_n_first_chunks: 16
   chunk_overlap: 128
 

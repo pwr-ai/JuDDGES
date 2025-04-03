@@ -4,14 +4,13 @@ from pprint import pformat
 from typing import Any
 
 import hydra
-import psutil
 import torch
+import yaml
 from datasets import Dataset, load_dataset
 from loguru import logger
 from omegaconf import DictConfig
 from openai import BaseModel
 from sentence_transformers import SentenceTransformer
-from tqdm import tqdm
 from transformers import PreTrainedTokenizer
 from transformers.utils import is_flash_attn_2_available
 
@@ -19,7 +18,6 @@ from juddges.config import EmbeddingModelConfig
 from juddges.preprocessing.text_chunker import TextSplitter
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
-from juddges.utils.misc import save_dataset_as_parquet_shards
 
 ID_COL: str = "judgment_id"
 TEXT_COL: str = "full_text"
