@@ -27,6 +27,12 @@ repos:
         name: Ruff Formatter
         args: [juddges, scripts, tests]
 
+  - repo: https://github.com/fastai/nbdev
+    rev: 2.2.10
+    hooks:
+      - id: nbdev_export
+        name: Export notebooks
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.23.3
     hooks:

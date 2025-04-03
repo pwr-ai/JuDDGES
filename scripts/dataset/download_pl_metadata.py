@@ -6,7 +6,12 @@ from loguru import logger
 from mpire.pool import WorkerPool
 from pymongo import ReplaceOne
 from requests import HTTPError
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 from juddges.data.database import get_mongo_collection
 from juddges.data.pl_court_api import PolishCourtAPI
@@ -39,19 +44,19 @@ def main(
         params["lastUpdateTo"] = last_update_to
 
     api = PolishCourtAPI()
-    total_judgements = api.get_number_of_judgements(params=params)
-    logger.info(f"Total judgements found: {total_judgements:_}")
+    total_judgments = api.get_number_of_judgements(params=params)
+    logger.info(f"Total judgements found: {total_judgments:_}")
 
     if limit is not None:
-        total_judgements = min(total_judgements, limit)
+        total_judgments = min(total_judgments, limit)
 
     logger.info(
-        f"Downloading {total_judgements:_} judgements: (batch_size={batch_size}, n_jobs={n_jobs}, params={params})"
+        f"Downloading {total_judgments:_} judgements: (batch_size={batch_size}, n_jobs={n_jobs}, params={params})"
     )
     if dry:
         return
 
-    offsets = list(range(0, total_judgements, batch_size))
+    offsets = list(range(0, total_judgments, batch_size))
     download_metadata = MetadataDownloader(
         mongo_uri=mongo_uri,
         batch_size=batch_size,
@@ -90,13 +95,13 @@ class MetadataDownloader:
         params |= self.params
 
         api = PolishCourtAPI()
-        judgements = api.get_judgements(params)
+        judgments = api.get_judgments(params)
 
-        for item in judgements:
+        for item in judgments:
             item["_id"] = item.pop("id")
 
         # update existing documents or insert new ones
-        write_ops = [ReplaceOne({"_id": item["_id"]}, item, upsert=True) for item in judgements]
+        write_ops = [ReplaceOne({"_id": item["_id"]}, item, upsert=True) for item in judgments]
         result = collection.bulk_write(write_ops, ordered=False)
         logger.info(
             "Write results: {upserted} upserted, {modified} modified",

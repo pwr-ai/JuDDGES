@@ -21,6 +21,7 @@ pydantic>=2.7.4,<3.0.0
 pyarrow==15.0.0
 pymongo==4.3.3
 python-dotenv==1.0.1
+pytz==2024.1
 PyYAML==6.0.1
 requests>=2.31.0
 rich==13.7.0
@@ -47,7 +48,7 @@ dvc[s3]==3.48.3
 jupyterlab==4.3.1
 mlflow==2.11.3
 mypy==1.8.0
-nbdev==2.3.34
+nbdev==2.3.37
 pre-commit==3.7.1
 psycopg2-binary==2.9.9
 pytest==8.0.2

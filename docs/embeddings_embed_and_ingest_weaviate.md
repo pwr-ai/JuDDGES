@@ -37,7 +37,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/embed/embed_text.py embedding_model=mmlw-r
 To upload the embeddings to a Weaviate database:
 
 ```bash
-python scripts/embed/ingest_embeddings_to_weaviate.py --embeddings-dir data/embeddings/JuDDGES/pl-court-raw/mmlw-roberta-large/all_embeddings [--batch-size 64] [--upsert]
+python scripts/embed/ingest_embeddings_to_weaviate.py --embeddings-dir data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings [--batch-size 64] [--upsert]
 ```
 
 Parameters:
