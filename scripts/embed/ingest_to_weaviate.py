@@ -8,8 +8,7 @@ from typing import Any, Callable
 
 import hydra
 import numpy as np
-import polars as pl
-from datasets import Dataset, concatenate_datasets, load_dataset
+from datasets import Dataset, load_dataset
 from dotenv import load_dotenv
 from grpc import stream_stream_rpc_method_handler
 from loguru import logger
@@ -31,8 +30,9 @@ def main(cfg: DictConfig):
     config = EmbeddingConfig(**cfg_dict)
 
     _check_embeddings_exist(config)
-    logger.info(f"Igesting {config.output_dir} to Weaviate...")
+    logger.info(f"Starting ingestion of {config.output_dir} to Weaviate...")
 
+    logger.info("Loading datasets...")
     ds = load_dataset(config.dataset_name, num_proc=NUM_PROC)
     chunk_ds = load_dataset("parquet", data_dir=config.chunk_embeddings_dir, num_proc=NUM_PROC)
     agg_ds = load_dataset("parquet", data_dir=config.agg_embeddings_dir, num_proc=NUM_PROC)
@@ -41,18 +41,11 @@ def main(cfg: DictConfig):
     chunk_ds = chunk_ds["train"]
     agg_ds = agg_ds["train"]
 
-    breakpoint()
-
-    agg_ds = concatenate_datasets(
-        [ds, agg_ds.rename_column("judgment_id", "agg_judgment_id")], axis=1
-    )
-    assert (
-        agg_ds.select_columns(["agg_judgment_id", "judgment_id"])
-        .to_polars()
-        .with_columns(pl.col("agg_judgment_id") == pl.col("judgment_id"))
-        .all()
-    ), "Script assumes same order of judgments in embeddings and original dataset"
-    agg_ds = agg_ds.remove_columns(["agg_judgment_id"])
+    logger.info("Preparing aggregated dataset (it may take a few minutes)...")
+    agg_ds_polars = agg_ds.to_polars()
+    ds_polars = ds.to_polars()
+    ds_polars = agg_ds_polars.join(ds_polars, on="judgment_id", how="left")
+    agg_ds = Dataset.from_polars(ds_polars)
 
     do_ingest(
         chunk_ds,
@@ -61,6 +54,8 @@ def main(cfg: DictConfig):
         BATCH_SIZE,
         upsert=True,
     )
+    del chunk_ds
+    gc.collect()
 
     do_ingest(
         agg_ds,
@@ -78,6 +73,8 @@ def do_ingest(
     batch_size: int,
     upsert: bool,
 ) -> None:
+    num_rows = dataset.num_rows
+
     with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
         collection = db.get_collection(collection)
         initial_count = db.get_collection_size(collection)
@@ -88,19 +85,18 @@ def do_ingest(
             uuids = set(db.get_uuids(collection))
             logger.info(f"Found {len(uuids)} existing UUIDs in database")
 
-            original_len = dataset.num_rows
             dataset = dataset.filter(
                 lambda item: item["uuid"] not in uuids,
                 num_proc=NUM_PROC,
                 desc="Filtering out already uploaded embeddings",
             )
-            logger.info(f"Filtered out {original_len - dataset.num_rows} existing embeddings")
+            logger.info(f"Filtered out {num_rows - dataset.num_rows} existing embeddings")
         else:
             logger.info(
                 "upsert enabled - uploading all embeddings (automatically updating already uploaded)"
             )
 
-        total_batches = math.ceil(dataset.num_rows / batch_size)
+        total_batches = math.ceil(num_rows / batch_size)
         logger.info(f"Processing {total_batches} batches with size {batch_size}")
 
         if NUM_PROC > 1:
@@ -162,9 +158,9 @@ def process_batch_of_chunks(db: WeaviateJudgmentsDatabase, batch: dict[str, list
             db.insert_batch(collection=db.judgment_chunks_collection, objects=objects)
             logger.info(f"Successfully inserted {len(objects)} objects")
 
-        # Help garbage collection
-        del objects
-        gc.collect()
+            # Help garbage collection
+            del objects
+            gc.collect()
 
     except Exception as e:
         logger.error(f"Error processing batch: {str(e)}")
@@ -233,6 +229,8 @@ def process_batch_of_documents(db: WeaviateJudgmentsDatabase, batch: dict[str, l
                 objects=records,
             )
             logger.info(f"Successfully inserted {len(records)} documents")
+            del records
+            gc.collect()
         else:
             logger.warning("No records to insert")
     except Exception as e:
