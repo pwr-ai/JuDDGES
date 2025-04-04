@@ -76,18 +76,18 @@ stages:
       size: 52
     - path: scripts/embed/embed_text.py
       hash: md5
-      md5: eb28f54c2da67a4dbbf620e5a2384e0c
-      size: 5096
+      md5: 8ac0afb39f6134a32d55ba1137d65899
+      size: 5063
     outs:
     - path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings
       hash: md5
-      md5: d23be52cb8d5a14c58845a0b752ce27f.dir
-      size: 20137162
+      md5: aa9b417c0fecb907cc925e29354461ef.dir
+      size: 3125953595
       nfiles: 10
     - path: data/embeddings/pl-court-raw/mmlw-roberta-large/chunk_embeddings
       hash: md5
-      md5: 0ad83c43e6227560187ea1cf71ce0335.dir
-      size: 17609307
+      md5: dfbf1add12814a4766be8fdf2f002a66.dir
+      size: 10547484872
       nfiles: 10
   evaluate_api_models@en-court-instruct-open_ai_gpt-4o-997:
     cmd: PYTHONPATH=. python scripts/sft/evaluate.py --output-file data/experiments/predict/en-court-instruct/open_ai_gpt-4o/outputs_997.json

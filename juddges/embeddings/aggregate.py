@@ -43,12 +43,12 @@ def mean_average_embeddings_and_save(
     df = df.with_columns((pl.col(embedding_col) * pl.col("weight")).alias("weighted_embedding"))
 
     # Group by and aggregate using a custom function that can handle numpy arrays
-    def weighted_sum(series: pl.Series) -> list[float]:
+    def weighted_sum(weighted_embs: pl.Series) -> list[float]:
         # Convert to numpy arrays and sum
-        arrays = [np.array(x) for x in series]
+        arrays = [np.array(x) for x in weighted_embs]
         return np.sum(arrays, axis=0).tolist()
 
-    agg_df = df.group_by(id_col).agg(
+    agg_df = df.group_by(id_col, maintain_order=True).agg(
         pl.col("weighted_embedding")
         .map_elements(weighted_sum, return_dtype=pl.List(pl.Float64))
         .alias(embedding_col)
@@ -56,5 +56,18 @@ def mean_average_embeddings_and_save(
 
     shard_size = math.ceil(num_unique_docs / num_shards)
     for i in tqdm(range(num_shards), desc="Aggregating embeddings"):
-        shard = agg_df.slice(i * shard_size, i * shard_size + shard_size).collect()
-        shard.write_parquet(output_dir / f"mean_embeddings_{i}.parquet")
+        offset = i * shard_size
+        length = min(shard_size, num_unique_docs - offset)
+        if offset > num_unique_docs:
+            raise ValueError(
+                f"Offset {offset} is greater than number of unique documents {num_unique_docs}"
+            )
+        shard = agg_df.slice(offset=offset, length=length).collect()
+        shard.write_parquet(output_dir / f"weighted_avg_embeddings_{i}.parquet")
+
+    unique_agg_docs = pl.scan_parquet(output_dir).select(pl.col(id_col).n_unique()).collect().item()
+    if unique_agg_docs != num_unique_docs:
+        raise ValueError(
+            f"Number of unique documents in the output directory {output_dir} "
+            f"is not equal to the number of unique documents in the input dataframe {num_unique_docs}"
+        )
