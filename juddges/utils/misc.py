@@ -76,3 +76,16 @@ def save_dataset_as_parquet_shards(ds: Dataset, num_shards: int, output_dir: Pat
     for index in trange(num_shards, desc="Saving shards"):
         shard = ds.shard(index=index, num_shards=num_shards, contiguous=True)
         shard.to_parquet(f"{output_dir}/shard_{index:03d}.parquet")
+
+
+def parse_true_string(value: str) -> bool:
+    """Parse a string to a boolean.
+
+    Args:
+        value (str): string to parse
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in ["true", "1", "yes", "y"]
+    raise ValueError(f"Invalid value: {value}")

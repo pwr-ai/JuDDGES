@@ -1,7 +1,7 @@
 import os
 import re
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -30,7 +30,7 @@ class WeaviateDatabase(ABC):
 
         self.client: weaviate.WeaviateClient
 
-    def __enter__(self) -> "WeaviateDatabase":
+    def __enter__(self) -> Self:
         self.client = weaviate.connect_to_custom(
             http_host=self.host,
             http_port=self.port,

@@ -50,12 +50,20 @@ CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 PYTHONPATH="$PWD:$PYTHONPATH" python scripts/
   * Upload judgments with their aggregated embeddings (full dataset with aggregated embeddings will be ingested)
 
 ```bash
-PYTHONPATH="$PWD:$PYTHONPATH" python scripts/embed/ingest_to_weaviate.py  \
+PROCESSING_PROC=10 INGEST_PROC=5 PYTHONPATH="$PWD:$PYTHONPATH" python scripts/embed/ingest_to_weaviate.py \
   embedding_model=mmlw-roberta-large \
-  dataset_name=JuDDGES/pl-court-raw  \
+  dataset_name=JuDDGES/pl-court-raw \
   output_dir=data/embeddings/pl-court-raw/mmlw-roberta-large \
-  [--batch-size 64] \
-  [--upsert]
+  [+ingest_batch_size=64] \
+  [+upsert=true]
+```
+
+## Step 3: Test Weaviate Ingestion
+
+Test the ingestion by running the following command, which will print all collections and their schemas, and run sample queries.
+
+```bash
+python scripts/embed/test_weaviate_ingestion.py
 ```
 
 ## Notes

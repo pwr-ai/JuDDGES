@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "juddges"
+name="juddges"
 version = "0.0.1"
 description = "Juddges is a tool for managing and analyzing judgements."
 authors = ["Lukasz Augustyniak <lukasz.augustyniak@pwr.edu.p>"]
@@ -14,13 +14,15 @@ select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.mypy]
 python_version = "3.11"
-strict = true
 untyped_calls_exclude = ["pymongo"]
 plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
 module = ["pyarrow.*", "datasets.*", "sentence_transformers.*"]
 ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
 
 [tool.pytest.ini_options]
 minversion = "8.0.0"
