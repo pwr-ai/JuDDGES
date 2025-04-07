@@ -56,7 +56,7 @@ srun --kill-on-bad-exit=1 \
         --bind "$TMPDIR:$TMPDIR" \
         --nv \
         "$SIF_IMAGE_PATH" \
-        bash -c "$COMMAND"
+        bash -c "$SCRIPT"
 
 EXIT_CODE=$?
 exit $EXIT_CODE
