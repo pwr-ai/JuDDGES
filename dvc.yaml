@@ -299,11 +299,10 @@ stages:
     outs:
       - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
 
-  summarize_metrics:
+  summarize_ngram_metrics:
     matrix:
       dir:
-        - data/experiments/predict/pl-court-instruct
-        - data/experiments/predict/en-court-instruct
+        - data/experiments/predict/raw/pl-court-frankowe-instruct
     cmd: >-
       PYTHONPATH=. python scripts/sft/summarize_metrics.py
       --root-dir ${item.dir}
@@ -312,5 +311,16 @@ stages:
     metrics:
       - ${item.dir}/metrics_ngram_summary.md:
           cache: false
+
+  summarize_judge_metrics:
+    matrix:
+      dir:
+        - data/experiments/predict/raw/pl-court-frankowe-instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/summarize_metrics.py
+      --root-dir ${item.dir}
+    deps:
+      - scripts/sft/summarize_metrics.py
+    metrics:
       - ${item.dir}/metrics_judge_summary.md:
           cache: false
