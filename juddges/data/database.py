@@ -1,11 +1,12 @@
 import os
-from typing import Any, Callable, Generator, Iterable, Iterator
+from typing import Any, Callable, Generator, Iterator
 
 from loguru import logger
 from pymongo import MongoClient, UpdateOne
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
 from pymongo.errors import BulkWriteError
+from pymongo.results import BulkWriteResult
 
 
 def get_mongo_collection(
@@ -36,7 +37,8 @@ class BatchedDatabaseCursor:
 
     def __iter__(self) -> Iterator[list[dict[str, Any]]]:
         if self.prefetch:
-            iterable: Iterable = list(self.cursor)
+            logger.info("Prefetching document ids from database")
+            iterable = [batch for batch in self.cursor]
         else:
             iterable = self.cursor
 
@@ -66,7 +68,7 @@ class BatchDatabaseUpdate:
         self.mongo_uri = mongo_uri
         self.update_func = update_func
 
-    def __call__(self, documents: list[dict[str, Any]]) -> None:
+    def __call__(self, documents: list[dict[str, Any]]) -> BulkWriteResult:
         update_batch: list[UpdateOne] = []
 
         for doc in documents:
@@ -76,6 +78,13 @@ class BatchDatabaseUpdate:
         collection = get_mongo_collection(mongo_uri=self.mongo_uri)
 
         try:
-            collection.bulk_write(update_batch, ordered=False)
+            write_results = collection.bulk_write(update_batch, ordered=False)
         except BulkWriteError as err:
             logger.error(err)
+            raise
+        else:
+            if write_results.matched_count != write_results.modified_count:
+                logger.error(
+                    f"Matched count {write_results.matched_count} != modified count {write_results.modified_count}"
+                )
+            return write_results
