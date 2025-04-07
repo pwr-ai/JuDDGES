@@ -1,4 +1,4 @@
-from asyncio import subprocess
+import subprocess
 from pathlib import Path
 
 from datasets import load_dataset
@@ -14,11 +14,10 @@ DATA_SHARD_FILE_PATTERN = "train_*.parquet"
 DEFAULT_ASSETS_DIR_IN_REPO = "README_files"
 
 
-def prepare_dataset_card_and_push_data_to_hf_repo(
+def push_data_to_hf_repo(
     repo_id: str,
     commit_message: str,
     data_files_dir: Path,
-    dataset_card_template: str | Path,
     dataset_card_path: Path,
     dataset_card_assets: Path,
 ) -> None:
@@ -32,12 +31,6 @@ def prepare_dataset_card_and_push_data_to_hf_repo(
     except RepositoryNotFoundError:
         logger.error(f"Repository {repo_id} does not exist")
         raise
-
-    prepare_dataset_card(
-        data_files_dir=data_files_dir,
-        dataset_card_template=dataset_card_template,
-        dataset_card_path=dataset_card_path,
-    )
 
     # Replace old data files with new ones
     deletions = []
@@ -134,6 +127,8 @@ def prepare_dataset_card(
 
     with dataset_card_path.open("w") as f:
         f.write(card_content)
+
+    return dataset_card_path
 
 
 def generate_dataset_card(

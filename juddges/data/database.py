@@ -1,10 +1,10 @@
+import math
 import os
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterator
+from typing import Any, Callable, Generator, Iterator, Self
 
-import pyarrow as pa
-import pyarrow.parquet as pq
+import polars as pl
 from loguru import logger
 from pymongo import MongoClient, UpdateOne
 from pymongo.collection import Collection
@@ -46,7 +46,7 @@ class MongoInterface:
         self.db_name = db_name
         self.collection_name = collection_name
 
-    def __enter__(self) -> "MongoInterface":
+    def __enter__(self) -> Self:
         self.client = MongoClient(self.uri)
         self.db = self.client[self.db_name]
         self.collection = self.db[self.collection_name]
@@ -91,7 +91,7 @@ class MongoInterface:
         clean_legacy_shards: bool = False,
         filter_query: dict[str, Any] | None = None,
         fields_to_ignore: list[str] | None = None,
-        verbose: bool = True,
+        schema: pl.Schema | None = None,
     ) -> None:
         assert self.collection is not None, "Collection not initialized"
         assert file_name.suffix == ".parquet", "File must have .parquet extension"
@@ -128,6 +128,7 @@ class MongoInterface:
 
         num_docs = self.collection.count_documents(query)
         shard_idx = 0
+        total_shards = math.ceil(num_docs / shard_size)
         for offset in trange(0, num_docs, shard_size, desc="Chunks"):
             docs = list(
                 tqdm(
@@ -139,7 +140,13 @@ class MongoInterface:
                     desc="Downloading shard",
                 )
             )
-            dumped_f_name = self._save_docs_shard(docs, file_name, shard_idx)
+            dumped_f_name = self._save_docs_shard(
+                docs=docs,
+                file_name=file_name,
+                shard_idx=shard_idx,
+                total_shards=total_shards,
+                schema=schema,
+            )
             logger.info(f"Dumped {shard_idx}-th batch of documents to {dumped_f_name}")
             shard_idx += 1
 
@@ -148,12 +155,15 @@ class MongoInterface:
         docs: list[dict[str, Any]],
         file_name: Path,
         shard_idx: int | None,
+        total_shards: int | None,
+        schema: pl.Schema | None = None,
     ) -> Path:
         if shard_idx is not None:
-            file_name = file_name.with_name(f"{file_name.stem}_{shard_idx:02d}{file_name.suffix}")
+            file_name = file_name.with_name(
+                f"{file_name.stem}_{shard_idx:02d}_of_{total_shards}{file_name.suffix}"
+            )
 
-        table = pa.Table.from_pylist(docs)
-        pq.write_table(table, file_name)
+        pl.DataFrame(docs, schema=schema).write_parquet(file_name)
 
         return file_name
 

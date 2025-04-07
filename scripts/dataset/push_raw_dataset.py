@@ -7,8 +7,9 @@ from pathlib import Path
 
 import typer
 from dotenv import load_dotenv
+from loguru import logger
 
-from juddges.data.pl_court_repo import prepare_dataset_card_and_push_data_to_hf_repo
+from juddges.data.pl_court_repo import prepare_dataset_card, push_data_to_hf_repo
 from juddges.settings import PL_JUDGEMENTS_PATH_RAW
 
 load_dotenv()
@@ -44,15 +45,27 @@ def main(
         help="Commit message",
     ),
 ) -> None:
-    prepare_dataset_card_and_push_data_to_hf_repo(
+    dataset_card_path = prepare_dataset_card(
+        data_files_dir=data_files_dir,
+        dataset_card_template=dataset_card_template,
+        dataset_card_path=dataset_card_path,
+    )
+
+    logger.info(f"Created dataset card at: {dataset_card_path}")
+    # Ask for confirmation before pushing to HF
+    if not typer.confirm("Are you sure you want to push the dataset to Hugging Face?"):
+        typer.echo("Operation cancelled.")
+        raise typer.Abort()
+
+    push_data_to_hf_repo(
         repo_id=repo_id,
         commit_message=commit_message,
         data_files_dir=data_files_dir,
-        dataset_card_template=dataset_card_template,
         dataset_card_path=dataset_card_path,
         dataset_card_assets=dataset_card_assets,
     )
 
 
 if __name__ == "__main__":
+    typer.rich_utils.STYLE_ERRORS = False
     typer.run(main)

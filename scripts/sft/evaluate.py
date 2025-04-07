@@ -4,6 +4,7 @@ from pathlib import Path
 import typer
 
 from juddges.evaluation.info_extraction import InfoExtractionEvaluator
+from scripts.utils.typer_config import *  # noqa: F403
 
 
 def evaluate_results(
