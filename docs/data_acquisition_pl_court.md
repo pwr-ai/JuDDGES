@@ -18,14 +18,16 @@ MONGO_DB_NAME="datasets"
 
 1. Download judgements metadata - this will store metadata in the database:
     ```shell
-    PYTHONPATH=. python scripts/dataset/download_pl_metadata.py
+    PYTHONPATH=. python scripts/dataset/download_pl_metadata.py \
+        --last-update-from <YYYY-MM-DD>
     ```
 
 2. Download judgements text (XML content of judgements) - this will alter the database with content:
     ```shell
     PYTHONPATH=. python scripts/dataset/download_pl_additional_data.py \
         --data-type content \
-        --n-jobs 10
+        --n-jobs 10 \
+        --last-update-from <YYYY-MM-DD>
     ```
 
 3. Download additional details available for each judgement - this will alter the database with
@@ -33,19 +35,24 @@ MONGO_DB_NAME="datasets"
     ```shell
     PYTHONPATH=. python scripts/dataset/download_pl_additional_data.py \
         --data-type details \
-        --n-jobs 10
+        --n-jobs 10 \
+        --last-update-from <YYYY-MM-DD>
     ```
 
 4. Map id of courts and departments to court name:
     ```shell
-    PYTHONPATH=. python scripts/dataset/map_court_dep_id_2_name.py --n-jobs 10
+    PYTHONPATH=. python scripts/dataset/map_court_dep_id_2_name.py \
+        --n-jobs 10 \
+        --last-update-from <YYYY-MM-DD>
     ```
    _Remark_: File with mapping available at `data/datasets/pl/court_id_2_name.csv` was prepared based
    on data published on: https://orzeczenia.wroclaw.sa.gov.pl/indices
 
 5. Extract raw text from XML content and details of judgments not available through API:
     ```shell
-    PYTHONPATH=. python scripts/dataset/extract_pl_xml.py --n-jobs 10
+    PYTHONPATH=. python scripts/dataset/extract_pl_xml.py \
+        --n-jobs 10 \
+        --last-update-from <YYYY-MM-DD>
     ```
 
 6. For further processing prepare local dataset dump in `parquet` file, version it with dvc and push

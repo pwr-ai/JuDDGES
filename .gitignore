@@ -160,3 +160,4 @@ slurm/.commands.sh
 logs/
 slurm/juddges.sif
 *.sif
+local_notebooks/

@@ -6,7 +6,7 @@ import streamlit as st
 from juddges.prompts.information_extraction import EXAMPLE_SCHEMA
 from juddges.settings import SAMPLE_DATA_PATH
 
-TITLE = "Analyse Judgements"
+TITLE = "Analyse judgments"
 
 st.title(TITLE)
 
@@ -26,7 +26,7 @@ extracted_keys = [line.split(":")[0] for line in EXAMPLE_SCHEMA.split("\n") if l
 ]
 
 st.info(
-    "We sampled 100 random judgements from the dataset and extracted information from them. Below is the extracted information and the schema (questions) used to extract it."
+    "We sampled 100 random judgments from the dataset and extracted information from them. Below is the extracted information and the schema (questions) used to extract it."
 )
 
 st.text_area(
@@ -47,33 +47,33 @@ output.seek(0)
 st.download_button(
     label="Download data as Excel",
     data=output,
-    file_name="judgements.xlsx",
+    file_name="judgments.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
 st.header("Analyse Extracted Information")
 
-st.subheader("How many judgements we analyzed?")
+st.subheader("How many judgments we analyzed?")
 
-st.write(f"Number of judgements: {len(df)}")
+st.write(f"Number of judgments: {len(df)}")
 
-st.subheader("What courts judgement do we analyse")
+st.subheader("What courts judgment do we analyse")
 
 st.write(df.groupby("court")["_id"].count())
 
-st.subheader("How many judgements are drug offences?")
+st.subheader("How many judgments are drug offences?")
 
 drug_offences = df["drug_offence"].sum()
 
 st.info(f"Number of drug offences: {drug_offences}")
 
-st.subheader("How many judgements are child offences?")
+st.subheader("How many judgments are child offences?")
 
 child_offences = df["child_offence"].sum()
 
 st.info(f"Number of child offences: {child_offences}")
 
-st.subheader("Show examples of judgements that are child offences")
+st.subheader("Show examples of judgments that are child offences")
 
 drug_offences_df = df[df["child_offence"]]
 
@@ -82,6 +82,6 @@ st.write("We can check the sentences of them")
 for row_id, row in drug_offences_df.iterrows():
     st.subheader(row["signature"])
     st.info(row["verdict_summary"])
-    if st.toggle(key=row, label="Show judgement's text"):
+    if st.toggle(key=row, label="Show judgment's text"):
         st.markdown(row["text"])
         st.markdown("---")

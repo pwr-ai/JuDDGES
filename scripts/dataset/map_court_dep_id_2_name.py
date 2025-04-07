@@ -1,7 +1,7 @@
 import math
 import multiprocessing
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import typer
@@ -25,8 +25,24 @@ def main(
     ),
     batch_size: int = typer.Option(BATCH_SIZE, help="Batch size for fetching documents"),
     n_jobs: int = typer.Option(1, help="Number of parallel jobs"),
+    last_update_from: Optional[str] = typer.Option(None, help="Format: YYYY-MM-DD"),
 ) -> None:
-    query = {"$or": [{"court_name": {"$exists": False}}, {"department_name": {"$exists": False}}]}
+    # fail early if file is invalid:
+    court_dep_id_mapper = CourtId2CourtName(court_id_map_file)
+
+    query: dict[str, Any] = {
+        "$or": [{"court_name": {"$exists": False}}, {"department_name": {"$exists": False}}]
+    }
+
+    if last_update_from is not None:
+        # get all rows which were last updated after the given date
+        query = {
+            "$and": [
+                query,
+                {"lastUpdate": {"$gte": last_update_from}},
+            ]
+        }
+
     collection = get_mongo_collection()
     num_docs_to_update = collection.count_documents(query)
     cursor = collection.find(
@@ -35,7 +51,6 @@ def main(
         batch_size=batch_size,
     )
     batched_cursor = BatchedDatabaseCursor(cursor=cursor, batch_size=batch_size, prefetch=True)
-    court_dep_id_mapper = CourtId2CourtName(court_id_map_file)
     map_and_update_db = BatchDatabaseUpdate(mongo_uri=mongo_uri, update_func=court_dep_id_mapper)
 
     with multiprocessing.Pool(n_jobs) as pool:
@@ -54,7 +69,9 @@ def main(
 
 class CourtId2CourtName:
     def __init__(self, mapping_file: Path) -> None:
-        self.mapping = pd.read_csv(mapping_file).set_index(["court_id", "dep_id"]).to_dict("index")
+        self.mapping: dict[tuple[int, int], dict[str, str]] = (
+            pd.read_csv(mapping_file).set_index(["court_id", "dep_id"]).to_dict("index")
+        )
 
     def __call__(self, doc: dict[str, Any]) -> dict[str, Any]:
         try:

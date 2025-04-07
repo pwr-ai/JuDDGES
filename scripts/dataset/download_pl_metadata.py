@@ -1,12 +1,17 @@
-from typing import Optional
+from typing import Any, Optional
 
 import typer
 from dotenv import load_dotenv
 from loguru import logger
 from mpire.pool import WorkerPool
-from pymongo.errors import BulkWriteError
+from pymongo import ReplaceOne
 from requests import HTTPError
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 from juddges.data.database import get_mongo_collection
 from juddges.data.pl_court_api import PolishCourtAPI
@@ -22,24 +27,55 @@ def main(
     batch_size: int = typer.Option(BATCH_SIZE),
     n_jobs: int = typer.Option(N_JOBS),
     limit: Optional[int] = typer.Option(None),
+    date_from: Optional[str] = typer.Option(None, help="Format: YYYY-MM-DD"),
+    date_to: Optional[str] = typer.Option(None, help="Format: YYYY-MM-DD"),
+    last_update_from: Optional[str] = typer.Option(None, help="Format: YYYY-MM-DD"),
+    last_update_to: Optional[str] = typer.Option(None, help="Format: YYYY-MM-DD"),
+    dry: bool = typer.Option(False),
 ) -> None:
+    params = {}
+    if date_from is not None:
+        params["dateFrom"] = date_from
+    if date_to is not None:
+        params["dateTo"] = date_to
+    if last_update_from is not None:
+        params["lastUpdateFrom"] = last_update_from
+    if last_update_to is not None:
+        params["lastUpdateTo"] = last_update_to
+
     api = PolishCourtAPI()
-    total_judgements = api.get_number_of_judgements()
-    logger.info(f"Total judgements found: {total_judgements}")
+    total_judgments = api.get_number_of_judgements(params=params)
+    logger.info(f"Total judgements found: {total_judgments:_}")
 
     if limit is not None:
-        total_judgements = min(total_judgements, limit)
+        total_judgments = min(total_judgments, limit)
 
-    offsets = list(range(0, total_judgements, batch_size))
-    download_metadata = MetadataDownloader(mongo_uri, batch_size)
+    logger.info(
+        f"Downloading {total_judgments:_} judgements: (batch_size={batch_size}, n_jobs={n_jobs}, params={params})"
+    )
+    if dry:
+        return
+
+    offsets = list(range(0, total_judgments, batch_size))
+    download_metadata = MetadataDownloader(
+        mongo_uri=mongo_uri,
+        batch_size=batch_size,
+        params=params,
+    )
     with WorkerPool(n_jobs=n_jobs) as pool:
         pool.map_unordered(download_metadata, offsets, progress_bar=True)
 
 
 class MetadataDownloader:
-    def __init__(self, mongo_uri: str, batch_size: int):
+    def __init__(
+        self,
+        mongo_uri: str,
+        batch_size: int,
+        params: dict[str, Any],
+    ):
         self.mongo_uri = mongo_uri
         self.batch_size = batch_size
+        self.params = params
 
     @retry(
         wait=wait_random_exponential(multiplier=1, min=4, max=30),
@@ -54,23 +90,24 @@ class MetadataDownloader:
             "limit": self.batch_size,
             "offset": offset,
         }
-        api = PolishCourtAPI()
-        judgements = api.get_judgements(params)
 
-        for item in judgements:
+        assert not any(k in params.keys() for k in self.params.keys())
+        params |= self.params
+
+        api = PolishCourtAPI()
+        judgments = api.get_judgments(params)
+
+        for item in judgments:
             item["_id"] = item.pop("id")
 
-        # ignore when come across duplicated documents
-        try:
-            collection.insert_many(judgements, ordered=False)
-        except BulkWriteError as err:
-            if any(x["code"] != 11000 for x in err.details["writeErrors"]):
-                raise
-            else:
-                logger.warning(
-                    "found {num_duplicated} judgements duplicated",
-                    num_duplicated=len(err.details["writeErrors"]),
-                )
+        # update existing documents or insert new ones
+        write_ops = [ReplaceOne({"_id": item["_id"]}, item, upsert=True) for item in judgments]
+        result = collection.bulk_write(write_ops, ordered=False)
+        logger.info(
+            "Write results: {upserted} upserted, {modified} modified",
+            upserted=result.upserted_count,
+            modified=result.modified_count,
+        )
 
 
 if __name__ == "__main__":

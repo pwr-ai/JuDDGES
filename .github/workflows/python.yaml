@@ -9,7 +9,7 @@ jobs:
         python-version: [ 3.11 ]
         os:
           - ubuntu-latest
-#          - macos-latest # at the moment bitsandbytes installation fails on macOS
+          - macos-latest # at the moment bitsandbytes installation fails on macOS
 #          - windows-latest # utf-8 bugs on windows (https://github.com/pre-commit/pre-commit/issues/835)
     runs-on: ${{ matrix.os }}
     steps:
@@ -32,7 +32,11 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          make install_cpu
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            make install_macos
+          else
+            make install_cpu
+          fi
 
       - name: Lint
         run: make check
@@ -46,7 +50,7 @@ jobs:
         python-version: [ 3.11 ]
         os:
           - ubuntu-latest
-#          - macos-latest # at the moment bitsandbytes installation fails on macOS
+          - macos-latest # at the moment bitsandbytes installation fails on macOS
 #          - windows-latest # utf-8 bugs on windows (https://github.com/pre-commit/pre-commit/issues/835)
     runs-on: ${{ matrix.os }}
     steps:
@@ -63,7 +67,11 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          make install_cpu
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            make install_macos
+          else
+            make install_cpu
+          fi
 
       - name: Test
         env:

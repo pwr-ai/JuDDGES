@@ -1,5 +1,0 @@
-runOnSave = true
-headless = true
-allowRunOnSave = true
-fastReruns = true
-fileWatcherType = "auto"

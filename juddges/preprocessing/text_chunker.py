@@ -31,7 +31,7 @@ class TextSplitter:
         chunk_lens: list[int] = []
         chunks: list[str] = []
 
-        for id_, text in zip(txt["_id"], txt["text"]):
+        for id_, text in zip(txt["judgment_id"], txt["text"]):
             current_chunks = self._split_text(text)
 
             if self.take_n_first_chunks:
@@ -42,7 +42,12 @@ class TextSplitter:
             chunk_lens.extend([len(chunk) for chunk in current_chunks])
             chunk_ids.extend(range(len(current_chunks)))
 
-        return {"_id": ids, "chunk_id": chunk_ids, "chunk_len": chunk_lens, "text_chunk": chunks}
+        return {
+            "judgment_id": ids,
+            "chunk_id": chunk_ids,
+            "chunk_len": chunk_lens,
+            "chunk_text": chunks,
+        }
 
     def _split_text(self, text: str) -> list[str]:
         chunks = self.splitter.split_text(text)
