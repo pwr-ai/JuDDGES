@@ -11,7 +11,6 @@
 # NOTE: All env variables must be exported to be available after calling srun.
 # NOTE: You may need to specify some NCCL args in .env file depending on your cluster configuration
 
-echo "[$(date)] Running job $SLURM_JOB_ID on host: $(hostname)"
 
 # =====Provide these user-specific env variables through .env file=====
 if [ ! -f ./slurm/.env ]; then
