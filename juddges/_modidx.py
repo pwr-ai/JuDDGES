@@ -47,5 +47,4 @@ d = { 'settings': { 'branch': 'master',
             'juddges.utils.date_utils': {},
             'juddges.utils.logging': {},
             'juddges.utils.misc': {},
-            'juddges.utils.tor': {},
             'juddges.utils.versioning': {}}}
