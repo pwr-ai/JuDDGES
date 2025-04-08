@@ -1,4 +1,4 @@
-name: mistralai/Mistral-Nemo-Instruct-2407
+name: microsoft/phi-4
 tokenizer_name: ${.name}
 adapter_path: null
 batch_size: 1
