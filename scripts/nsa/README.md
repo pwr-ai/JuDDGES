@@ -8,17 +8,17 @@ Below is an overview of the purpose, requirements, and usage of each script.
 
 ## Requirements
 
-1. **MongoDB**  
+1. **MongoDB**
    The scripts rely on a MongoDB instance to store and manage the scraped data.
    The scripts will use the `nsa` database under the provided URI.
    You can specify the URI of the MongoDB instance using the `--db-uri` argument in the scripts or
    by setting the `DB_URI` environment variable.
 
-2. **Proxy**  
-   A working proxy is required for certain scripts to download data reliably. 
+2. **Proxy**
+   A working proxy is required for certain scripts to download data reliably.
    Provide the proxy address in the following format: `http://user:password@address:port`.
 
-3. **Data Storage Path**  
+3. **Data Storage Path**
    Configure `NSA_DATA_PATH` in the `juddges.settings` module to specify the directory for storing
    scraped and processed data.
 
@@ -29,7 +29,7 @@ Below is an overview of the purpose, requirements, and usage of each script.
 The recommended way to run the complete scraping pipeline is using the `full_procedure.py` script:
 
 ```bash
-python full_procedure.py --proxy-address YOUR_PROXY --db-uri YOUR_MONGODB_URI 
+python full_procedure.py --proxy-address YOUR_PROXY --db-uri YOUR_MONGODB_URI
 ```
 
 ### **`full_procedure.py`**
@@ -233,5 +233,5 @@ Scripts will use already scraped data from the database, so you don't need to se
   |------------------|------------------------------------------------|------------------------|
   | `--n-jobs`       | Number of parallel workers.                    | `10`                  |
   | `--log-file`     | Path for the log file (None to disable)         | None                       |
-  
+
 - **Output:** Saves processed data in Parquet files within `NSA_DATA_PATH/dataset`.

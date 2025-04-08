@@ -1,7 +1,7 @@
-from juddges.settings import NSA_DATA_PATH
-
 import polars as pl
 import pytest
+
+from juddges.settings import NSA_DATA_PATH
 
 PATH = NSA_DATA_PATH / "pages"
 

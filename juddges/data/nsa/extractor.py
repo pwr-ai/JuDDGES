@@ -1,13 +1,12 @@
+import re
 from typing import Any, Iterable, Sequence
 
 import pandas as pd
-from mpire import WorkerPool
-import re
-from bs4 import BeautifulSoup, Tag
-from pandas import Timestamp
 import pyarrow as pa
 import pytz
-
+from bs4 import BeautifulSoup, Tag
+from mpire import WorkerPool
+from pandas import Timestamp
 
 DESCRIPTION_MAP = {
     "id": "unique identifier of the judgment",

@@ -1,14 +1,14 @@
-from datetime import datetime
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
-from juddges.settings import LOGS_PATH, ROOT_PATH
-from juddges.utils.logging import setup_loguru
-
-from loguru import logger
 
 import typer
+from loguru import logger
+
+from juddges.settings import LOGS_PATH, ROOT_PATH
+from juddges.utils.logging import setup_loguru
 
 NSA_SCRIPTS_PATH = ROOT_PATH / "scripts" / "nsa"
 LOG_FILE = LOGS_PATH / "nsa" / f"full_procedure_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"

@@ -1,9 +1,10 @@
 from pathlib import Path
-import pymongo
+
 import pandas as pd
+import pymongo
 import typer
-from tqdm import tqdm
 from loguru import logger
+from tqdm import tqdm
 
 from juddges.utils.logging import setup_loguru
 

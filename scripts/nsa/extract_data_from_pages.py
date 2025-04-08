@@ -1,14 +1,14 @@
 from pathlib import Path
+
 import pandas as pd
+import pyarrow.parquet as pq
 import pymongo
 import typer
-from tqdm import tqdm
-import pyarrow.parquet as pq
 from loguru import logger
+from tqdm import tqdm
 
-
-from juddges.settings import NSA_DATA_PATH
 from juddges.data.nsa.extractor import NSADataExtractor
+from juddges.settings import NSA_DATA_PATH
 from juddges.utils.logging import setup_loguru
 
 setup_loguru(extra={"script": __file__})

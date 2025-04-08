@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 from pathlib import Path
+
 import pandas as pd
 import pymongo
-from pymongo.collection import Collection
 import typer
-
 from loguru import logger
+from pymongo.collection import Collection
+
 from juddges.utils.logging import setup_loguru
 
 setup_loguru(extra={"script": __file__})

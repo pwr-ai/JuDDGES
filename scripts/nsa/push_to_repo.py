@@ -1,10 +1,11 @@
 from pathlib import Path
+
 import typer
+from huggingface_hub import DatasetCard, DatasetCardData, HfApi
+from loguru import logger
 
 from juddges.settings import NSA_DATA_PATH
-from loguru import logger
 from juddges.utils.logging import setup_loguru
-from huggingface_hub import HfApi, DatasetCardData, DatasetCard
 
 setup_loguru(extra={"script": __file__})
 

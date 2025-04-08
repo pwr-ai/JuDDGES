@@ -1,7 +1,6 @@
-from pathlib import Path
 import random
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from pathlib import Path
 
 import pymongo
 import typer
@@ -9,6 +8,7 @@ import urllib3
 from loguru import logger
 from mpire import WorkerPool
 from random_user_agent.user_agent import UserAgent
+from zoneinfo import ZoneInfo
 
 from juddges.data.nsa.scraper import NSAScraper
 from juddges.utils.logging import setup_loguru

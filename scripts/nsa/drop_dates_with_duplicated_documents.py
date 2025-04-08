@@ -1,10 +1,11 @@
 from pathlib import Path
+
 import pandas as pd
 import pymongo
-from tqdm import tqdm
 import typer
-
 from loguru import logger
+from tqdm import tqdm
+
 from juddges.utils.logging import setup_loguru
 
 setup_loguru(extra={"script": __file__})
