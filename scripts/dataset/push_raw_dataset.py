@@ -4,10 +4,10 @@ from typing import Optional
 import typer
 from datasets import load_dataset
 from dotenv import load_dotenv
-from huggingface_hub import DatasetCardData, DatasetCard, HfApi
+from huggingface_hub import DatasetCard, DatasetCardData, HfApi
 from loguru import logger
 
-from juddges.settings import PL_JUDGEMENTS_PATH_RAW
+from juddges.settings import PL_JUDGMENTS_PATH_RAW
 
 load_dotenv()
 
@@ -18,9 +18,10 @@ DATASET_CARD_TEMPLATE_FILES = Path("data/datasets/pl/readme/raw/README_files")
 
 
 def main(
-    dataset_dir: Path = typer.Option(PL_JUDGEMENTS_PATH_RAW, help="Path to the dataset directory"),
+    dataset_dir: Path = typer.Option(PL_JUDGMENTS_PATH_RAW, help="Path to the dataset directory"),
     repo_id: Optional[str] = typer.Option(...),
     branch: Optional[str] = typer.Option(None, help="Branch to push the dataset to"),
+    commit_message: Optional[str] = typer.Option(None, help="Commit message"),
 ) -> None:
     logger.info("Loading dataset...")
     ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
@@ -53,6 +54,7 @@ def main(
         path_in_repo=DATASET_CARD_TEMPLATE_FILES.name,
         repo_id=repo_id,
         repo_type="dataset",
+        commit_message=commit_message,
         revision=branch,
     )
 

@@ -1,13 +1,11 @@
-lint_dirs := juddges scripts dashboards tests docker dev_notebooks
-mypy_dirs := juddges scripts dashboards tests docker dev_notebooks
+lint_dirs := juddges scripts tests
+mypy_dirs := juddges scripts tests
 
 fix:
-	ruff check $(lint_dirs) --fix
-	ruff format $(lint_dirs)
+	pre-commit run --all-files
 
 check:
-	ruff check $(lint_dirs)
-	ruff format $(lint_dirs) --check
+	pre-commit run --all-files
 
 check-types:
 	mypy --install-types --non-interactive $(mypy_dirs)
@@ -18,18 +16,29 @@ test:
 
 all: check test
 
+install: cuda := 124
 install:
-	pip install -r requirements.txt
-	pip install flash-attn --no-build-isolation
+	pip install -r requirements.txt --find-links https://download.pytorch.org/whl/cu$(cuda)
+	pip install flash-attn==2.6.3 --no-build-isolation
+
+install_macos:
+	# bitsandbytes are not supported on macOS (https://github.com/pwr-ai/JuDDGES/pull/41)
+	grep -v "bitsandbytes" requirements.txt | pip install -r /dev/stdin
 
 install_cpu:
 	pip install --find-links https://download.pytorch.org/whl/cpu -r requirements.txt
 
-# unsloth requires python 3.10
-# requires conda environment
+install_unsloth: cuda := 124
 install_unsloth:
-	conda install --yes pytorch-cuda=12.1 pytorch cudatoolkit xformers -c pytorch -c nvidia -c xformers
+	conda install \
+		pytorch-cuda=$(cuda) \
+		pytorch \
+		cudatoolkit \
+		'xformers<0.0.27' \
+		-c pytorch \
+		-c nvidia \
+		-c xformers \
+		--yes
 	pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
-	conda install pyg -c pyg
 	pip install flash-attn --no-build-isolation
-	pip install -r requirements.txt
+	pip install -r requirements_unsloth.txt

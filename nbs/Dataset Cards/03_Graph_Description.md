@@ -1,11 +1,11 @@
 # Polish Court Judgments Graph
 
 ## Dataset description
-We introduce a graph dataset of Polish Court Judgments. This dataset is primarily based on the [`JuDDGES/pl-court-raw`](https://huggingface.co/datasets/JuDDGES/pl-court-raw). The dataset consists of nodes representing either judgments or legal bases, and edges connecting judgments to the legal bases they refer to. Also, the graph was cleaned from small disconnected components, leaving single giant component. Consequently, the resulting graph is bipartite. We provide the dataset in both `JSON` and `PyG` formats, each has different purpose. While structurally graphs in these formats are the same, their attributes differ. 
+We introduce a graph dataset of Polish Court Judgments. This dataset is primarily based on the [`JuDDGES/pl-court-raw`](https://huggingface.co/datasets/JuDDGES/pl-court-raw). The dataset consists of nodes representing either judgments or legal bases, and edges connecting judgments to the legal bases they refer to. Also, the graph was cleaned from small disconnected components, leaving single giant component. Consequently, the resulting graph is bipartite. We provide the dataset in both `JSON` and `PyG` formats, each has different purpose. While structurally graphs in these formats are the same, their attributes differ.
 
 The `JSON` format is intended for analysis and contains most of the attributes available in [`JuDDGES/pl-court-raw`](https://huggingface.co/datasets/JuDDGES/pl-court-raw). We excluded some less-useful attributes and text content, which can be easily retrieved from the raw dataset and added to the graph as needed.
 
-The `PyG` format is designed for machine learning applications, such as link prediction on graphs, and is fully compatible with the [`Pytorch Geometric`](https://github.com/pyg-team/pytorch_geometric) framework. 
+The `PyG` format is designed for machine learning applications, such as link prediction on graphs, and is fully compatible with the [`Pytorch Geometric`](https://github.com/pyg-team/pytorch_geometric) framework.
 
 In the following sections, we provide a more detailed explanation and use case examples for each format.
 
@@ -19,9 +19,9 @@ In the following sections, we provide a more detailed explanation and use case e
 | #nodes (type=`legal_base`) | 2819 |
 | avg(degree)                | 6.132015294025195       |
 
-    
+
 ![png](../images/degree_distribution.png)
-    
+
 
 
 ## `JSON` format
@@ -58,10 +58,10 @@ g = nx.node_link_graph(g_data)
 
 ## `PyG` format
 
-The `PyTorch Geometric` format includes embeddings of the judgment content, obtained with [sdadas/mmlw-roberta-large](https://huggingface.co/sdadas/mmlw-roberta-large) for judgment nodes, 
-and one-hot-vector identifiers for legal-base nodes (note that for efficiency one can substitute it with random noise identifiers, 
+The `PyTorch Geometric` format includes embeddings of the judgment content, obtained with [sdadas/mmlw-roberta-large](https://huggingface.co/sdadas/mmlw-roberta-large) for judgment nodes,
+and one-hot-vector identifiers for legal-base nodes (note that for efficiency one can substitute it with random noise identifiers,
 like in [(Abboud et al., 2021)](https://arxiv.org/abs/2010.01179)).
-    
+
 
 
 ### Loading

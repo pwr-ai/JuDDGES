@@ -1,18 +1,24 @@
 defaults:
   - model: ???
-  - dataset: pl-court-instruct
+  - dataset: ???
   - _self_
-  - override hydra/hydra_logging: disabled  
-  - override hydra/job_logging: disabled  
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+model:
+  batch_size: 1 # always use the same batch_size for reproducibility
 
 device_map: 'auto'
-output_file: data/experiments/predict/${hydra:runtime.choices.dataset}/outputs_${hydra:runtime.choices.model}.json
-metrics_file: data/experiments/predict/${hydra:runtime.choices.dataset}/metrics_${hydra:runtime.choices.model}.json
-
-max_new_tokens: 250
+output_file: data/experiments/predict/raw/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.model}/outputs_${random_seed}.json
 truncate_context: True
+generate_kwargs:
+  max_new_tokens: ${dataset.max_output_tokens}
+  do_sample: true
+  temperature: 0.1
 
-hydra:  
-  output_subdir: null  
-  run:  
+random_seed: ???
+
+hydra:
+  output_subdir: null
+  run:
     dir: .

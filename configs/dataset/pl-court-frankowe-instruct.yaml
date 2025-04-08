@@ -1,0 +1,6 @@
+name: data/datasets/pl/sprawy_frankowe
+prompt_field: prompt
+context_field: context
+output_field: output
+
+max_output_tokens: 800

@@ -96,7 +96,7 @@ celerybeat-schedule
 *.sage.py
 
 # dotenv
-.env
+*.env
 
 # virtualenv
 .venv
@@ -155,3 +155,9 @@ secrets.env
 **/postgres-juddges/**
 outputs/
 wandb/
+*.db
+slurm/.commands.sh
+logs/
+slurm/juddges.sif
+*.sif
+local_notebooks/

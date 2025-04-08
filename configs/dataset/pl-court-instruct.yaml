@@ -2,3 +2,5 @@ name: JuDDGES/pl-court-instruct
 prompt_field: prompt
 context_field: context
 output_field: output
+
+max_output_tokens: 300 # 1050 is the real maximum, we take 0.95 quantile value

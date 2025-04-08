@@ -9,20 +9,35 @@ jobs:
         python-version: [ 3.11 ]
         os:
           - ubuntu-latest
-#          - macos-latest # at the moment bitsandbytes installation fails on macOS
-          - windows-latest
+          - macos-latest # at the moment bitsandbytes installation fails on macOS
+#          - windows-latest # utf-8 bugs on windows (https://github.com/pre-commit/pre-commit/issues/835)
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v3
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
       - name: Install deps
-        run: make install_cpu
+        run: |
+          python -m pip install --upgrade pip
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            make install_macos
+          else
+            make install_cpu
+          fi
+
       - name: Lint
         run: make check
 
@@ -35,20 +50,29 @@ jobs:
         python-version: [ 3.11 ]
         os:
           - ubuntu-latest
-#          - macos-latest # at the moment bitsandbytes installation fails on macOS
-          - windows-latest
+          - macos-latest # at the moment bitsandbytes installation fails on macOS
+#          - windows-latest # utf-8 bugs on windows (https://github.com/pre-commit/pre-commit/issues/835)
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v3
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+
       - name: Install deps
-        run: make install_cpu
+        run: |
+          python -m pip install --upgrade pip
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            make install_macos
+          else
+            make install_cpu
+          fi
+
       - name: Test
         env:
           HUGGING_FACE_HUB_TOKEN: ${{ secrets.HUGGING_FACE_HUB_TOKEN }}

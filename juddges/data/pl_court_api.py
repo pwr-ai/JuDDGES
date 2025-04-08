@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Any
 
 import requests
@@ -10,7 +11,7 @@ class PolishCourtAPI:
     def __init__(self) -> None:
         self.url = "https://apiorzeczenia.wroclaw.sa.gov.pl/ncourt-api"
 
-    @property
+    @cached_property
     def schema(self) -> dict[str, list[str]]:
         return {
             "judgement": [
@@ -44,7 +45,7 @@ class PolishCourtAPI:
         elif "limit" in params.keys():
             logger.warning("Setting limit to query the number of judgements has no effect!")
 
-        params |= {"limit": 0}
+        params = {**params, "limit": 0}
         endpoint = f"{self.url}/judgements"
         res = requests.get(endpoint, params=params)
         res.raise_for_status()
@@ -52,7 +53,7 @@ class PolishCourtAPI:
 
         return int(total_judgements)
 
-    def get_judgements(self, params: dict[str, Any]) -> list[dict[str, Any]]:
+    def get_judgments(self, params: dict[str, Any]) -> list[dict[str, Any]]:
         endpoint = f"{self.url}/judgements"
         res = requests.get(endpoint, params=params)
         res.raise_for_status()
@@ -81,7 +82,12 @@ class PolishCourtAPI:
     def get_cleaned_details(self, id: str) -> dict[str, Any]:
         """Downloads details without repeating fields retrieved in get_judgements."""
         details = self.get_details(id)
-        return {k: v for k, v in details.items() if k in self.schema["details"]}
+        details_in_schema = {k: v for k, v in details.items() if k in self.schema["details"]}
+
+        if not details_in_schema:
+            logger.warning(f"Didn't find details corresponding to schema for document: {id}")
+
+        return details_in_schema
 
     def get_details(self, id: str) -> dict[str, Any]:
         params = {"id": id}
@@ -99,7 +105,7 @@ class PolishCourtAPI:
             raise
         else:
             assert isinstance(details, dict)
-            details = self.parse_details(data)
+            details = self.parse_details(details)
             return details
 
     def parse_details(self, details: dict[str, Any]) -> dict[str, Any]:
@@ -110,7 +116,7 @@ class PolishCourtAPI:
             ("legalBases", "legalBasis"),
         ]
         for feature, nested_key in cols_to_unnest:
-            if details[feature] is None:
+            if details.get(feature) is None:
                 continue
             details[feature] = self._unnest_dict(details.get(feature), nested_key)
 

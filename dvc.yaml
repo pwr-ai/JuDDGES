@@ -1,23 +1,26 @@
+vars:
+  - seeds: [42, 7312, 997]
+
 stages:
   raw_dataset_readme:
     cmd: >-
-      jupyter nbconvert 
-      --no-input 
-      --to markdown 
-      --execute nbs/Data/02_Dataset_Description_Raw.ipynb
+      jupyter nbconvert
+      --no-input
+      --to markdown
+      --execute 'nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb'
       --output-dir data/datasets/pl/readme/raw
       --output README
     deps:
-      - nbs/Data/02_Dataset_Description_Raw.ipynb
+      - nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb
       - data/datasets/pl/raw
     outs:
       - data/datasets/pl/readme/raw/
 
   instruct_dataset_readme:
     cmd: >-
-      jupyter nbconvert 
-      --no-input 
-      --to markdown 
+      jupyter nbconvert
+      --no-input
+      --to markdown
       --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
       --output-dir data/datasets/pl/readme/instruct
       --output README
@@ -25,15 +28,23 @@ stages:
       - nbs/Data/03_Dataset_Description_Instruct.ipynb
     outs:
       - data/datasets/pl/readme/instruct/
-  build_instruct_dataset:
+
+  build_instruct_dataset_pl:
     cmd: >-
-      PYTHONPATH=. python scripts/dataset/build_instruct_dataset.py
+      PYTHONPATH=. python scripts/dataset/build_instruct_dataset_pl.py
       --dataset-dir data/datasets/pl/raw
       --repo-id JuDDGES/pl-court-instruct
     deps:
       - data/datasets/pl/raw
-      - scripts/dataset/build_instruct_dataset.py
+      - scripts/dataset/build_instruct_dataset_pl.py
     desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
+
+  build_instruct_dataset_en:
+    cmd: >-
+      PYTHONPATH=. python scripts/dataset/build_instruct_dataset_en.py
+      --repo-id JuDDGES/en-court-instruct
+    deps:
+      - scripts/dataset/build_instruct_dataset_en.py
 
   embed:
     matrix:
@@ -54,7 +65,7 @@ stages:
       model:
         - mmlw-roberta-large
     cmd: >-
-      PYTHONPATH=. python scripts/embed/aggregate_embeddings.py 
+      PYTHONPATH=. python scripts/embed/aggregate_embeddings.py
       --embeddings-dir data/embeddings/pl-court-raw/${item.model}/all_embeddings
     deps:
       - scripts/embed/aggregate_embeddings.py
@@ -62,79 +73,254 @@ stages:
     outs:
       - data/embeddings/pl-court-raw/${item.model}/agg_embeddings.pt
 
-  
   build_graph_dataset:
     cmd: >-
       PYTHONPATH=. python scripts/dataset/build_graph_dataset.py
-      --dataset-dir data/datasets/pl/raw 
+      --dataset-dir data/datasets/pl/raw
       --embeddings-root-dir data/embeddings/pl-court-raw/mmlw-roberta-large/
       --target-dir data/datasets/pl/graph
     deps:
       - scripts/dataset/build_graph_dataset.py
       - juddges/data/pl_court_graph.py
-      - data/datasets/pl/raw 
+      - data/datasets/pl/raw
       - data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings.pt
       - data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings/config.yaml
     outs:
       - data/datasets/pl/graph/data
       - data/datasets/pl/graph/metadata.yaml
 
-  sft_unsloth:
-    matrix:
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Mistral-7B-Instruct-v0.3
+  build_instruct_frankowe_dataset_pl:
     cmd: >-
-      PYTHONPATH=. python scripts/sft/fine_tune_unsloth.py model=${item.model}
+      PYTHONPATH=. python scripts/dataset/build_instruct_frankowe_dataset_pl.py
+      --train-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
+      --test-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
+      --output-dir data/datasets/pl/sprawy_frankowe
+      --tokenizer-name meta-llama/Llama-3.1-8B-Instruct
+      --threshold-tokens 64_000
     deps:
-      - scripts/sft/fine_tune_unsloth.py
-      - configs/fine_tuning.yaml 
-      - configs/model/${item.model}.yaml
+      - scripts/dataset/build_instruct_frankowe_dataset_pl.py
+      - data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
+      - data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
     outs:
-      - data/experiments/fine-tune/${item.model}/pl-court-instruct
+      - data/datasets/pl/sprawy_frankowe/train.jsonl
+      - data/datasets/pl/sprawy_frankowe/test.jsonl
+      - data/datasets/pl/sprawy_frankowe/dataset_info.json
 
+  ### ---------------------------- Fine-tuning ---------------------------- ###
+  sft:
+    matrix: &sft_models
+      model_dataset:
+        - dataset: pl-court-frankowe-instruct
+          model: llama_3.1_8b_instruct
+        - dataset: pl-court-frankowe-instruct
+          model: llama_3.2_3b_instruct
+        - dataset: pl-court-frankowe-instruct
+          model: mistral_nemo_instruct_2407
+        - dataset: pl-court-frankowe-instruct
+          model: pllum_12b_instruct
+        - dataset: pl-court-frankowe-instruct
+          model: phi_4
+        - dataset: en-appealcourt-coded-instruct
+          model: llama_3.1_8b_instruct
+        - dataset: en-appealcourt-coded-instruct
+          model: mistral_nemo_instruct_2407
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py
+      dataset=${item.model_dataset.dataset}
+      model=${item.model_dataset.model}
+    deps:
+      - scripts/sft/fine_tune_deepspeed.py
+      - configs/peft_fine_tuning.yaml
+      - configs/model/${item.model_dataset.model}.yaml
+    outs:
+      - data/experiments/peft-fine-tune/${item.model_dataset.model}/${item.model_dataset.dataset}/
+
+  ### ---------------------------- Prediction ---------------------------- ###
   predict:
     matrix:
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned
-        - Unsloth-Mistral-7B-Instruct-v0.3
-        - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
+      <<: *sft_models
+      seed: ${seeds}
     cmd: >-
-      PYTHONPATH=. python scripts/sft/predict.py model=${item.model}
+      PYTHONPATH=. python scripts/sft/predict.py
+      dataset=${item.model_dataset.dataset}
+      model=${item.model_dataset.model}
+      random_seed=${item.seed}
     deps:
       - scripts/sft/predict.py
       - configs/predict.yaml
-      - configs/model/${item.model}.yaml
+      - configs/model/${item.model_dataset.model}.yaml
     outs:
-      - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
 
-  evaluate:
+  predict_on_fine_tuned:
     matrix:
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned
-        - Unsloth-Mistral-7B-Instruct-v0.3
-        - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
+      model_dataset:
+        - dataset: pl-court-frankowe-instruct
+          model: llama_3.2_3b_instruct
+      seed: ${seeds}
     cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate.py 
-      --output-file data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
+      PYTHONPATH=. python scripts/sft/predict.py
+      dataset=${item.model_dataset.dataset}
+      model=${item.model_dataset.model}
+      model.adapter_path=data/experiments/fine-tune/${item.model_dataset.dataset}/${item.model_dataset.model}
+      random_seed=${item.seed}
+      output_file=data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
+    deps:
+      - scripts/sft/predict.py
+      - configs/predict.yaml
+      - configs/model/${item.model_dataset.model}.yaml
+    outs:
+      - data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
+
+  predict_with_api:
+    matrix:
+      dataset:
+        - pl-court-instruct
+        - en-court-instruct
+      model:
+        - gpt-4o
+        - gpt-4o-mini
+      seed:
+        - 997
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/predict_with_api.py
+      dataset=${item.dataset}
+      model_version=${item.model}
+      seed=${item.seed}
+      output_file=data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
+    deps:
+      - scripts/sft/predict_with_api.py
+      - configs/predict_with_api.yaml
+    outs:
+      - data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
+
+  ### ---------------------------- Evaluation ---------------------------- ###
+  evaluate: # use with NUM_PROC
+    matrix:
+      <<: *sft_models
+      seed: ${seeds}
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate.py
+      --output-file data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
+      --num-proc=-1
     deps:
       - scripts/sft/evaluate.py
-      - data/experiments/predict/pl-court-instruct/outputs_${item.model}.json
-    metrics:
-      - data/experiments/predict/pl-court-instruct/metrics_${item.model}.json:
-          cache: false
+      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/metrics_${item.seed}.json
 
-  summarize_metrics:
+  evaluate_api_models:
+    matrix:
+      dataset:
+        - en-court-instruct
+        - pl-court-instruct
+      model:
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
+      seed: [997]
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate.py
+      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      --num-proc=-1
+    deps:
+      - scripts/sft/evaluate.py
+      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
+
+  evaluate_llm_as_judge_pl:
+    matrix:
+      judge_model:
+        - gpt_4o_mini
+      evaluated_model:
+        - Unsloth-Llama-3-8B-Instruct
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned
+        - Unsloth-Mistral-Nemo-Instruct-2407
+        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
+        - Bielik-7B-Instruct-v0.1
+        - Bielik-7B-Instruct-v0.1-fine-tuned
+        - Bielik-11B-v2.2-Instruct
+        - Bielik-11B-v2.2-Instruct-fine-tuned
+      seed: ${seeds}
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
+      api_model=${item.judge_model}
+      answers_file=data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      out_metric_file=data/experiments/predict/pl-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      prompt=pl
+    deps:
+      - scripts/sft/evaluate_llm_as_judge.py
+      - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+
+  evaluate_llm_as_judge_en:
+    matrix:
+      judge_model:
+        - gpt_4o_mini
+      evaluated_model:
+        - Unsloth-Llama-3-8B-Instruct
+        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
+        - Unsloth-Mistral-Nemo-Instruct-2407
+        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
+      seed: ${seeds}
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
+      api_model=${item.judge_model}
+      answers_file=data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      out_metric_file=data/experiments/predict/en-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      prompt=en
+    deps:
+      - scripts/sft/evaluate_llm_as_judge.py
+      - data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/en-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+
+  evaluate_llm_as_judge_api_models:
+    matrix:
+      language:
+        - pl
+        - en
+      judge_model:
+        - gpt_4o_mini
+      evaluated_model:
+        - open_ai_gpt-4o
+        - open_ai_gpt-4o-mini
+      seed: [997]
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
+      api_model=${item.judge_model}
+      answers_file=data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      out_metric_file=data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      prompt=${item.language}
+    deps:
+      - scripts/sft/evaluate_llm_as_judge.py
+      - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+    outs:
+      - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+
+  summarize_ngram_metrics:
     matrix:
       dir:
-        - data/experiments/predict/pl-court-instruct
+        - data/experiments/predict/raw/pl-court-frankowe-instruct
     cmd: >-
-      PYTHONPATH=. python scripts/sft/summarize_metrics.py 
+      PYTHONPATH=. python scripts/sft/summarize_metrics.py
       --root-dir ${item.dir}
     deps:
       - scripts/sft/summarize_metrics.py
     metrics:
-      - ${item.dir}/metrics_summary.md:
+      - ${item.dir}/metrics_ngram_summary.md:
+          cache: false
+
+  summarize_judge_metrics:
+    matrix:
+      dir:
+        - data/experiments/predict/raw/pl-court-frankowe-instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/summarize_metrics.py
+      --root-dir ${item.dir}
+    deps:
+      - scripts/sft/summarize_metrics.py
+    metrics:
+      - ${item.dir}/metrics_judge_summary.md:
           cache: false

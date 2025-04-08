@@ -1,30 +1,35 @@
 import os
+import pickle
+from multiprocessing import cpu_count
 from pathlib import Path
-from datasets import Dataset
 from typing import Any, Literal
+
 import hydra
+import torch
+import yaml
+from datasets import Dataset, load_dataset
 from loguru import logger
 from omegaconf import DictConfig
 from openai import BaseModel
-import torch
-from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
+from transformers import PreTrainedTokenizer
 from transformers.utils import is_flash_attn_2_available
-import yaml
 
-from juddges.config import EmbeddingModelConfig, RawDatasetConfig
-from juddges.settings import CONFIG_PATH
+from juddges.config import EmbeddingModelConfig
 from juddges.preprocessing.text_chunker import TextSplitter
+from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 
 assert is_flash_attn_2_available(), "FlashAttention2 is required for this script"
 
-NUM_PROC = int(os.getenv("NUM_PROC", 1))
+NUM_PROC = int(os.getenv("NUM_PROC", cpu_count() - 2))
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+os.environ["TOKENIZERS_PARALLELISM"] = "false" if (NUM_PROC > 1) else "true"
 
 
 class EmbeddingConfig(BaseModel, extra="forbid"):
-    dataset: RawDatasetConfig
+    dataset_name: str
     embedding_model: EmbeddingModelConfig
     length_adjust_mode: Literal["truncate", "chunk"]
     truncation_tokens: int | None = None
@@ -45,17 +50,19 @@ def main(cfg: DictConfig) -> None:
     config.output_dir.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(
-        config.dataset.format,
-        data_dir=str(config.dataset.root_dir),
-        columns=["_id", "text"],
-    )
-    ds = ds.filter(lambda item: item["text"] is not None)
+        config.dataset_name,
+        columns=["judgment_id", "full_text"],
+    )["train"]
 
-    if config.chunk_config is not None:
-        ds = chunk_dataset(ds, config)
-        text_column = "text_chunk"
-    else:
-        text_column = "text"
+    ds = ds.rename_column("full_text", "text")
+
+    # Add logging to inspect dataset items
+    logger.info(f"Dataset columns: {ds.column_names}")
+    sample_item = ds[0]
+    logger.info(f"Sample item keys: {list(sample_item.keys())}")
+    logger.info(f"Sample item content: {sample_item}")
+
+    ds = ds.filter(lambda item: item["text"] is not None, num_proc=NUM_PROC)
 
     model = SentenceTransformer(
         config.embedding_model.name,
@@ -64,53 +71,77 @@ def main(cfg: DictConfig) -> None:
     )
     model.compile()
 
+    if config.chunk_config is not None:
+        logger.info("Chunking dataset")
+
+        ds = chunk_dataset(dataset=ds, config=config, tokenizer=model.tokenizer)
+        text_column = "chunk_text"
+    else:
+        text_column = "text"
+
     if config.truncation_tokens is not None:
         assert config.truncation_tokens <= config.embedding_model.max_seq_length
         model.max_seq_length = config.truncation_tokens
 
-    embedder = Embedder(model, text_column)
-    ds = ds.map(
-        embedder,
-        batched=True,
-        batch_size=config.batch_size,
-        num_proc=None,
-        remove_columns=[text_column],
-        desc="Embedding chunks",
-    )
-    ds.save_to_disk(config.output_dir)
+    # Start multi-GPU processing pool
+    pool = model.start_multi_process_pool()
+
+    logger.info(f"Embedding dataset with {config.batch_size} batch size using multiple GPUs")
+    texts = ds[text_column]
+
+    # Calculate total number of batches
+    total_batches = (len(texts) + config.batch_size - 1) // config.batch_size
+
+    # Process embeddings with progress bar
+    embeddings = []
+    for i in tqdm(
+        range(0, len(texts), config.batch_size),
+        total=total_batches,
+        desc="Calculating embeddings",
+    ):
+        batch_texts = texts[i : i + config.batch_size]
+        batch_embeddings = model.encode_multi_process(
+            batch_texts, pool, batch_size=config.batch_size
+        )
+        embeddings.extend(batch_embeddings)
+
+    # save embeddings to disk
+    with open(config.output_dir / "embeddings.pkl", "wb") as f:
+        pickle.dump(embeddings, f)
+
+    ds = ds.add_column("embedding", embeddings)
+
+    # Stop the multi-GPU pool
+    model.stop_multi_process_pool(pool)
+
+    logger.info(f"Saving dataset to {config.output_dir}")
+    ds.save_to_disk(str(config.output_dir))
+    logger.info(f"Dataset saved to {config.output_dir}")
 
     with open(config.output_dir / "config.yaml", "w") as f:
         yaml.dump(config.model_dump(), f)
 
 
-def chunk_dataset(dataset: Dataset, config: EmbeddingConfig) -> Dataset:
+def chunk_dataset(
+    dataset: Dataset,
+    config: EmbeddingConfig,
+    tokenizer: PreTrainedTokenizer | None = None,
+) -> Dataset:
     # todo: To be verified
     assert config.chunk_config is not None
-    split_worker = TextSplitter(**config.chunk_config)
-    ds = dataset.select_columns(["_id", "text"]).map(
+    split_worker = TextSplitter(**config.chunk_config, tokenizer=tokenizer)
+    logger.info(f"Chunking dataset with {config.chunk_config}")
+    logger.info(f"Dataset columns: {dataset.column_names}")
+    ds = dataset.select_columns(["judgment_id", "text"]).map(
         split_worker,
         batched=True,
         num_proc=NUM_PROC,
-        remove_columns=["_id", "text"],
+        remove_columns=["judgment_id", "text"],
         desc="Chunking documents",
     )
+    ds.save_to_disk(str(config.output_dir / "chunked"))
     logger.info(f"Dataset split into {ds.num_rows} chunks")
     return ds
-
-
-class Embedder:
-    def __init__(self, model: SentenceTransformer, text_column: str) -> None:
-        self.model = model
-        self.text_column = text_column
-
-    def __call__(self, items: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "embedding": self.model.encode(
-                items[self.text_column],
-                show_progress_bar=False,
-                batch_size=len(items[self.text_column]),
-            )
-        }
 
 
 if __name__ == "__main__":

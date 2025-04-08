@@ -14,9 +14,10 @@ DATA_PATH = ROOT_PATH / "data"
 CONFIG_PATH = ROOT_PATH / "configs"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
+FRANKOWICZE_DATA_PATH = DATA_PATH / "analysis" / "sprawy_frankowe"
 
 PL_JUDGEMENTS_PATH = DATA_PATH / "datasets" / "pl"
-PL_COURT_DEP_ID_2_NAME = PL_JUDGEMENTS_PATH / "court_dep_names.csv"
+PL_COURT_DEP_ID_2_NAME = PL_JUDGEMENTS_PATH / "court_id_2_name.csv"
 PL_JUDGEMENTS_PATH_RAW = PL_JUDGEMENTS_PATH / "raw"
 PL_JUDGEMENTS_PATH_TEXTS = PL_JUDGEMENTS_PATH / "text"
 PL_JUDGEMENTS_PATH_INSTRUCT = PL_JUDGEMENTS_PATH / "instruct"
@@ -74,6 +75,6 @@ def prepare_langchain_cache() -> None:
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 
 
-def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url: str = "postgres-juddges") -> None:
+def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost") -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)

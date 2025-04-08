@@ -1,23 +1,24 @@
 import json
 import os
 from pathlib import Path
-import time
+from pprint import pformat
 
 import hydra
-from datasets import load_dataset
-
-from loguru import logger
-from openai import BaseModel
 import torch
+from datasets import load_dataset
+from loguru import logger
 from omegaconf import DictConfig
-from tqdm import tqdm
-from torch.utils.data import DataLoader
-from juddges.config import DatasetConfig, LLMConfig
-from juddges.settings import CONFIG_PATH
-from juddges.models.factory import get_model
-from juddges.preprocessing.text_encoder import TextEncoderForEval
-from juddges.utils.config import resolve_config
+from transformers import set_seed
 
+from juddges.config import PredictConfig
+from juddges.models.factory import get_model
+from juddges.models.predict import predict_with_llm
+from juddges.preprocessing.text_encoder import TextEncoderForEval
+from juddges.settings import CONFIG_PATH
+from juddges.utils.config import resolve_config
+from juddges.utils.misc import sort_dataset_by_input_length
+
+torch.set_float32_matmul_precision("high")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
@@ -25,81 +26,69 @@ if NUM_PROC > 1:
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
-class PredictConfig(BaseModel, extra="forbid"):
-    model: LLMConfig
-    dataset: DatasetConfig
-    device_map: str
-    output_file: Path
-    metrics_file: Path
-    max_new_tokens: int
-    truncate_context: bool
-
-
-@torch.inference_mode()
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
+@torch.inference_mode()
 def main(cfg: DictConfig) -> None:
-    cfg_dict = resolve_config(cfg)
-    logger.info(f"config:\n{cfg_dict}")
-    config = PredictConfig(**cfg_dict)
+    """Performs inference on a given dataset using given model.
+    The outputs are saved to a file in the following JSONL format:
+    [
+        {
+            "answer": str,
+            "gold": str
+        },
+        ...
+    ]
+    """
+    config = PredictConfig(**resolve_config(cfg))
+    logger.info(f"config:\n{pformat(config.model_dump())}")
 
     output_file = Path(config.output_file)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(config.dataset.name, split="test")
+    ds, reverse_sort_idx = sort_dataset_by_input_length(ds, config.dataset.context_field)
     logger.info("Loading model...")
 
     model_pack = get_model(config.model, device_map=config.device_map)
-    model, tokenizer = model_pack.model, model_pack.tokenizer
-    model.eval()
+
+    assert not any(key in model_pack.generate_kwargs for key in config.generate_kwargs.keys())
+    model_pack.generate_kwargs |= config.generate_kwargs
+
+    if config.model.use_unsloth:
+        from unsloth import FastLanguageModel
+
+        FastLanguageModel.for_inference(model_pack.model)
+    else:
+        model_pack.model.eval()
+        # model_pack.model.compile()  # might cause libcuda.so not found error
+
     if config.model.batch_size > 1 and config.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
 
     gold_outputs = [item["output"] for item in ds]
 
     encoder = TextEncoderForEval(
-        tokenizer=tokenizer,
-        max_length=config.model.max_seq_length,
+        tokenizer=model_pack.tokenizer,
+        max_length=config.get_max_input_length(model_pack.model.config.max_position_embeddings),
         padding=config.model.padding,
     )
     ds.set_transform(encoder, columns=["prompt", "context"])
-    dataloader = DataLoader(
-        ds,
+
+    set_seed(config.random_seed)
+    model_outputs = predict_with_llm(
+        model_pack=model_pack,
+        dataset=ds,
         batch_size=config.model.batch_size,
-        num_workers=NUM_PROC,
-        pin_memory=(NUM_PROC > 1),
-        shuffle=False,
+        num_proc=NUM_PROC,
+        verbose=True,
     )
-
-    model_outputs = []
-
-    with tqdm(dataloader) as pbar:
-        for batch in pbar:
-            model_inputs = batch["input_ids"].view(config.model.batch_size, -1)
-            model_inputs = model_inputs.to(DEVICE, non_blocking=True)
-            input_length = model_inputs.size(1)
-
-            start_time = time.time()
-            generated_ids = model.generate(
-                model_inputs,
-                max_new_tokens=config.max_new_tokens,
-                **model_pack.generate_kwargs,
-            )
-            duration = time.time() - start_time
-
-            decoded = tokenizer.batch_decode(
-                generated_ids[:, input_length:],
-                skip_special_tokens=True,
-            )
-            model_outputs.extend(decoded)
-
-            pbar.set_postfix_str(f"{generated_ids.numel() / duration: 0.2f} tok/sec")
-
     results = [
         {"answer": ans, "gold": gold_ans} for ans, gold_ans in zip(model_outputs, gold_outputs)
     ]
+    results = [results[i] for i in reverse_sort_idx]
 
     with open(output_file, "w") as f:
-        json.dump(results, f, indent="\t")
+        json.dump(results, f, indent="\t", ensure_ascii=False)
 
 
 if __name__ == "__main__":
