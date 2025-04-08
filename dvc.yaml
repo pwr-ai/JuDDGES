@@ -17,19 +17,6 @@ stages:
       - data/datasets/pl/pl-court-raw/README.md
       - data/datasets/pl/pl-court-raw/README_files/
 
-  instruct_dataset_readme:
-    cmd: >-
-      jupyter nbconvert
-      --no-input
-      --to markdown
-      --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
-      --output-dir data/datasets/pl/readme/instruct
-      --output README
-    deps:
-      - nbs/Data/03_Dataset_Description_Instruct.ipynb
-    outs:
-      - data/datasets/pl/readme/instruct/
-
   build_instruct_dataset_pl:
     cmd: >-
       PYTHONPATH=. python scripts/dataset/build_instruct_dataset_pl.py
@@ -107,85 +94,71 @@ stages:
       - data/datasets/pl/sprawy_frankowe/test.jsonl
       - data/datasets/pl/sprawy_frankowe/dataset_info.json
 
-  ### Fine-tuning ###
+  ### ---------------------------- Fine-tuning ---------------------------- ###
   sft:
-    matrix:
-      dataset:
-        - pl-court-instruct
-        - pl-court-frankowe-instruct
-        - en-court-instruct
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Mistral-7B-Instruct-v0.3
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Bielik-7B-Instruct-v0.1
-        - Bielik-11B-v2.2-Instruct
-        - llama_3.1_8b_instruct
+    matrix: &sft_models
+      model_dataset:
+        - dataset: pl-court-frankowe-instruct
+          model: llama_3.1_8b_instruct
+        - dataset: pl-court-frankowe-instruct
+          model: llama_3.2_3b_instruct
+        - dataset: pl-court-frankowe-instruct
+          model: mistral_nemo_instruct_2407
+        - dataset: pl-court-frankowe-instruct
+          model: pllum_12b_instruct
+        - dataset: pl-court-frankowe-instruct
+          model: phi_4
+        - dataset: en-appealcourt-coded-instruct
+          model: llama_3.1_8b_instruct
+        - dataset: en-appealcourt-coded-instruct
+          model: mistral_nemo_instruct_2407
     cmd: >-
-      PYTHONPATH=. python scripts/sft/fine_tune_llm.py
-      dataset=${item.dataset}
-      model=${item.model}
+      PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py
+      dataset=${item.model_dataset.dataset}
+      model=${item.model_dataset.model}
     deps:
-      - scripts/sft/fine_tune_llm.py
-      - configs/fine_tuning.yaml
-      - configs/model/${item.model}.yaml
+      - scripts/sft/fine_tune_deepspeed.py
+      - configs/peft_fine_tuning.yaml
+      - configs/model/${item.model_dataset.model}.yaml
     outs:
-      - data/experiments/fine-tune/${item.model}/${item.dataset}/
+      - data/experiments/peft-fine-tune/${item.model_dataset.model}/${item.model_dataset.dataset}/
 
-  ### Prediction ###
-  predict_pl:
+  ### ---------------------------- Prediction ---------------------------- ###
+  predict:
     matrix:
-      dataset:
-        - pl-court-instruct
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned
-        - Unsloth-Mistral-7B-Instruct-v0.3
-        - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
-        - Bielik-7B-Instruct-v0.1
-        - Bielik-7B-Instruct-v0.1-fine-tuned
-        - trurl-13B-academic
-        - qra-13b
-        - Bielik-11B-v2.2-Instruct
-        - Bielik-11B-v2.2-Instruct-fine-tuned
+      <<: *sft_models
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
-      dataset=${item.dataset}
-      model=${item.model}
+      dataset=${item.model_dataset.dataset}
+      model=${item.model_dataset.model}
       random_seed=${item.seed}
-      output_file=data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/predict.py
       - configs/predict.yaml
-      - configs/model/${item.model}.yaml
+      - configs/model/${item.model_dataset.model}.yaml
     outs:
-      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
 
-  predict_en:
+  predict_on_fine_tuned:
     matrix:
-      dataset:
-        - en-court-instruct
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
+      model_dataset:
+        - dataset: pl-court-frankowe-instruct
+          model: llama_3.2_3b_instruct
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict.py
-      dataset=${item.dataset}
-      model=${item.model}
+      dataset=${item.model_dataset.dataset}
+      model=${item.model_dataset.model}
+      model.adapter_path=data/experiments/fine-tune/${item.model_dataset.dataset}/${item.model_dataset.model}
       random_seed=${item.seed}
-      output_file=data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      output_file=data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
     deps:
       - scripts/sft/predict.py
       - configs/predict.yaml
-      - configs/model/${item.model}.yaml
+      - configs/model/${item.model_dataset.model}.yaml
     outs:
-      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      - data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
 
   predict_with_api:
     matrix:
@@ -209,54 +182,20 @@ stages:
     outs:
       - data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
 
-  ### Evaluation ###
-  evaluate_pl:
+  ### ---------------------------- Evaluation ---------------------------- ###
+  evaluate: # use with NUM_PROC
     matrix:
-      dataset:
-        - pl-court-instruct
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned
-        - Unsloth-Mistral-7B-Instruct-v0.3
-        - Unsloth-Mistral-7B-Instruct-v0.3-fine-tuned
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
-        - Bielik-7B-Instruct-v0.1
-        - Bielik-7B-Instruct-v0.1-fine-tuned
-        - trurl-13B-academic
-        - qra-13b
-        - Bielik-11B-v2.2-Instruct
-        - Bielik-11B-v2.2-Instruct-fine-tuned
+      <<: *sft_models
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      --output-file data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
       --num-proc=-1
     deps:
       - scripts/sft/evaluate.py
-      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
+      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
     outs:
-      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
-
-  evaluate_en:
-    matrix:
-      dataset:
-        - en-court-instruct
-      model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
-      seed: ${seeds}
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
-      --num-proc=-1
-    deps:
-      - scripts/sft/evaluate.py
-      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
-    outs:
-      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
+      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/metrics_${item.seed}.json
 
   evaluate_api_models:
     matrix:
@@ -348,11 +287,10 @@ stages:
     outs:
       - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
 
-  summarize_metrics:
+  summarize_ngram_metrics:
     matrix:
       dir:
-        - data/experiments/predict/pl-court-instruct
-        - data/experiments/predict/en-court-instruct
+        - data/experiments/predict/raw/pl-court-frankowe-instruct
     cmd: >-
       PYTHONPATH=. python scripts/sft/summarize_metrics.py
       --root-dir ${item.dir}
@@ -361,5 +299,16 @@ stages:
     metrics:
       - ${item.dir}/metrics_ngram_summary.md:
           cache: false
+
+  summarize_judge_metrics:
+    matrix:
+      dir:
+        - data/experiments/predict/raw/pl-court-frankowe-instruct
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/summarize_metrics.py
+      --root-dir ${item.dir}
+    deps:
+      - scripts/sft/summarize_metrics.py
+    metrics:
       - ${item.dir}/metrics_judge_summary.md:
           cache: false

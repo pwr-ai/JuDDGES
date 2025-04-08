@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import typer
@@ -6,10 +7,12 @@ import typer
 from juddges.evaluation.info_extraction import InfoExtractionEvaluator
 from scripts.utils.typer_config import *  # noqa: F403
 
+NUM_PROC = int(os.environ.get("NUM_PROC", 1))
+
 
 def evaluate_results(
     output_file: Path = typer.Option(...),
-    num_proc: int = typer.Option(1),
+    num_proc: int = typer.Option(NUM_PROC),
 ) -> None:
     with open(output_file, "r") as file:
         results = json.load(file)

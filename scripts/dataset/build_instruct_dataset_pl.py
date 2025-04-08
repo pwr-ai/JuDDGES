@@ -8,7 +8,7 @@ from datasets import load_dataset
 from dotenv import load_dotenv
 from loguru import logger
 
-from juddges.settings import PL_JUDGEMENTS_PATH_INSTRUCT, PL_JUDGEMENTS_PATH_RAW
+from juddges.settings import PL_JUDGMENTS_PATH_INSTRUCT, PL_JUDGMENTS_PATH_RAW
 
 load_dotenv()
 
@@ -61,10 +61,10 @@ SCHEMA_2_FEATURES = {
 
 
 def main(
-    dataset_dir: Path = typer.Option(PL_JUDGEMENTS_PATH_RAW, help="Path to the dataset directory"),
+    dataset_dir: Path = typer.Option(PL_JUDGMENTS_PATH_RAW, help="Path to the dataset directory"),
     repo_id: Optional[str] = typer.Option(None),
     target_dir: Path = typer.Option(
-        PL_JUDGEMENTS_PATH_INSTRUCT,
+        PL_JUDGMENTS_PATH_INSTRUCT,
         help="Path to the target directory",
     ),
     test_size: int = typer.Option(2_000, help="Size of the test set"),

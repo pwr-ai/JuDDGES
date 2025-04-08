@@ -101,7 +101,7 @@ class PolishCourtAPI:
 
         return int(total_judgements)
 
-    def get_judgements(self, params: dict[str, Any]) -> list[dict[str, Any]]:
+    def get_judgments(self, params: dict[str, Any]) -> list[dict[str, Any]]:
         endpoint = f"{self.url}/judgements"
         res = requests.get(endpoint, params=params)
         res.raise_for_status()

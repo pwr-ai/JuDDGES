@@ -14,7 +14,7 @@ WV_API_KEY = os.environ["WV_API_KEY"]
 
 QUERY_PROMPT = "zapytanie: {query}"
 
-# NOTE: This is standalone example, for convenience you can use judgements/data/weaviate_db.py
+# NOTE: This is standalone example, for convenience you can use judgments/data/weaviate_db.py
 with weaviate.connect_to_local(
     host=WV_HOST,
     port=WV_PORT,

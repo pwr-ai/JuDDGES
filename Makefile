@@ -1,5 +1,5 @@
-lint_dirs := juddges scripts dashboards tests
-mypy_dirs := juddges scripts dashboards tests
+lint_dirs := juddges scripts tests
+mypy_dirs := juddges scripts tests
 
 fix:
 	pre-commit run --all-files
@@ -20,6 +20,10 @@ install: cuda := 124
 install:
 	pip install -r requirements.txt --find-links https://download.pytorch.org/whl/cu$(cuda)
 	pip install flash-attn==2.6.3 --no-build-isolation
+
+install_macos:
+	# bitsandbytes are not supported on macOS (https://github.com/pwr-ai/JuDDGES/pull/41)
+	grep -v "bitsandbytes" requirements.txt | pip install -r /dev/stdin
 
 install_cpu:
 	pip install --find-links https://download.pytorch.org/whl/cpu -r requirements.txt

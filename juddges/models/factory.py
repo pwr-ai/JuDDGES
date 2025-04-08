@@ -3,10 +3,24 @@ from typing import Any
 
 import torch
 from loguru import logger
-from peft import PeftModel
+from peft import PeftModelForCausalLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 from juddges.config import LLMConfig
+
+LLAMA_3_MODELS = [
+    "meta-llama/Llama-3.1-8B-Instruct",
+    "meta-llama/Llama-3.2-3B-Instruct",
+]
+
+PHI_4_MODELS = [
+    "microsoft/phi-4",
+]
+
+MISTRAL_MODELS = [
+    "mistralai/Mistral-Nemo-Instruct-2407",
+    "CYFRAGOVPL/PLLuM-12B-instruct",
+]
 
 
 @dataclass
@@ -17,14 +31,12 @@ class ModelForGeneration:
 
 
 def get_model(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
-    if "llama" in llm_config.name.lower():
+    if llm_config.name in LLAMA_3_MODELS:
         return get_llama_3(llm_config, **kwargs)
-    elif llm_config.name.lower().startswith("speakleash/bielik-11b-v2"):
+    elif llm_config.name in PHI_4_MODELS:
         return get_model_with_default_setup(llm_config, **kwargs)
-    elif any(mistral_model in llm_config.name.lower() for mistral_model in ("mistral", "bielik")):
+    elif llm_config.name in MISTRAL_MODELS:
         return get_mistral(llm_config, **kwargs)
-    elif any(llama_2_model in llm_config.name.lower() for llama_2_model in ("trurl", "qra")):
-        return get_model_with_default_setup(llm_config, **kwargs)
     else:
         raise ValueError(f"Model: {llm_config} not yet handled or doesn't exists.")
 
@@ -97,7 +109,7 @@ def _get_model_tokenizer(
 
     if llm_config.adapter_path is not None:
         logger.info(f"Loading adapter from {llm_config.adapter_path}")
-        model = PeftModel.from_pretrained(model, llm_config.adapter_path)
+        model = PeftModelForCausalLM.from_pretrained(model, llm_config.adapter_path)
         model = model.merge_and_unload(safe_merge=True)
 
     return model, tokenizer

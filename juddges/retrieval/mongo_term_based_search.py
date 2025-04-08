@@ -14,7 +14,7 @@ RETURNED_ATTRIBUTES = {
 }
 
 
-def search_judgements(query: str, max_docs: int = 100):
+def search_judgments(query: str, max_docs: int = 100):
     collection = get_mongo_collection()
     return list(
         collection.aggregate(
@@ -33,7 +33,7 @@ def search_judgements(query: str, max_docs: int = 100):
     )
 
 
-def search_judgements_by_signature(signature: str, max_docs: int = 100):
+def search_judgments_by_signature(signature: str, max_docs: int = 100):
     collection = get_mongo_collection()
     return list(
         collection.aggregate(
