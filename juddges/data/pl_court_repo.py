@@ -7,7 +7,7 @@ from huggingface_hub.errors import RepositoryNotFoundError
 from loguru import logger
 from tabulate import tabulate
 
-from juddges.utils.hf import disable_caching_ctx
+from juddges.utils.hf import disable_hf_dataset_cache
 
 DEFAULT_DATA_DIR_IN_REPO = "data"
 DATA_SHARD_FILE_PATTERN = "train_*.parquet"
@@ -91,7 +91,7 @@ def prepare_dataset_card(
     dataset_card_template: str | Path,
     dataset_card_path: Path,
 ) -> Path:
-    with disable_caching_ctx():
+    with disable_hf_dataset_cache():
         dataset_info = load_dataset("parquet", data_dir=data_files_dir)["train"].info
 
     generate_dataset_card(
