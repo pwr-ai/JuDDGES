@@ -1,6 +1,6 @@
 # NSA Data Scraping & Extraction Scripts
 
-This directory contains a suite of Python scripts designed for scraping, processing, and storing
+The `scripts/nsa` directory contains a suite of Python scripts designed for scraping, processing, and storing
 document data from the NSA archive.
 Below is an overview of the purpose, requirements, and usage of each script.
 

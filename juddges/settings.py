@@ -1,9 +1,11 @@
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import mlflow
 import tiktoken
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
+from zoneinfo import ZoneInfo
 
 # get root path as ROOT_PATH as pathlib objects
 ROOT_PATH = Path(__file__).resolve().parent.parent
@@ -78,3 +80,7 @@ def prepare_langchain_cache() -> None:
 def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost") -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)
+
+
+def get_nsa_end_date() -> str:
+    return (datetime.now(ZoneInfo("Europe/Warsaw")) - timedelta(days=14)).strftime("%Y-%m-%d")

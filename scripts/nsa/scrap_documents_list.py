@@ -8,15 +8,15 @@ import urllib3
 from loguru import logger
 from mpire import WorkerPool
 from random_user_agent.user_agent import UserAgent
-from zoneinfo import ZoneInfo
 
 from juddges.data.nsa.scraper import NSAScraper
+from juddges.settings import get_nsa_end_date
 from juddges.utils.logging import setup_loguru
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 START_DATE = "1981-01-01"
-END_DATE = (datetime.now(ZoneInfo("Europe/Warsaw")) - timedelta(days=14)).strftime("%Y-%m-%d")
+END_DATE = get_nsa_end_date()
 
 
 def main(
