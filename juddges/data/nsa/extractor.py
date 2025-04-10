@@ -1,3 +1,9 @@
+"""Data extraction module for NSA (National Administrative Court) judgments.
+
+This module provides functionality to extract structured data from raw NSA judgment HTML pages.
+The extracted data can be converted to pandas DataFrame or PyArrow Table formats for further processing.
+"""
+
 import re
 from typing import Any, Iterable, Sequence
 
@@ -8,6 +14,10 @@ from bs4 import BeautifulSoup, Tag
 from mpire import WorkerPool
 from pandas import Timestamp
 
+# Timezone for date handling
+WARSAW_TZ = pytz.timezone("Europe/Warsaw")
+
+# Mapping of field names to their descriptions
 DESCRIPTION_MAP = {
     "id": "unique identifier of the judgment",
     "Sygnatura": "signature of judgment (unique within court)",
@@ -37,6 +47,7 @@ DESCRIPTION_MAP = {
     "Prawomocność": "finality",
 }
 
+# Mapping of Polish field names to English field names
 FIELD_MAP = {
     "id": "judgment_id",
     "Sygnatura": "docket_number",
@@ -66,7 +77,7 @@ FIELD_MAP = {
     "Prawomocność": "finality",
 }
 
-
+# Order of fields in the output data
 ORDER = [
     "judgment_id",
     "docket_number",
@@ -92,6 +103,7 @@ ORDER = [
     "dissenting_opinion",
 ]
 
+# Fields that should be treated as lists
 LIST_TYPE_FIELDS = {
     "Hasła tematyczne",
     "Symbol z opisem",
@@ -101,8 +113,7 @@ LIST_TYPE_FIELDS = {
     "Publikacja w u.z.o.",
 }
 
-WARSAW_TZ = pytz.timezone("Europe/Warsaw")
-
+# PyArrow schema for structured data storage
 PYARROW_SCHEMA = pa.schema(
     [
         ("judgment_id", pa.string()),
@@ -158,13 +169,30 @@ PYARROW_SCHEMA = pa.schema(
 
 
 class NSADataExtractor:
+    """Extractor for structured data from raw NSA judgment HTML pages.
+
+    This class provides methods to extract and transform data from raw NSA judgment HTML pages
+    into structured formats (dictionaries, pandas DataFrames, or PyArrow Tables).
+    """
+
     def __init__(self) -> None:
+        """Initialize the extractor and validate field mappings."""
         assert (set(FIELD_MAP.values()) - set(ORDER)) == {"journal", "law", "article", "link"}
         assert (set(ORDER) - set(FIELD_MAP.values())) == set()
 
     def extract_data_from_pages(
         self, pages: Sequence[str], doc_ids: Sequence[str], n_jobs: int | None = None
     ) -> list[dict[str, Any]]:
+        """Extract data from multiple HTML pages in parallel.
+
+        Args:
+            pages: Sequence of HTML pages to extract data from
+            doc_ids: Sequence of document IDs corresponding to the pages
+            n_jobs: Number of parallel jobs to use (None for number of cores)
+
+        Returns:
+            List of dictionaries containing extracted data for each page
+        """
         extracted_data = []
         with WorkerPool(n_jobs) as pool:
             args = (
@@ -184,22 +212,52 @@ class NSADataExtractor:
     def extract_data_from_pages_to_df(
         self, pages: Iterable[str], doc_ids: Iterable[str], n_jobs: int | None = None
     ) -> pd.DataFrame:
+        """Extract data from pages and convert to pandas DataFrame.
+
+        Args:
+            pages: Iterable of HTML pages to extract data from
+            doc_ids: Iterable of document IDs corresponding to the pages
+            n_jobs: Number of parallel jobs to use (None for automatic)
+
+        Returns:
+            DataFrame containing extracted data with columns in ORDER
+        """
         extracted_data = self.extract_data_from_pages(pages, doc_ids, n_jobs)
         return pd.DataFrame(extracted_data, columns=ORDER)
 
     def extract_data_from_pages_to_pyarrow(
         self, pages: Iterable[str], doc_ids: Iterable[str], n_jobs: int | None = None
     ) -> pa.Table:
+        """Extract data from pages and convert to PyArrow Table.
+
+        Args:
+            pages: Iterable of HTML pages to extract data from
+            doc_ids: Iterable of document IDs corresponding to the pages
+            n_jobs: Number of parallel jobs to use (None for automatic)
+
+        Returns:
+            PyArrow Table containing extracted data with schema PYARROW_SCHEMA
+        """
         extracted_data = self.extract_data_from_pages(pages, doc_ids, n_jobs)
         table = pa.Table.from_pylist(extracted_data, schema=self.pyarrow_schema)
         return table.select(ORDER)
 
     @property
     def pyarrow_schema(self) -> pa.Schema:
+        """Get the PyArrow schema for the extracted data."""
         return PYARROW_SCHEMA
 
     def extract_data(self, page: str, doc_id: str) -> dict[str, Any]:
-        soup = BeautifulSoup(page, "html.parser")  # 'page' contains the HTML
+        """Extract structured data from a single HTML page.
+
+        Args:
+            page: HTML content of the judgment page
+            doc_id: Document ID of the judgment
+
+        Returns:
+            Dictionary containing extracted data fields
+        """
+        soup = BeautifulSoup(page, "html.parser")
         extracted_data = (
             {FIELD_MAP["id"]: doc_id}
             | self._extract_number_and_type(soup)
@@ -211,6 +269,7 @@ class NSADataExtractor:
         return extracted_data
 
     def _extract_number_and_type(self, soup: BeautifulSoup) -> dict[str, Any]:
+        """Extract docket number and judgment type from the header."""
         number_and_type = soup.find("span", class_="war_header").get_text(strip=True)
         if number_and_type.startswith("- ") and " - " not in number_and_type:
             number_and_type = " " + number_and_type
@@ -225,6 +284,7 @@ class NSADataExtractor:
         return {FIELD_MAP["Sygnatura"]: number, FIELD_MAP["Rodzaj orzeczenia"]: judgment_type}
 
     def _extract_text_sections(self, soup: BeautifulSoup) -> dict[str, Any]:
+        """Extract text sections from the page (e.g., full text, reasons, thesis)."""
         extracted_data = {}
         section_headers = soup.find_all("div", class_="lista-label")
         for header in section_headers:
@@ -237,6 +297,7 @@ class NSADataExtractor:
         return extracted_data
 
     def _extract_table(self, soup: BeautifulSoup) -> dict[str, Any]:
+        """Extract data from the table of the judgment."""
         extracted_data = {}
         rows = soup.find_all("tr", class_="niezaznaczona")
         for row in rows:
@@ -268,8 +329,8 @@ class NSADataExtractor:
     def _extract_text_data_with_br_tags(self, value: str) -> list[str]:
         return [item.strip() for item in value.split("<br/>") if item.strip()]
 
-    # Function to preserve paragraphs with \n\n
     def _extract_text_preserve_paragraphs(self, html_element: Tag) -> str:
+        """Extract text from HTML while preserving paragraph structure."""
         paragraphs = html_element.find_all(["p", "br"])
         text_parts = []
         for paragraph in paragraphs:
@@ -279,6 +340,7 @@ class NSADataExtractor:
         return "\n\n".join(text_parts)
 
     def _extract_regulations(self, value: Tag) -> list[dict[str, Any]]:
+        """Extract legal regulations from the HTML table cell."""
         chunks = []
         x = 0
         chunks.append([])
@@ -318,6 +380,8 @@ class NSADataExtractor:
         return regulations
 
     def _extract_related(self, value: Tag) -> list[dict[str, Any]]:
+        """Extract related judgments from the table cell.
+        Returns list of dictionaries with related judgment details (sygnatura, rodzaj orzeczenia, data orzeczenia, id)."""
         related = []
         for a in value.find_all("a"):
             number_type_date = a.get_text(strip=True)
@@ -345,6 +409,7 @@ class NSADataExtractor:
         return related
 
     def _extract_fields_with_br(self, label_text: str, value_text: str) -> dict[str, Any]:
+        """Extract fields that contain <br/> tags or are list-type fields."""
         data = dict()
         data[FIELD_MAP[label_text]] = self._extract_text_data_with_br_tags(value_text)
         if label_text == "Sędziowie":
@@ -362,6 +427,7 @@ class NSADataExtractor:
         return data
 
     def _extract_date_finality(self, value: Tag) -> dict[str, Any]:
+        """Extract judgment date and finality status from the HTML table cell."""
         date = dict()
         date_value = value.find_all("td")[0].get_text(strip=True)
         judgment_type = value.find_all("td")[1].get_text(strip=True)
@@ -372,5 +438,6 @@ class NSADataExtractor:
         return date
 
     def _to_datetime(self, date_str: str) -> Timestamp:
+        """Convert date string to timestamp in Warsaw timezone."""
         date = pd.to_datetime(date_str)
         return WARSAW_TZ.localize(date)
