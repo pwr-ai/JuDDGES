@@ -1,12 +1,16 @@
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import mlflow
 import tiktoken
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
+from zoneinfo import ZoneInfo
 
 # get root path as ROOT_PATH as pathlib objects
 ROOT_PATH = Path(__file__).resolve().parent.parent
+
+LOGS_PATH = ROOT_PATH / "logs"
 
 DATA_PATH = ROOT_PATH / "data"
 CONFIG_PATH = ROOT_PATH / "configs"
@@ -21,6 +25,9 @@ PL_JUDGEMENTS_PATH_RAW = PL_JUDGEMENTS_PATH / "pl-court-raw" / "data"
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
 TEXT_EMBEDDING_MODEL = "sdadas/mmlw-roberta-large"
+
+# NSA
+NSA_DATA_PATH = DATA_PATH / "datasets" / "nsa"
 
 
 def num_tokens_from_string(
@@ -71,3 +78,7 @@ def prepare_langchain_cache() -> None:
 def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost") -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)
+
+
+def get_nsa_end_date() -> str:
+    return (datetime.now(ZoneInfo("Europe/Warsaw")) - timedelta(days=14)).strftime("%Y-%m-%d")
