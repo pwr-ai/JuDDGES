@@ -11,7 +11,10 @@ from requests import HTTPError
 
 from juddges.data.database import MongoInterface
 from juddges.data.pl_court_api import DataNotFoundError, PolishCourtAPI
-from juddges.data.pl_court_repo import push_data_to_hf_repo
+from juddges.data.pl_court_repo import (
+    commit_hf_operations_to_repo,
+    prepare_hf_repo_commit_operations,
+)
 from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
 from juddges.settings import PL_JUDGEMENTS_PATH, PL_JUDGEMENTS_PATH_RAW
 from juddges.utils.pipeline import RetryOnException, get_recent_successful_flow_date
@@ -246,13 +249,17 @@ def dump_dataset(file_name: Path, shard_size: int) -> None:
 )
 def push_dataset_to_hub() -> None:
     commit_message = f"Dataset update {runtime.flow_run.scheduled_start_time.to_date_string()}"
-    push_data_to_hf_repo(
+    operations = prepare_hf_repo_commit_operations(
         repo_id=REPO_ID,
-        commit_message=commit_message,
         data_files_dir=PL_JUDGEMENTS_PATH_RAW,
         dataset_card_template=DATASET_CARD_TEMPLATE,
         dataset_card_path=DATASET_CARD_PATH,
         dataset_card_assets=DATASET_CARD_ASSETS,
+    )
+    commit_hf_operations_to_repo(
+        repo_id=REPO_ID,
+        commit_message=commit_message,
+        operations=operations,
     )
 
 

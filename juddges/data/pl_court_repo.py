@@ -5,7 +5,6 @@ from datasets import load_dataset
 from huggingface_hub import CommitOperationAdd, CommitOperationDelete, DatasetCardData, HfApi
 from huggingface_hub.errors import RepositoryNotFoundError
 from loguru import logger
-from tabulate import tabulate
 
 from juddges.utils.hf import disable_hf_dataset_cache
 
@@ -13,24 +12,20 @@ DEFAULT_DATA_DIR_IN_REPO = "data"
 DATA_SHARD_FILE_PATTERN = "train_*.parquet"
 DEFAULT_ASSETS_DIR_IN_REPO = "README_files"
 
+T_operations = list[CommitOperationAdd | CommitOperationDelete]
 
-def push_data_to_hf_repo(
+
+def prepare_hf_repo_commit_operations(
     repo_id: str,
-    commit_message: str,
     data_files_dir: Path,
     dataset_card_path: Path,
     dataset_card_assets: Path,
-) -> None:
+) -> T_operations:
     assert data_files_dir.exists()
     assert list(data_files_dir.glob(DATA_SHARD_FILE_PATTERN))
 
+    _check_repo_exists(repo_id)
     api = HfApi()
-
-    try:
-        api.repo_info(repo_id=repo_id, repo_type="dataset")
-    except RepositoryNotFoundError:
-        logger.error(f"Repository {repo_id} does not exist")
-        raise
 
     # Replace old data files with new ones
     deletions = []
@@ -72,12 +67,16 @@ def push_data_to_hf_repo(
 
     operations = deletions + additions
 
-    operations_table = [(op.path_in_repo, type(op).__name__) for op in operations]
-    logger.info(
-        "Repository operations:\n"
-        f"{tabulate(operations_table, headers=['Path', 'Operation'], tablefmt='grid')}"
-    )
+    return operations
 
+
+def commit_hf_operations_to_repo(
+    repo_id: str,
+    commit_message: str,
+    operations: T_operations,
+) -> None:
+    _check_repo_exists(repo_id)
+    api = HfApi()
     api.create_commit(
         repo_id=repo_id,
         repo_type="dataset",
@@ -159,3 +158,12 @@ def generate_dataset_card(
     assert assets_dir.is_dir()
 
     return dataset_card_path
+
+
+def _check_repo_exists(repo_id: str):
+    api = HfApi()
+    try:
+        api.repo_info(repo_id=repo_id, repo_type="dataset")
+    except RepositoryNotFoundError:
+        logger.error(f"Repository {repo_id} does not exist")
+        raise
