@@ -28,7 +28,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 os.environ["TOKENIZERS_PARALLELISM"] = "false" if (NUM_PROC > 1) else "true"
 
 if DEVICE == "cuda":
-    assert is_flash_attn_2_available(), "FlashAttention2 is required for this script"
+    assert is_flash_attn_2_available(), "FlashAttention2 is required when using GPU"
 
 
 @torch.inference_mode()
@@ -69,6 +69,7 @@ def main(cfg: DictConfig) -> None:
             batched=True,
             batch_size=config.batch_size,
             num_proc=1,
+            desc="Embedding chunks",
         )
     save_dataset_as_parquet_shards(chunk_ds, config.num_output_shards, config.chunk_embeddings_dir)
 
@@ -127,7 +128,7 @@ class Embedder:
     def __call__(self, items: dict[str, list[Any]]) -> dict[str, Any]:
         process = psutil.Process()
         initial_memory = process.memory_info().rss / 1024 / 1024 / 1024  # Convert to GB
-        logger.info(f"Initial memory usage: {initial_memory:.2f} GB")
+        logger.info(f"System memory usage: {initial_memory:.2f} GB")
 
         try:
             embeddings = self.model.encode_multi_process(
@@ -135,9 +136,6 @@ class Embedder:
                 pool=self.pool,
                 batch_size=len(items[self.column_to_embed]),
             )
-            final_memory = process.memory_info().rss / 1024 / 1024 / 1024  # Convert to GB
-            logger.info(f"Final memory usage: {final_memory:.2f} GB")
-            logger.info(f"Memory difference: {final_memory - initial_memory:.2f} GB")
         except Exception as e:
             logger.error(f"Error embedding dataset: {e}")
             raise e

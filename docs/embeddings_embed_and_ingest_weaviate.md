@@ -42,6 +42,15 @@ CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 PYTHONPATH="$PWD:$PYTHONPATH" python scripts/
   output_dir=data/embeddings/pl-court-raw/mmlw-roberta-large
 ```
 
+Embedding generation can be run with DVC, by running command specified below, which will run embedding for dataset (unless already present) and embedding model specified in `dvc.yaml`:
+
+* `JuDDGES/pl-court-raw`
+* `JuDDGES/en-court-raw`
+
+```bash
+CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro embed
+```
+
 ## Step 2: Ingest embeddings to Weaviate
 
 * To upload the embeddings created in the previous step to a Weaviate database, one needs to run the following ommand with parameters similar to the previous one.

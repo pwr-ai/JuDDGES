@@ -3270,3 +3270,57 @@ stages:
       hash: md5
       md5: 0b0853473cd29f03a9f498da602ec711
       size: 1232839
+  embed@mmlw-roberta-large-en-court-raw:
+    cmd: PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=mmlw-roberta-large
+      dataset_name=JuDDGES/en-court-raw output_dir=data/embeddings/en-court-raw/mmlw-roberta-large
+    deps:
+    - path: configs/embedding.yaml
+      hash: md5
+      md5: 0e6208b3b3bc737f6f7d01a7ba95e2c2
+      size: 386
+    - path: configs/embedding_model/mmlw-roberta-large.yaml
+      hash: md5
+      md5: 22f36cfd196c0fdc3cfd8a036d52b606
+      size: 52
+    - path: scripts/embed/embed_text.py
+      hash: md5
+      md5: e67715f0e71ae4c4333f8cab4f3e5f20
+      size: 4851
+    outs:
+    - path: data/embeddings/en-court-raw/mmlw-roberta-large/agg_embeddings
+      hash: md5
+      md5: 91c7a36a54cddfc01b6c0c6476ecead1.dir
+      size: 47459509
+      nfiles: 10
+    - path: data/embeddings/en-court-raw/mmlw-roberta-large/chunk_embeddings
+      hash: md5
+      md5: 2099d811816165f88d7ced047ca0e5c9.dir
+      size: 179768039
+      nfiles: 10
+  embed@mmlw-roberta-large-pl-court-raw:
+    cmd: PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=mmlw-roberta-large
+      dataset_name=JuDDGES/pl-court-raw output_dir=data/embeddings/pl-court-raw/mmlw-roberta-large
+    deps:
+    - path: configs/embedding.yaml
+      hash: md5
+      md5: 0e6208b3b3bc737f6f7d01a7ba95e2c2
+      size: 386
+    - path: configs/embedding_model/mmlw-roberta-large.yaml
+      hash: md5
+      md5: 22f36cfd196c0fdc3cfd8a036d52b606
+      size: 52
+    - path: scripts/embed/embed_text.py
+      hash: md5
+      md5: e67715f0e71ae4c4333f8cab4f3e5f20
+      size: 4851
+    outs:
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings
+      hash: md5
+      md5: aa9b417c0fecb907cc925e29354461ef.dir
+      size: 3125953595
+      nfiles: 10
+    - path: data/embeddings/pl-court-raw/mmlw-roberta-large/chunk_embeddings
+      hash: md5
+      md5: dfbf1add12814a4766be8fdf2f002a66.dir
+      size: 10547484872
+      nfiles: 10

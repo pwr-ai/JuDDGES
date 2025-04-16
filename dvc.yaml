@@ -50,33 +50,21 @@ stages:
     matrix:
       model:
         - mmlw-roberta-large
+      dataset:
+        - pl-court-raw
+        - en-court-raw
     cmd: >-
       PYTHONPATH=. python scripts/embed/embed_text.py
       embedding_model=${item.model}
-      dataset_name=JuDDGES/pl-court-raw
-      output_dir=data/embeddings/pl-court-raw/${item.model}
+      dataset_name=JuDDGES/${item.dataset}
+      output_dir=data/embeddings/${item.dataset}/${item.model}
     deps:
       - scripts/embed/embed_text.py
       - configs/embedding.yaml
       - configs/embedding_model/${item.model}.yaml
     outs:
-      - data/embeddings/pl-court-raw/${item.model}/chunk_embeddings:
-          cache: false
-      - data/embeddings/pl-court-raw/${item.model}/agg_embeddings:
-          cache: false
-
-  aggregate_embeddings:
-    matrix:
-      model:
-        - mmlw-roberta-large
-    cmd: >-
-      PYTHONPATH=. python scripts/embed/aggregate_embeddings.py
-      --embeddings-dir data/embeddings/pl-court-raw/${item.model}/all_embeddings
-    deps:
-      - scripts/embed/aggregate_embeddings.py
-      - data/embeddings/pl-court-raw/${item.model}/all_embeddings
-    outs:
-      - data/embeddings/pl-court-raw/${item.model}/agg_embeddings.pt
+      - data/embeddings/${item.dataset}/${item.model}/chunk_embeddings
+      - data/embeddings/${item.dataset}/${item.model}/agg_embeddings
 
   build_graph_dataset:
     cmd: >-
