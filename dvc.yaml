@@ -8,26 +8,14 @@ stages:
       --no-input
       --to markdown
       --execute 'nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb'
-      --output-dir data/datasets/pl/readme/raw
+      --output-dir data/datasets/pl/pl-court-raw
       --output README
     deps:
       - nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb
-      - data/datasets/pl/raw
+      - data/datasets/pl/pl-court-raw/data/
     outs:
-      - data/datasets/pl/readme/raw/
-
-  instruct_dataset_readme:
-    cmd: >-
-      jupyter nbconvert
-      --no-input
-      --to markdown
-      --execute nbs/Data/03_Dataset_Description_Instruct.ipynb
-      --output-dir data/datasets/pl/readme/instruct
-      --output README
-    deps:
-      - nbs/Data/03_Dataset_Description_Instruct.ipynb
-    outs:
-      - data/datasets/pl/readme/instruct/
+      - data/datasets/pl/pl-court-raw/README.md
+      - data/datasets/pl/pl-court-raw/README_files/
 
   build_instruct_dataset_pl:
     cmd: >-
