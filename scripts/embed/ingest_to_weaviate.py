@@ -256,9 +256,13 @@ def process_batch_of_documents(
     try:
         records = []
         for i in range(len(batch["judgment_id"])):
-            properties = {
-                key: batch[key][i] for key in batch.keys() if key in db.judgments_properties
-            }
+            property_names = set(db.judgments_properties).intersection(batch.keys())
+            missing_properties = set(db.judgments_properties).difference(batch.keys())
+            logger.warning(
+                f"Found missing properties compared to weaviate schema: {missing_properties}, "
+                f"uploading only {property_names}"
+            )
+            properties = {key: batch[key][i] for key in property_names}
             properties = process_judgment_dates(properties)
 
             records.append(

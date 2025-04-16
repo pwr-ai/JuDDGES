@@ -141,6 +141,12 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                     index_searchable=True,
                 ),
                 wvcc.Property(
+                    name="source",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
                     name="docket_number",
                     data_type=wvcc.DataType.TEXT,
                     index_filterable=True,
@@ -186,7 +192,7 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                     index_searchable=True,
                 ),
                 wvcc.Property(
-                    name="content",
+                    name="xml_content",
                     data_type=wvcc.DataType.TEXT,
                     index_filterable=True,
                     index_searchable=True,
@@ -274,8 +280,10 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                     index_searchable=True,
                 ),
                 wvcc.Property(
-                    name="text_legal_bases",
+                    name="extracted_legal_bases",
                     data_type=wvcc.DataType.OBJECT_ARRAY,
+                    index_filterable=True,
+                    index_searchable=True,
                     nested_properties=[
                         wvcc.Property(
                             name="text",
@@ -311,6 +319,102 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                 ),
                 wvcc.Property(
                     name="thesis",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="references",
+                    data_type=wvcc.DataType.TEXT_ARRAY,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="country",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="court_type",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="submission_date",
+                    data_type=wvcc.DataType.DATE,
+                    index_filterable=True,
+                ),
+                wvcc.Property(
+                    name="finality",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="related_docket_numbers",
+                    data_type=wvcc.DataType.OBJECT_ARRAY,
+                    index_filterable=True,
+                    index_searchable=True,
+                    nested_properties=[
+                        wvcc.Property(
+                            name="judgment_id",
+                            data_type=wvcc.DataType.TEXT,
+                            index_filterable=True,
+                            index_searchable=True,
+                        ),
+                        wvcc.Property(
+                            name="docket_number",
+                            data_type=wvcc.DataType.TEXT,
+                            index_filterable=True,
+                            index_searchable=True,
+                        ),
+                        wvcc.Property(
+                            name="judgment_date",
+                            data_type=wvcc.DataType.DATE,
+                            index_filterable=True,
+                        ),
+                        wvcc.Property(
+                            name="judgment_type",
+                            data_type=wvcc.DataType.TEXT,
+                            index_filterable=True,
+                            index_searchable=True,
+                        ),
+                    ],
+                ),
+                wvcc.Property(
+                    name="challenged_authority",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="official_collection",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="glosa_information",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="reasons_for_judgment",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="dissenting_opinion",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="judge_rapporteur",
                     data_type=wvcc.DataType.TEXT,
                     index_filterable=True,
                     index_searchable=True,
