@@ -17,19 +17,50 @@ class InfoExtractionEvaluator:
         ]
 
     def evaluate(self, results: list[dict[str, str]]) -> dict[str, dict[str, float]]:
-        preds, golds = parse_results(results)
+        parsed = parse_results(results)
 
-        metrics = {}
+        metrics = {
+            "stats": {
+                "total_docs": len(results),
+                "num_preds_parse_errors": parsed.num_preds_parse_errors,
+            }
+        }
         with tqdm(self.structured_evaluators, desc="Structured", disable=not self.verbose) as pbar:
             for eval in pbar:
                 pbar.set_postfix({"eval": eval.name})
-                metrics[eval.name] = eval.evaluate(preds=preds, golds=golds)
+                assert eval.name != "stats"
+                metrics[eval.name] = eval.evaluate(
+                    preds=parsed.preds,
+                    golds=parsed.golds,
+                )
+
+                correct_structure_preds = {}
+                correct_structure_golds = {}
+                for k in parsed.preds.keys():
+                    correct_structure_preds[k] = [
+                        p_i
+                        for i, p_i in enumerate(parsed.preds[k])
+                        if not parsed.failed_preds_parse_mask[i]
+                    ]
+                    correct_structure_golds[k] = [
+                        g_i
+                        for i, g_i in enumerate(parsed.golds[k])
+                        if not parsed.failed_preds_parse_mask[i]
+                    ]
+                metrics[f"{eval.name}__correctly_parsed"] = eval.evaluate(
+                    preds=correct_structure_preds,
+                    golds=correct_structure_golds,
+                )
 
         text_preds = [res["answer"] for res in results]
         text_golds = [res["gold"] for res in results]
         with tqdm(self.full_text_evaluators, desc="Full text", disable=not self.verbose) as pbar:
             for eval in pbar:
                 pbar.set_postfix({"eval": eval.name})
-                metrics[eval.name] = eval.evaluate(preds=text_preds, golds=text_golds)
+                assert eval.name != "stats"
+                metrics[eval.name] = eval.evaluate(
+                    preds=text_preds,
+                    golds=text_golds,
+                )
 
         return metrics
