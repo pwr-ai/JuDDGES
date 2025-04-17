@@ -14,7 +14,7 @@ DATASET_CARD_DIR = Path("data/datasets/nsa/readme")
 
 
 def main(
-    repo_name: str = typer.Option("JuDDGES/nsa"),
+    repo_name: str = typer.Option("JuDDGES/pl-nsa"),
     log_file: Path = typer.Option(None, help="Log file to save the logs to."),
 ) -> None:
     setup_loguru(extra={"script": __file__}, log_file=log_file)

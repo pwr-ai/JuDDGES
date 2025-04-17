@@ -19,6 +19,9 @@ WARSAW_TZ = pytz.timezone("Europe/Warsaw")
 
 # Mapping of field names to their descriptions
 DESCRIPTION_MAP = {
+    "kraj": "country where the court is located",
+    "rodzaj sądu": "type of the court",
+    "źródło": "source of the judgment data",
     "id": "unique identifier of the judgment",
     "Sygnatura": "signature of judgment (unique within court)",
     "Powołane przepisy": "textual representation of the legal bases for the judgment (with references to online repository)",
@@ -49,9 +52,12 @@ DESCRIPTION_MAP = {
 
 # Mapping of Polish field names to English field names
 FIELD_MAP = {
+    "kraj": "country",
+    "rodzaj sądu": "court_type",
+    "źródło": "source",
     "id": "judgment_id",
     "Sygnatura": "docket_number",
-    "Powołane przepisy": "text_legal_bases",
+    "Powołane przepisy": "extracted_legal_bases",
     "Sygn. powiązane": "related_docket_numbers",
     "Sędziowie": "judges",
     "Data orzeczenia": "judgment_date",
@@ -79,6 +85,9 @@ FIELD_MAP = {
 
 # Order of fields in the output data
 ORDER = [
+    "country",
+    "court_type",
+    "source",
     "judgment_id",
     "docket_number",
     "judgment_type",
@@ -94,7 +103,7 @@ ORDER = [
     "related_docket_numbers",
     "challenged_authority",
     "decision",
-    "text_legal_bases",
+    "extracted_legal_bases",
     "official_collection",
     "glosa_information",
     "thesis",
@@ -116,6 +125,9 @@ LIST_TYPE_FIELDS = {
 # PyArrow schema for structured data storage
 PYARROW_SCHEMA = pa.schema(
     [
+        ("country", pa.string(), True),
+        ("court_type", pa.string(), True),
+        ("source", pa.string(), True),
         ("judgment_id", pa.string()),
         ("docket_number", pa.string(), True),
         ("judgment_type", pa.string(), True),
@@ -145,7 +157,7 @@ PYARROW_SCHEMA = pa.schema(
         ("challenged_authority", pa.string(), True),
         ("decision", pa.list_(pa.string()), True),
         (
-            "text_legal_bases",
+            "extracted_legal_bases",
             pa.list_(
                 pa.struct(
                     [
@@ -166,6 +178,12 @@ PYARROW_SCHEMA = pa.schema(
         ("dissenting_opinion", pa.large_string(), True),
     ]
 )
+
+CONSTANT_FIELDS = {
+    "country": "Poland",
+    "court_type": "administrative court",
+    "source": "nsa",
+}
 
 
 class NSADataExtractor:
@@ -259,7 +277,8 @@ class NSADataExtractor:
         """
         soup = BeautifulSoup(page, "html.parser")
         extracted_data = (
-            {FIELD_MAP["id"]: doc_id}
+            CONSTANT_FIELDS
+            | {FIELD_MAP["id"]: doc_id}
             | self._extract_number_and_type(soup)
             | self._extract_table(soup)
             | self._extract_text_sections(soup)
