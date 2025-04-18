@@ -41,7 +41,7 @@ stages:
       dataset:
         - pl-court-raw
         - en-court-raw
-        - nsa
+        - pl-nsa
     cmd: >-
       PYTHONPATH=. python scripts/embed/embed_text.py
       embedding_model=${item.model}

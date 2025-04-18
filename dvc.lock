@@ -3640,3 +3640,30 @@ stages:
       md5: 0e74901c31fce5e67ce47fd8db037a90.dir
       size: 5093706854
       nfiles: 10
+  embed@mmlw-roberta-large-pl-nsa:
+    cmd: PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=mmlw-roberta-large
+      dataset_name=JuDDGES/pl-nsa output_dir=data/embeddings/pl-nsa/mmlw-roberta-large
+    deps:
+    - path: configs/embedding.yaml
+      hash: md5
+      md5: 0e6208b3b3bc737f6f7d01a7ba95e2c2
+      size: 386
+    - path: configs/embedding_model/mmlw-roberta-large.yaml
+      hash: md5
+      md5: 22f36cfd196c0fdc3cfd8a036d52b606
+      size: 52
+    - path: scripts/embed/embed_text.py
+      hash: md5
+      md5: e67715f0e71ae4c4333f8cab4f3e5f20
+      size: 4851
+    outs:
+    - path: data/embeddings/pl-nsa/mmlw-roberta-large/agg_embeddings
+      hash: md5
+      md5: 35ff4a964dc7ad5d4a849b806f4cec35.dir
+      size: 7335276831
+      nfiles: 10
+    - path: data/embeddings/pl-nsa/mmlw-roberta-large/chunk_embeddings
+      hash: md5
+      md5: 0e74901c31fce5e67ce47fd8db037a90.dir
+      size: 5093706854
+      nfiles: 10
