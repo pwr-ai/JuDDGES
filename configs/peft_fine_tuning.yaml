@@ -1,0 +1,52 @@
+defaults:
+  - model: ???
+  - dataset: pl-court-instruct
+  - _self_
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+model:
+  padding_side: right
+
+training_args:
+  run_name: ${run_name}
+  output_dir: ${output_dir}
+  num_train_epochs: 3
+
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  gradient_checkpointing: True
+  gradient_checkpointing_kwargs: { "use_reentrant": True }
+  optim: "adamw_torch_fused"
+  logging_steps: 1
+  save_strategy: "steps"
+  save_steps: 0.25
+  bf16: True
+  learning_rate: 2e-5 # learning rate, based on QLoRA paper
+  max_grad_norm: 0.3 # max gradient norm based on QLoRA paper
+  warmup_ratio: 0.03 # warmup ratio based on QLoRA paper
+  push_to_hub: False
+  report_to: "wandb"
+  seed: 46
+  packing: True
+  torch_compile: False # setting to True might cause libcuda.so errors
+
+peft_args:
+  r: 8
+  lora_alpha: 16
+  lora_dropout: 0 # Supports any, but = 0 is optimized
+  bias: "none" # Supports any, but = "none" is optimized
+  target_modules: "all-linear"
+
+max_context_size: 32_000
+truncate_context: True
+wandb_entity: graph-ml-lab-wust
+wandb_project: juddges-fine-tune
+
+output_dir: data/experiments/peft-fine-tune/${hydra:runtime.choices.model}/${hydra:runtime.choices.dataset}
+run_name: ${hydra:runtime.choices.model}_${hydra:runtime.choices.dataset}_fine_tune
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

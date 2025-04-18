@@ -1,5 +1,6 @@
 import datetime
 from collections import defaultdict
+from dataclasses import dataclass
 
 from juddges.utils.misc import parse_yaml
 
@@ -7,34 +8,56 @@ EMPTY_ANSWER = ""
 DATE_FMT = "%Y-%m-%d"
 
 
+@dataclass
+class ParseResults:
+    preds: dict[str, list[str]]
+    golds: dict[str, list[str]]
+    failed_preds_parse_mask: list[bool]
+    num_preds_parse_errors: int
+
+
 def parse_results(
     results: list[dict[str, str]],
-) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+) -> ParseResults:
     """Parses the results of the model into gold and predicted dictionaries.
 
     Args:
         results (list[dict[str, str]]): list of model and gold answers in format [{"answer": str, "gold": str}]
 
     Returns:
-        tuple[dict[str, list[str]], dict[str, list[str]]]: parsed gold and predicted fields
+        ParseResults: parsed gold and predicted fields
     """
     res_pred: dict[str, list[str]] = defaultdict(list)
     res_gold: dict[str, list[str]] = defaultdict(list)
+    failed_preds_parse_mask: list[bool] = []
 
+    num_preds_parse_errors = 0
     for item in results:
         gold = _parse_item(item["gold"])
         assert gold is not None
 
-        ans = _parse_item(item["answer"])
-        if ans is None:
-            ans = dict.fromkeys(gold.keys(), EMPTY_ANSWER)
+        preds = _parse_item(item["answer"])
+        if preds is None:
+            num_preds_parse_errors += 1
+            failed_preds_parse_mask.append(True)
+            preds = dict.fromkeys(gold.keys(), EMPTY_ANSWER)
+        else:
+            failed_preds_parse_mask.append(False)
 
         # NOTE: it doesn't account for fields that were extra added by LLM
         for k in gold.keys():
-            res_pred[k].append(ans.get(k, EMPTY_ANSWER))
+            res_pred[k].append(preds.get(k, EMPTY_ANSWER))
             res_gold[k].append(gold[k])
 
-    return res_pred, res_gold
+    res_pred = dict(res_pred)
+    res_gold = dict(res_gold)
+
+    return ParseResults(
+        preds=res_pred,
+        golds=res_gold,
+        failed_preds_parse_mask=failed_preds_parse_mask,
+        num_preds_parse_errors=num_preds_parse_errors,
+    )
 
 
 def _parse_item(item: str) -> dict[str, str] | None:

@@ -37,7 +37,7 @@ def predict_with_llm(
     tokenizer = model_pack.tokenizer
     device = next(model.parameters()).device
 
-    with tqdm(dataloader, disable=not verbose) as pbar:
+    with tqdm(dataloader, disable=not verbose, desc="Predicting") as pbar:
         for batch in pbar:
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)

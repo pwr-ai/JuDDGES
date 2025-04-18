@@ -2,18 +2,15 @@ import json
 import os
 from pathlib import Path
 from pprint import pformat
-from typing import Any
 
 import hydra
 import torch
 from datasets import load_dataset
-from lightning_fabric import seed_everything
 from loguru import logger
 from omegaconf import DictConfig
-from openai import BaseModel
-from pydantic import Field
+from transformers import set_seed
 
-from juddges.config import DatasetConfig, LLMConfig
+from juddges.config import PredictConfig
 from juddges.models.factory import get_model
 from juddges.models.predict import predict_with_llm
 from juddges.preprocessing.text_encoder import TextEncoderForEval
@@ -27,20 +24,6 @@ NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
 if NUM_PROC > 1:
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-
-class PredictConfig(BaseModel, extra="forbid"):
-    model: LLMConfig
-    dataset: DatasetConfig
-    device_map: str
-    output_file: Path
-    truncate_context: bool
-    generate_kwargs: dict[str, Any] = Field(default_factory=dict)
-    random_seed: int
-
-    @property
-    def corrected_max_seq_length(self) -> int:
-        return self.model.max_seq_length - self.dataset.max_output_tokens
 
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
@@ -77,7 +60,7 @@ def main(cfg: DictConfig) -> None:
         FastLanguageModel.for_inference(model_pack.model)
     else:
         model_pack.model.eval()
-        # model_pack.model.compile() # might cause libcuda.so not found error
+        # model_pack.model.compile()  # might cause libcuda.so not found error
 
     if config.model.batch_size > 1 and config.model.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
@@ -86,12 +69,12 @@ def main(cfg: DictConfig) -> None:
 
     encoder = TextEncoderForEval(
         tokenizer=model_pack.tokenizer,
-        max_length=config.corrected_max_seq_length,
+        max_length=config.get_max_input_length(model_pack.model.config.max_position_embeddings),
         padding=config.model.padding,
     )
     ds.set_transform(encoder, columns=["prompt", "context"])
 
-    seed_everything(config.random_seed)
+    set_seed(config.random_seed)
     model_outputs = predict_with_llm(
         model_pack=model_pack,
         dataset=ds,

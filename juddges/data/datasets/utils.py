@@ -1,8 +1,11 @@
 from typing import Any
 
 
-def create_chat(
-    entry: dict[str, Any], prompt_field: str, context_field: str, output_field: str
+def format_to_conversations(
+    entry: dict[str, Any],
+    prompt_field: str,
+    context_field: str,
+    output_field: str,
 ) -> dict[str, list[dict[str, str]]]:
     first_message = entry[prompt_field].format(context=entry[context_field])
     messages = [

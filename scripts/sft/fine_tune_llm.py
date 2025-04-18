@@ -26,7 +26,7 @@ from transformers import (
 from trl import SFTConfig, SFTTrainer
 
 from juddges.config import FineTuningConfig
-from juddges.data.datasets.utils import create_chat
+from juddges.data.datasets.utils import format_to_conversations
 from juddges.models.factory import get_model
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.settings import CONFIG_PATH
@@ -62,7 +62,7 @@ def main(cfg: DictConfig) -> None:
         dataset_output_field=config.dataset.output_field,
         truncate_context=config.truncate_context,
         tokenizer=model_pack.tokenizer,
-        max_length=config.model.max_seq_length,
+        max_length=config.max_context_size,
         num_proc=NUM_PROC,
     )
 
@@ -102,7 +102,9 @@ def prepare_dataset(
         )
 
     dataset = dataset.map(
-        lambda x: create_chat(x, dataset_prompt_field, dataset_context_field, dataset_output_field),
+        lambda x: format_to_conversations(
+            x, dataset_prompt_field, dataset_context_field, dataset_output_field
+        ),
         remove_columns=dataset.column_names,
         desc="Formatting to chat",
     )
@@ -122,7 +124,7 @@ def get_trainer(
 ) -> Trainer:
     sft_config = SFTConfig(
         dataset_text_field="messages",
-        max_seq_length=config.model.max_seq_length,
+        max_seq_length=config.max_context_size,
         dataset_num_proc=num_proc,
         **config.training_args,
     )

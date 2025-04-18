@@ -1,5 +1,6 @@
 [core]
     remote = clarin_s3
+    autostage = true
 ['remote "clarin_s3"']
     url = s3://projects/juddges/dvc
     endpointurl = https://s3.clarin-pl.eu/
