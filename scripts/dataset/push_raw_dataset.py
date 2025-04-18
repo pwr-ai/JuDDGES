@@ -1,61 +1,91 @@
+"""
+Push raw dataset to Hugging Face.
+Partially based on https://github.com/huggingface/datasets/blob/14fb15ade27dd8a2cdc4e5992e8d1b9fd1347f1c/src/datasets/arrow_dataset.py#L5401
+"""
+
 from pathlib import Path
-from typing import Optional
 
 import typer
-from datasets import load_dataset
 from dotenv import load_dotenv
-from huggingface_hub import DatasetCard, DatasetCardData, HfApi
 from loguru import logger
+from tabulate import tabulate
 
-from juddges.settings import PL_JUDGMENTS_PATH_RAW
+from juddges.data.pl_court_repo import (
+    commit_hf_operations_to_repo,
+    prepare_dataset_card,
+    prepare_hf_repo_commit_operations,
+)
+from juddges.settings import PL_JUDGEMENTS_PATH_RAW
+
+typer.rich_utils.STYLE_ERRORS = False
 
 load_dotenv()
 
-MAX_SHARD_SIZE = "4GB"
-
-DATASET_CARD_TEMPLATE = Path("data/datasets/pl/readme/raw/README.md")
-DATASET_CARD_TEMPLATE_FILES = Path("data/datasets/pl/readme/raw/README_files")
+DATASET_CARD_TEMPLATE = Path("nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb")
+DATASET_CARD_PATH = Path("data/datasets/pl/pl-court-raw/README.md")
+DATASET_CARD_ASSETS = Path("data/datasets/pl/pl-court-raw/README_files")
 
 
 def main(
-    dataset_dir: Path = typer.Option(PL_JUDGMENTS_PATH_RAW, help="Path to the dataset directory"),
-    repo_id: Optional[str] = typer.Option(...),
-    branch: Optional[str] = typer.Option(None, help="Branch to push the dataset to"),
-    commit_message: Optional[str] = typer.Option(None, help="Commit message"),
+    repo_id: str = typer.Option(
+        ...,
+        help="Repository ID",
+    ),
+    data_files_dir: Path = typer.Option(
+        PL_JUDGEMENTS_PATH_RAW,
+        help="Path to the dataset directory",
+    ),
+    dataset_card_template: Path = typer.Option(
+        DATASET_CARD_TEMPLATE,
+        help="Path to the dataset card template",
+    ),
+    dataset_card_path: Path = typer.Option(
+        DATASET_CARD_PATH,
+        help="Path to the dataset card",
+    ),
+    dataset_card_assets: Path = typer.Option(
+        DATASET_CARD_ASSETS,
+        help="Path to the dataset card assets",
+    ),
+    commit_message: str = typer.Option(
+        ...,
+        help="Commit message",
+    ),
 ) -> None:
-    logger.info("Loading dataset...")
-    ds = load_dataset("parquet", name="pl_judgements", data_dir=dataset_dir)
-
-    num_rows = ds["train"].num_rows
-    logger.info(f"Loaded dataset size: {num_rows}")
-
-    ds.push_to_hub(repo_id, max_shard_size=MAX_SHARD_SIZE, revision=branch)
-
-    # Card creation
-
-    assert 100_000 < num_rows < 1_000_000
-    card_data = DatasetCardData(
-        language="pl",
-        multilinguality="monolingual",
-        size_categories="100K<n<1M",
-        source_datasets=["original"],
-        pretty_name="Polish Court Judgments Raw",
-        tags=["polish court"],
+    dataset_card_path = prepare_dataset_card(
+        data_files_dir=data_files_dir,
+        dataset_card_template=dataset_card_template,
+        dataset_card_path=dataset_card_path,
     )
-    card = DatasetCard.from_template(
-        card_data,
-        template_path=DATASET_CARD_TEMPLATE,
-    )
-    card.push_to_hub(repo_id, revision=branch)
 
-    api = HfApi()
-    api.upload_folder(
-        folder_path=DATASET_CARD_TEMPLATE_FILES,
-        path_in_repo=DATASET_CARD_TEMPLATE_FILES.name,
+    logger.info(f"Created dataset card at: {dataset_card_path}")
+    # Ask for confirmation before pushing to HF
+    if not typer.confirm("Are you sure you want to push the dataset to Hugging Face?"):
+        typer.echo("Operation cancelled.")
+        raise typer.Abort()
+
+    operations = prepare_hf_repo_commit_operations(
         repo_id=repo_id,
-        repo_type="dataset",
         commit_message=commit_message,
-        revision=branch,
+        data_files_dir=data_files_dir,
+        dataset_card_path=dataset_card_path,
+        dataset_card_assets=dataset_card_assets,
+    )
+
+    operations_table = [(op.path_in_repo, type(op).__name__) for op in operations]
+    logger.info(
+        "Repository operations:\n"
+        f"{tabulate(operations_table, headers=['Path', 'Operation'], tablefmt='grid')}"
+    )
+
+    if not typer.confirm("Are you sure you want to push the dataset to Hugging Face?"):
+        typer.echo("Operation cancelled.")
+        raise typer.Abort()
+
+    commit_hf_operations_to_repo(
+        repo_id=repo_id,
+        commit_message=commit_message,
+        operations=operations,
     )
 
 

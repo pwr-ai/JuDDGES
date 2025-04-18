@@ -1,7 +1,6 @@
 name: mistralai/Mistral-Nemo-Instruct-2407
 tokenizer_name: ${.name}
 adapter_path: null
-max_seq_length: 32_000
 batch_size: 1
 padding: longest
 use_4bit: false
