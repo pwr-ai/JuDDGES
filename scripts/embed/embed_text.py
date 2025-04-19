@@ -15,7 +15,7 @@ from transformers.utils import is_flash_attn_2_available
 
 from juddges.config import EmbeddingConfig
 from juddges.embeddings.aggregate import mean_average_embeddings_and_save
-from juddges.preprocessing.text_chunker import TextSplitter
+from juddges.preprocessing.text_chunker import TextChunker
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 from juddges.utils.misc import save_dataset_as_parquet_shards
@@ -62,7 +62,7 @@ def main(cfg: DictConfig) -> None:
     logger.info("Chunking dataset")
     chunk_ds = chunk_dataset(dataset=ds, config=config, tokenizer=model.tokenizer)
 
-    embedder = Embedder(model=model, column_to_embed=TextSplitter.CHUNK_TEXT_COL)
+    embedder = Embedder(model=model, column_to_embed=TextChunker.CHUNK_TEXT_COL)
     with embedder:
         chunk_ds = chunk_ds.map(
             embedder,
@@ -89,7 +89,7 @@ def chunk_dataset(
     tokenizer: PreTrainedTokenizer | None = None,
 ) -> Dataset:
     assert config.chunk_config is not None
-    split_worker = TextSplitter(
+    split_worker = TextChunker(
         id_col=ID_COL,
         text_col=TEXT_COL,
         **config.chunk_config,

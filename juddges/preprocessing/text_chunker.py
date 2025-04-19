@@ -4,7 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from transformers import PreTrainedTokenizer
 
 
-class TextSplitter:
+class TextChunker:
     CHUNK_ID_COL: str = "chunk_id"
     CHUNK_LEN_COL: str = "chunk_len"
     CHUNK_TEXT_COL: str = "chunk_text"
@@ -28,7 +28,10 @@ class TextSplitter:
                 chunk_overlap=chunk_overlap,
             )
         else:
-            self.splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size)
+            self.splitter = RecursiveCharacterTextSplitter(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+            )
 
         self.min_split_chars = min_split_chars
         self.take_n_first_chunks = take_n_first_chunks

@@ -6,7 +6,7 @@ import polars as pl
 from loguru import logger
 from tqdm.auto import tqdm
 
-from juddges.preprocessing.text_chunker import TextSplitter
+from juddges.preprocessing.text_chunker import TextChunker
 
 
 def mean_average_embeddings_and_save(
@@ -25,7 +25,7 @@ def mean_average_embeddings_and_save(
         tuple[list[str], Tensor]: tuple of list of ids and aggregated embeddings
     """
     schema = df.collect_schema()
-    required_cols = {id_col, TextSplitter.CHUNK_LEN_COL, embedding_col}
+    required_cols = {id_col, TextChunker.CHUNK_LEN_COL, embedding_col}
     assert required_cols.issubset(
         schema.names()
     ), f"Missing required columns: {required_cols - set(schema.names())}"
@@ -35,8 +35,8 @@ def mean_average_embeddings_and_save(
 
     # Create a normalized weight column
     df = df.with_columns(
-        pl.col(TextSplitter.CHUNK_LEN_COL).over(id_col).alias("weight")
-        / pl.col(TextSplitter.CHUNK_LEN_COL).sum().over(id_col)
+        pl.col(TextChunker.CHUNK_LEN_COL).over(id_col).alias("weight")
+        / pl.col(TextChunker.CHUNK_LEN_COL).sum().over(id_col)
     )
 
     # Multiply embeddings by weights and sum
