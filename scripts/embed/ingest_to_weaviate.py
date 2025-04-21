@@ -2,12 +2,14 @@ import gc
 import math
 import multiprocessing
 import os
+import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pprint import pformat
 from typing import Any, Callable
 
 import hydra
 import numpy as np
+import polars as pl
 from datasets import Dataset, load_dataset
 from dotenv import load_dotenv
 from loguru import logger
@@ -43,28 +45,31 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Starting ingestion of {config.output_dir} to Weaviate...")
 
     logger.info("Loading datasets...")
-    ds = load_dataset(config.dataset_name, num_proc=PROCESSING_PROC)
     chunk_ds = load_dataset(
         "parquet",
         data_dir=config.chunk_embeddings_dir,
         num_proc=PROCESSING_PROC,
     )
-    agg_ds = load_dataset(
-        "parquet",
-        data_dir=config.agg_embeddings_dir,
-        num_proc=PROCESSING_PROC,
-    )
 
-    ds = ds["train"]
-    chunk_ds = chunk_ds["train"]
-    agg_ds = agg_ds["train"]
+    ds_polars = pl.scan_parquet(f"hf://datasets/{config.dataset_name}/data/*.parquet")
+    agg_ds_polars = pl.scan_parquet(f"{config.agg_embeddings_dir}/*.parquet")
 
     logger.info("Preparing aggregated dataset (it may take a few minutes)...")
-    agg_ds_polars = agg_ds.to_polars()
-    ds_polars = ds.to_polars()
-    ds_polars = agg_ds_polars.join(ds_polars, on="judgment_id", how="left")
-    agg_ds = Dataset.from_polars(ds_polars)
+    # TODO: Now we use temporary parquet file to avoid OOM conversion to hf.Dataset
+    # the pipeline might be rewriten to be intire in polars instead
+    with tempfile.NamedTemporaryFile(suffix=".parquet") as temp_file:
+        # Stream query result directly to parquet file
+        agg_ds_polars.join(ds_polars, on="judgment_id", how="left").sink_parquet(temp_file.name)
 
+        # Load the temporary parquet file using HF datasets
+        agg_ds = load_dataset(
+            "parquet",
+            data_files=temp_file.name,
+            num_proc=PROCESSING_PROC,
+        )["train"]
+
+    logger.info("Done!")
+    chunk_ds = chunk_ds["train"]
     do_ingest(
         dataset=chunk_ds,
         collection_name=WeaviateJudgmentsDatabase.JUDGMENT_CHUNKS_COLLECTION,
