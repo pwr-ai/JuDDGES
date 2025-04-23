@@ -146,7 +146,7 @@
                 <!-- Data Wyroku -->
                 <Header value="Data Wyroku" />
                 <Text name="data_wyroku_desc" value="Data wydania wyroku w formacie YYYY-MM-DD (np. '2024-11-30')" />
-                <TextArea name="data_wyroku" toName="text" />
+                <TextArea name="data_wyroku" toName="text" rows="1" maxSubmissions="1" />
 
                 <!-- Sprawa Frankowiczów -->
                 <Header value="Sprawa Frankowiczów" />
@@ -325,7 +325,7 @@
                 <!-- Data Aneksu -->
                 <Header value="Data Aneksu" />
                 <Text name="data_aneksu_desc" value="Data aneksu w formacie YYYY-MM-DD (np. '2023-01-15')" />
-                <TextArea name="data_aneksu" toName="text" />
+                <TextArea name="data_aneksu" toName="text" rows="1" maxSubmissions="1" />
 
                 <!-- Przedmiot Aneksu -->
                 <Header value="Przedmiot Aneksu" />
@@ -357,6 +357,30 @@
                   <Choice value="Dowód z opinii biegłego" />
                 </Choices>
 
+                <!-- Oświadczenie Nieważności -->
+                <Header value="Oświadczenie Nieważności" />
+                <Text name="oswiadczenie_niewaznosci_desc" value="Czy odbierano oświadczenie powoda o skutkach nieważności umowy?" />
+                <Choices name="oswiadczenie_niewaznosci" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Odwołanie do SN -->
+                <Header value="Odwołanie do SN" />
+                <Text name="odwolanie_do_sn_desc" value="Czy odwołano się do orzecznictwa SN?" />
+                <Choices name="odwolanie_do_sn" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Odwołanie do TSUE -->
+                <Header value="Odwołanie do TSUE" />
+                <Text name="odwolanie_do_tsue_desc" value="Czy odwołano się do orzecznictwa TSUE?" />
+                <Choices name="odwolanie_do_tsue" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
                 <!-- Teoria Prawna -->
                 <Header value="Teoria Prawna" />
                 <Text name="teoria_prawna_desc" value="Teoria prawna, na której oparto wyrok (np. 'Teoria dwóch kondykcji')" />
@@ -365,10 +389,62 @@
                   <Choice value="Teoria salda" />
                 </Choices>
 
+                <!-- Zarzut Zatrzymania lub Potrącenia -->
+                <Header value="Zarzut Zatrzymania lub Potrącenia" />
+                <Text name="zarzut_zatrzymania_lub_potracenia_desc" value="Czy uwzględniono zarzut zatrzymania lub potrącenia?" />
+                <Choices name="zarzut_zatrzymania_lub_potracenia" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Odsetki Ustawowe -->
+                <Header value="Odsetki Ustawowe" />
+                <Text name="odsetki_ustawowe_desc" value="Czy uwzględniono odsetki ustawowe?" />
+                <Choices name="odsetki_ustawowe" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Data Rozpoczęcia Odsetek -->
+                <Header value="Data Rozpoczęcia Odsetek" />
+                <Text name="data_rozpoczecia_odsetek_desc" value="Data rozpoczęcia naliczania odsetek" />
+                <Choices name="data_rozpoczecia_odsetek" toName="text" choice="single">
+                  <Choice value="Od dnia wezwania do zapłaty" />
+                  <Choice value="Od daty wytoczenia powództwa" />
+                  <Choice value="Od daty wydania wyroku" />
+                  <Choice value="Od innej daty" />
+                </Choices>
+
+                <!-- Zabezpieczenie -->
+                <Header value="Zabezpieczenie" />
+                <Text name="zabezpieczenie_udzielone_desc" value="Czy udzielono zabezpieczenia?" />
+                <Choices name="zabezpieczenie_udzielone" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Rodzaj Zabezpieczenia -->
+                <Header value="Rodzaj Zabezpieczenia" />
+                <Text name="rodzaj_zabezpieczenia_desc" value="Rodzaj zabezpieczenia (np. 'Wstrzymanie egzekucji')" />
+                <TextArea name="rodzaj_zabezpieczenia" toName="text" rows="1" maxSubmissions="1" />
+
+                <!-- Zabezpieczenie Pierwsza Instancja -->
+                <Header value="Zabezpieczenie Pierwsza Instancja" />
+                <Text name="zabezpieczenie_pierwsza_instancja_desc" value="Czy zabezpieczenia udzielił sąd I instancji?" />
+                <Choices name="zabezpieczenie_pierwsza_instancja" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Czas Trwania Sprawy -->
+                <Header value="Czas Trwania Sprawy" />
+                <Text name="czas_trwania_sprawy_desc" value="Czas rozpoznania sprawy – od złożenia pozwu do wydania wyroku (np. '2 lata 3 miesiące')" />
+                <TextArea name="czas_trwania_sprawy" toName="text" rows="1" maxSubmissions="1" />
+
                 <!-- Rozstrzygnięcie Sądu -->
                 <Header value="Rozstrzygnięcie Sądu" />
                 <Text name="rozstrzygniecie_sadu_desc" value="Rozstrzygnięcie (np. 'Oddalenie powództwa')" />
-                <TextArea name="rozstrzygniecie_sadu" toName="text" rows="1" />
+                <TextArea name="rozstrzygniecie_sadu" toName="text" rows="1" maxSubmissions="1" />
 
                 <!-- Typ Rozstrzygnięcia -->
                 <Header value="Typ Rozstrzygnięcia" />
@@ -393,7 +469,7 @@
                 <!-- Beneficjent Kosztów -->
                 <Header value="Beneficjent Kosztów" />
                 <Text name="beneficjent_kosztow_desc" value="Na rzecz której strony zasądzono zwrot kosztów (np. 'Pozwany')" />
-                <TextArea name="beneficjent_kosztow" toName="text" rows="1" />
+                <TextArea name="beneficjent_kosztow" toName="text" rows="1" maxSubmissions="1" />
 
                 <!-- Wynik Sprawy -->
                 <Header value="Wynik Sprawy" />
@@ -407,7 +483,7 @@
                 <!-- Szczegóły Wyniku Sprawy -->
                 <Header value="Szczegóły Wyniku Sprawy" />
                 <Text name="szczegoly_wyniku_sprawy_desc" value="Szczegóły dotyczące wyniku sprawy (np. 'Kredytobiorca wygrał, umowa uznana za nieważną')" />
-                <TextArea name="szczegoly_wyniku_sprawy" toName="text" rows="2" />
+                <TextArea name="szczegoly_wyniku_sprawy" toName="text" rows="1" maxSubmissions="1" />
               </View>
             </Panel>
           </Collapse>
