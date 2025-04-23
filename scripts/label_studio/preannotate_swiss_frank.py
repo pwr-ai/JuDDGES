@@ -1,58 +1,45 @@
-import json
-
-import typer
+import hydra
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from hydra.utils import get_class
+from langchain.globals import set_llm_cache
+from langchain_community.cache import SQLiteCache
+from langchain_community.callbacks import get_openai_callback
+from omegaconf import DictConfig
+from tqdm import tqdm
 
-from label_studio_toolkit.annotator import LLMAnnotator
+from juddges.settings import ROOT_PATH
+from label_studio_toolkit.annotator import LangChainOpenAIAnnotator
 from label_studio_toolkit.api.client import LabelStudioClient
-from label_studio_toolkit.schemas.swiss_frank import SwissFrancJudgmentAnnotation
-
-LABEL_STUDIO_PROJECT_TITLE = "Juddges Project: Swiss Frank"
 
 load_dotenv()
 
 
-def main(
-    ls_base_url: str = typer.Option(..., envvar="LABEL_STUDIO_BASE_URL"),
-    ls_api_key: str = typer.Option(..., envvar="LABEL_STUDIO_API_KEY"),
-    project_name: str = typer.Option(...),
-    model_version: str = typer.Option(...),
-):
-    client = LabelStudioClient(base_url=ls_base_url, api_key=ls_api_key, project_name=project_name)
+@hydra.main(
+    version_base="1.3",
+    config_path=str(ROOT_PATH / "configs"),
+    config_name="preannotate_label_studio",
+)
+def main(cfg: DictConfig):
+    set_llm_cache(SQLiteCache(database_path=cfg.model.request_cache_db))
 
-    # [project] = [p for p in ls.projects.list() if p.title == LABEL_STUDIO_PROJECT_TITLE]
+    client = LabelStudioClient(
+        base_url=cfg.ls_base_url, api_key=cfg.ls_api_key, project_name=cfg.project_name
+    )
 
-    # label_interface = ls.projects.get(id=project.id).get_label_interface()
+    schema = get_class(cfg.annotation_schema)
+    annotator = LangChainOpenAIAnnotator(cfg.model.name, cfg.prompt.template, schema)
 
-    # controls_keys = list(label_interface._controls.keys())
-
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
-    annotator = LLMAnnotator(llm, SwissFrancJudgmentAnnotation)
-
-    input_ = "Sąd rozpoznaje sprawę w apelacji warszawskiej. Jest to sprawa dotycząca umowy kredytowej we frankach szwajcarskich. Powód podał podstawę prawną z art. 385(1) Kodeksu cywilnego. Rozpoznano powództwo w całości. Zwrócono koszty procesu kredytobiorcy."
-
-    print(json.dumps(annotation.__dict__, indent=4))
-
-    for task in client.get_tasks():
-        annotation = annotator.annotate(input_)
-
-        client.create_prediction(
-            task_id=task.id, prediction=annotation, model_version=model_version
-        )
-        break
-
-    # llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
-    # annotator = LLMAnnotator(llm, SwissFrancJudgmentAnnotation)
-
-    # input_ = "Sąd rozpoznaje sprawę w apelacji warszawskiej. Jest to sprawa dotycząca umowy kredytowej we frankach szwajcarskich. Powód podał podstawę prawną z art. 385(1) Kodeksu cywilnego. Rozpoznano powództwo w całości. Zwrócono koszty procesu kredytobiorcy."
-
-    # annotation = annotator.annotate(input_)
-
-    # print(json.dumps(annotation.__dict__, indent=4))
+    with get_openai_callback() as cb:
+        for i, task in tqdm(enumerate(client.get_tasks())):
+            if i >= 10:
+                break
+            annotation = annotator.annotate(task.data[cfg.text_field])
+            prediction = client.create_prediction(
+                prediction=annotation, model_version=cfg.model_version
+            )
+            client.push_prediction(task.id, prediction)
+        print(cb)
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    main()

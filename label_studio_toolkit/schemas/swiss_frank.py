@@ -1,6 +1,34 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel as PydanticModel
+from pydantic import Field
+from pydantic_core.core_schema import ModelField
+
+
+def generate_default_fallback_validate(original_field_validate):
+    def default_fallback_validate(self, v, values, *, loc, cls=None):
+        value, error = original_field_validate(self, v, values, loc=loc, cls=cls)
+        if error and not self.required:
+            value, error = self.default, None
+        return value, error
+
+    return default_fallback_validate
+
+
+class BaseModel(PydanticModel):
+    @classmethod
+    def parse_obj_with_default_fallback(cls, obj):
+        original_field_validate = ModelField.validate
+        try:
+            ModelField.validate = generate_default_fallback_validate(original_field_validate)
+            return cls.parse_obj(obj)
+        finally:
+            ModelField.validate = original_field_validate
+
+
+class TakNie(str, Enum):
+    TAK = "Tak"
+    NIE = "Nie"
 
 
 class TypSadu(str, Enum):
@@ -105,16 +133,16 @@ class SwissFrancJudgmentAnnotation(BaseModel):
         None, description="Czy sąd jest I instancji czy odwoławczy"
     )
     podstawa_prawna: str | None = Field(None, description="Podstawa prawna roszczenia")
-    podstawa_prawna_podana: bool | None = Field(
+    podstawa_prawna_podana: TakNie | None = Field(
         None, description="Czy powód podał podstawę prawną?"
     )
     rodzaj_roszczenia: RodzajRoszczenia | None = Field(None, description="Rodzaj roszczenia")
-    modyfikacje_powodztwa: bool | None = Field(None, description="Czy były modyfikacje powództwa")
+    modyfikacje_powodztwa: TakNie | None = Field(None, description="Czy były modyfikacje powództwa")
     typ_modyfikacji: TypModyfikacji | None = Field(None, description="Typ modyfikacji powództwa")
     status_kredytobiorcy: StatusKredytobiorcy | None = Field(
         None, description="Status kredytobiorcy"
     )
-    wspoluczestnictwo_powodowe: bool | None = Field(
+    wspoluczestnictwo_powodowe: TakNie | None = Field(
         None, description="Czy współuczestnictwo po stronie powodowej"
     )
     typ_wspoluczestnictwa: TypWspoluczestnictwa | None = Field(
@@ -123,23 +151,23 @@ class SwissFrancJudgmentAnnotation(BaseModel):
     rola_pozwanego: RolaPozwanego | None = Field(
         None, description="Czy pozwany faktycznie był stroną umowy czy następcą prawnym"
     )
-    wczesniejsze_skargi_do_rzecznika: bool | None = Field(
+    wczesniejsze_skargi_do_rzecznika: TakNie | None = Field(
         None, description="Czy były uprzednie skargi do rzecznika finansowego"
     )
     umowa_kredytowa: UmowaKredytowa | None = Field(
         None, description="Czy umowa kredytowa zawierana bezpośrednio w banku czy z pośrednikiem"
     )
-    klauzula_niedozwolona: bool | None = Field(
+    klauzula_niedozwolona: TakNie | None = Field(
         None, description="Istnienie klauzuli niedozwolonej w umowie"
     )
-    wpisana_do_rejestru_uokik: bool | None = Field(
+    wpisana_do_rejestru_uokik: TakNie | None = Field(
         None, description="Czy klauzula wpisana do rejestru klauzul niedozwolonych UOKiK"
     )
     waluta_splaty: WalutaSplaty | None = Field(None, description="Waluta spłaty")
-    aneks_do_umowy: bool | None = Field(None, description="Czy był aneks do umowy")
+    aneks_do_umowy: TakNie | None = Field(None, description="Czy był aneks do umowy")
     data_aneksu: str | None = Field(None, description="Data aneksu w formacie YYYY-MM-DD")
     przedmiot_aneksu: PrzedmiotAneksu | None = Field(None, description="Czego dotyczył aneks")
-    status_splaty_kredytu: bool | None = Field(
+    status_splaty_kredytu: TakNie | None = Field(
         None, description="Czy kredyt był spłacony, w tym w trakcie procesu"
     )
     data_wyroku: str | None = Field(None, description="Data wydania wyroku w formacie YYYY-MM-DD")
@@ -149,32 +177,34 @@ class SwissFrancJudgmentAnnotation(BaseModel):
         None, description="Czy wyrok wydano na rozprawie czy na posiedzeniu niejawnym"
     )
     dowody: list[Dowody] | None = Field(None, description="Jakie dowody zostały przeprowadzone")
-    oswiadczenie_niewaznosci: bool | None = Field(
+    oswiadczenie_niewaznosci: TakNie | None = Field(
         None, description="Czy odbierano oświadczenie powoda o skutkach nieważności umowy"
     )
-    odwolanie_do_sn: bool | None = Field(None, description="Czy odwołano się do orzecznictwa SN")
-    odwolanie_do_tsue: bool | None = Field(
+    odwolanie_do_sn: TakNie | None = Field(None, description="Czy odwołano się do orzecznictwa SN")
+    odwolanie_do_tsue: TakNie | None = Field(
         None, description="Czy odwołano się do orzecznictwa TSUE"
     )
     teoria_prawna: TeoriaPrawna | None = Field(
         None, description="Teoria prawna, na której oparto wyrok"
     )
-    zarzut_zatrzymania_lub_potracenia: bool | None = Field(
+    zarzut_zatrzymania_lub_potracenia: TakNie | None = Field(
         None, description="Czy uwzględniono zarzut zatrzymania lub potrącenia"
     )
-    odsetki_ustawowe: bool | None = Field(None, description="Czy uwzględniono odsetki ustawowe")
+    odsetki_ustawowe: TakNie | None = Field(None, description="Czy uwzględniono odsetki ustawowe")
     data_rozpoczecia_odsetek: DataRozpoczeciaOdsetek | None = Field(
         None, description="Data rozpoczęcia naliczania odsetek"
     )
-    koszty_postepowania: bool | None = Field(
+    koszty_postepowania: TakNie | None = Field(
         None, description="Czy zasądzono zwrot kosztów postępowania"
     )
     beneficjent_kosztow: str | None = Field(
         None, description="Na rzecz której strony zasądzono zwrot kosztów"
     )
-    zabezpieczenie_udzielone: bool | None = Field(None, description="Czy udzielono zabezpieczenia")
+    zabezpieczenie_udzielone: TakNie | None = Field(
+        None, description="Czy udzielono zabezpieczenia"
+    )
     rodzaj_zabezpieczenia: str | None = Field(None, description="Rodzaj zabezpieczenia")
-    zabezpieczenie_pierwsza_instancja: bool | None = Field(
+    zabezpieczenie_pierwsza_instancja: TakNie | None = Field(
         None, description="Czy zabezpieczenia udzielił sąd I instancji"
     )
     czas_trwania_sprawy: str | None = Field(
@@ -183,9 +213,9 @@ class SwissFrancJudgmentAnnotation(BaseModel):
     wynik_sprawy: WynikSprawy | None = Field(
         None, description="Ocena, czy bank czy kredytobiorca wygrał sprawę"
     )
-    szczegoły_wyniku_sprawy: str | None = Field(
+    szczegoly_wyniku_sprawy: str | None = Field(
         None, description="Szczegóły dotyczące wyniku sprawy"
     )
-    sprawa_frankowiczow: bool | None = Field(
+    sprawa_frankowiczow: TakNie | None = Field(
         None, description="Czy sprawa dotyczy kredytu frankowego (CHF)"
     )
