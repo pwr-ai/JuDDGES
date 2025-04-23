@@ -17,7 +17,7 @@ python_version = "3.11"
 untyped_calls_exclude = ["pymongo"]
 plugins = "numpy.typing.mypy_plugin"
 
-[tool.mypy.overrides]
+[[tool.mypy.overrides]]
 module = ["pyarrow.*", "datasets.*", "sentence_transformers.*"]
 ignore_missing_imports = true
 disallow_untyped_defs = true
