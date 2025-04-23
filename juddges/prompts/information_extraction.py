@@ -137,7 +137,9 @@ def prepare_information_extraction_chain(
     log_to_mlflow: bool = False,
 ) -> RunnableSequence:
     model = ChatOpenAI(model=model_name, temperature=0)
-    human_message_template = HumanMessagePromptTemplate.from_template(EXTRACTION_PROMPT_TEMPLATE)
+    human_message_template = HumanMessagePromptTemplate.from_template(
+        EXTRACTION_PROMPT_TEMPLATE
+    )
     _prompt = ChatPromptTemplate(
         messages=[human_message_template],
         input_variables=["TEXT", "LANGUAGE", "SCHEMA"],
@@ -153,7 +155,9 @@ def prepare_information_extraction_chain(
 
 def prepare_schema_chain(model_name: str = "gpt-3.5-turbo") -> RunnableSequence:
     model = ChatOpenAI(model=model_name, temperature=0)
-    human_message_template = HumanMessagePromptTemplate.from_template(SCHEMA_PROMPT_TEMPLATE)
+    human_message_template = HumanMessagePromptTemplate.from_template(
+        SCHEMA_PROMPT_TEMPLATE
+    )
     _prompt = ChatPromptTemplate(
         messages=[human_message_template],
         input_variables=["TEXT", "LANGUAGE", "SCHEMA"],
