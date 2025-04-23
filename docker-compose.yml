@@ -13,16 +13,16 @@ services:
     env_file:
       - .env
     restart: always
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              capabilities:
-                - gpu
-                - utility # nvidia-smi
-                - compute # CUDA. Required to avoid "CUDA version: N/A"
-                - video # NVDEC/NVENC. For instance to use a hardware accelerated ffmpeg. Skip it if you don't need it
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           capabilities:
+    #             - gpu
+    #             - utility # nvidia-smi
+    #             - compute # CUDA. Required to avoid "CUDA version: N/A"
+    #             - video # NVDEC/NVENC. For instance to use a hardware accelerated ffmpeg. Skip it if you don't need it
     networks:
       - juddges-network
 
