@@ -1,6 +1,7 @@
 import math
 import multiprocessing
 import os
+import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -49,7 +50,7 @@ def get_batch_embeddings(judgment_ids: list[str], embeddings_dict: dict) -> dict
     }
 
 
-def process_batch(db, batch, batch_embeddings):
+async def process_batch(db, batch, batch_embeddings, properties_list):
     """Process and insert a batch of documents into Weaviate."""
     try:
         records = []
@@ -62,7 +63,7 @@ def process_batch(db, batch, batch_embeddings):
                 continue
 
             properties = {
-                key: batch[key][i] for key in batch.keys() if key in db.judgments_properties
+                key: batch[key][i] for key in batch.keys() if key in properties_list
             }
             properties = process_judgment_dates(properties)
 
@@ -75,7 +76,7 @@ def process_batch(db, batch, batch_embeddings):
             )
 
         if records:  # Only insert if we have valid records
-            db.insert_batch(
+            await db.async_insert_batch(
                 collection=db.judgments_collection,
                 objects=records,
             )
@@ -85,11 +86,19 @@ def process_batch(db, batch, batch_embeddings):
         raise
 
 
-def main(
-    dataset_name: Path = typer.Option("JuDDGES/pl-court-raw"),
-    embeddings_dir: Path = typer.Option(...),
-    batch_size: int = typer.Option(BATCH_SIZE),
-    debug: bool = typer.Option(False, help="Enable debug logging"),
+async def get_collection_size(collection):
+    """Get the number of documents in a collection."""
+    count = 0
+    async for _ in collection.iterator(return_properties=[]):
+        count += 1
+    return count
+
+
+async def main_async(
+    dataset_name: str,
+    embeddings_dir: Path,
+    batch_size: int,
+    debug: bool,
 ) -> None:
     if debug:
         logger.remove()
@@ -112,37 +121,39 @@ def main(
         logger.info(f"Dataset loaded with columns: {dataset.column_names}")
         total_batches = math.ceil(len(dataset) / batch_size)
 
-        with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
+        async with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
             logger.info("Checking number of documents in collection...")
-            initial_count = db.get_collection_size(db.judgments_collection)
+            initial_count = await get_collection_size(db.judgments_collection)
             logger.info(f"Initial number of documents in collection: {initial_count}")
 
-            if set(db.judgments_properties) != set(dataset.column_names):
+            # Get properties asynchronously
+            properties_list = await db.judgments_properties
+            
+            if set(properties_list) != set(dataset.column_names):
                 logger.warning(
                     "Dataset columns do not match judgment properties, ignoring extra columns: "
-                    f"{set(dataset.column_names) - set(db.judgments_properties)}"
+                    f"{set(dataset.column_names) - set(properties_list)}"
                 )
 
             if MAX_WORKERS > 1:
                 logger.info(f"Using parallel processing with {MAX_WORKERS} workers")
-                with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-                    futures = []
-                    for batch in tqdm(
-                        dataset.iter(batch_size=batch_size),
-                        total=total_batches,
-                        desc="Uploading batches in parallel",
-                    ):
-                        # Get embeddings only for current batch
-                        batch_embeddings = get_batch_embeddings(
-                            batch["judgment_id"], embeddings_dict
-                        )
-                        futures.append(executor.submit(process_batch, db, batch, batch_embeddings))
-
-                    for future in as_completed(futures):
-                        try:
-                            future.result()
-                        except Exception as e:
-                            logger.error(f"Batch processing failed: {str(e)}")
+                batch_tasks = []
+                
+                for batch_idx, batch in enumerate(tqdm(
+                    dataset.iter(batch_size=batch_size),
+                    total=total_batches,
+                    desc="Preparing batch tasks",
+                )):
+                    # Get embeddings only for current batch
+                    batch_embeddings = get_batch_embeddings(
+                        batch["judgment_id"], embeddings_dict
+                    )
+                    batch_tasks.append(process_batch(db, batch, batch_embeddings, properties_list))
+                    
+                    # Process in smaller groups to avoid memory issues
+                    if len(batch_tasks) >= MAX_WORKERS or batch_idx == total_batches - 1:
+                        await asyncio.gather(*batch_tasks)
+                        batch_tasks = []
             else:
                 logger.info("Using sequential processing")
                 for batch in tqdm(
@@ -152,15 +163,30 @@ def main(
                 ):
                     # Get embeddings only for current batch
                     batch_embeddings = get_batch_embeddings(batch["judgment_id"], embeddings_dict)
-                    process_batch(db, batch, batch_embeddings)
+                    await process_batch(db, batch, batch_embeddings, properties_list)
 
-            final_count = db.get_collection_size(db.judgments_collection)
+            final_count = await get_collection_size(db.judgments_collection)
             logger.info(f"Final number of documents in collection: {final_count}")
             logger.info(f"Added {final_count - initial_count} new documents")
 
     except Exception as e:
         logger.error(f"Script failed: {str(e)}", exc_info=True)
         raise
+
+
+def main(
+    dataset_name: Path = typer.Option("JuDDGES/pl-court-raw"),
+    embeddings_dir: Path = typer.Option(...),
+    batch_size: int = typer.Option(BATCH_SIZE),
+    debug: bool = typer.Option(False, help="Enable debug logging"),
+) -> None:
+    """Run the main async function."""
+    asyncio.run(main_async(
+        dataset_name=str(dataset_name),
+        embeddings_dir=embeddings_dir,
+        batch_size=batch_size,
+        debug=debug,
+    ))
 
 
 if __name__ == "__main__":

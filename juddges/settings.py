@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import langchain
 import mlflow
 import tiktoken
 from sqlalchemy import create_engine
@@ -17,6 +18,7 @@ CONFIG_PATH = ROOT_PATH / "configs"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
 FRANKOWICZE_DATA_PATH = DATA_PATH / "analysis" / "sprawy_frankowe"
+ARTICLE_111_DATA_PATH = DATA_PATH / "analysis" / "agitacja_wyborcza"
 
 PL_JUDGEMENTS_PATH = DATA_PATH / "datasets" / "pl"
 PL_COURT_DEP_ID_2_NAME = PL_JUDGEMENTS_PATH / "court_id_2_name.csv"
@@ -54,7 +56,7 @@ LLM_TO_PRICE_COMPLETION = {
     "gpt-3.5-turbo-1106": 0.002 / 1000,
 }
 
-LOCAL_POSTGRES = "postgresql+psycopg2://llm:llm@postgres-juddges:5432/llm"
+LOCAL_POSTGRES = "postgresql+psycopg2://llm:llm@localhost:3456/llm"
 
 
 def get_sqlalchemy_engine() -> Engine:
@@ -70,12 +72,14 @@ def get_sqlalchemy_engine() -> Engine:
 
 def prepare_langchain_cache() -> None:
     import langchain
-    from langchain.cache import SQLAlchemyMd5Cache
+    from langchain_community.cache import SQLAlchemyMd5Cache
 
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 
 
-def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost") -> None:
+def prepare_mlflow(
+    experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost"
+) -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)
 
