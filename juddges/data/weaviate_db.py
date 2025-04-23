@@ -41,7 +41,7 @@ class WeaviateDatabase(ABC):
             auth_credentials=self.api_key,
         )
         await self.client.connect()
-        await self.create_collections()
+        await self.async_create_collections()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback) -> None:
@@ -59,26 +59,35 @@ class WeaviateDatabase(ABC):
         return None
 
     @abstractmethod
-    async def create_collections(self) -> None:
+    async def async_create_collections(self) -> None:
         pass
 
-    async def insert_batch(
+    async def async_insert_batch(
         self,
         collection: weaviate.collections.Collection,
         objects: list[dict[str, Any]],
     ) -> None:
-        response = await collection.data.insert_many(objects)
-        if response.has_errors:
-            errors = [err.message for err in response.errors]
-            raise ValueError(f"Error ingesting batch: {errors}")
+        try:
+            response = await collection.data.insert_many(objects)
+            if response.has_errors:
+                # Log each error with detailed information
+                for i, err in enumerate(response.errors):
+                    obj_id = objects[i].get("id", "unknown")
+                    logger.error(f"Error inserting object {obj_id}: {err.message}")
+                # Raise a consolidated error
+                errors = [f"Object {i}: {err.message}" for i, err in enumerate(response.errors)]
+                raise ValueError(f"Error ingesting batch: {errors}")
+        except Exception as e:
+            logger.error(f"Exception during batch insertion: {str(e)}")
+            raise
 
-    async def get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:
+    async def async_get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:
         result = []
         async for obj in collection.iterator(return_properties=[]):
             result.append(str(obj.uuid))
         return result
 
-    async def _safe_create_collection(self, *args: Any, **kwargs: Any) -> None:
+    async def async_safe_create_collection(self, *args: Any, **kwargs: Any) -> None:
         try:
             await self.client.collections.create(*args, **kwargs)
         except weaviate.exceptions.UnexpectedStatusCodeError as err:
@@ -123,8 +132,8 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
         config = await self.judgment_chunks_collection.config.get()
         return [prop.name for prop in config.properties]
 
-    async def create_collections(self) -> None:
-        await self._safe_create_collection(
+    async def async_create_collections(self) -> None:
+        await self.async_safe_create_collection(
             name=self.JUDGMENTS_COLLECTION,
             properties=[
                 wvcc.Property(
@@ -311,7 +320,7 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
             ],
             vectorizer_config=wvcc.Configure.Vectorizer.none(),
         )
-        await self._safe_create_collection(
+        await self.async_safe_create_collection(
             name=self.JUDGMENT_CHUNKS_COLLECTION,
             properties=[
                 wvcc.Property(
@@ -340,6 +349,19 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                 )
             ],
         )
+
+    # For backward compatibility
+    async def create_collections(self) -> None:
+        await self.async_create_collections()
+        
+    async def insert_batch(self, collection, objects):
+        await self.async_insert_batch(collection, objects)
+        
+    async def get_uuids(self, collection):
+        return await self.async_get_uuids(collection)
+        
+    async def _safe_create_collection(self, *args, **kwargs):
+        await self.async_safe_create_collection(*args, **kwargs)
 
     @staticmethod
     def uuid_from_judgment_chunk_id(judgment_id: str, chunk_id: int) -> str:

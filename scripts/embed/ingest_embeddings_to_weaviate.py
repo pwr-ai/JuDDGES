@@ -2,6 +2,7 @@ import gc
 import math
 import multiprocessing
 import os
+import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -77,7 +78,7 @@ def validate_batch(batch):
         return False
 
 
-def process_batch(db, batch):
+async def process_batch(db, batch):
     """Process and insert a batch of embeddings into Weaviate."""
     try:
         if not validate_batch(batch):
@@ -103,7 +104,7 @@ def process_batch(db, batch):
         ]
 
         if objects:
-            db.insert_batch(collection=db.judgment_chunks_collection, objects=objects)
+            await db.async_insert_batch(collection=db.judgment_chunks_collection, objects=objects)
             logger.info(f"Successfully inserted {len(objects)} objects")
 
         # Help garbage collection
@@ -115,14 +116,12 @@ def process_batch(db, batch):
         raise
 
 
-def main(
-    embeddings_dir: Path = typer.Option(
-        "data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings"
-    ),
-    batch_size: int = typer.Option(BATCH_SIZE),
-    upsert: bool = typer.Option(False),
-    max_embeddings: int = typer.Option(None, help="Maximum number of embeddings to process"),
-    debug: bool = typer.Option(False, help="Enable debug logging"),
+async def main_async(
+    embeddings_dir: Path,
+    batch_size: int,
+    upsert: bool,
+    max_embeddings: int,
+    debug: bool,
 ) -> None:
     if debug:
         logger.remove()  # Remove default handler
@@ -168,18 +167,19 @@ def main(
             desc="Generating UUIDs",
         )
 
-        with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
-            initial_count = len(db.get_uuids(db.judgment_chunks_collection))
+        async with WeaviateJudgmentsDatabase(WV_HOST, WV_PORT, WV_GRPC_PORT, WV_API_KEY) as db:
+            uuids = await db.async_get_uuids(db.judgment_chunks_collection)
+            initial_count = len(uuids)
             logger.info(f"Initial number of objects in collection: {initial_count}")
 
             if not upsert:
                 logger.info("upsert disabled - uploading only new embeddings")
-                uuids = set(db.get_uuids(db.judgment_chunks_collection))
-                logger.info(f"Found {len(uuids)} existing UUIDs in database")
+                uuids_set = set(uuids)
+                logger.info(f"Found {len(uuids_set)} existing UUIDs in database")
 
                 original_len = len(embs)
                 embs = embs.filter(
-                    lambda item: item["uuid"] not in uuids,
+                    lambda item: item["uuid"] not in uuids_set,
                     num_proc=NUM_PROC,
                     desc="Filtering out already uploaded embeddings",
                 )
@@ -192,22 +192,23 @@ def main(
             total_batches = math.ceil(len(embs) / batch_size)
             logger.info(f"Processing {total_batches} batches with size {batch_size}")
 
-            if NUM_PROC > 1:
+            if MAX_WORKERS > 1:
                 logger.info(f"Using parallel processing with {MAX_WORKERS} workers")
-                with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-                    futures = [
-                        executor.submit(process_batch, db, batch)
-                        for batch in tqdm(
-                            embs.iter(batch_size=batch_size),
-                            total=total_batches,
-                            desc="Uploading batches in parallel",
-                        )
-                    ]
-                    for future in as_completed(futures):
-                        try:
-                            future.result()  # Raise exceptions if any
-                        except Exception as e:
-                            logger.error(f"Batch processing failed: {str(e)}")
+                batch_tasks = []
+                
+                for batch_idx, batch in enumerate(tqdm(
+                    embs.iter(batch_size=batch_size),
+                    total=total_batches,
+                    desc="Preparing batch tasks",
+                )):
+                    batch_tasks.append(process_batch(db, batch))
+                    
+                    # Process in smaller groups to avoid memory issues
+                    if len(batch_tasks) >= MAX_WORKERS or batch_idx == total_batches - 1:
+                        await asyncio.gather(*batch_tasks)
+                        batch_tasks = []
+                        # Help with garbage collection
+                        gc.collect()
             else:
                 logger.info("Using sequential processing")
                 for batch in tqdm(
@@ -215,18 +216,38 @@ def main(
                     total=total_batches,
                     desc="Uploading batches sequentially",
                 ):
-                    process_batch(db, batch)
+                    await process_batch(db, batch)
                     # Clean up batch after processing
                     del batch
                     gc.collect()
 
-            final_count = len(db.get_uuids(db.judgment_chunks_collection))
+            final_uuids = await db.async_get_uuids(db.judgment_chunks_collection)
+            final_count = len(final_uuids)
             logger.info(f"Final number of objects in collection: {final_count}")
             logger.info(f"Added {final_count - initial_count} new objects")
 
     except Exception as e:
         logger.error(f"Script failed: {str(e)}", exc_info=True)
         raise
+
+
+def main(
+    embeddings_dir: Path = typer.Option(
+        "data/embeddings/pl-court-raw/mmlw-roberta-large/all_embeddings"
+    ),
+    batch_size: int = typer.Option(BATCH_SIZE),
+    upsert: bool = typer.Option(False),
+    max_embeddings: int = typer.Option(None, help="Maximum number of embeddings to process"),
+    debug: bool = typer.Option(False, help="Enable debug logging"),
+) -> None:
+    """Run the main async function."""
+    asyncio.run(main_async(
+        embeddings_dir=embeddings_dir,
+        batch_size=batch_size,
+        upsert=upsert,
+        max_embeddings=max_embeddings,
+        debug=debug,
+    ))
 
 
 if __name__ == "__main__":
