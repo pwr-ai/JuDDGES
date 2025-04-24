@@ -17,23 +17,6 @@ stages:
       - data/datasets/pl/pl-court-raw/README.md
       - data/datasets/pl/pl-court-raw/README_files/
 
-  build_instruct_dataset_pl:
-    cmd: >-
-      PYTHONPATH=. python scripts/dataset/build_instruct_dataset_pl.py
-      --dataset-dir data/datasets/pl/raw
-      --repo-id JuDDGES/pl-court-instruct
-    deps:
-      - data/datasets/pl/raw
-      - scripts/dataset/build_instruct_dataset_pl.py
-    desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
-
-  build_instruct_dataset_en:
-    cmd: >-
-      PYTHONPATH=. python scripts/dataset/build_instruct_dataset_en.py
-      --repo-id JuDDGES/en-court-instruct
-    deps:
-      - scripts/dataset/build_instruct_dataset_en.py
-
   embed:
     matrix:
       model:
