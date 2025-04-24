@@ -1,5 +1,5 @@
 import weaviate.classes.config as wvcc
-from typing import ClassVar, Optional, Any
+from typing import ClassVar, Optional, Any, Union, List, Dict
 import datetime
 from loguru import logger
 
@@ -385,4 +385,89 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
             limit=limit,
         )
         
-        return [item.properties for item in response.objects] 
+        return [item.properties for item in response.objects]
+
+    def insert(self, document: Union[LegalDocument, DocumentChunk], collection_name: Optional[str] = None) -> None:
+        """Insert a single document or chunk into the appropriate collection.
+        
+        Args:
+            document: The document or chunk to insert
+            collection_name: Optional collection name override
+        """
+        if collection_name is None:
+            if isinstance(document, LegalDocument):
+                collection = self.legal_documents_collection
+            elif isinstance(document, DocumentChunk):
+                collection = self.document_chunks_collection
+            else:
+                raise ValueError(f"Unsupported document type: {type(document)}")
+        else:
+            collection = self.get_collection(collection_name)
+
+        try:
+            properties = document.dict(exclude_none=True)
+            collection.data.insert(properties)
+            logger.info(f"Successfully inserted document {document.document_id}")
+        except Exception as e:
+            logger.error(f"Error inserting document {document.document_id}: {str(e)}")
+            raise
+
+    def search(
+        self, 
+        query: str, 
+        collection_name: Optional[str] = None,
+        vector_name: str = "base",
+        limit: int = 10,
+        filters: Optional[weaviate.classes.query.Filter] = None,
+    ) -> List[Dict]:
+        """Search for documents using semantic search.
+        
+        Args:
+            query: The search query
+            collection_name: Optional collection name override
+            vector_name: The named vector to use for search (base, dev, or semantic)
+            limit: Maximum number of results to return
+            filters: Optional query filters
+            
+        Returns:
+            List of matching documents
+        """
+        if collection_name is None:
+            collection = self.legal_documents_collection
+        else:
+            collection = self.get_collection(collection_name)
+
+        try:
+            response = collection.query.near_text(
+                query=query,
+                target_vectors=[vector_name],
+                filters=filters,
+                limit=limit,
+            )
+            return [item.properties for item in response.objects]
+        except Exception as e:
+            logger.error(f"Error during search: {str(e)}")
+            raise
+
+    def delete(
+        self, 
+        document_id: str, 
+        collection_name: Optional[str] = None,
+    ) -> None:
+        """Delete a document from the specified collection.
+        
+        Args:
+            document_id: ID of the document to delete
+            collection_name: Optional collection name override
+        """
+        if collection_name is None:
+            collection = self.legal_documents_collection
+        else:
+            collection = self.get_collection(collection_name)
+
+        try:
+            collection.data.delete(document_id)
+            logger.info(f"Successfully deleted document {document_id}")
+        except Exception as e:
+            logger.error(f"Error deleting document {document_id}: {str(e)}")
+            raise 
