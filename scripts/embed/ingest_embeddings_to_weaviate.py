@@ -1,9 +1,8 @@
+import asyncio
 import gc
 import math
 import multiprocessing
 import os
-import asyncio
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
@@ -195,14 +194,16 @@ async def main_async(
             if MAX_WORKERS > 1:
                 logger.info(f"Using parallel processing with {MAX_WORKERS} workers")
                 batch_tasks = []
-                
-                for batch_idx, batch in enumerate(tqdm(
-                    embs.iter(batch_size=batch_size),
-                    total=total_batches,
-                    desc="Preparing batch tasks",
-                )):
+
+                for batch_idx, batch in enumerate(
+                    tqdm(
+                        embs.iter(batch_size=batch_size),
+                        total=total_batches,
+                        desc="Preparing batch tasks",
+                    )
+                ):
                     batch_tasks.append(process_batch(db, batch))
-                    
+
                     # Process in smaller groups to avoid memory issues
                     if len(batch_tasks) >= MAX_WORKERS or batch_idx == total_batches - 1:
                         await asyncio.gather(*batch_tasks)
@@ -241,13 +242,15 @@ def main(
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ) -> None:
     """Run the main async function."""
-    asyncio.run(main_async(
-        embeddings_dir=embeddings_dir,
-        batch_size=batch_size,
-        upsert=upsert,
-        max_embeddings=max_embeddings,
-        debug=debug,
-    ))
+    asyncio.run(
+        main_async(
+            embeddings_dir=embeddings_dir,
+            batch_size=batch_size,
+            upsert=upsert,
+            max_embeddings=max_embeddings,
+            debug=debug,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -1,8 +1,7 @@
+import asyncio
 import math
 import multiprocessing
 import os
-import asyncio
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import torch
@@ -62,9 +61,7 @@ async def process_batch(db, batch, batch_embeddings, properties_list):
                 logger.warning(f"No embedding found for judgment_id: {judgment_id}")
                 continue
 
-            properties = {
-                key: batch[key][i] for key in batch.keys() if key in properties_list
-            }
+            properties = {key: batch[key][i] for key in batch.keys() if key in properties_list}
             properties = process_judgment_dates(properties)
 
             records.append(
@@ -128,7 +125,7 @@ async def main_async(
 
             # Get properties asynchronously
             properties_list = await db.judgments_properties
-            
+
             if set(properties_list) != set(dataset.column_names):
                 logger.warning(
                     "Dataset columns do not match judgment properties, ignoring extra columns: "
@@ -138,18 +135,18 @@ async def main_async(
             if MAX_WORKERS > 1:
                 logger.info(f"Using parallel processing with {MAX_WORKERS} workers")
                 batch_tasks = []
-                
-                for batch_idx, batch in enumerate(tqdm(
-                    dataset.iter(batch_size=batch_size),
-                    total=total_batches,
-                    desc="Preparing batch tasks",
-                )):
-                    # Get embeddings only for current batch
-                    batch_embeddings = get_batch_embeddings(
-                        batch["judgment_id"], embeddings_dict
+
+                for batch_idx, batch in enumerate(
+                    tqdm(
+                        dataset.iter(batch_size=batch_size),
+                        total=total_batches,
+                        desc="Preparing batch tasks",
                     )
+                ):
+                    # Get embeddings only for current batch
+                    batch_embeddings = get_batch_embeddings(batch["judgment_id"], embeddings_dict)
                     batch_tasks.append(process_batch(db, batch, batch_embeddings, properties_list))
-                    
+
                     # Process in smaller groups to avoid memory issues
                     if len(batch_tasks) >= MAX_WORKERS or batch_idx == total_batches - 1:
                         await asyncio.gather(*batch_tasks)
@@ -181,12 +178,14 @@ def main(
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ) -> None:
     """Run the main async function."""
-    asyncio.run(main_async(
-        dataset_name=str(dataset_name),
-        embeddings_dir=embeddings_dir,
-        batch_size=batch_size,
-        debug=debug,
-    ))
+    asyncio.run(
+        main_async(
+            dataset_name=str(dataset_name),
+            embeddings_dir=embeddings_dir,
+            batch_size=batch_size,
+            debug=debug,
+        )
+    )
 
 
 if __name__ == "__main__":

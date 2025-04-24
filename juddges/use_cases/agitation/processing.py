@@ -4,7 +4,6 @@ Functions for processing judgment data.
 
 import pandas as pd
 from loguru import logger
-from matplotlib import pyplot as plt
 
 from juddges.use_cases.agitation.search import QUERY_COLUMN
 

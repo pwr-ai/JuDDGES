@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from loguru import logger
 
 
@@ -106,9 +105,7 @@ def visualize_score_distribution(merged_df, output_path):
 
     # Query count distribution
     plt.subplot(2, 2, 4)
-    plt.hist(
-        merged_df["query_count"], bins=range(1, merged_df["query_count"].max() + 2)
-    )
+    plt.hist(merged_df["query_count"], bins=range(1, merged_df["query_count"].max() + 2))
     plt.title("Distribution of Query Matches per Judgment")
     plt.xlabel("Number of Queries Matched")
     plt.ylabel("Count")

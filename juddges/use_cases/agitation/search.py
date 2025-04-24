@@ -152,9 +152,7 @@ async def bm25_judgment_search(
 
         # Update progress bar
         pbar.update(1)
-        pbar.set_postfix(
-            {"total": sum(len(judgments) for judgments in all_judgments.values())}
-        )
+        pbar.set_postfix({"total": sum(len(judgments) for judgments in all_judgments.values())})
 
     # Close progress bar
     pbar.close()
@@ -330,9 +328,7 @@ def deduplicate_judgments(judgments: List[Dict]) -> List[Dict]:
             }
 
     # Sort judgments by accumulated score and extract judgment objects
-    sorted_judgments = sorted(
-        judgment_scores.items(), key=lambda x: x[1]["score"], reverse=True
-    )
+    sorted_judgments = sorted(judgment_scores.items(), key=lambda x: x[1]["score"], reverse=True)
 
     # Create deduplicated list with accumulated scores
     deduplicated_judgments = []
@@ -344,9 +340,7 @@ def deduplicate_judgments(judgments: List[Dict]) -> List[Dict]:
     logger.info(f"Deduplicated to {len(deduplicated_judgments)} unique judgments")
 
     # Log some statistics about deduplication
-    duplicate_rate = (
-        (len(judgments) - len(deduplicated_judgments)) / len(judgments) * 100
-    )
+    duplicate_rate = (len(judgments) - len(deduplicated_judgments)) / len(judgments) * 100
     logger.info(f"Duplicate rate: {duplicate_rate:.2f}%")
 
     return deduplicated_judgments
