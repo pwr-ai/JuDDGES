@@ -11,8 +11,8 @@ from omegaconf import DictConfig
 from transformers import set_seed
 
 from juddges.config import PredictConfig
-from juddges.models.factory import get_model
-from juddges.models.predict import predict_with_llm
+from juddges.llm.factory import get_llm
+from juddges.llm.predict import predict_with_llm
 from juddges.preprocessing.text_encoder import TextEncoderForEval
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
@@ -49,12 +49,12 @@ def main(cfg: DictConfig) -> None:
     ds, reverse_sort_idx = sort_dataset_by_input_length(ds, config.dataset.context_field)
     logger.info("Loading model...")
 
-    model_pack = get_model(config.model, device_map=config.device_map)
+    model_pack = get_llm(config.llm, device_map=config.device_map)
 
     assert not any(key in model_pack.generate_kwargs for key in config.generate_kwargs.keys())
     model_pack.generate_kwargs |= config.generate_kwargs
 
-    if config.model.use_unsloth:
+    if config.llm.use_unsloth:
         from unsloth import FastLanguageModel
 
         FastLanguageModel.for_inference(model_pack.model)
@@ -62,7 +62,7 @@ def main(cfg: DictConfig) -> None:
         model_pack.model.eval()
         # model_pack.model.compile()  # might cause libcuda.so not found error
 
-    if config.model.batch_size > 1 and config.model.padding is False:
+    if config.llm.batch_size > 1 and config.llm.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
 
     gold_outputs = [item["output"] for item in ds]
@@ -70,7 +70,7 @@ def main(cfg: DictConfig) -> None:
     encoder = TextEncoderForEval(
         tokenizer=model_pack.tokenizer,
         max_length=config.get_max_input_length(model_pack.model.config.max_position_embeddings),
-        padding=config.model.padding,
+        padding=config.llm.padding,
     )
     ds.set_transform(encoder, columns=["prompt", "context"])
 
@@ -78,7 +78,7 @@ def main(cfg: DictConfig) -> None:
     model_outputs = predict_with_llm(
         model_pack=model_pack,
         dataset=ds,
-        batch_size=config.model.batch_size,
+        batch_size=config.llm.batch_size,
         num_proc=NUM_PROC,
         verbose=True,
     )

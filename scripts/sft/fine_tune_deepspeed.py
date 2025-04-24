@@ -27,7 +27,7 @@ from transformers import (
 from trl import SFTConfig, SFTTrainer
 
 from juddges.config import FineTuningConfig
-from juddges.models.factory import get_model
+from juddges.llm.factory import get_llm
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.formatter import format_to_conversations
 from juddges.settings import CONFIG_PATH
@@ -54,8 +54,8 @@ def main(cfg: DictConfig) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with state.local_main_process_first():
-        model_pack = get_model(
-            config.model,
+        model_pack = get_llm(
+            config.llm,
             use_cache=False,
         )
 

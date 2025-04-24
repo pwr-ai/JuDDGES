@@ -4,7 +4,7 @@ from datasets import Dataset
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from juddges.models.factory import ModelForGeneration
+from juddges.llm.factory import ModelForGeneration
 
 
 def predict_with_llm(

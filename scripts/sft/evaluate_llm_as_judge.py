@@ -35,7 +35,7 @@ class ApiModel(BaseModel, extra="forbid"):
 
 
 class LLMJudgeConfig(BaseModel, extra="forbid"):
-    api_model: ApiModel
+    api_llm: ApiModel
     answers_file: Path
     out_metric_file: Path
     prompt: Literal["pl", "en"]
@@ -57,13 +57,13 @@ def main(cfg: DictConfig) -> None:
 def evaluate_with_api_llm(config: LLMJudgeConfig) -> dict[str, Any]:
     client = ChatOpenAI(
         api_key=OPENAI_API_KEY,
-        base_url=config.api_model.endpoint,
-        model_name=config.api_model.name,
+        base_url=config.api_llm.endpoint,
+        model_name=config.api_llm.name,
         temperature=0.0,
     )
 
-    if config.api_model.request_cache_db is not None:
-        set_llm_cache(SQLiteCache(str(config.api_model.request_cache_db)))
+    if config.api_llm.request_cache_db is not None:
+        set_llm_cache(SQLiteCache(str(config.api_llm.request_cache_db)))
 
     evaluator = StructuredLLMJudgeEvaluator(client=client, prompt=PROMPTS[config.prompt])
 
