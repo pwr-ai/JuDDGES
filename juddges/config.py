@@ -43,7 +43,7 @@ class RawDatasetConfig(BaseModel, extra="forbid"):
 
 
 class FineTuningConfig(BaseModel, extra="forbid"):
-    model: LLMConfig
+    llm: LLMConfig
     dataset: DatasetConfig
     max_context_size: int
     training_args: dict[str, Any]
@@ -60,7 +60,7 @@ class FineTuningConfig(BaseModel, extra="forbid"):
 
 
 class PredictConfig(BaseModel, extra="forbid"):
-    model: LLMConfig
+    llm: LLMConfig
     dataset: DatasetConfig
     device_map: str
     output_file: Path

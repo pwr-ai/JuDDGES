@@ -30,11 +30,11 @@ class ModelForGeneration:
     generate_kwargs: dict[str, Any]
 
 
-def get_model(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
+def get_llm(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     if llm_config.name in LLAMA_3_MODELS:
         return get_llama_3(llm_config, **kwargs)
     elif llm_config.name in PHI_4_MODELS:
-        return get_model_with_default_setup(llm_config, **kwargs)
+        return get_llm_with_default_setup(llm_config, **kwargs)
     elif llm_config.name in MISTRAL_MODELS:
         return get_mistral(llm_config, **kwargs)
     else:
@@ -42,7 +42,7 @@ def get_model(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
 
 
 def get_llama_3(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
-    model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
+    model, tokenizer = get_llm_tokenizer(llm_config, **kwargs)
     tokenizer.padding_side = llm_config.padding_side
     tokenizer.pad_token = tokenizer.eos_token
     terminators: list[int] = [tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")]
@@ -55,7 +55,7 @@ def get_llama_3(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
 
 
 def get_mistral(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
-    model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
+    model, tokenizer = get_llm_tokenizer(llm_config, **kwargs)
     tokenizer.padding_side = llm_config.padding_side
     tokenizer.pad_token = tokenizer.eos_token
 
@@ -66,8 +66,8 @@ def get_mistral(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     )
 
 
-def get_model_with_default_setup(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
-    model, tokenizer = _get_model_tokenizer(llm_config, **kwargs)
+def get_llm_with_default_setup(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
+    model, tokenizer = get_llm_tokenizer(llm_config, **kwargs)
     tokenizer.padding_side = llm_config.padding_side
 
     return ModelForGeneration(
@@ -77,7 +77,7 @@ def get_model_with_default_setup(llm_config: LLMConfig, **kwargs: Any) -> ModelF
     )
 
 
-def _get_model_tokenizer(
+def get_llm_tokenizer(
     llm_config: LLMConfig,
     **kwargs: Any,
 ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:

@@ -1,8 +1,10 @@
 import os
 
 import torch
-from torch_geometric.data import InMemoryDataset, download_url
+from torch_geometric.data import HeteroData, InMemoryDataset, download_url
 from torch_geometric.transforms import BaseTransform
+
+torch.serialization.add_safe_globals([HeteroData])
 
 
 class PlCourtGraphDataset(InMemoryDataset):

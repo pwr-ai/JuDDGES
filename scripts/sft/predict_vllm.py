@@ -33,13 +33,13 @@ def main(cfg: DictConfig) -> None:
     ds = load_dataset(config.dataset.name, split="test")
 
     llm = LLM(
-        model=config.model.name,
+        model=config.llm.name,
         quantization="bitsandbytes",
         load_format="bitsandbytes",
         enable_lora=True,
-        qlora_adapter_name_or_path=config.model.adapter_path,
-        max_model_len=config.model.max_seq_length,
-        max_num_seqs=config.model.batch_size,
+        qlora_adapter_name_or_path=config.llm.adapter_path,
+        max_model_len=config.llm.max_seq_length,
+        max_num_seqs=config.llm.batch_size,
     )
 
     truncator = ContextTruncator(
