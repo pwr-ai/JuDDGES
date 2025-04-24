@@ -8,13 +8,13 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from sentence_transformers import SentenceTransformer
 
-from juddges.data.weaviate_db import WeaviateJudgmentsDatabase
+from ingest_to_weaviate import EnhancedWeaviateDB
 from juddges.settings import ROOT_PATH
 
 console = Console()
 
 
-def print_collections(db: WeaviateJudgmentsDatabase) -> None:
+def print_collections(db: EnhancedWeaviateDB) -> None:
     """Print all collections in the database."""
     console.print("\n[bold blue]All Collections[/bold blue]")
     collections = db.client.collections.list_all()
@@ -28,7 +28,7 @@ def print_collections(db: WeaviateJudgmentsDatabase) -> None:
     console.print(table)
 
 
-def print_schema(db: WeaviateJudgmentsDatabase) -> None:
+def print_schema(db: EnhancedWeaviateDB) -> None:
     """Print the schema of both collections."""
     console.print("\n[bold blue]Weaviate Schema[/bold blue]")
 
@@ -38,7 +38,7 @@ def print_schema(db: WeaviateJudgmentsDatabase) -> None:
         task = progress.add_task("Fetching schema...", start=False)
         progress.start_task(task)
 
-        for collection_name in [db.JUDGMENTS_COLLECTION, db.JUDGMENT_CHUNKS_COLLECTION]:
+        for collection_name in [db.LEGAL_DOCUMENTS_COLLECTION, db.DOCUMENT_CHUNKS_COLLECTION]:
             collection = db.client.collections.get(collection_name)
             schema = collection.config.get()
 
@@ -54,7 +54,7 @@ def print_schema(db: WeaviateJudgmentsDatabase) -> None:
         progress.stop_task(task)
 
 
-def print_collection_stats(db: WeaviateJudgmentsDatabase) -> None:
+def print_collection_stats(db: EnhancedWeaviateDB) -> None:
     """Print statistics about the collections."""
     console.print("\n[bold blue]Collection Statistics[/bold blue]")
 
@@ -64,29 +64,29 @@ def print_collection_stats(db: WeaviateJudgmentsDatabase) -> None:
         task = progress.add_task("Calculating statistics...", start=False)
         progress.start_task(task)
 
-        console.print("[green]Fetching judgments collection...[/green]")
-        judgments_collection = db.client.collections.get(db.JUDGMENTS_COLLECTION)
-        judgments_count = len(judgments_collection)
-        console.print(f"[green]Judgments collection fetched. Count: {judgments_count:,}[/green]")
+        console.print("[green]Fetching legal documents collection...[/green]")
+        legal_docs_collection = db.legal_documents_collection
+        legal_docs_count = db.get_collection_size(legal_docs_collection)
+        console.print(f"[green]Legal documents collection fetched. Count: {legal_docs_count:,}[/green]")
 
-        console.print("[green]Fetching chunks collection...[/green]")
-        chunks_collection = db.client.collections.get(db.JUDGMENT_CHUNKS_COLLECTION)
-        chunks_count = len(chunks_collection)
-        console.print(f"[green]Chunks collection fetched. Count: {chunks_count:,}[/green]")
+        console.print("[green]Fetching document chunks collection...[/green]")
+        chunks_collection = db.document_chunks_collection
+        chunks_count = db.get_collection_size(chunks_collection)
+        console.print(f"[green]Document chunks collection fetched. Count: {chunks_count:,}[/green]")
 
         table = Table(title="Document Counts")
         table.add_column("Collection", style="cyan")
         table.add_column("Count", style="magenta")
 
-        table.add_row(db.JUDGMENTS_COLLECTION, f"{judgments_count:,}")
-        table.add_row(db.JUDGMENT_CHUNKS_COLLECTION, f"{chunks_count:,}")
+        table.add_row(db.LEGAL_DOCUMENTS_COLLECTION, f"{legal_docs_count:,}")
+        table.add_row(db.DOCUMENT_CHUNKS_COLLECTION, f"{chunks_count:,}")
 
         console.print(table)
 
         progress.stop_task(task)
 
 
-def run_sample_queries(db: WeaviateJudgmentsDatabase) -> None:
+def run_sample_queries(db: EnhancedWeaviateDB) -> None:
     """Run sample queries to verify search functionality."""
     console.print("\n[bold blue]Sample Queries[/bold blue]")
 
@@ -96,45 +96,56 @@ def run_sample_queries(db: WeaviateJudgmentsDatabase) -> None:
         task = progress.add_task("Running sample queries...", start=False)
         progress.start_task(task)
 
-        # Query on judgments collection
-        judgments = db.judgments_collection
-        response = judgments.query.fetch_objects(limit=3)
+        # Query on legal documents collection
+        legal_docs = db.legal_documents_collection
+        response = legal_docs.query.fetch_objects(limit=3)
 
-        console.print("[yellow]Sample Judgments:[/yellow]")
+        console.print("[yellow]Sample Legal Documents:[/yellow]")
         for obj in response.objects:
-            assert obj.properties.get("judgment_id"), "judgment_id is not set"
+            assert obj.properties.get("document_id"), "document_id is not set"
             print(obj.properties)
 
-        console.print("\n[yellow]Sample Filtered Judgments by Court:[/yellow]")
-        response = judgments.query.fetch_objects(limit=3, include_vector=True)
+        console.print("\n[yellow]Sample Documents with Vectors:[/yellow]")
+        response = legal_docs.query.fetch_objects(limit=3, include_vector=True)
         for obj in response.objects:
-            assert obj.properties.get("judgment_id"), "judgment_id is not set"
+            assert obj.properties.get("document_id"), "document_id is not set"
             assert obj.vector is not None and len(obj.vector) > 0, "Vector is empty"
             print(obj.properties)
-            print(obj.vector)
+            print(f"Vector dimensions: {len(obj.vector)}")
 
-        # Hybrid search on judgments collection
+        # Hybrid search on legal documents collection
         query = "Sprawa dotyczy narkotyków"  # Case involves drugs
         model = SentenceTransformer("sdadas/mmlw-roberta-large")
-        query_vector = model.encode(query)
+        query_vector = model.encode(query).tolist()  # Convert numpy array to list
 
-        response = judgments.query.hybrid(query=query, vector=query_vector, limit=3)
+        response = legal_docs.query.hybrid(
+            query=query,
+            alpha=0.5,  # Balance between vector and keyword search
+            vector=query_vector,
+            target_vector="base",
+            limit=3,
+        )
 
-        console.print("\n[yellow]Sample Hybrid Search Results on Judgments:[/yellow]")
+        console.print("\n[yellow]Sample Hybrid Search Results on Legal Documents:[/yellow]")
         console.print(f"Query: {query}")
         for obj in response.objects:
-            assert obj.properties.get("judgment_id"), "judgment_id is not set"
+            assert obj.properties.get("document_id"), "document_id is not set"
             print(obj.properties)
 
         # Semantic search on chunks
-        chunks = db.judgment_chunks_collection
-
-        response = chunks.query.hybrid(query=query, limit=3)
+        chunks = db.document_chunks_collection
+        response = chunks.query.hybrid(
+            query=query,
+            alpha=0.5,  # Balance between vector and keyword search
+            vector=query_vector,
+            target_vector="base",
+            limit=3,
+        )
 
         console.print("\n[yellow]Sample Semantic Search Results on Chunks:[/yellow]")
         console.print(f"Query: {query}")
         for obj in response.objects:
-            assert obj.properties.get("judgment_id"), "judgment_id is not set"
+            assert obj.properties.get("document_id"), "document_id is not set"
             print(obj.properties)
 
         progress.stop_task(task)
@@ -149,14 +160,14 @@ def main() -> None:
 
     console.print("[bold green]Starting Weaviate Ingestion Test[/bold green]")
     console.print(
-        f"Connecting to Weaviate at {os.environ['WV_URL']}:{os.environ['WV_PORT']} (gRPC: {os.environ['WV_GRPC_PORT']})"
+        f"Connecting to Weaviate at {os.environ['WV_HOST']}:{os.environ['WV_PORT']} (gRPC: {os.environ['WV_GRPC_PORT']})"
     )
 
-    with WeaviateJudgmentsDatabase(
-        os.environ["WV_URL"],
+    with EnhancedWeaviateDB(
+        os.environ["WV_HOST"],
         os.environ["WV_PORT"],
         os.environ["WV_GRPC_PORT"],
-        os.environ["WV_API_KEY"],
+        os.environ.get("WV_API_KEY"),
     ) as db:
         # Print all collections
         print_collections(db)
