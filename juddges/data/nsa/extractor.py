@@ -76,7 +76,7 @@ FIELD_MAP = {
     "Treść wyniku": "decision",
     "Publikacja w u.z.o.": "official_collection",
     "Info. o glosach": "glosa_information",
-    "Sentencja": "full_text",
+    "Sentencja": "sentence",
     "Uzasadnienie": "reasons_for_judgment",
     "Tezy": "thesis",
     "Zdanie odrębne": "dissenting_opinion",
@@ -107,9 +107,10 @@ ORDER = [
     "official_collection",
     "glosa_information",
     "thesis",
-    "full_text",
+    "sentence",
     "reasons_for_judgment",
     "dissenting_opinion",
+    "full_text",
 ]
 
 # Fields that should be treated as lists
@@ -173,9 +174,10 @@ PYARROW_SCHEMA = pa.schema(
         ("official_collection", pa.list_(pa.string()), True),
         ("glosa_information", pa.list_(pa.string()), True),
         ("thesis", pa.large_string(), True),
-        ("full_text", pa.large_string(), True),
+        ("sentence", pa.large_string(), True),
         ("reasons_for_judgment", pa.large_string(), True),
         ("dissenting_opinion", pa.large_string(), True),
+        ("full_text", pa.large_string(), True),
     ]
 )
 
@@ -196,7 +198,7 @@ class NSADataExtractor:
     def __init__(self) -> None:
         """Initialize the extractor and validate field mappings."""
         assert (set(FIELD_MAP.values()) - set(ORDER)) == {"journal", "law", "article", "link"}
-        assert (set(ORDER) - set(FIELD_MAP.values())) == set()
+        assert (set(ORDER) - set(FIELD_MAP.values())) == {"full_text"}
 
     def extract_data_from_pages(
         self, pages: Sequence[str], doc_ids: Sequence[str], n_jobs: int | None = None
@@ -283,6 +285,7 @@ class NSADataExtractor:
             | self._extract_table(soup)
             | self._extract_text_sections(soup)
         )
+        extracted_data["full_text"] = self._get_full_text(extracted_data)
         assert set(extracted_data.keys()) - set(ORDER) == set()
         extracted_data = {k: extracted_data[k] for k in ORDER if k in extracted_data}
         return extracted_data
@@ -460,3 +463,26 @@ class NSADataExtractor:
         """Convert date string to timestamp in Warsaw timezone."""
         date = pd.to_datetime(date_str)
         return WARSAW_TZ.localize(date)
+
+    def _get_full_text(self, extracted_data: dict[str, Any]) -> str:
+        """Get full text from the judgment."""
+        thesis = extracted_data.get("thesis", None)
+        sentence = extracted_data.get("sentence", None)
+        reasons_for_judgment = extracted_data.get("reasons_for_judgment", None)
+        dissenting_opinion = extracted_data.get("dissenting_opinion", None)
+        template = "{header}\n\n{text}"
+        if thesis is not None:
+            thesis = template.format(header="TEZY", text=thesis)
+        if sentence is not None:
+            sentence = template.format(header="SENTENCJA", text=sentence)
+        if reasons_for_judgment is not None:
+            reasons_for_judgment = template.format(header="UZASADNIENIE", text=reasons_for_judgment)
+        if dissenting_opinion is not None:
+            dissenting_opinion = template.format(header="ZDANIE ODRĘBNE", text=dissenting_opinion)
+        return "\n\n\n".join(
+            [
+                item
+                for item in [thesis, sentence, reasons_for_judgment, dissenting_opinion]
+                if item is not None
+            ]
+        )

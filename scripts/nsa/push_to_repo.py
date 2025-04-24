@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 import typer
@@ -28,6 +29,32 @@ def main(
         repo_type="dataset",
         delete_patterns="*.parquet",
     )
+
+    # Generate the dataset card README
+    logger.info("Generating dataset card README")
+
+    cmd = [
+        "jupyter",
+        "nbconvert",
+        "--no-input",
+        "--to",
+        "markdown",
+        "--execute",
+        "nbs/Dataset Cards/04_Dataset_Description_NSA.ipynb",
+        "--output-dir",
+        str(DATASET_CARD_DIR),
+        "--output",
+        "README",
+    ]
+    try:
+        result = subprocess.run(cmd, check=True, capture_output=True)
+        logger.info(f"Successfully generated README: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to generate README: {e.output}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error generating README: {str(e)}")
+        raise
 
     card_data = DatasetCardData(
         language="pl",
