@@ -6,6 +6,8 @@ from loguru import logger
 import weaviate
 from juddges.data.base_weaviate_db import BaseWeaviateDB
 from juddges.data.schemas import (
+    DocumentChunk,
+    LegalDocument,
     LegalDocumentSchema,
     LegalDocumentSectionSchema,
     LegalDocumentSentenceSchema,

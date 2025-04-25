@@ -276,7 +276,7 @@ class DocumentChunk(BaseModel):
     y: Optional[float] = None
 
 
-class LegalDocument(BaseModel):
+class LegalDocument(BaseModel): 
     """Base schema for all legal documents."""
     # Common fields across document types
     document_id: str = Field(description="Unique identifier")
