@@ -81,15 +81,15 @@ stages:
   sft:
     matrix: &sft_models
       llm_dataset:
-        - dataset: pl-court-frankowe-instruct
+        - dataset: pl_court_swiss_franc_loans
           llm: llama_3.1_8b_instruct
-        - dataset: pl-court-frankowe-instruct
+        - dataset: pl_court_swiss_franc_loans
           llm: llama_3.2_3b_instruct
-        - dataset: pl-court-frankowe-instruct
+        - dataset: pl_court_swiss_franc_loans
           llm: mistral_nemo_instruct_2407
-        - dataset: pl-court-frankowe-instruct
+        - dataset: pl_court_swiss_franc_loans
           llm: pllum_12b_instruct
-        - dataset: pl-court-frankowe-instruct
+        - dataset: pl_court_swiss_franc_loans
           llm: phi_4
         - dataset: en-appealcourt-coded-instruct
           llm: llama_3.1_8b_instruct
