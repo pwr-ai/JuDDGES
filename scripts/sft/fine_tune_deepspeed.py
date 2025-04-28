@@ -142,7 +142,6 @@ def get_trainer(
         processing_class=tokenizer,
         args=sft_config,
         train_dataset=dataset,
-        tokenizer=tokenizer,
         peft_config=peft_config,
     )
 
