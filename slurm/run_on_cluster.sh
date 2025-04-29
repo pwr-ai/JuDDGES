@@ -117,12 +117,12 @@ if [ "$stage" = "sft" ]; then
         --mixed_precision=bf16 \
         --dynamo_backend=no \
         scripts/sft/fine_tune_deepspeed.py \
-            model=${model} \
+            llm=${model} \
             dataset=${dataset} \
     "
 else
     export COMMAND="python scripts/sft/predict.py \
-        model=${model} \
+        llm=${model} \
         dataset=${dataset} \
         random_seed=${random_seed}
     "
