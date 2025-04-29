@@ -82,7 +82,7 @@ verdict_tags: List[string]"""
 
 SWISS_FRANC_LOAN_SCHEMA = dedent("""
     apelacja: string, description: "Określenie apelacji, w której znajduje się sąd rozpoznający sprawę", example: "Apelacja warszawska"
-    typ_sadu: enum [Sąd Rejonowy, Sąd Okręgowy, Sąd Frankowy], description: "Typ sądu rozpoznającego sprawę", example: "Sąd Rejonowy"
+    typ_sadu: enum [Sąd Rejonowy, Sąd Okręgowy, Sąd Frankowy, Sąd Apelacyjny], description: "Typ sądu rozpoznającego sprawę", example: "Sąd Rejonowy"
     instancja_sadu: enum [Sąd I instancji, Sąd odwoławczy], description: "Czy sąd jest I instancji czy odwoławczy", example: "Sąd I instancji"
     podstawa_prawna: string, description: "Podstawa prawna roszczenia", example: "Art. 385(1) Kodeksu cywilnego"
     podstawa_prawna_podana: boolean, description: "Czy powód podał podstawę prawną?", example: true

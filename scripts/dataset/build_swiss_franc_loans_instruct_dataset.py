@@ -2,15 +2,18 @@ import hashlib
 import json
 from pathlib import Path
 from textwrap import dedent
+from typing import Any
 
 import pandas as pd
 import typer
 import yaml
+from loguru import logger
 from tabulate import tabulate
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer
 
-from juddges.utils.misc import log_size_change
+from juddges.prompts.information_extraction import SWISS_FRANC_LOAN_SCHEMA
+from juddges.utils.misc import log_size_change, parse_ie_schema, validate_yaml
 
 YAML_OUTPUT = "```yaml\n{label}\n```"
 INSTRUCTION_TEMPLATE = """
@@ -41,6 +44,8 @@ def main(
     tokenizer_name: str = typer.Option(DEFAULT_TOKENIZER_NAME, help="Name of the tokenizer to use"),
     output_dir: Path = typer.Option(..., help="Path to the output directory"),
 ) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     train_df = pd.read_pickle(train_ds_path)
     test_df = pd.read_pickle(test_ds_path)
 
@@ -49,11 +54,33 @@ def main(
     train_df = remove_duplicates(train_df)
     test_df = remove_duplicates(test_df)
 
-    schema = train_df["schema"][0]
+    # assert train_df["schema"][0] == SWISS_FRANC_LOAN_SCHEMA
+    schema = parse_ie_schema(SWISS_FRANC_LOAN_SCHEMA)
     instruction_template = dedent(INSTRUCTION_TEMPLATE).strip()
 
-    train_instruct_dataset = format_instruction(train_df, instruction_template, schema)
-    test_instruct_dataset = format_instruction(test_df, instruction_template, schema)
+    train_instruct_dataset = format_instruction(
+        train_df,
+        instruction_template,
+        schema,
+        SWISS_FRANC_LOAN_SCHEMA,
+    )
+    original_train_size = len(train_instruct_dataset)
+    train_instruct_dataset = filter_by_schema_mismatch(schema, train_instruct_dataset)
+    logger.info(
+        f"Filtered {original_train_size - len(train_instruct_dataset)} items out of {original_train_size}"
+    )
+
+    test_instruct_dataset = format_instruction(
+        test_df,
+        instruction_template,
+        schema,
+        SWISS_FRANC_LOAN_SCHEMA,
+    )
+    original_test_size = len(test_instruct_dataset)
+    test_instruct_dataset = filter_by_schema_mismatch(schema, test_instruct_dataset)
+    logger.info(
+        f"Filtered {original_test_size - len(test_instruct_dataset)} items out of {original_test_size}"
+    )
 
     if threshold_tokens is not None:
         train_instruct_dataset = filter_by_num_tokens(
@@ -105,17 +132,17 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
 def format_instruction(
     df: pd.DataFrame,
     instruction_template: str,
-    schema: list[str],
+    schema: dict[str, dict[str, Any]],
+    schema_formatted: str,
 ) -> list[dict[str, str]]:
-    schema_keys = [key.split(":")[0] for key in schema.splitlines()]
     instruct_dataset = []
     for _, item in tqdm(df.iterrows(), total=len(df), desc="Generating instructions"):
         gold = YAML_OUTPUT.format(
-            label=yaml.dump({key: item[key] for key in schema_keys}, allow_unicode=True)
+            label=yaml.dump({key: item[key] for key in schema.keys()}, allow_unicode=True)
         )
         instruct_dataset.append(
             {
-                "prompt": instruction_template.format(schema=schema),
+                "prompt": instruction_template.format(schema=schema_formatted),
                 "context": item["text"],
                 "output": gold,
             }
@@ -135,6 +162,13 @@ def filter_by_num_tokens(
         return_length=True,
     )["length"]
     return [item for item, length in zip(dataset, lengths) if length <= threshold_tokens]
+
+
+def filter_by_schema_mismatch(
+    schema: dict[str, dict[str, Any]],
+    dataset: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    return [item for item in dataset if validate_yaml(item["output"], schema)["num_errors"] == 0]
 
 
 if __name__ == "__main__":
