@@ -8,6 +8,7 @@ from pathlib import Path
 from pprint import pformat
 
 import hydra
+import numpy as np
 from accelerate import PartialState
 from datasets import (
     Dataset,
@@ -99,14 +100,13 @@ def prepare_dataset(
         truncator = ContextTruncator(tokenizer, max_length)
 
         dataset = dataset.map(
-            lambda x: {
-                "context": truncator(
-                    x[dataset_prompt_field], x[dataset_context_field], x[dataset_output_field]
-                )
-            },
+            lambda x: truncator(
+                x[dataset_prompt_field], x[dataset_context_field], x[dataset_output_field]
+            ),
             desc="Truncating context",
             num_proc=num_proc,
         )
+        _log_truncation_stats(dataset)
 
     dataset = dataset.map(
         lambda x: format_to_conversations(
@@ -133,8 +133,10 @@ def get_trainer(
     )
 
     if config.use_peft:
+        logger.info(f"Using PEFT with config: {config.peft_args}")
         peft_config = LoraConfig(**config.peft_args)
     else:
+        logger.info("Full fine-tuning, without PEFT")
         peft_config = None
 
     trainer = SFTTrainer(
@@ -146,6 +148,17 @@ def get_trainer(
     )
 
     return trainer
+
+
+def _log_truncation_stats(dataset: Dataset) -> None:
+    mean_num_truncated_tokens = np.mean(dataset["num_truncated_tokens"]).item()
+    std_num_truncated_tokens = np.std(dataset["num_truncated_tokens"]).item()
+    mean_truncated_ratio = np.mean(dataset["truncated_ratio"]).item()
+    std_truncated_ratio = np.std(dataset["truncated_ratio"]).item()
+    logger.info(
+        f"Average number of truncated tokens: {mean_num_truncated_tokens:.2f} ± {std_num_truncated_tokens:.2f}"
+    )
+    logger.info(f"Average truncated ratio: {mean_truncated_ratio:.2f} ± {std_truncated_ratio:.2f}")
 
 
 main()
