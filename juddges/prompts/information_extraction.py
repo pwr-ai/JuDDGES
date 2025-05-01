@@ -19,8 +19,8 @@ def load_prompt_from_yaml(path: Path) -> str:
     return dedent(yaml.safe_load(path.read_text())["content"]).strip()
 
 
-SCHEMA_PROMPT_TEMPLATE = load_prompt_from_yaml(PROMPTS_PATH / "schema.yaml")
-EXTRACTION_PROMPT_TEMPLATE = load_prompt_from_yaml(PROMPTS_PATH / "extraction.yaml")
+SCHEMA_PROMPT_TEMPLATE = load_prompt_from_yaml(PROMPTS_PATH / "schema_derivation.yaml")
+EXTRACTION_PROMPT_TEMPLATE = load_prompt_from_yaml(PROMPTS_PATH / "info_extraction_json.yaml")
 
 
 def prepare_information_extraction_chain_from_user_prompt() -> RunnableSequence:
@@ -41,7 +41,7 @@ def prepare_information_extraction_chain(
     human_message_template = HumanMessagePromptTemplate.from_template(EXTRACTION_PROMPT_TEMPLATE)
     _prompt = ChatPromptTemplate(
         messages=[human_message_template],
-        input_variables=["TEXT", "LANGUAGE", "SCHEMA"],
+        input_variables=["language", "schema", "context"],
     )
 
     if log_to_mlflow:

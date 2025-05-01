@@ -107,7 +107,11 @@ def prepare_dataset(
         _log_truncation_stats(dataset)
 
     formatter = ConversationFormatter(
+        tokenizer=tokenizer,
         config=config,
+        dataset_context_field=config.dataset.context_field,
+        dataset_output_field=config.dataset.output_field,
+        use_output=True,
     )
     dataset = dataset.map(
         formatter,

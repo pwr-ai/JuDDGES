@@ -12,7 +12,7 @@ content: |
       plea: string
 
   ====
-  {SCHEMA_TEXT}
+  {schema_text}
   ====
 
   Format response as JSON:
