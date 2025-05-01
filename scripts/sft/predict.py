@@ -46,7 +46,6 @@ def main(cfg: DictConfig) -> None:
     config.output_dir.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(config.dataset.name, split="test")
-    ds = ds.select(range(40))
     ds, reverse_sort_idx = sort_dataset_by_input_length(ds, config.dataset.context_field)
     logger.info("Loading model...")
 
