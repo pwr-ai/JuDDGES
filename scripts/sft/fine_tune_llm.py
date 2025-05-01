@@ -28,7 +28,7 @@ from trl import SFTConfig, SFTTrainer
 from juddges.config import FineTuningConfig
 from juddges.llm.factory import get_llm
 from juddges.preprocessing.context_truncator import ContextTruncator
-from juddges.preprocessing.formatter import format_to_conversations
+from juddges.preprocessing.formatters import format_to_conversations
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 

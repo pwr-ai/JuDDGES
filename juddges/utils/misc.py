@@ -1,5 +1,5 @@
 import re
-from collections import defaultdict
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -83,6 +83,12 @@ def parse_yaml(text: str) -> Any:
         yaml_str = text
 
     return yaml.safe_load(yaml_str)
+
+
+def save_yaml(data: Any, path: Path) -> None:
+    """Saves a dictionary to a YAML file."""
+    with open(path, "w") as f:
+        yaml.safe_dump(data, f)
 
 
 def sort_dataset_by_input_length(ds: Dataset, field: str) -> tuple[Dataset, list[int]]:

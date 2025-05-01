@@ -1,6 +1,0 @@
-name: JuDDGES/en-court-instruct
-prompt_field: prompt
-context_field: context
-output_field: output
-
-max_output_tokens: 300

@@ -1,7 +1,30 @@
+import json
+from functools import cached_property
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
+import jinja2
 from pydantic import BaseModel, Field
+
+
+class PromptInfoExtractionConfig(BaseModel, extra="forbid"):
+    """Configuration class for prompt."""
+
+    language: Literal["pl", "en"]
+    ie_schema: dict[str, dict[str, Any]]
+    content: str
+
+    @cached_property
+    def template(self) -> jinja2.Template:
+        return jinja2.Template(self.content)
+
+    def render(self, context: str) -> str:
+        schema_str = json.dumps(self.ie_schema, indent=2)
+        return self.template.render(
+            language=self.language,
+            schema=schema_str,
+            context=context,
+        ).strip()
 
 
 class LLMConfig(BaseModel, extra="forbid"):
@@ -24,11 +47,16 @@ class EmbeddingModelConfig(BaseModel, extra="forbid"):
     max_seq_length: int
 
 
-class DatasetConfig(BaseModel, extra="forbid"):
-    """Configuration class for instructions dataset."""
+class DatasetInfoExtractionConfig(BaseModel, extra="forbid"):
+    """Configuration class for instructions dataset for information extraction."""
 
     name: str
-    prompt_field: str
+    language: Literal["pl", "en"]
+    prompt_field: str | None = Field(
+        default=None,
+        deprecated=True,
+        desc="Legacy, prompt now is defined outside",
+    )
     context_field: str
     output_field: str
     max_output_tokens: int
@@ -44,7 +72,9 @@ class RawDatasetConfig(BaseModel, extra="forbid"):
 
 class FineTuningConfig(BaseModel, extra="forbid"):
     llm: LLMConfig
-    dataset: DatasetConfig
+    dataset: DatasetInfoExtractionConfig
+    prompt: PromptInfoExtractionConfig
+    ie_schema: dict[str, dict[str, Any]]
     max_context_size: int
     training_args: dict[str, Any]
     peft_args: dict[str, Any] | None
@@ -59,14 +89,30 @@ class FineTuningConfig(BaseModel, extra="forbid"):
         return self.peft_args is not None
 
 
-class PredictConfig(BaseModel, extra="forbid"):
+class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     llm: LLMConfig
-    dataset: DatasetConfig
+    dataset: DatasetInfoExtractionConfig
+    prompt: PromptInfoExtractionConfig
+    ie_schema: dict[str, dict[str, Any]]
     device_map: str
-    output_file: Path
+    output_dir: Path
     truncate_context: bool
     generate_kwargs: dict[str, Any] = Field(default_factory=dict)
     random_seed: int
 
-    def get_max_input_length(self, max_position_embeddings: int) -> int:
+    @property
+    def output_file(self) -> Path:
+        return self.output_dir / "outputs.jsonl"
+
+    @property
+    def dataset_file(self) -> Path:
+        """Path to the file with final inputs."""
+        return self.output_dir / "dataset.json"
+
+    @property
+    def config_file(self) -> Path:
+        """Path to the file with config."""
+        return self.output_dir / "config.yaml"
+
+    def get_max_input_length_accounting_for_output(self, max_position_embeddings: int) -> int:
         return max_position_embeddings - self.dataset.max_output_tokens

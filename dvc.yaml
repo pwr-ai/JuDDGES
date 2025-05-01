@@ -83,31 +83,43 @@ stages:
       llm_dataset:
         - dataset: pl_court_swiss_franc_loans
           llm: llama_3.1_8b_instruct
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans
         - dataset: pl_court_swiss_franc_loans
           llm: llama_3.2_3b_instruct
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans
         - dataset: pl_court_swiss_franc_loans
           llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans
         - dataset: pl_court_swiss_franc_loans
           llm: pllum_12b_instruct
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans
         - dataset: pl_court_swiss_franc_loans
           llm: phi_4
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans
         - dataset: en-appealcourt-coded-instruct
           llm: llama_3.1_8b_instruct
-        - dataset: en-appealcourt-coded-instruct
-          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py
       dataset=${item.llm_dataset.dataset}
       llm=${item.llm_dataset.llm}
+      prompt=${item.llm_dataset.prompt}
+      ie_schema=${item.llm_dataset.ie_schema}
     deps:
       - scripts/sft/fine_tune_deepspeed.py
       - configs/peft_fine_tuning.yaml
       - configs/llm/${item.llm_dataset.llm}.yaml
     outs:
-      - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/
+      - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
 
   ### ---------------------------- Prediction ---------------------------- ###
-  predict:
+  predict_swiss_franc_loans:
     matrix:
       <<: *sft_models
       seed: ${seeds}
@@ -115,13 +127,18 @@ stages:
       PYTHONPATH=. python scripts/sft/predict.py
       dataset=${item.llm_dataset.dataset}
       llm=${item.llm_dataset.llm}
+      prompt=${item.llm_dataset.prompt}
+      ie_schema=${item.llm_dataset.ie_schema}
       random_seed=${item.seed}
     deps:
       - scripts/sft/predict.py
       - configs/predict.yaml
       - configs/llm/${item.llm_dataset.llm}.yaml
+      - configs/prompt/${item.llm_dataset.prompt}.yaml
+      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
     outs:
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/outputs_${item.seed}.json
+      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/${item.seed}/outputs.json
+      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/${item.seed}/dataset.json
 
   predict_on_fine_tuned:
     matrix:

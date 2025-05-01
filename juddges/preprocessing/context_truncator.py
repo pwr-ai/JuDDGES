@@ -7,17 +7,18 @@ from tokenizers.implementations import BaseTokenizer
 
 
 class ContextTruncatorBase(ABC):
-    def __init__(self, max_length: int):
+    def __init__(self, prompt_without_context: str, max_length: int):
         self.max_length = max_length
+        self.prompt_without_context = prompt_without_context
 
     @abstractmethod
-    def __call__(self, prompt: str, context: str, output: str | None = None) -> dict[str, Any]:
+    def __call__(self, context: str, output: str | None = None) -> str:
         """Truncates and returns the inner context of the input."""
 
 
 class ContextTruncator(ContextTruncatorBase):
-    def __init__(self, tokenizer: BaseTokenizer, max_length: int):
-        super().__init__(max_length)
+    def __init__(self, prompt_without_context: str, tokenizer: BaseTokenizer, max_length: int):
+        super().__init__(prompt_without_context, max_length)
         self.tokenizer = tokenizer
 
         empty_messages = [
@@ -32,20 +33,22 @@ class ContextTruncator(ContextTruncatorBase):
         except ValueError:
             self.empty_messages_length = 0
 
-    def __call__(self, prompt: str, context: str, output: str | None = None) -> dict[str, Any]:
+        self.prompt_length = self.tokenizer(
+            [self.prompt_without_context], return_length=True, add_special_tokens=False
+        )["length"][0]
+
+    def __call__(self, context: str, output: str | None = None) -> str:
         if output:
-            prompt_length, output_length = self.tokenizer(
-                [prompt, output], return_length=True, add_special_tokens=False
-            )["length"]
+            output_length = self.tokenizer([output], return_length=True, add_special_tokens=False)[
+                "length"
+            ][0]
         else:
-            prompt_length, output_length = (
-                self.tokenizer([prompt], return_length=True, add_special_tokens=False)["length"][0],
-                0,
-            )
+            output_length = 0
 
         max_context_length = (
-            self.max_length - prompt_length - output_length - self.empty_messages_length
+            self.max_length - self.prompt_length - output_length - self.empty_messages_length
         )
+        if max_context_length <= 0:
         if max_context_length <= 0:
             warnings.warn(
                 f"Context was truncated to 0 tokens. "
@@ -71,22 +74,22 @@ class ContextTruncator(ContextTruncatorBase):
 class ContextTruncatorTiktoken(ContextTruncatorBase):
     """Simplified context truncation for OpenAI models."""
 
-    def __init__(self, model: str, max_length: int):
-        super().__init__(max_length)
+    def __init__(self, prompt_without_context: str, model: str, max_length: int):
+        super().__init__(prompt_without_context, max_length)
 
         warnings.warn("Truncator for OpenAI doesn't account for special tokens!")
         self.model = model
         self.tokenizer = tiktoken.encoding_for_model(model)
 
-    def __call__(self, prompt: str, context: str, output: str | None = None) -> dict[str, Any]:
-        prompt_length = len(self.tokenizer.encode(prompt))
+        self.prompt_length = len(self.tokenizer.encode(self.prompt_without_context))
 
+    def __call__(self, context: str, output: str | None = None) -> str:
         if output is not None:
             output_length = len(self.tokenizer.encode(output))
         else:
             output_length = 0
 
-        context_length = self.max_length - prompt_length - output_length
+        context_length = self.max_length - self.prompt_length - output_length
         if context_length <= 0:
             raise ValueError("Prompt and output too long to keep the context!")
 
