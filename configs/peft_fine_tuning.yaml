@@ -49,8 +49,8 @@ truncate_context: False
 wandb_entity: graph-ml-lab-wust
 wandb_project: juddges-fine-tune
 
-output_dir: data/experiments/peft-fine-tune/${hydra:runtime.choices.llm}/${hydra:runtime.choices.dataset}
-run_name: ${hydra:runtime.choices.llm}_${hydra:runtime.choices.dataset}_fine_tune
+output_dir: data/experiments/peft-fine-tune/${hydra:runtime.choices.llm}/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.prompt}/${hydra:runtime.choices.ie_schema}
+run_name: ${hydra:runtime.choices.llm}_${hydra:runtime.choices.dataset}_${hydra:runtime.choices.prompt}_${hydra:runtime.choices.ie_schema}_fine_tune
 
 hydra:
   output_subdir: null
