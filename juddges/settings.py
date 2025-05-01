@@ -15,6 +15,7 @@ LOGS_PATH = ROOT_PATH / "logs"
 
 DATA_PATH = ROOT_PATH / "data"
 CONFIG_PATH = ROOT_PATH / "configs"
+PROMPTS_PATH = CONFIG_PATH / "prompt"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
 FRANKOWICZE_DATA_PATH = DATA_PATH / "analysis" / "sprawy_frankowe"

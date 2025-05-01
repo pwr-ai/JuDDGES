@@ -1,6 +1,8 @@
 defaults:
   - llm: ???
   - dataset: ???
+  - prompt: ???
+  - ie_schema: ???
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
@@ -8,8 +10,12 @@ defaults:
 llm:
   batch_size: 1 # always use the same batch_size for reproducibility
 
+prompt:
+  language: ${dataset.language}
+  ie_schema: ${ie_schema}
+
 device_map: 'auto'
-output_file: data/experiments/predict/raw/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.llm}/outputs_${random_seed}.json
+output_dir: data/experiments/predict/raw/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.llm}/${hydra:runtime.choices.prompt}/${hydra:runtime.choices.ie_schema}/${hydra:runtime.choices.random_seed}
 truncate_context: True
 generate_kwargs:
   max_new_tokens: ${dataset.max_output_tokens}

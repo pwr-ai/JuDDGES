@@ -1,4 +1,5 @@
-name: data/datasets/pl/swiss_franc_loans
+name: data/datasets/pl/sprawy_frankowe
+language: pl
 prompt_field: prompt
 context_field: context
 output_field: output

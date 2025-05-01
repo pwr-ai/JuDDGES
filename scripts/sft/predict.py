@@ -5,18 +5,20 @@ from pprint import pformat
 
 import hydra
 import torch
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 from loguru import logger
 from omegaconf import DictConfig
 from transformers import set_seed
 
-from juddges.config import PredictConfig
-from juddges.llm.factory import get_llm
+from juddges.config import PredictInfoExtractionConfig
+from juddges.llm.factory import ModelPack, get_llm
 from juddges.llm.predict import predict_with_llm
-from juddges.preprocessing.text_encoder import TextEncoderForEval
+from juddges.preprocessing.context_truncator import ContextTruncator
+from juddges.preprocessing.formatters import ConversationFormatter
+from juddges.preprocessing.text_encoder import TokenizerEncoder
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
-from juddges.utils.misc import sort_dataset_by_input_length
+from juddges.utils.misc import save_yaml, sort_dataset_by_input_length
 
 torch.set_float32_matmul_precision("high")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -39,10 +41,10 @@ def main(cfg: DictConfig) -> None:
         ...
     ]
     """
-    config = PredictConfig(**resolve_config(cfg))
+    config = PredictInfoExtractionConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
-    output_file = Path(config.output_file)
+    output_file = Path(config.output_dir)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(config.dataset.name, split="test")
@@ -54,25 +56,15 @@ def main(cfg: DictConfig) -> None:
     assert not any(key in model_pack.generate_kwargs for key in config.generate_kwargs.keys())
     model_pack.generate_kwargs |= config.generate_kwargs
 
-    if config.llm.use_unsloth:
-        from unsloth import FastLanguageModel
-
-        FastLanguageModel.for_inference(model_pack.model)
-    else:
-        model_pack.model.eval()
-        # model_pack.model.compile()  # might cause libcuda.so not found error
+    model_pack.model.eval()
+    # model_pack.model.compile()  # might cause libcuda.so not found error
 
     if config.llm.batch_size > 1 and config.llm.padding is False:
         raise ValueError("Padding has to be enabled if batch size > 1.")
 
     gold_outputs = [item["output"] for item in ds]
 
-    encoder = TextEncoderForEval(
-        tokenizer=model_pack.tokenizer,
-        max_length=config.get_max_input_length(model_pack.model.config.max_position_embeddings),
-        padding=config.llm.padding,
-    )
-    ds.set_transform(encoder, columns=["prompt", "context"])
+    ds = prepare_and_save_dataset_for_prediction(dataset=ds, config=config, model_pack=model_pack)
 
     set_seed(config.random_seed)
     model_outputs = predict_with_llm(
@@ -89,6 +81,60 @@ def main(cfg: DictConfig) -> None:
 
     with open(output_file, "w") as f:
         json.dump(results, f, indent="\t", ensure_ascii=False)
+
+    save_yaml(config.model_dump(), config.config_file)
+
+
+def prepare_and_save_dataset_for_prediction(
+    dataset: Dataset,
+    config: PredictInfoExtractionConfig,
+    model_pack: ModelPack,
+) -> Dataset:
+    max_input_length = config.get_max_input_length_accounting_for_output(
+        model_pack.model.config.max_position_embeddings
+    )
+    context_truncator = ContextTruncator(
+        prompt_without_context=config.prompt.render(context=""),
+        tokenizer=model_pack.tokenizer,
+        max_length=max_input_length,
+    )
+    dataset = dataset.map(
+        lambda x: {"context": context_truncator(x["context"])},
+        batched=True,
+        desc="Truncating context",
+        num_proc=NUM_PROC,
+    )
+
+    formatter = ConversationFormatter(
+        prompt=config.prompt,
+        dataset_context_field=config.dataset.context_field,
+        dataset_output_field=None,
+        use_output=False,
+    )
+    dataset = dataset.map(
+        formatter,
+        batched=False,
+        remove_columns=dataset.column_names,
+        desc="Formatting dataset",
+        num_proc=NUM_PROC,
+    )
+
+    logger.info(f"Saving dataset to {config.dataset_file}")
+    logger.info(f"Example item:\n{pformat(dataset[0])}")
+    dataset.to_json(config.dataset_file)
+
+    tokenizer_encoder = TokenizerEncoder(
+        final_input_field=formatter.FORMATTED_FIELD,
+        tokenizer=model_pack.tokenizer,
+    )
+    dataset = dataset.map(
+        tokenizer_encoder,
+        batched=True,
+        desc="Tokenizing dataset",
+        num_proc=NUM_PROC,
+    )
+
+    return dataset
 
 
 if __name__ == "__main__":

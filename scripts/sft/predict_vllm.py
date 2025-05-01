@@ -10,7 +10,7 @@ from loguru import logger
 from omegaconf import DictConfig
 from vllm import LLM, SamplingParams
 
-from juddges.config import PredictConfig
+from juddges.config import PredictInfoExtractionConfig
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.text_encoder import TextEncoderForEvalPlainTextFormat
 from juddges.settings import CONFIG_PATH
@@ -24,10 +24,10 @@ NUM_PROC = int(os.getenv("NUM_PROC", 1))
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
 @torch.inference_mode()
 def main(cfg: DictConfig) -> None:
-    config = PredictConfig(**resolve_config(cfg))
+    config = PredictInfoExtractionConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
-    output_file = Path(config.output_file)
+    output_file = Path(config.output_dir)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(config.dataset.name, split="test")

@@ -1,0 +1,229 @@
+apelacja:
+  type: string
+  description: "Określenie apelacji, w której znajduje się sąd rozpoznający sprawę"
+  example: "Apelacja warszawska"
+
+typ_sadu:
+  type: enum
+  values: [Sąd Rejonowy, Sąd Okręgowy, Sąd Frankowy]
+  description: "Typ sądu rozpoznającego sprawę"
+  example: "Sąd Rejonowy"
+
+instancja_sadu:
+  type: enum
+  values: [Sąd I instancji, Sąd odwoławczy]
+  description: "Czy sąd jest I instancji czy odwoławczy"
+  example: "Sąd I instancji"
+
+podstawa_prawna:
+  type: string
+  description: "Podstawa prawna roszczenia"
+  example: "Art. 385(1) Kodeksu cywilnego"
+
+podstawa_prawna_podana:
+  type: boolean
+  description: "Czy powód podał podstawę prawną?"
+  example: true
+
+rodzaj_roszczenia:
+  type: enum
+  values: [O ustalenie istnienia/nieistnienia stosunku prawnego, O ukształtowanie stosunku prawnego, O zapłatę, Roszczenia dodatkowe]
+  description: "Rodzaj roszczenia"
+  example: "O zapłatę"
+
+modyfikacje_powodztwa:
+  type: boolean
+  description: "Czy były modyfikacje powództwa"
+  example: true
+
+typ_modyfikacji:
+  type: enum
+  values: [Rodzaj roszczenia, Kwoty roszczenia]
+  description: "Typ modyfikacji powództwa"
+  example: "Kwoty roszczenia"
+
+status_kredytobiorcy:
+  type: enum
+  values: [Konsument, Przedsiębiorca]
+  description: "Status kredytobiorcy"
+  example: "Konsument"
+
+wspoluczestnictwo_powodowe:
+  type: boolean
+  description: "Czy współuczestnictwo po stronie powodowej"
+  example: false
+
+typ_wspoluczestnictwa:
+  type: enum
+  values: [Małżeństwo, Konkubinat, Inni członkowie rodziny, Spadkobiercy]
+  description: "Rodzaj współuczestnictwa"
+  example: "Małżeństwo"
+
+rola_pozwanego:
+  type: enum
+  values: [Strona umowy, Następca prawny]
+  description: "Czy pozwany faktycznie był stroną umowy czy następcą prawnym"
+  example: "Strona umowy"
+
+wczesniejsze_skargi_do_rzecznika:
+  type: boolean
+  description: "Czy były uprzednie skargi do rzecznika finansowego"
+  example: false
+
+umowa_kredytowa:
+  type: enum
+  values: [Zawarta bezpośrednio w banku, Z udziałem pośrednika]
+  description: "Czy umowa kredytowa zawierana bezpośrednio w banku czy z pośrednikiem"
+  example: "Zawarta bezpośrednio w banku"
+
+klauzula_niedozwolona:
+  type: boolean
+  description: "Istnienie klauzuli niedozwolonej w umowie"
+  example: true
+
+wpisana_do_rejestru_uokik:
+  type: boolean
+  description: "Czy klauzula wpisana do rejestru klauzul niedozwolonych UOKiK"
+  example: true
+
+waluta_splaty:
+  type: enum
+  values: [PLN, CHF]
+  description: "Waluta spłaty"
+  example: "CHF"
+
+aneks_do_umowy:
+  type: boolean
+  description: "Czy był aneks do umowy"
+  example: true
+
+data_aneksu:
+  type: date
+  format: ISO 8601
+  description: "Data aneksu"
+  example: "2023-01-15"
+
+przedmiot_aneksu:
+  type: enum
+  values: [Zmiana waluty spłaty, Inne kwestie]
+  description: "Czego dotyczył aneks"
+  example: "Zmiana waluty spłaty"
+
+status_splaty_kredytu:
+  type: boolean
+  description: "Czy kredyt był spłacony, w tym w trakcie procesu"
+  example: true
+
+data_wyroku:
+  type: date
+  format: ISO 8601
+  description: "Data wydania wyroku"
+  example: "2024-11-30"
+
+rozstrzygniecie_sadu:
+  type: string
+  description: "Rozstrzygnięcie"
+  example: "Oddalenie powództwa"
+
+typ_rozstrzygniecia:
+  type: enum
+  values: [Uwzględnienie powództwa w całości, Uwzględnienie powództwa w części, Oddalenie powództwa, Oddalenie apelacji, Zmiana wyroku, Przekazanie do ponownego rozpoznania]
+  description: "Typ rozstrzygnięcia"
+  example: "Oddalenie powództwa"
+
+sesja_sadowa:
+  type: enum
+  values: [Rozprawa, Posiedzenie niejawne]
+  description: "Czy wyrok wydano na rozprawie czy na posiedzeniu niejawnym"
+  example: "Rozprawa"
+
+dowody:
+  type: list
+  items:
+    type: enum
+    values: [Przesłuchanie stron, Przesłuchanie świadków, Dowód z opinii biegłego]
+  description: "Jakie dowody zostały przeprowadzone"
+  example: ["Przesłuchanie stron", "Dowód z opinii biegłego"]
+
+oswiadczenie_niewaznosci:
+  type: boolean
+  description: "Czy odbierano oświadczenie powoda o skutkach nieważności umowy"
+  example: false
+
+odwolanie_do_sn:
+  type: boolean
+  description: "Czy odwołano się do orzecznictwa SN"
+  example: true
+
+odwolanie_do_tsue:
+  type: boolean
+  description: "Czy odwołano się do orzecznictwa TSUE"
+  example: true
+
+teoria_prawna:
+  type: enum
+  values: [Teoria dwóch kondykcji, Teoria salda]
+  description: "Teoria prawna, na której oparto wyrok"
+  example: "Teoria dwóch kondykcji"
+
+zarzut_zatrzymania_lub_potracenia:
+  type: boolean
+  description: "Czy uwzględniono zarzut zatrzymania lub potrącenia"
+  example: false
+
+odsetki_ustawowe:
+  type: boolean
+  description: "Czy uwzględniono odsetki ustawowe"
+  example: true
+
+data_rozpoczecia_odsetek:
+  type: enum
+  values: [Od dnia wezwania do zapłaty, Od daty wytoczenia powództwa, Od daty wydania wyroku, Od innej daty]
+  description: "Data rozpoczęcia naliczania odsetek"
+  example: "Od daty wydania wyroku"
+
+koszty_postepowania:
+  type: boolean
+  description: "Czy zasądzono zwrot kosztów postępowania"
+  example: true
+
+beneficjent_kosztow:
+  type: string
+  description: "Na rzecz której strony zasądzono zwrot kosztów"
+  example: "Pozwany"
+
+zabezpieczenie_udzielone:
+  type: boolean
+  description: "Czy udzielono zabezpieczenia"
+  example: true
+
+rodzaj_zabezpieczenia:
+  type: string
+  description: "Rodzaj zabezpieczenia"
+  example: "Wstrzymanie egzekucji"
+
+zabezpieczenie_pierwsza_instancja:
+  type: boolean
+  description: "Czy zabezpieczenia udzielił sąd I instancji"
+  example: true
+
+czas_trwania_sprawy:
+  type: string
+  description: "Czas rozpoznania sprawy – od złożenia pozwu do wydania wyroku"
+  example: "2 lata 3 miesiące"
+
+wynik_sprawy:
+  type: enum
+  values: [Wygrana kredytobiorcy, Wygrana banku, Częściowe uwzględnienie roszczeń obu stron]
+  description: "Ocena, czy bank czy kredytobiorca wygrał sprawę"
+  example: "Wygrana kredytobiorcy"
+
+szczegoły_wyniku_sprawy:
+  type: string
+  description: "Szczegóły dotyczące wyniku sprawy"
+  example: "Kredytobiorca wygrał, umowa uznana za nieważną"
+
+sprawa_frankowiczów:
+  type: boolean
+  description: "Czy sprawa dotyczy kredytu frankowego (CHF)"
+  example: true

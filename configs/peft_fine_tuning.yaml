@@ -1,12 +1,18 @@
 defaults:
   - llm: ???
   - dataset: ???
+  - prompt: ???
+  - ie_schema: ???
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
 llm:
   padding_side: right
+
+prompt:
+  language: ${dataset.language}
+  ie_schema: ${ie_schema}
 
 training_args:
   run_name: ${run_name}
