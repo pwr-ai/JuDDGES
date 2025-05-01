@@ -1,6 +1,5 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any
 
 import tiktoken
 from tokenizers.implementations import BaseTokenizer
@@ -48,7 +47,6 @@ class ContextTruncator(ContextTruncatorBase):
         max_context_length = (
             self.max_length - self.prompt_length - output_length - self.empty_messages_length
         )
-        if max_context_length <= 0:
         if max_context_length <= 0:
             warnings.warn(
                 f"Context was truncated to 0 tokens. "

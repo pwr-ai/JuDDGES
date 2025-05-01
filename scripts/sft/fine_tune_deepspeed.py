@@ -97,8 +97,9 @@ def prepare_dataset(
             max_length=config.max_context_size,
         )
         dataset = dataset.map(
-            lambda x: truncator(
-                x[dataset_prompt_field], x[dataset_context_field], x[dataset_output_field]
+            lambda x: context_truncator(
+                context=x[config.dataset.context_field],
+                output=x[config.dataset.output_field],
             ),
             desc="Truncating context",
             num_proc=num_proc,
