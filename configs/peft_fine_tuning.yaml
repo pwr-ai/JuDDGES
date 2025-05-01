@@ -45,7 +45,7 @@ peft_args:
   target_modules: "all-linear"
 
 max_context_size: 32_000
-truncate_context: True
+truncate_context: False
 wandb_entity: graph-ml-lab-wust
 wandb_project: juddges-fine-tune
 
