@@ -3568,8 +3568,8 @@ stages:
     deps:
     - path: configs/ie_schema/swiss_franc_loans.yaml
       hash: md5
-      md5: d24e45c56aca4226bdd86d14b7d81dc4
-      size: 6204
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
     - path: data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
       hash: md5
       md5: 4adbda0e8e448bd23837decd6b96899b
@@ -3585,13 +3585,13 @@ stages:
     outs:
     - path: data/datasets/pl/swiss_franc_loans/dataset_info.json
       hash: md5
-      md5: 1a19faf84f6225ae4d47b21fe71a7175
-      size: 7979
+      md5: d5fc169c83ea5865c1c951c5aeab29ff
+      size: 8003
     - path: data/datasets/pl/swiss_franc_loans/test.jsonl
       hash: md5
-      md5: 511cda78d1835fb82ebe94af0bdb6f3b
-      size: 49161943
+      md5: e7bc0622f639231d7899470f4703d86b
+      size: 62342764
     - path: data/datasets/pl/swiss_franc_loans/train.jsonl
       hash: md5
-      md5: ed0cdb2ed281fca1ab8cae7ec9f94f16
-      size: 274804452
+      md5: b3c0f1f0061c463aee056156eaceeaaa
+      size: 322839112
