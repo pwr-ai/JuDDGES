@@ -123,7 +123,8 @@ if [ "$stage" = "sft" ]; then
         --num_processes=$WORLD_SIZE \
         --num_machines=1 \
         --use-deepspeed \
-        --zero-stage 2 \
+        --zero-stage 3 \
+        --zero3_init_flag true \
         --mixed_precision=bf16 \
         --dynamo_backend=no \
         scripts/sft/fine_tune_deepspeed.py \
