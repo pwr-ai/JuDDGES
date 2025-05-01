@@ -1,9 +1,7 @@
 import json
-from functools import cached_property
 from pathlib import Path
 from typing import Any, Literal
 
-import jinja2
 from pydantic import BaseModel, Field
 
 
@@ -14,13 +12,9 @@ class PromptInfoExtractionConfig(BaseModel, extra="forbid"):
     ie_schema: dict[str, dict[str, Any]]
     content: str
 
-    @cached_property
-    def template(self) -> jinja2.Template:
-        return jinja2.Template(self.content)
-
     def render(self, context: str) -> str:
         schema_str = json.dumps(self.ie_schema, indent=2)
-        return self.template.render(
+        return self.content.format(
             language=self.language,
             schema=schema_str,
             context=context,
@@ -101,8 +95,8 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     random_seed: int
 
     @property
-    def output_file(self) -> Path:
-        return self.output_dir / "outputs.jsonl"
+    def predictions_file(self) -> Path:
+        return self.output_dir / "predictions.jsonl"
 
     @property
     def dataset_file(self) -> Path:

@@ -5,13 +5,13 @@ apelacja:
 
 typ_sadu:
   type: enum
-  values: [Sąd Rejonowy, Sąd Okręgowy, Sąd Frankowy]
+  choices: [Sąd Rejonowy, Sąd Okręgowy, Sąd Frankowy]
   description: "Typ sądu rozpoznającego sprawę"
   example: "Sąd Rejonowy"
 
 instancja_sadu:
   type: enum
-  values: [Sąd I instancji, Sąd odwoławczy]
+  choices: [Sąd I instancji, Sąd odwoławczy]
   description: "Czy sąd jest I instancji czy odwoławczy"
   example: "Sąd I instancji"
 
@@ -27,7 +27,7 @@ podstawa_prawna_podana:
 
 rodzaj_roszczenia:
   type: enum
-  values: [O ustalenie istnienia/nieistnienia stosunku prawnego, O ukształtowanie stosunku prawnego, O zapłatę, Roszczenia dodatkowe]
+  choices: [O ustalenie istnienia/nieistnienia stosunku prawnego, O ukształtowanie stosunku prawnego, O zapłatę, Roszczenia dodatkowe]
   description: "Rodzaj roszczenia"
   example: "O zapłatę"
 
@@ -38,13 +38,13 @@ modyfikacje_powodztwa:
 
 typ_modyfikacji:
   type: enum
-  values: [Rodzaj roszczenia, Kwoty roszczenia]
+  choices: [Rodzaj roszczenia, Kwoty roszczenia]
   description: "Typ modyfikacji powództwa"
   example: "Kwoty roszczenia"
 
 status_kredytobiorcy:
   type: enum
-  values: [Konsument, Przedsiębiorca]
+  choices: [Konsument, Przedsiębiorca]
   description: "Status kredytobiorcy"
   example: "Konsument"
 
@@ -55,13 +55,13 @@ wspoluczestnictwo_powodowe:
 
 typ_wspoluczestnictwa:
   type: enum
-  values: [Małżeństwo, Konkubinat, Inni członkowie rodziny, Spadkobiercy]
+  choices: [Małżeństwo, Konkubinat, Inni członkowie rodziny, Spadkobiercy]
   description: "Rodzaj współuczestnictwa"
   example: "Małżeństwo"
 
 rola_pozwanego:
   type: enum
-  values: [Strona umowy, Następca prawny]
+  choices: [Strona umowy, Następca prawny]
   description: "Czy pozwany faktycznie był stroną umowy czy następcą prawnym"
   example: "Strona umowy"
 
@@ -72,7 +72,7 @@ wczesniejsze_skargi_do_rzecznika:
 
 umowa_kredytowa:
   type: enum
-  values: [Zawarta bezpośrednio w banku, Z udziałem pośrednika]
+  choices: [Zawarta bezpośrednio w banku, Z udziałem pośrednika]
   description: "Czy umowa kredytowa zawierana bezpośrednio w banku czy z pośrednikiem"
   example: "Zawarta bezpośrednio w banku"
 
@@ -88,7 +88,7 @@ wpisana_do_rejestru_uokik:
 
 waluta_splaty:
   type: enum
-  values: [PLN, CHF]
+  choices: [PLN, CHF]
   description: "Waluta spłaty"
   example: "CHF"
 
@@ -105,7 +105,7 @@ data_aneksu:
 
 przedmiot_aneksu:
   type: enum
-  values: [Zmiana waluty spłaty, Inne kwestie]
+  choices: [Zmiana waluty spłaty, Inne kwestie]
   description: "Czego dotyczył aneks"
   example: "Zmiana waluty spłaty"
 
@@ -127,13 +127,13 @@ rozstrzygniecie_sadu:
 
 typ_rozstrzygniecia:
   type: enum
-  values: [Uwzględnienie powództwa w całości, Uwzględnienie powództwa w części, Oddalenie powództwa, Oddalenie apelacji, Zmiana wyroku, Przekazanie do ponownego rozpoznania]
+  choices: [Uwzględnienie powództwa w całości, Uwzględnienie powództwa w części, Oddalenie powództwa, Oddalenie apelacji, Zmiana wyroku, Przekazanie do ponownego rozpoznania]
   description: "Typ rozstrzygnięcia"
   example: "Oddalenie powództwa"
 
 sesja_sadowa:
   type: enum
-  values: [Rozprawa, Posiedzenie niejawne]
+  choices: [Rozprawa, Posiedzenie niejawne]
   description: "Czy wyrok wydano na rozprawie czy na posiedzeniu niejawnym"
   example: "Rozprawa"
 
@@ -141,7 +141,7 @@ dowody:
   type: list
   items:
     type: enum
-    values: [Przesłuchanie stron, Przesłuchanie świadków, Dowód z opinii biegłego]
+    choices: [Przesłuchanie stron, Przesłuchanie świadków, Dowód z opinii biegłego]
   description: "Jakie dowody zostały przeprowadzone"
   example: ["Przesłuchanie stron", "Dowód z opinii biegłego"]
 
@@ -162,7 +162,7 @@ odwolanie_do_tsue:
 
 teoria_prawna:
   type: enum
-  values: [Teoria dwóch kondykcji, Teoria salda]
+  choices: [Teoria dwóch kondykcji, Teoria salda]
   description: "Teoria prawna, na której oparto wyrok"
   example: "Teoria dwóch kondykcji"
 
@@ -178,7 +178,7 @@ odsetki_ustawowe:
 
 data_rozpoczecia_odsetek:
   type: enum
-  values: [Od dnia wezwania do zapłaty, Od daty wytoczenia powództwa, Od daty wydania wyroku, Od innej daty]
+  choices: [Od dnia wezwania do zapłaty, Od daty wytoczenia powództwa, Od daty wydania wyroku, Od innej daty]
   description: "Data rozpoczęcia naliczania odsetek"
   example: "Od daty wydania wyroku"
 
@@ -214,7 +214,7 @@ czas_trwania_sprawy:
 
 wynik_sprawy:
   type: enum
-  values: [Wygrana kredytobiorcy, Wygrana banku, Częściowe uwzględnienie roszczeń obu stron]
+  choices: [Wygrana kredytobiorcy, Wygrana banku, Częściowe uwzględnienie roszczeń obu stron]
   description: "Ocena, czy bank czy kredytobiorca wygrał sprawę"
   example: "Wygrana kredytobiorcy"
 

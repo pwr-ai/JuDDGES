@@ -3563,8 +3563,13 @@ stages:
       --train-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
       --test-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
       --output-dir data/datasets/pl/swiss_franc_loans --tokenizer-name meta-llama/Llama-3.1-8B-Instruct
+      --schema-path configs/ie_schema/swiss_franc_loans.yaml --output-format json
       --threshold-tokens 64_000
     deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: d24e45c56aca4226bdd86d14b7d81dc4
+      size: 6204
     - path: data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
       hash: md5
       md5: 4adbda0e8e448bd23837decd6b96899b
@@ -3575,18 +3580,18 @@ stages:
       size: 78916967
     - path: scripts/dataset/build_swiss_franc_loans_instruct_dataset.py
       hash: md5
-      md5: a9bf82a8229003eb0591aaeca34fc2cb
-      size: 5868
+      md5: 141a0da72de353d23802d36e38bc25fd
+      size: 5294
     outs:
     - path: data/datasets/pl/swiss_franc_loans/dataset_info.json
       hash: md5
-      md5: 618dd1b081654303b15874c7b76b7482
-      size: 8382
+      md5: 1a19faf84f6225ae4d47b21fe71a7175
+      size: 7979
     - path: data/datasets/pl/swiss_franc_loans/test.jsonl
       hash: md5
-      md5: 9676abc7aa2d9bd910ed4f6accbf67e3
-      size: 68942701
+      md5: 511cda78d1835fb82ebe94af0bdb6f3b
+      size: 49161943
     - path: data/datasets/pl/swiss_franc_loans/train.jsonl
       hash: md5
-      md5: 90273af677118a0a33bfa9b81d44f16f
-      size: 346417570
+      md5: ed0cdb2ed281fca1ab8cae7ec9f94f16
+      size: 274804452

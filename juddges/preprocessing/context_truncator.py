@@ -44,10 +44,10 @@ class ContextTruncator(ContextTruncatorBase):
         else:
             output_length = 0
 
-        max_context_length = (
+        max_allowed_ctx_length = (
             self.max_length - self.prompt_length - output_length - self.empty_messages_length
         )
-        if max_context_length <= 0:
+        if max_allowed_ctx_length <= 0:
             warnings.warn(
                 f"Context was truncated to 0 tokens. "
                 f"The prompt and output are too long for the max_length of {self.max_length}."
@@ -58,12 +58,13 @@ class ContextTruncator(ContextTruncatorBase):
             context,
             truncation=False,
             add_special_tokens=False,
-        )["input_ids"]
-        truncated_context_ids = full_context_ids[:max_context_length]
-        num_truncated_tokens = len(full_context_ids) - len(truncated_context_ids)
+            return_tensors="pt",
+        )["input_ids"].squeeze()
+        truncated_ctx_ids = full_context_ids[:max_allowed_ctx_length]
+        num_truncated_tokens = len(full_context_ids) - len(truncated_ctx_ids)
         truncated_ratio = num_truncated_tokens / len(full_context_ids)
         return {
-            "context": self.tokenizer.decode(truncated_context_ids),
+            "context": self.tokenizer.decode(truncated_ctx_ids),
             "num_truncated_tokens": num_truncated_tokens,
             "truncated_ratio": truncated_ratio,
         }

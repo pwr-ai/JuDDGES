@@ -1,6 +1,5 @@
 import json
 import os
-from pathlib import Path
 from pprint import pformat
 
 import hydra
@@ -11,7 +10,7 @@ from omegaconf import DictConfig
 from transformers import set_seed
 
 from juddges.config import PredictInfoExtractionConfig
-from juddges.llm.factory import ModelPack, get_llm
+from juddges.llm.factory import ModelForGeneration, get_llm
 from juddges.llm.predict import predict_with_llm
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.formatters import ConversationFormatter
@@ -44,8 +43,7 @@ def main(cfg: DictConfig) -> None:
     config = PredictInfoExtractionConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
-    output_file = Path(config.output_dir)
-    output_file.parent.mkdir(parents=True, exist_ok=True)
+    config.output_dir.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(config.dataset.name, split="test")
     ds, reverse_sort_idx = sort_dataset_by_input_length(ds, config.dataset.context_field)
@@ -79,7 +77,7 @@ def main(cfg: DictConfig) -> None:
     ]
     results = [results[i] for i in reverse_sort_idx]
 
-    with open(output_file, "w") as f:
+    with open(config.predictions_file, "w") as f:
         json.dump(results, f, indent="\t", ensure_ascii=False)
 
     save_yaml(config.model_dump(), config.config_file)
@@ -88,7 +86,7 @@ def main(cfg: DictConfig) -> None:
 def prepare_and_save_dataset_for_prediction(
     dataset: Dataset,
     config: PredictInfoExtractionConfig,
-    model_pack: ModelPack,
+    model_pack: ModelForGeneration,
 ) -> Dataset:
     max_input_length = config.get_max_input_length_accounting_for_output(
         model_pack.model.config.max_position_embeddings
@@ -100,12 +98,13 @@ def prepare_and_save_dataset_for_prediction(
     )
     dataset = dataset.map(
         lambda x: context_truncator(context=x[config.dataset.context_field]),
-        batched=True,
+        batched=False,
         desc="Truncating context",
         num_proc=NUM_PROC,
     )
 
     formatter = ConversationFormatter(
+        tokenizer=model_pack.tokenizer,
         prompt=config.prompt,
         dataset_context_field=config.dataset.context_field,
         dataset_output_field=None,
@@ -124,18 +123,13 @@ def prepare_and_save_dataset_for_prediction(
 
     logger.info(f"Saving dataset to {config.dataset_file}")
     logger.info(f"Example item:\n{pformat(dataset[0])}")
-    dataset.to_json(config.dataset_file)
+    dataset.to_json(config.dataset_file, force_ascii=False)
 
     tokenizer_encoder = TokenizerEncoder(
-        final_input_field=formatter.FORMATTED_FIELD,
+        final_input_field=formatter.FINAL_INPUT_FIELD,
         tokenizer=model_pack.tokenizer,
     )
-    dataset = dataset.map(
-        tokenizer_encoder,
-        batched=True,
-        desc="Tokenizing dataset",
-        num_proc=NUM_PROC,
-    )
+    dataset.set_transform(tokenizer_encoder)
 
     return dataset
 

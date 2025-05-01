@@ -14,7 +14,7 @@ class TokenizerEncoder:
     def __call__(self, batch: dict[str, list[Any]]) -> dict[str, Tensor]:
         return self.tokenizer(
             batch[self.final_input_field],
-            padding=False,
+            padding=True,
             truncation=False,
             return_tensors="pt",
             return_attention_mask=True,

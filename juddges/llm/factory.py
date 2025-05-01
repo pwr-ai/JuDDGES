@@ -14,7 +14,8 @@ LLAMA_3_MODELS = [
 ]
 
 PHI_4_MODELS = [
-    "microsoft/phi-4",
+    "microsoft/Phi-4",
+    "microsoft/Phi-4-mini-instruct",
 ]
 
 MISTRAL_MODELS = [

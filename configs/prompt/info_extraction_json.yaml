@@ -4,7 +4,7 @@ content: |
   Your task is to carefully analyze the provided judgment text and extract specific information according to the schema provided.
 
   Key instructions:
-  - Language: Extract information in {{language}}, maintaining the original language of the judgment
+  - Language: Extract information in {language}, maintaining the original language of the judgment
   - Accuracy: Only extract information that is explicitly stated in the text
   - Empty fields: Use empty string "" when information cannot be found
   - Consistency: Ensure extracted values match the specified data types and enums
@@ -26,11 +26,11 @@ content: |
   - Leave empty if date is partial or ambiguous
 
   Schema for extraction:
-  {{schema}}
+  {schema}
 
   Judgment text to analyze:
   ====
-  {{context}}
+  {context}
   ====
 
   Format response as JSON, ensuring all schema fields are included:
