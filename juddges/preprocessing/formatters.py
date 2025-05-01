@@ -15,6 +15,7 @@ class Formatter(ABC):
 
 class ConversationFormatter(Formatter):
     FINAL_INPUT_FIELD = "final_input"
+    MESSAGES_FIELD = "messages"
 
     def __init__(
         self,
@@ -23,6 +24,7 @@ class ConversationFormatter(Formatter):
         dataset_context_field: str,
         dataset_output_field: str | None,
         use_output: bool,
+        format_as_chat: bool = True,
     ):
         super().__init__()
         self.tokenizer = tokenizer
@@ -30,6 +32,7 @@ class ConversationFormatter(Formatter):
         self.dataset_context_field = dataset_context_field
         self.dataset_output_field = dataset_output_field
         self.use_output = use_output
+        self.format_as_chat = format_as_chat
 
     def __call__(self, item: dict[str, Any]) -> dict[str, str]:
         final_input = self.prompt.render(context=item[self.dataset_context_field])
@@ -42,14 +45,17 @@ class ConversationFormatter(Formatter):
         else:
             messages = [{"role": "user", "content": final_input}]
 
-        return {
-            self.FINAL_INPUT_FIELD: self.tokenizer.apply_chat_template(
-                conversation=messages,
-                tokenize=False,
-                add_special_tokens=True,
-                add_generation_prompt=True,
-            ),
-        }
+        if self.format_as_chat:
+            return {
+                self.FINAL_INPUT_FIELD: self.tokenizer.apply_chat_template(
+                    conversation=messages,
+                    tokenize=False,
+                    add_special_tokens=True,
+                    add_generation_prompt=True,
+                ),
+            }
+        else:
+            return {self.MESSAGES_FIELD: messages}
 
 
 def format_to_conversations(

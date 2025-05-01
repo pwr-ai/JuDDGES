@@ -108,10 +108,11 @@ def prepare_dataset(
 
     formatter = ConversationFormatter(
         tokenizer=tokenizer,
-        config=config,
+        prompt=config.prompt,
         dataset_context_field=config.dataset.context_field,
         dataset_output_field=config.dataset.output_field,
         use_output=True,
+        format_as_chat=False,
     )
     dataset = dataset.map(
         formatter,
