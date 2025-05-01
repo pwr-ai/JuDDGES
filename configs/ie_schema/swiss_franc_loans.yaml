@@ -5,7 +5,7 @@ apelacja:
 
 typ_sadu:
   type: enum
-  choices: [Sąd Rejonowy, Sąd Okręgowy, Sąd Frankowy]
+  choices: [Sąd Rejonowy, Sąd Okręgowy, Sąd Frankowy, Sąd Apelacyjny]
   description: "Typ sądu rozpoznającego sprawę"
   example: "Sąd Rejonowy"
 
