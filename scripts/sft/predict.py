@@ -99,7 +99,7 @@ def prepare_and_save_dataset_for_prediction(
         max_length=max_input_length,
     )
     dataset = dataset.map(
-        lambda x: {"context": context_truncator(x["context"])},
+        lambda x: context_truncator(context=x[config.dataset.context_field]),
         batched=True,
         desc="Truncating context",
         num_proc=NUM_PROC,
@@ -111,10 +111,13 @@ def prepare_and_save_dataset_for_prediction(
         dataset_output_field=None,
         use_output=False,
     )
+    cols_to_remove = set(dataset.column_names).difference(
+        set(["num_truncated_tokens", "truncated_ratio"])
+    )
     dataset = dataset.map(
         formatter,
         batched=False,
-        remove_columns=dataset.column_names,
+        remove_columns=cols_to_remove,
         desc="Formatting dataset",
         num_proc=NUM_PROC,
     )

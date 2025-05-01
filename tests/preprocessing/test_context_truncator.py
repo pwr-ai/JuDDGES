@@ -49,7 +49,7 @@ class TestContextTruncator(unittest.TestCase):
             prompt_without_context=PROMPT_TEMPLATE.format(context=""),
             tokenizer=tokenizer,
             max_length=max_length,
-        )(context, output)
+        )(context, output)["context"]
 
         self.assertGreaterEqual(len(context), len(truncated_context))
 
@@ -84,7 +84,7 @@ class TestContextTruncatorTiktoken(unittest.TestCase):
                     model=model,
                     max_length=max_length,
                 )
-                truncated_context = truncator(context, output)
+                truncated_context = truncator(context, output)["context"]
 
                 self.assertLess(len(truncated_context), len(context))
                 self.assertGreater(len(truncated_context), 0)
