@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from pprint import pformat
 
 import hydra
@@ -43,7 +44,13 @@ def main(cfg: DictConfig) -> None:
     config = PredictInfoExtractionConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
-    config.output_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        config.output_dir.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        logger.error(
+            f"Output directory {config.output_dir} already exists. Remove stale outputs first."
+        )
+        sys.exit(1)
 
     ds = load_dataset(config.dataset.name, split="test")
     ds, reverse_sort_idx = sort_dataset_by_input_length(ds, config.dataset.context_field)
@@ -81,6 +88,8 @@ def main(cfg: DictConfig) -> None:
         json.dump(results, f, indent="\t", ensure_ascii=False)
 
     save_yaml(config.model_dump(), config.config_file)
+
+    logger.info(f"Successfully finished prediction, saved outcomes to {config.output_dir}")
 
 
 def prepare_and_save_dataset_for_prediction(

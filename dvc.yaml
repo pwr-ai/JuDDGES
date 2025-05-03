@@ -140,9 +140,9 @@ stages:
       - configs/prompt/${item.llm_dataset.prompt}.yaml
       - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
     outs:
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/${item.seed}/predictions.jsonl
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/${item.seed}/dataset.json
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/${item.seed}/config.yaml
+      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
+      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
+      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
   predict_on_fine_tuned:
     matrix:

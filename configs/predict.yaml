@@ -15,7 +15,7 @@ prompt:
   ie_schema: ${ie_schema}
 
 device_map: 'auto'
-output_dir: data/experiments/predict/raw/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.llm}/${hydra:runtime.choices.prompt}/${hydra:runtime.choices.ie_schema}/${hydra:runtime.choices.random_seed}
+output_dir: data/experiments/predict/raw/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.llm}/${hydra:runtime.choices.prompt}/${hydra:runtime.choices.ie_schema}/seed_${random_seed}
 truncate_context: True
 generate_kwargs:
   max_new_tokens: ${dataset.max_output_tokens}

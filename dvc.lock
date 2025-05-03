@@ -3595,3 +3595,26 @@ stages:
       hash: md5
       md5: b3c0f1f0061c463aee056156eaceeaaa
       size: 322839112
+  sft@llm_dataset3:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
+      llm=pllum_12b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
+    deps:
+    - path: configs/llm/pllum_12b_instruct.yaml
+      hash: md5
+      md5: da63cfb5002b8768e0b037a42467d4d4
+      size: 146
+    - path: configs/peft_fine_tuning.yaml
+      hash: md5
+      md5: 6135de56a46fecca31c3c37fcf5ab294
+      size: 1602
+    - path: scripts/sft/fine_tune_deepspeed.py
+      hash: md5
+      md5: b343369c0c6534575d0d64db920a9b6f
+      size: 5051
+    outs:
+    - path: 
+        data/experiments/peft-fine-tune/pllum_12b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      hash: md5
+      md5: 721e0c83fe24240c4ae84c20b1bbbca3.dir
+      size: 1446865906
+      nfiles: 92

@@ -76,7 +76,6 @@ def main(cfg: DictConfig) -> None:
         num_proc=NUM_PROC,
     )
     trainer.train()
-    trainer.save_model()
 
     state.wait_for_everyone()
 
