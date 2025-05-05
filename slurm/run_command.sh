@@ -1,18 +1,17 @@
 #!/bin/bash
 
-#SBATCH --job-name=hallu
-#SBATCH --partition=lem-gpu
+#SBATCH --job-name=juddges_sft
 #SBATCH --output=logs/%j-%x.log
-#SBATCH --time=24:00:00
+#SBATCH --time=48:00:00
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=hopper:1
-#SBATCH --cpus-per-gpu=8
+#SBATCH --gpus-per-node=4
+#SBATCH --cpus-per-gpu=4
 #SBATCH --mem=128G
 # NOTE: You can reconfigure the above parameters to your needs in the sbatch call.
 # NOTE: All env variables must be exported to be available after calling srun.
 # NOTE: You may need to specify some NCCL args in .env file depending on your cluster configuration
 
-echo "[$(date)] Running job on host: $(hostname)"
+echo "[$(date)] Running job $SLURM_JOB_ID on host: $(hostname)"
 
 # =====Provide these user-specific env variables through .env file=====
 if [ ! -f ./slurm/.env ]; then
@@ -23,32 +22,31 @@ set -a # Enable automatic export of all variables
 source ./slurm/.env
 set +a # Disable automatic export after loading
 
-# Check if required environment variables are set
-if [ -z "$VENV_PATH" ]; then
-    echo "Error: VENV_PATH is not set in .env file"
+# Validate required environment variables
+required_vars=("WANDB_API_KEY" "HF_TOKEN" "SIF_IMAGE_PATH" "WORKDIR")
+for var in "${required_vars[@]}"; do
+    if [ -z "${!var:-}" ]; then
+        echo "Error: Required environment variable $var is not set"
+        exit 1
+    fi
+done
+
+# Validate SIF image exists
+if [ ! -f "$SIF_IMAGE_PATH" ]; then
+    echo "Error: SIF image not found at $SIF_IMAGE_PATH"
     exit 1
 fi
 
-if [ -z "$WORKDIR" ]; then
-    echo "Error: WORKDIR is not set in .env file"
+# Validate WORKDIR exists
+if [ ! -d "$WORKDIR" ]; then
+    echo "Error: WORKDIR $WORKDIR does not exist"
     exit 1
 fi
 
-# Check if virtual environment exists
-if [ ! -f "$VENV_PATH/bin/activate" ]; then
-    echo "Error: Virtual environment not found at $VENV_PATH"
-    exit 1
-fi
-
-export VENV_PATH
 export WANDB_API_KEY
 export HF_TOKEN
 export SIF_IMAGE_PATH
-export CONDA_ENV_NAME
-
-# use local tmpdir to prevent home folder filling up
-export HF_HOME="$TMPDIR/.huggingface"
-mkdir -p "$HF_HOME"
+export WORKDIR
 
 export NODES=($(scontrol show hostnames $SLURM_JOB_NODELIST | tr '\n' '\n'))
 export WORLD_SIZE=$(($SLURM_GPUS_ON_NODE * $SLURM_JOB_NUM_NODES))
@@ -62,7 +60,8 @@ while [ $# -gt 0 ]; do
             shift 2
             ;;
         *)
-            shift
+            echo "Unknown argument: $1"
+            exit 1
             ;;
     esac
 done
@@ -76,16 +75,29 @@ if [ -z "$run_cmd" ]; then
 fi
 
 # =====Run the script using apptainer image=====
-export NUM_PROC="$SLURM_CPUS_PER_GPU"
-export PYTHONPATH="$PYTHONPATH:$PWD"
+export NUM_PROC=$SLURM_CPUS_PER_GPU
+export PYTHONPATH="$PYTHONPATH."
 
-echo "Running with virtual environment: $VENV_PATH"
-cd "$WORKDIR" || { echo "Error: Failed to change to directory $WORKDIR"; exit 1; }
+cd $WORKDIR || {
+    echo "Error: Failed to change to directory $WORKDIR"
+    exit 1
+}
 
-# Fix srun command to properly handle multiple commands
+echo "Running the following command with apptainer: $run_cmd"
+
 srun --kill-on-bad-exit=1 \
     --jobid $SLURM_JOB_ID \
-    bash -c "source $VENV_PATH/bin/activate && $run_cmd"
+    apptainer run \
+        --fakeroot \
+        --bind "$TMPDIR:$TMPDIR" \
+        --bind "$WORKDIR:$WORKDIR" \
+        --bind "$HOME:$HOME" \
+        --nv \
+        "$SIF_IMAGE_PATH" \
+        bash -c "$run_cmd"
 
 EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "Error: Command failed with exit code $EXIT_CODE"
+fi
 exit $EXIT_CODE

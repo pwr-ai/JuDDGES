@@ -24,6 +24,10 @@ MISTRAL_MODELS = [
     "CYFRAGOVPL/PLLuM-12B-instruct",
 ]
 
+BIELIK_MODELS = [
+    "speakleash/Bielik-11B-v2.3-Instruct",
+]
+
 
 @dataclass
 class ModelForGeneration:
@@ -35,7 +39,7 @@ class ModelForGeneration:
 def get_llm(llm_config: LLMConfig, **kwargs: Any) -> ModelForGeneration:
     if llm_config.name in LLAMA_3_MODELS:
         return get_llama_3(llm_config, **kwargs)
-    elif llm_config.name in PHI_4_MODELS:
+    elif llm_config.name in PHI_4_MODELS or llm_config.name in BIELIK_MODELS:
         return get_llm_with_default_setup(llm_config, **kwargs)
     elif llm_config.name in MISTRAL_MODELS:
         return get_mistral(llm_config, **kwargs)
