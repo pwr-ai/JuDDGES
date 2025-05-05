@@ -13,6 +13,7 @@ from juddges.utils.config import resolve_config
         "llama_3.1_8b_instruct",
         "llama_3.2_3b_instruct",
         "pllum_12b_instruct",
+        "bielik_11b_v23_instruct",
         "phi_4",
         "phi_4_mini_instruct",
     ],
