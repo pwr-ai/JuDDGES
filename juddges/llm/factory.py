@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import dataclass
 from typing import Any
 
@@ -108,9 +109,18 @@ def get_llm_tokenizer(
         )
         tokenizer = AutoTokenizer.from_pretrained(llm_config.name)
 
-    if llm_config.adapter_path is not None:
+    if llm_config.should_load_adapter:
         logger.info(f"Loading adapter from {llm_config.adapter_path}")
-        model = PeftModelForCausalLM.from_pretrained(model, llm_config.adapter_path)
-        model = model.merge_and_unload(safe_merge=True)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=UserWarning,
+                message="Found missing adapter keys while loading the checkpoint*",
+            )
+            model = PeftModelForCausalLM.from_pretrained(
+                model=model,
+                model_id=llm_config.adapter_path_or_last_ckpt_path,
+            )
+            model = model.merge_and_unload(safe_merge=True)
 
     return model, tokenizer

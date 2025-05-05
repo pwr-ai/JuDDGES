@@ -37,7 +37,7 @@ def main(cfg: DictConfig) -> None:
         quantization="bitsandbytes",
         load_format="bitsandbytes",
         enable_lora=True,
-        qlora_adapter_name_or_path=config.llm.adapter_path,
+        qlora_adapter_name_or_path=config.llm.adapter_path_or_last_ckpt_path,
         max_model_len=config.llm.max_seq_length,
         max_num_seqs=config.llm.batch_size,
     )

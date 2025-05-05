@@ -131,7 +131,6 @@ def prepare_and_save_dataset_for_prediction(
     )
 
     logger.info(f"Saving dataset to {config.dataset_file}")
-    logger.info(f"Example item:\n{pformat(dataset[0])}")
     dataset.to_json(config.dataset_file, force_ascii=False)
 
     tokenizer_encoder = TokenizerEncoder(
