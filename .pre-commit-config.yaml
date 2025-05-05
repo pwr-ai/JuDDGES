@@ -38,7 +38,7 @@ repos:
   - repo: https://github.com/fastai/nbdev
     rev: 2.2.10
     hooks:
-    - id: nbdev_export
-      name: Notebook exporter
+      - id: nbdev_export
+        name: Notebook exporter
 
 exclude: 'data/|dvc.lock'
