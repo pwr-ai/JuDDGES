@@ -23,6 +23,7 @@ set -a # Enable automatic export of all variables
 source ./slurm/.env
 set +a # Disable automatic export after loading
 
+export VENV_PATH
 export WANDB_API_KEY
 export HF_TOKEN
 export SIF_IMAGE_PATH
@@ -65,7 +66,7 @@ echo "Running the following command with apptainer: $run_cmd"
 
 srun --kill-on-bad-exit=1 \
     --jobid $SLURM_JOB_ID \
-    conda run -n "$CONDA_ENV_NAME" "$run_cmd"
+    source "$VENV_PATH/bin/activate" && "$run_cmd"
 
 EXIT_CODE=$?
 exit $EXIT_CODE
