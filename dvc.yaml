@@ -140,7 +140,7 @@ stages:
       - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
       - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
-  predict_on_fine_tuned:
+  predict_swiss_franc_loans_on_fine_tuned:
     matrix:
       <<: *sft_models
       seed: ${seeds}

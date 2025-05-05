@@ -23,6 +23,23 @@ set -a # Enable automatic export of all variables
 source ./slurm/.env
 set +a # Disable automatic export after loading
 
+# Check if required environment variables are set
+if [ -z "$VENV_PATH" ]; then
+    echo "Error: VENV_PATH is not set in .env file"
+    exit 1
+fi
+
+if [ -z "$WORKDIR" ]; then
+    echo "Error: WORKDIR is not set in .env file"
+    exit 1
+fi
+
+# Check if virtual environment exists
+if [ ! -f "$VENV_PATH/bin/activate" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH"
+    exit 1
+fi
+
 export VENV_PATH
 export WANDB_API_KEY
 export HF_TOKEN
@@ -62,11 +79,13 @@ fi
 export NUM_PROC="$SLURM_CPUS_PER_GPU"
 export PYTHONPATH="$PYTHONPATH:$PWD"
 
-echo "Running the following command with apptainer: $run_cmd"
+echo "Running with virtual environment: $VENV_PATH"
+cd "$WORKDIR" || { echo "Error: Failed to change to directory $WORKDIR"; exit 1; }
 
+# Fix srun command to properly handle multiple commands
 srun --kill-on-bad-exit=1 \
     --jobid $SLURM_JOB_ID \
-    source "$VENV_PATH/bin/activate" && "$run_cmd"
+    bash -c "source $VENV_PATH/bin/activate && $run_cmd"
 
 EXIT_CODE=$?
 exit $EXIT_CODE
