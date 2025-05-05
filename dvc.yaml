@@ -184,15 +184,18 @@ stages:
     matrix:
       <<: *sft_models
       seed: ${seeds}
+      model_type:
+        - raw
+        - fine_tuned
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/outputs_${item.seed}.json
+      --output-file data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
       --num-proc=-1
     deps:
       - scripts/sft/evaluate.py
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/outputs_${item.seed}.json
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
     outs:
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/metrics_${item.seed}.json
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/metrics.json
 
   evaluate_api_models:
     matrix:
