@@ -1,7 +1,9 @@
 import json
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Literal
 
+from loguru import logger
 from pydantic import BaseModel, Field
 
 
@@ -32,6 +34,32 @@ class LLMConfig(BaseModel, extra="forbid"):
     batch_size: int
     use_4bit: bool
     use_unsloth: bool = False
+
+    @property
+    def should_load_adapter(self) -> bool:
+        return self.adapter_path is not None
+
+    @cached_property
+    def adapter_path_or_last_ckpt_path(self) -> Path:
+        if (self.adapter_path / "adapter_model.safetensors").exists():
+            return self.adapter_path
+
+        checkpoints = list(self.adapter_path.glob("checkpoint-*"))
+        if not checkpoints:
+            raise ValueError(
+                f"No adapter_model.safetensors or checkpoint dir found in {self.adapter_path}"
+            )
+
+        last_checkpoint_adapter_path, *_ = sorted(
+            checkpoints,
+            key=lambda x: int(x.stem.split("-")[-1]),
+            reverse=True,
+        )
+        logger.warning(
+            "adapter_path was set to checkpoints dir, using last checkpoint "
+            f"(set specific checkpoint path as adapter_path to use other checkpoint): {last_checkpoint_adapter_path}"
+        )
+        return last_checkpoint_adapter_path
 
 
 class EmbeddingModelConfig(BaseModel, extra="forbid"):
