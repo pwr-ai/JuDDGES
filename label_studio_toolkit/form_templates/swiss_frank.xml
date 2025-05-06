@@ -138,23 +138,25 @@
             <!-- Basic Information Section -->
             <Panel value="Informacje Podstawowe" className="section-header header-basic">
               <View className="section section-basic">
-                <!-- Apelacja -->
-                <Header value="Apelacja" />
-                <Text name="apelacja_desc" value="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę (np. 'Apelacja warszawska')" />
-                <TextArea name="apelacja" toName="text" rows="1" maxSubmissions="1" placeholder="Wpisz apelację tutaj..." />
-
-                <!-- Data Wyroku -->
-                <Header value="Data Wyroku" />
-                <Text name="data_wyroku_desc" value="Data wydania wyroku w formacie YYYY-MM-DD (np. '2024-11-30')" />
-                <TextArea name="data_wyroku" toName="text" rows="1" maxSubmissions="1" />
-
                 <!-- Sprawa Frankowiczów -->
                 <Header value="Sprawa Frankowiczów" />
                 <Text name="sprawa_frankowiczow_desc" value="Czy sprawa dotyczy kredytu frankowego (CHF)?" />
                 <Choices name="sprawa_frankowiczow" toName="text" choice="single">
                   <Choice value="Tak" />
                   <Choice value="Nie" />
+                  <Choice value="Badanie wzorca umownego" />
                 </Choices>
+
+                <!-- Apelacja -->
+                <Header value="Apelacja" />
+                <Text name="apelacja_desc" value="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę (np. 'Apelacja warszawska'). 
+                'Zanonimizowano' jeśli niemożliwe do ustalenia bo zanonimizowano." />
+                <TextArea name="apelacja" toName="text" rows="1" maxSubmissions="1" placeholder="Wpisz apelację tutaj..." />
+
+                <!-- Data Wyroku -->
+                <Header value="Data Wyroku" />
+                <Text name="data_wyroku_desc" value="Data wydania wyroku w formacie YYYY-MM-DD (np. '2024-11-30')" />
+                <TextArea name="data_wyroku" toName="text" rows="1" maxSubmissions="1" />
               </View>
             </Panel>
 
@@ -168,6 +170,7 @@
                   <Choice value="Sąd Rejonowy" />
                   <Choice value="Sąd Okręgowy" />
                   <Choice value="Sąd Frankowy" />
+                  <Choice value="Sąd Ochrony Konkurencji i Konsumentów" />
                 </Choices>
 
                 <!-- Instancja Sądu -->
@@ -212,6 +215,7 @@
                   <Choice value="O ukształtowanie stosunku prawnego" />
                   <Choice value="O zapłatę" />
                   <Choice value="Roszczenia dodatkowe" />
+                  <Choice value="Dotyczy wzorca umownego" />
                 </Choices>
 
                 <!-- Modyfikacje Powództwa -->
@@ -237,16 +241,23 @@
               <View className="section section-parties">
                 <!-- Status Kredytobiorcy -->
                 <Header value="Status Kredytobiorcy" />
-                <Text name="status_kredytobiorcy_desc" value="Status kredytobiorcy (np. 'Konsument')" />
+                <Text name="status_kredytobiorcy_desc" value="Status kredytobiorcy" />
                 <Choices name="status_kredytobiorcy" toName="text" choice="single">
                   <Choice value="Konsument" />
                   <Choice value="Przedsiębiorca" />
+                  <Choice value="Nie sprawdzano" />
                 </Choices>
 
-                <!-- Współuczestnictwo Powodowe -->
-                <Header value="Współuczestnictwo Powodowe" />
+                <!-- Współuczestnictwo -->
+                <Header value="Współuczestnictwo" />
                 <Text name="wspoluczestnictwo_powodowe_desc" value="Czy współuczestnictwo po stronie powodowej?" />
                 <Choices name="wspoluczestnictwo_powodowe" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <Text name="wspoluczestnictwo_pozwanego_desc" value="Czy współuczestnictwo po stronie pozwanej?" />
+                <Choices name="wspoluczestnictwo_pozwanego" toName="text" choice="single">
                   <Choice value="Tak" />
                   <Choice value="Nie" />
                 </Choices>
@@ -257,14 +268,14 @@
                 <Choices name="typ_wspoluczestnictwa" toName="text" choice="single">
                   <Choice value="Małżeństwo" />
                   <Choice value="Konkubinat" />
-                  <Choice value="Inni członkowie rodziny" />
-                  <Choice value="Spadkobiercy" />
+                  <Choice value="Spadkodawcy" />
+                  <Choice value="Inny rodzaj" />
                 </Choices>
 
-                <!-- Rola Pozwanego -->
-                <Header value="Rola Pozwanego" />
-                <Text name="rola_pozwanego_desc" value="Czy pozwany faktycznie był stroną umowy czy następcą prawnym (np. 'Strona umowy')" />
-                <Choices name="rola_pozwanego" toName="text" choice="single">
+                <!-- Strony umowy -->
+                <Header value="Strony umowy" />
+                <Text name="strony_umowy_desc" value="Czy powód był stroną umowy czy następcą prawnym?" />
+                <Choices name="strony_umowy" toName="text" choice="single">
                   <Choice value="Strona umowy" />
                   <Choice value="Następca prawny" />
                 </Choices>
@@ -355,6 +366,7 @@
                   <Choice value="Przesłuchanie stron" />
                   <Choice value="Przesłuchanie świadków" />
                   <Choice value="Dowód z opinii biegłego" />
+                  <Choice value="Dowód z dokumentów" />
                 </Choices>
 
                 <!-- Oświadczenie Nieważności -->
@@ -391,10 +403,18 @@
 
                 <!-- Zarzut Zatrzymania lub Potrącenia -->
                 <Header value="Zarzut Zatrzymania lub Potrącenia" />
-                <Text name="zarzut_zatrzymania_lub_potracenia_desc" value="Czy uwzględniono zarzut zatrzymania lub potrącenia?" />
-                <Choices name="zarzut_zatrzymania_lub_potracenia" toName="text" choice="single">
+                <Text name="zarzut_zatrzymania_desc" value="Czy uwzględniono zarzut zatrzymania?" />
+                <Choices name="zarzut_zatrzymania" toName="text" choice="single">
                   <Choice value="Tak" />
                   <Choice value="Nie" />
+                  <Choice value="Nie podniesiono takiego zarzutu" />
+                </Choices>
+
+                <Text name="zarzut_potracenia_desc" value="Czy uwzględniono zarzut potrącenia?" />
+                <Choices name="zarzut_potracenia" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                  <Choice value="Nie podniesiono takiego zarzutu" />
                 </Choices>
 
                 <!-- Odsetki Ustawowe -->
@@ -421,6 +441,7 @@
                 <Choices name="zabezpieczenie_udzielone" toName="text" choice="single">
                   <Choice value="Tak" />
                   <Choice value="Nie" />
+                  <Choice value="Nie było wniosku o zabezpieczenie" />
                 </Choices>
 
                 <!-- Rodzaj Zabezpieczenia -->
