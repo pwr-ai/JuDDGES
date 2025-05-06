@@ -31,10 +31,17 @@ class TakNie(str, Enum):
     NIE = "Nie"
 
 
+class SprawaFrankowiczow(str, Enum):
+    TAK = "Tak"
+    NIE = "Nie"
+    BADANIE_WZORCA = "Badanie wzorca umownego"
+
+
 class TypSadu(str, Enum):
     SAD_REJONOWY = "Sąd Rejonowy"
     SAD_OKREGOWY = "Sąd Okręgowy"
     SAD_FRANKOWY = "Sąd Frankowy"
+    SAD_OCHRONY_KONKURENCJI = "Sąd Ochrony Konkurencji i Konsumentów"
 
 
 class InstancjaSadu(str, Enum):
@@ -47,6 +54,7 @@ class RodzajRoszczenia(str, Enum):
     UKSZTALTOWANIE = "O ukształtowanie stosunku prawnego"
     ZAPLATA = "O zapłatę"
     ROSZCZENIA_DODATKOWE = "Roszczenia dodatkowe"
+    WZORZEC_UMOWNY = "Dotyczy wzorca umownego"
 
 
 class TypModyfikacji(str, Enum):
@@ -57,16 +65,17 @@ class TypModyfikacji(str, Enum):
 class StatusKredytobiorcy(str, Enum):
     KONSUMENT = "Konsument"
     PRZEDSIEBIORCA = "Przedsiębiorca"
+    NIE_SPRAWDZANO = "Nie sprawdzano"
 
 
 class TypWspoluczestnictwa(str, Enum):
     MALZENSTWO = "Małżeństwo"
     KONKUBINAT = "Konkubinat"
-    INNI_CZLONKOWIE_RODZINY = "Inni członkowie rodziny"
-    SPADKOBIERCY = "Spadkobiercy"
+    SPADKODAWCY = "Spadkodawcy"
+    INNY_RODZAJ = "Inny rodzaj"
 
 
-class RolaPozwanego(str, Enum):
+class StronaUmowy(str, Enum):
     STRONA_UMOWY = "Strona umowy"
     NASTEPCA_PRAWNY = "Następca prawny"
 
@@ -104,6 +113,7 @@ class Dowody(str, Enum):
     PRZESLUCHANIE_STRON = "Przesłuchanie stron"
     PRZESLUCHANIE_SWIADKOW = "Przesłuchanie świadków"
     DOWOD_Z_OPINII_BIEGLEGO = "Dowód z opinii biegłego"
+    DOWOD_Z_DOKUMENTOW = "Dowód z dokumentów"
 
 
 class TeoriaPrawna(str, Enum):
@@ -124,10 +134,26 @@ class WynikSprawy(str, Enum):
     CZESCIOWE_UWZGLEDNIENIE = "Częściowe uwzględnienie roszczeń obu stron"
 
 
+class Zarzut(str, Enum):
+    TAK = "Tak"
+    NIE = "Nie"
+    NIE_PODNIOSIONO = "Nie podniesiono takiego zarzutu"
+
+
+class Zabezpieczenie(str, Enum):
+    TAK = "Tak"
+    NIE = "Nie"
+    NIE_BYLO_WNIOSKU = "Nie było wniosku o zabezpieczenie"
+
+
 class SwissFrancJudgmentAnnotation(BaseModel):
-    apelacja: str | None = Field(
-        None, description="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę"
+    sprawa_frankowiczow: SprawaFrankowiczow | None = Field(
+        None, description="Czy sprawa dotyczy kredytu frankowego (CHF)?"
     )
+    apelacja: str | None = Field(
+        None, description="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę. 'Zanonimizowano' jeśli niemożliwe do ustalenia bo zanonimizowano."
+    )
+    data_wyroku: str | None = Field(None, description="Data wydania wyroku w formacie YYYY-MM-DD")
     typ_sadu: TypSadu | None = Field(None, description="Typ sądu rozpoznającego sprawę")
     instancja_sadu: InstancjaSadu | None = Field(
         None, description="Czy sąd jest I instancji czy odwoławczy"
@@ -145,11 +171,14 @@ class SwissFrancJudgmentAnnotation(BaseModel):
     wspoluczestnictwo_powodowe: TakNie | None = Field(
         None, description="Czy współuczestnictwo po stronie powodowej"
     )
+    wspoluczestnictwo_pozwanego: TakNie | None = Field(
+        None, description="Czy współuczestnictwo po stronie pozwanej"
+    )
     typ_wspoluczestnictwa: TypWspoluczestnictwa | None = Field(
         None, description="Rodzaj współuczestnictwa"
     )
-    rola_pozwanego: RolaPozwanego | None = Field(
-        None, description="Czy pozwany faktycznie był stroną umowy czy następcą prawnym"
+    strony_umowy: StronaUmowy | None = Field(
+        None, description="Czy powód był stroną umowy czy następcą prawnym"
     )
     wczesniejsze_skargi_do_rzecznika: TakNie | None = Field(
         None, description="Czy były uprzednie skargi do rzecznika finansowego"
@@ -170,7 +199,6 @@ class SwissFrancJudgmentAnnotation(BaseModel):
     status_splaty_kredytu: TakNie | None = Field(
         None, description="Czy kredyt był spłacony, w tym w trakcie procesu"
     )
-    data_wyroku: str | None = Field(None, description="Data wydania wyroku w formacie YYYY-MM-DD")
     rozstrzygniecie_sadu: str | None = Field(None, description="Rozstrzygnięcie")
     typ_rozstrzygniecia: TypRozstrzygniecia | None = Field(None, description="Typ rozstrzygnięcia")
     sesja_sadowa: SesjaSadowa | None = Field(
@@ -187,8 +215,11 @@ class SwissFrancJudgmentAnnotation(BaseModel):
     teoria_prawna: TeoriaPrawna | None = Field(
         None, description="Teoria prawna, na której oparto wyrok"
     )
-    zarzut_zatrzymania_lub_potracenia: TakNie | None = Field(
-        None, description="Czy uwzględniono zarzut zatrzymania lub potrącenia"
+    zarzut_zatrzymania: Zarzut | None = Field(
+        None, description="Czy uwzględniono zarzut zatrzymania"
+    )
+    zarzut_potracenia: Zarzut | None = Field(
+        None, description="Czy uwzględniono zarzut potrącenia"
     )
     odsetki_ustawowe: TakNie | None = Field(None, description="Czy uwzględniono odsetki ustawowe")
     data_rozpoczecia_odsetek: DataRozpoczeciaOdsetek | None = Field(
@@ -200,7 +231,7 @@ class SwissFrancJudgmentAnnotation(BaseModel):
     beneficjent_kosztow: str | None = Field(
         None, description="Na rzecz której strony zasądzono zwrot kosztów"
     )
-    zabezpieczenie_udzielone: TakNie | None = Field(
+    zabezpieczenie_udzielone: Zabezpieczenie | None = Field(
         None, description="Czy udzielono zabezpieczenia"
     )
     rodzaj_zabezpieczenia: str | None = Field(None, description="Rodzaj zabezpieczenia")
@@ -215,7 +246,4 @@ class SwissFrancJudgmentAnnotation(BaseModel):
     )
     szczegoly_wyniku_sprawy: str | None = Field(
         None, description="Szczegóły dotyczące wyniku sprawy"
-    )
-    sprawa_frankowiczow: TakNie | None = Field(
-        None, description="Czy sprawa dotyczy kredytu frankowego (CHF)"
     )
