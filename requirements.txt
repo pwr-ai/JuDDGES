@@ -46,7 +46,6 @@ streamlit==1.40.2
 tenacity==8.2.3
 tensorboard==2.16.2
 tiktoken==0.7.0
-torch==2.6.0
 torch_geometric==2.5.3
 torchmetrics==1.6.1
 transformers==4.51.3
