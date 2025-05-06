@@ -3615,9 +3615,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/pllum_12b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
       hash: md5
-      md5: 6f2952f28f0f2be306c6f58eb216dec5.dir
-      size: 525623388
-      nfiles: 32
+      md5: d751713988987e9331980363e24189ce.dir
+      size: 0
+      nfiles: 0
   sft@llm_dataset0:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
       llm=llama_3.1_8b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
@@ -3643,12 +3643,12 @@ stages:
       nfiles: 32
   sft@llm_dataset2:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
-      llm=pllum_12b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
+      llm=mistral_nemo_instruct_2407 prompt=info_extraction_json ie_schema=swiss_franc_loans
     deps:
-    - path: configs/llm/pllum_12b_instruct.yaml
+    - path: configs/llm/mistral_nemo_instruct_2407.yaml
       hash: md5
-      md5: da63cfb5002b8768e0b037a42467d4d4
-      size: 146
+      md5: 3737ee590c709dbfdfc85e1ffec7a692
+      size: 153
     - path: configs/peft_fine_tuning.yaml
       hash: md5
       md5: 6135de56a46fecca31c3c37fcf5ab294
@@ -3659,10 +3659,10 @@ stages:
       size: 5051
     outs:
     - path: 
-        data/experiments/peft-fine-tune/pllum_12b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+        data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
       hash: md5
-      md5: 6fb6eb445c0a385eee7908b1a23a9805.dir
-      size: 525605340
+      md5: 80be726c5707b89ccd2a9a6ef26ffa4d.dir
+      size: 525618248
       nfiles: 32
   predict_swiss_franc_loans@llm_dataset2-42:
     cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
@@ -3912,12 +3912,12 @@ stages:
       size: 3983889
   sft@llm_dataset1:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
-      llm=mistral_nemo_instruct_2407 prompt=info_extraction_json ie_schema=swiss_franc_loans
+      llm=llama_3.2_3b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
     deps:
-    - path: configs/llm/mistral_nemo_instruct_2407.yaml
+    - path: configs/llm/llama_3.2_3b_instruct.yaml
       hash: md5
-      md5: 3737ee590c709dbfdfc85e1ffec7a692
-      size: 153
+      md5: 73b192c37c435e02409a989e0e0094ed
+      size: 149
     - path: configs/peft_fine_tuning.yaml
       hash: md5
       md5: 6135de56a46fecca31c3c37fcf5ab294
@@ -3928,10 +3928,10 @@ stages:
       size: 5051
     outs:
     - path: 
-        data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+        data/experiments/peft-fine-tune/llama_3.2_3b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
       hash: md5
-      md5: 80be726c5707b89ccd2a9a6ef26ffa4d.dir
-      size: 525618248
+      md5: 0f3cfbf31a401015b44b6fde91decb2b.dir
+      size: 263948441
       nfiles: 32
   predict_swiss_franc_loans@llm_dataset1-42:
     cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
@@ -4176,3 +4176,271 @@ stages:
       hash: md5
       md5: c9616cb1a60dbd93f58695d546b612c3
       size: 3987
+  predict_swiss_franc_loans_on_fine_tuned@llm_dataset0-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
+      llm=llama_3.1_8b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
+      random_seed=42 
+      llm.adapter_path=data/experiments/peft-fine-tune/llama_3.1_8b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      output_dir=data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.1_8b_instruct/info_extraction_json/swiss_franc_loans/seed_42
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: configs/llm/llama_3.1_8b_instruct.yaml
+      hash: md5
+      md5: b2e83ce967242bd6586815b53d868fcd
+      size: 149
+    - path: configs/predict.yaml
+      hash: md5
+      md5: ab95db8b5cad99333671faba3f60c1a9
+      size: 712
+    - path: configs/prompt/info_extraction_json.yaml
+      hash: md5
+      md5: 9374c2a0f12c5656c817d4802b6aa82c
+      size: 1397
+    - path: 
+        data/experiments/peft-fine-tune/llama_3.1_8b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      hash: md5
+      md5: 402d66ada1e9733c34b71f7a680d152e.dir
+      size: 405002864
+      nfiles: 32
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: ced46f44948dc5f45da7b8f3c700b5c4
+      size: 4758
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.1_8b_instruct/info_extraction_json/swiss_franc_loans/seed_42/config.yaml
+      hash: md5
+      md5: 9374a6d2b8044e0d7f192cb10651636c
+      size: 17524
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.1_8b_instruct/info_extraction_json/swiss_franc_loans/seed_42/dataset.json
+      hash: md5
+      md5: 5a11320cd3aaec573cd5f099284c1aaa
+      size: 73076301
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.1_8b_instruct/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl
+      hash: md5
+      md5: 403e1afeaaf93cbb050a0099bfc76851
+      size: 4124634
+  predict_swiss_franc_loans_on_fine_tuned@llm_dataset0-997:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
+      llm=llama_3.1_8b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
+      random_seed=997 
+      llm.adapter_path=data/experiments/peft-fine-tune/llama_3.1_8b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      output_dir=data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.1_8b_instruct/info_extraction_json/swiss_franc_loans/seed_997
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: configs/llm/llama_3.1_8b_instruct.yaml
+      hash: md5
+      md5: b2e83ce967242bd6586815b53d868fcd
+      size: 149
+    - path: configs/predict.yaml
+      hash: md5
+      md5: ab95db8b5cad99333671faba3f60c1a9
+      size: 712
+    - path: configs/prompt/info_extraction_json.yaml
+      hash: md5
+      md5: 9374c2a0f12c5656c817d4802b6aa82c
+      size: 1397
+    - path: 
+        data/experiments/peft-fine-tune/llama_3.1_8b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      hash: md5
+      md5: 402d66ada1e9733c34b71f7a680d152e.dir
+      size: 405002864
+      nfiles: 32
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: ced46f44948dc5f45da7b8f3c700b5c4
+      size: 4758
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.1_8b_instruct/info_extraction_json/swiss_franc_loans/seed_997/config.yaml
+      hash: md5
+      md5: 063d894209353a5937835e95e7ce12ac
+      size: 17526
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.1_8b_instruct/info_extraction_json/swiss_franc_loans/seed_997/dataset.json
+      hash: md5
+      md5: 5a11320cd3aaec573cd5f099284c1aaa
+      size: 73076301
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.1_8b_instruct/info_extraction_json/swiss_franc_loans/seed_997/predictions.jsonl
+      hash: md5
+      md5: 3b11671a96cfa6f75af6435821ee4b21
+      size: 4124549
+  predict_swiss_franc_loans_on_fine_tuned@llm_dataset2-7312:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
+      llm=mistral_nemo_instruct_2407 prompt=info_extraction_json ie_schema=swiss_franc_loans
+      random_seed=7312 
+      llm.adapter_path=data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      output_dir=data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_7312
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: configs/llm/mistral_nemo_instruct_2407.yaml
+      hash: md5
+      md5: 3737ee590c709dbfdfc85e1ffec7a692
+      size: 153
+    - path: configs/predict.yaml
+      hash: md5
+      md5: ab95db8b5cad99333671faba3f60c1a9
+      size: 712
+    - path: configs/prompt/info_extraction_json.yaml
+      hash: md5
+      md5: 9374c2a0f12c5656c817d4802b6aa82c
+      size: 1397
+    - path: 
+        data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      hash: md5
+      md5: 80be726c5707b89ccd2a9a6ef26ffa4d.dir
+      size: 525618248
+      nfiles: 32
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: ced46f44948dc5f45da7b8f3c700b5c4
+      size: 4758
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_7312/config.yaml
+      hash: md5
+      md5: 933d160b03b3764356b1dc4db45012cc
+      size: 17546
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_7312/dataset.json
+      hash: md5
+      md5: f5d605f91f90c790b78dd84b70e783b8
+      size: 72825746
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      hash: md5
+      md5: 3dacd22ab63f15b2bb53a92bcfb4e125
+      size: 4160713
+  predict_swiss_franc_loans_on_fine_tuned@llm_dataset2-42:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
+      llm=mistral_nemo_instruct_2407 prompt=info_extraction_json ie_schema=swiss_franc_loans
+      random_seed=42 
+      llm.adapter_path=data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      output_dir=data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_42
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: configs/llm/mistral_nemo_instruct_2407.yaml
+      hash: md5
+      md5: 3737ee590c709dbfdfc85e1ffec7a692
+      size: 153
+    - path: configs/predict.yaml
+      hash: md5
+      md5: ab95db8b5cad99333671faba3f60c1a9
+      size: 712
+    - path: configs/prompt/info_extraction_json.yaml
+      hash: md5
+      md5: 9374c2a0f12c5656c817d4802b6aa82c
+      size: 1397
+    - path: 
+        data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      hash: md5
+      md5: 80be726c5707b89ccd2a9a6ef26ffa4d.dir
+      size: 525618248
+      nfiles: 32
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: ced46f44948dc5f45da7b8f3c700b5c4
+      size: 4758
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_42/config.yaml
+      hash: md5
+      md5: 025cf27efc8fb1c0ae7d9918d175daf7
+      size: 17542
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_42/dataset.json
+      hash: md5
+      md5: f5d605f91f90c790b78dd84b70e783b8
+      size: 72825746
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl
+      hash: md5
+      md5: af46dc3504ed678fe36d66c8798ca083
+      size: 4166998
+  predict_swiss_franc_loans_on_fine_tuned@llm_dataset2-997:
+    cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
+      llm=mistral_nemo_instruct_2407 prompt=info_extraction_json ie_schema=swiss_franc_loans
+      random_seed=997 
+      llm.adapter_path=data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      output_dir=data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_997
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: configs/llm/mistral_nemo_instruct_2407.yaml
+      hash: md5
+      md5: 3737ee590c709dbfdfc85e1ffec7a692
+      size: 153
+    - path: configs/predict.yaml
+      hash: md5
+      md5: ab95db8b5cad99333671faba3f60c1a9
+      size: 712
+    - path: configs/prompt/info_extraction_json.yaml
+      hash: md5
+      md5: 9374c2a0f12c5656c817d4802b6aa82c
+      size: 1397
+    - path: 
+        data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      hash: md5
+      md5: 80be726c5707b89ccd2a9a6ef26ffa4d.dir
+      size: 525618248
+      nfiles: 32
+    - path: scripts/sft/predict.py
+      hash: md5
+      md5: ced46f44948dc5f45da7b8f3c700b5c4
+      size: 4758
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_997/config.yaml
+      hash: md5
+      md5: 0405fb4b3944f69089dab38daa30e428
+      size: 17544
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_997/dataset.json
+      hash: md5
+      md5: f5d605f91f90c790b78dd84b70e783b8
+      size: 72825746
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/mistral_nemo_instruct_2407/info_extraction_json/swiss_franc_loans/seed_997/predictions.jsonl
+      hash: md5
+      md5: 521227e1a3184f6b385e0ee862645b80
+      size: 4159790
+  sft@llm_dataset4:
+    cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
+      llm=bielik_11b_v23_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
+    deps:
+    - path: configs/llm/bielik_11b_v23_instruct.yaml
+      hash: md5
+      md5: 7c91942887226b961815fc7ffcf22feb
+      size: 152
+    - path: configs/peft_fine_tuning.yaml
+      hash: md5
+      md5: 6135de56a46fecca31c3c37fcf5ab294
+      size: 1602
+    - path: scripts/sft/fine_tune_deepspeed.py
+      hash: md5
+      md5: b343369c0c6534575d0d64db920a9b6f
+      size: 5051
+    outs:
+    - path: 
+        data/experiments/peft-fine-tune/bielik_11b_v23_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
+      hash: md5
+      md5: 9c02f24ec34e301c2173c44533bc1ac7.dir
+      size: 541088937
+      nfiles: 40
