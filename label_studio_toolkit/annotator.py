@@ -32,8 +32,13 @@ class LangChainAnnotator(Annotator):
         assert isinstance(result, self.schema)
         return result
 
+    async def async_annotate(self, input_data: dict[str, Any]) -> BaseModel:
+        result = await self.chain.ainvoke({"text": input_data})
+        assert isinstance(result, self.schema)
+        return result
+
 
 class LangChainOpenAIAnnotator(LangChainAnnotator):
     def __init__(self, model: str, prompt: str, schema: type[BaseModel]) -> None:
-        llm = ChatOpenAI(model=model)
+        llm = ChatOpenAI(model=model, temperature=0, max_retries=5)
         super().__init__(llm, prompt, schema, "json_schema")

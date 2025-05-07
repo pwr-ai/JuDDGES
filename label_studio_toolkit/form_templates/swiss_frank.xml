@@ -149,7 +149,7 @@
 
                 <!-- Apelacja -->
                 <Header value="Apelacja" />
-                <Text name="apelacja_desc" value="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę (np. 'Apelacja warszawska'). 
+                <Text name="apelacja_desc" value="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę (np. 'Apelacja warszawska').
                 'Zanonimizowano' jeśli niemożliwe do ustalenia bo zanonimizowano." />
                 <TextArea name="apelacja" toName="text" rows="1" maxSubmissions="1" placeholder="Wpisz apelację tutaj..." />
 
