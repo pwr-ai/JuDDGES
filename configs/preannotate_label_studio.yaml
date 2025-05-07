@@ -9,7 +9,7 @@ project_name: "Juddges Project: Swiss Frank"
 text_field: "text"
 model_version: ${model.name}
 
-annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation 
+annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation
 
 model:
   request_cache_db: .langchain_annotation_cache.db

@@ -1,0 +1,24 @@
+
+ls_base_url: ${oc.env:LABEL_STUDIO_BASE_URL}
+ls_api_key: ${oc.env:LABEL_STUDIO_API_KEY}
+project_name: "Juddges Project: Swiss Frank v2"
+text_field: "text"
+label_interface: label_studio_toolkit/form_templates/swiss_frank.xml
+
+model_version: gpt-4.1-2025-04-14
+data_path: data/analysis/sprawy_frankowe/annotations/gpt-4.1-2025-04-14/test_annotations.parquet
+
+filter_fields:
+  sprawa_frankowiczow: Tak
+
+not_annotation_fields:
+  - ${text_field}
+  - LLM
+  - schema
+  - language
+
+annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation 
+
+
+model:
+  request_cache_db: .langchain_annotation_cache.db

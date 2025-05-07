@@ -151,7 +151,8 @@ class SwissFrancJudgmentAnnotation(BaseModel):
         None, description="Czy sprawa dotyczy kredytu frankowego (CHF)?"
     )
     apelacja: str | None = Field(
-        None, description="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę. 'Zanonimizowano' jeśli niemożliwe do ustalenia bo zanonimizowano."
+        None,
+        description="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę. 'Zanonimizowano' jeśli niemożliwe do ustalenia bo zanonimizowano.",
     )
     data_wyroku: str | None = Field(None, description="Data wydania wyroku w formacie YYYY-MM-DD")
     typ_sadu: TypSadu | None = Field(None, description="Typ sądu rozpoznającego sprawę")
@@ -218,9 +219,7 @@ class SwissFrancJudgmentAnnotation(BaseModel):
     zarzut_zatrzymania: Zarzut | None = Field(
         None, description="Czy uwzględniono zarzut zatrzymania"
     )
-    zarzut_potracenia: Zarzut | None = Field(
-        None, description="Czy uwzględniono zarzut potrącenia"
-    )
+    zarzut_potracenia: Zarzut | None = Field(None, description="Czy uwzględniono zarzut potrącenia")
     odsetki_ustawowe: TakNie | None = Field(None, description="Czy uwzględniono odsetki ustawowe")
     data_rozpoczecia_odsetek: DataRozpoczeciaOdsetek | None = Field(
         None, description="Data rozpoczęcia naliczania odsetek"
