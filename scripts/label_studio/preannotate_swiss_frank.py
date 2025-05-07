@@ -30,7 +30,7 @@ def main(cfg: DictConfig):
     annotator = LangChainOpenAIAnnotator(cfg.model.name, cfg.prompt.template, schema)
 
     with get_openai_callback() as cb:
-        for i, task in tqdm(enumerate(client.get_tasks())):
+        for task in tqdm(client.get_tasks()):
             annotation = annotator.annotate(task.data[cfg.text_field])
             prediction = client.create_prediction(
                 prediction=annotation, model_version=cfg.model_version

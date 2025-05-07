@@ -1,0 +1,19 @@
+defaults:
+  - model: ../api_model/gpt_4.1
+  - prompt: annotate_swiss_frank
+  - _self_
+
+dataset:
+  train:
+    path: data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
+  test:
+    path: data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
+
+text_field: "text"
+model_version: ${model.name}
+annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation 
+
+output_dir: data/analysis/sprawy_frankowe/annotations/${model.name}
+
+model:
+  request_cache_db: .langchain_annotation_cache.db
