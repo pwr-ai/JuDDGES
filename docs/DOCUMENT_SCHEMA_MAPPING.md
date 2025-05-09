@@ -61,7 +61,6 @@ The table below maps properties between the unified schema, judgment-specific fi
 | structured_content.sections[].is_amended         | -                  | -                         | -                  | Whether segment has been amended         |
 | structured_content.semantic_graph                | -                  | -                         | -                  | Relationships between sections           |
 | structured_content.segmentation_method           | -                  | -                         | -                  | How document was segmented               |
-| section_embeddings                               | -                  | -                         | -                  | Vector embeddings by section             |
 | **Legal References**                             |
 | legal_references[].ref_id                        | -                  | -                         | -                  | Reference identifier                     |
 | legal_references[].ref_type                      | -                  | -                         | -                  | Type of reference                        |

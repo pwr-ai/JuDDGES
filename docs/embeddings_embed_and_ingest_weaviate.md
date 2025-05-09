@@ -53,7 +53,7 @@ CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro embed
 
 ## Step 2: Ingest embeddings to Weaviate
 
-* To upload the embeddings created in the previous step to a Weaviate database, one needs to run the following ommand with parameters similar to the previous one.
+* To upload the embeddings created in the previous step to a Weaviate database, one needs to run the following command with parameters similar to the previous one.
 * The upload will be done in two steps:
   * Upload chunks with their embeddings
   * Upload judgments with their aggregated embeddings (full dataset with aggregated embeddings will be ingested)
