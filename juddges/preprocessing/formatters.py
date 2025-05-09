@@ -19,7 +19,7 @@ class ConversationFormatter(Formatter):
 
     def __init__(
         self,
-        tokenizer: PreTrainedTokenizer,
+        tokenizer: PreTrainedTokenizer | None,
         prompt: PromptInfoExtractionConfig,
         dataset_context_field: str,
         dataset_output_field: str | None,
@@ -34,6 +34,9 @@ class ConversationFormatter(Formatter):
         self.use_output = use_output
         self.format_as_chat = format_as_chat
 
+        if self.format_as_chat:
+            assert self.tokenizer is not None
+
     def __call__(self, item: dict[str, Any]) -> dict[str, str]:
         final_input = self.prompt.render(context=item[self.dataset_context_field])
         if self.use_output:
@@ -46,6 +49,7 @@ class ConversationFormatter(Formatter):
             messages = [{"role": "user", "content": final_input}]
 
         if self.format_as_chat:
+            assert self.tokenizer is not None
             return {
                 self.FINAL_INPUT_FIELD: self.tokenizer.apply_chat_template(
                     conversation=messages,
