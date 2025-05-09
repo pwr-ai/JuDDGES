@@ -1,5 +1,5 @@
 defaults:
-  - embedding_model: ???
+  - embedding_model: sdadas/mmlw-roberta-large
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
@@ -13,6 +13,9 @@ chunk_config:
 
 batch_size: 4096
 num_output_shards: 10
+ingest_batch_size: 32  # Batch size for ingestion
+upsert: false  # Whether to update existing documents
+max_documents: null  # Maximum number of documents to ingest (null for all)
 
 output_dir: null
 

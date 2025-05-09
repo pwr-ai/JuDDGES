@@ -26,11 +26,11 @@ from transformers import (
 from trl import SFTConfig, SFTTrainer
 
 from juddges.config import FineTuningConfig
-from juddges.data.datasets.utils import format_to_conversations
 from juddges.models.factory import get_model
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
+from juddges.utils.formatters import format_to_conversations
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 

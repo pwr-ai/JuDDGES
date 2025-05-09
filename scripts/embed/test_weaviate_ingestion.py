@@ -8,13 +8,13 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from sentence_transformers import SentenceTransformer
 
-from ingest_to_weaviate import EnhancedWeaviateDB
+from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
 from juddges.settings import ROOT_PATH
 
 console = Console()
 
 
-def print_collections(db: EnhancedWeaviateDB) -> None:
+def print_collections(db: WeaviateLegalDocumentsDatabase) -> None:
     """Print all collections in the database."""
     console.print("\n[bold blue]All Collections[/bold blue]")
     collections = db.client.collections.list_all()
@@ -28,7 +28,7 @@ def print_collections(db: EnhancedWeaviateDB) -> None:
     console.print(table)
 
 
-def print_schema(db: EnhancedWeaviateDB) -> None:
+def print_schema(db: WeaviateLegalDocumentsDatabase) -> None:
     """Print the schema of both collections."""
     console.print("\n[bold blue]Weaviate Schema[/bold blue]")
 
@@ -54,7 +54,7 @@ def print_schema(db: EnhancedWeaviateDB) -> None:
         progress.stop_task(task)
 
 
-def print_collection_stats(db: EnhancedWeaviateDB) -> None:
+def print_collection_stats(db: WeaviateLegalDocumentsDatabase) -> None:
     """Print statistics about the collections."""
     console.print("\n[bold blue]Collection Statistics[/bold blue]")
 
@@ -67,7 +67,9 @@ def print_collection_stats(db: EnhancedWeaviateDB) -> None:
         console.print("[green]Fetching legal documents collection...[/green]")
         legal_docs_collection = db.legal_documents_collection
         legal_docs_count = db.get_collection_size(legal_docs_collection)
-        console.print(f"[green]Legal documents collection fetched. Count: {legal_docs_count:,}[/green]")
+        console.print(
+            f"[green]Legal documents collection fetched. Count: {legal_docs_count:,}[/green]"
+        )
 
         console.print("[green]Fetching document chunks collection...[/green]")
         chunks_collection = db.document_chunks_collection
@@ -86,7 +88,7 @@ def print_collection_stats(db: EnhancedWeaviateDB) -> None:
         progress.stop_task(task)
 
 
-def run_sample_queries(db: EnhancedWeaviateDB) -> None:
+def run_sample_queries(db: WeaviateLegalDocumentsDatabase) -> None:
     """Run sample queries to verify search functionality."""
     console.print("\n[bold blue]Sample Queries[/bold blue]")
 
@@ -163,12 +165,7 @@ def main() -> None:
         f"Connecting to Weaviate at {os.environ['WV_HOST']}:{os.environ['WV_PORT']} (gRPC: {os.environ['WV_GRPC_PORT']})"
     )
 
-    with EnhancedWeaviateDB(
-        os.environ["WV_HOST"],
-        os.environ["WV_PORT"],
-        os.environ["WV_GRPC_PORT"],
-        os.environ.get("WV_API_KEY"),
-    ) as db:
+    with WeaviateLegalDocumentsDatabase() as db:
         # Print all collections
         print_collections(db)
 

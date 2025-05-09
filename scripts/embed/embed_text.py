@@ -52,6 +52,13 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Sample item content: {sample_item}")
 
     ds = ds.filter(lambda item: item[TEXT_COL] is not None, num_proc=NUM_PROC)
+
+    # Limit the number of documents if max_documents is set
+    if config.max_documents and config.max_documents > 0:
+        logger.info(f"Limiting to {config.max_documents} documents")
+        ds = ds.select(range(min(config.max_documents, ds.num_rows)))
+    logger.info(f"Number of documents after limiting: {ds.num_rows}")
+
     model = SentenceTransformer(
         config.embedding_model.name,
         device=DEVICE,
@@ -61,6 +68,7 @@ def main(cfg: DictConfig) -> None:
 
     logger.info("Chunking dataset")
     chunk_ds = chunk_dataset(dataset=ds, config=config, tokenizer=model.tokenizer)
+    logger.info(f"Number of chunks after chunking: {chunk_ds.num_rows}")
 
     embedder = Embedder(model=model, column_to_embed=TextChunker.CHUNK_TEXT_COL)
     with embedder:
@@ -71,6 +79,7 @@ def main(cfg: DictConfig) -> None:
             num_proc=1,
             desc="Embedding chunks",
         )
+    logger.info(f"Number of chunks after embedding: {chunk_ds.num_rows}")
     save_dataset_as_parquet_shards(chunk_ds, config.num_output_shards, config.chunk_embeddings_dir)
 
     df = pl.scan_parquet(config.chunk_embeddings_dir)
