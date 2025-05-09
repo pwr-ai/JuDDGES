@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -82,6 +82,9 @@ class EmbeddingConfig(BaseModel, extra="forbid"):
     chunk_config: dict[str, Any] = None
     batch_size: int
     num_output_shards: int
+    max_documents: Optional[int] = None
+    ingest_batch_size: int = 32
+    upsert: bool = True
 
     @property
     def chunk_embeddings_dir(self) -> Path:
