@@ -20,7 +20,7 @@ load_dotenv(ROOT_PATH / ".env", override=True)
 class BaseWeaviateDB(ABC):
     def __init__(self, client: Optional[WeaviateClient] = None):
         """Initialize the Weaviate database connection.
-        
+
         Args:
             client: Optional pre-configured Weaviate client. If not provided, one will be created.
         """
@@ -30,15 +30,17 @@ class BaseWeaviateDB(ABC):
     def __enter__(self):
         """Set up the database connection when entering context."""
         if self.client is None:
-            connection_params = ConnectionParams.from_params(
-                host=os.getenv("WEAVIATE_HOST", "localhost"),
-                port=int(os.getenv("WEAVIATE_PORT", "8080")),
-                scheme=os.getenv("WEAVIATE_SCHEME", "http"),
-                headers={"X-OpenAI-Api-Key": os.getenv("OPENAI_API_KEY", "")},
+            self.client = weaviate.connect_to_custom(
+                http_host=os.getenv("WEAVIATE_HOST", "localhost"),
+                http_port=int(os.getenv("WEAVIATE_PORT", "8080")),
+                http_secure=False,
+                grpc_host=os.getenv("WEAVIATE_HOST", "localhost"),
                 grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),
-                timeout_config=60
+                grpc_secure=False,
+                auth_credentials=weaviate.auth.AuthApiKey(
+                    api_key=os.getenv("WEAVIATE_API_KEY", "")
+                ),
             )
-            self.client = weaviate.WeaviateClient(connection_params=connection_params)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -55,50 +57,9 @@ class BaseWeaviateDB(ABC):
             raise ValueError("Collection not initialized. Call safe_create_collection first.")
         return self._collection
 
-    def safe_create_collection(
-        self,
-        name: str,
-        description: str = "",
-        properties: Optional[List[Property]] = None,
-        vectorizer_config: Optional[dict] = None
-    ) -> Collection:
-        """Safely create a collection if it doesn't exist.
-        
-        Args:
-            name: Name of the collection
-            description: Optional description
-            properties: List of property configurations
-            vectorizer_config: Optional vectorizer configuration
-            
-        Returns:
-            The created or existing collection
-        """
-        try:
-            # Check if collection exists
-            if self.client.collections.exists(name):
-                logger.info(f"Collection {name} already exists")
-                self._collection = self.client.collections.get(name)
-                return self._collection
-
-            # Create new collection
-            logger.info(f"Creating collection {name}")
-            config = Configure.new(
-                name=name,
-                description=description,
-                vectorizer_config=vectorizer_config or {"none": {"vectorizeClassName": False}},
-                properties=properties or []
-            )
-            self._collection = self.client.collections.create(config)
-            logger.info(f"Successfully created collection {name}")
-            return self._collection
-
-        except Exception as e:
-            logger.error(f"Error creating collection {name}: {str(e)}")
-            raise
-
     def insert_batch(self, objects: List[dict], batch_size: int = 100) -> None:
         """Insert a batch of objects into the collection.
-        
+
         Args:
             objects: List of objects to insert
             batch_size: Size of each batch
@@ -110,7 +71,7 @@ class BaseWeaviateDB(ABC):
                         batch.add_object(
                             properties=obj.get("properties", {}),
                             vector=obj.get("vector"),
-                            uuid=obj.get("id")
+                            uuid=obj.get("id"),
                         )
                     except Exception as e:
                         logger.error(f"Failed to insert object {obj.get('id')}: {str(e)}")
@@ -141,4 +102,4 @@ class BaseWeaviateDB(ABC):
         return result
 
     def close(self) -> None:
-        self.__exit__(None, None, None) 
+        self.__exit__(None, None, None)

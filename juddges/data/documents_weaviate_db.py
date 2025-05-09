@@ -1,48 +1,26 @@
-import weaviate.classes.config as wvcc
-from typing import ClassVar, Optional, Any, Union, List, Dict
 import datetime
+from typing import Any, ClassVar, Dict, List, Optional, Union
+
 from loguru import logger
 
 import weaviate
+import weaviate.classes.config as wvcc
 from juddges.data.base_weaviate_db import BaseWeaviateDB
 from juddges.data.schemas import (
     DocumentChunk,
     LegalDocument,
-    LegalDocumentSchema,
-    LegalDocumentSectionSchema,
-    LegalDocumentSentenceSchema,
 )
+from juddges.settings import TEXT_EMBEDDING_MODEL, VectorName
 
 
 class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
     """Database for legal documents including both judgments and tax interpretations."""
-    
+
     LEGAL_DOCUMENTS_COLLECTION: ClassVar[str] = "legal_documents"
     DOCUMENT_CHUNKS_COLLECTION: ClassVar[str] = "document_chunks"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._documents_collection: Optional[weaviate.collections.Collection] = None
-        self._sections_collection: Optional[weaviate.collections.Collection] = None
-        self._sentences_collection: Optional[weaviate.collections.Collection] = None
-
-    @property
-    def documents_collection(self) -> weaviate.collections.Collection:
-        if self._documents_collection is None:
-            self._documents_collection = self.client.collections.get("LegalDocument")
-        return self._documents_collection
-
-    @property
-    def sections_collection(self) -> weaviate.collections.Collection:
-        if self._sections_collection is None:
-            self._sections_collection = self.client.collections.get("LegalDocumentSection")
-        return self._sections_collection
-
-    @property
-    def sentences_collection(self) -> weaviate.collections.Collection:
-        if self._sentences_collection is None:
-            self._sentences_collection = self.client.collections.get("LegalDocumentSentence")
-        return self._sentences_collection
 
     @property
     def legal_documents_collection(self) -> weaviate.collections.Collection:
@@ -84,81 +62,509 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
         Returns:
             The number of objects in the collection.
         """
-        response = collection.aggregate.over_all(
-            total_count=True
-        )
+        response = collection.aggregate.over_all(total_count=True)
         return response.total_count
+
+    def safe_create_collection(
+        self, name: str, description: str, properties: List[wvcc.Property], vectorizer_config: Any
+    ) -> None:
+        """Safely create a collection if it doesn't already exist.
+
+        Args:
+            name: Name of the collection to create
+            description: Description of the collection
+            properties: List of property configurations
+            vectorizer_config: Vectorizer configuration
+        """
+        try:
+            self.client.collections.create(
+                name=name,
+                description=description,
+                properties=properties,
+                vectorizer_config=vectorizer_config,
+            )
+            logger.info(f"Collection '{name}' created successfully")
+        except weaviate.exceptions.UnexpectedStatusCodeError as err:
+            if "already exists" in str(err) and err.status_code == 422:
+                logger.info(f"Collection '{name}' already exists, skipping creation")
+            else:
+                logger.error(f"Error creating collection '{name}': {err}")
+                raise
+
+    def delete_collection(self, collection_name: str) -> None:
+        """Delete a collection if it exists.
+
+        Args:
+            collection_name: Name of the collection to delete
+        """
+        try:
+            self.client.collections.delete(collection_name)
+            logger.info(f"Collection '{collection_name}' deleted successfully")
+        except weaviate.exceptions.UnexpectedStatusCodeError as err:
+            if "not found" in str(err).lower():
+                logger.info(f"Collection '{collection_name}' does not exist, skipping deletion")
+            else:
+                logger.error(f"Error deleting collection '{collection_name}': {err}")
+                raise
 
     def create_collections(self) -> None:
         # Create LegalDocument collection
         self.safe_create_collection(
-            name="LegalDocument",
+            name=self.LEGAL_DOCUMENTS_COLLECTION,
             description="Collection of legal documents",
             properties=[
                 wvcc.Property(
-                    name=name,
-                    data_type=wvcc.DataType.TEXT if dtype == str else wvcc.DataType.NUMBER,
-                    description=description,
-                    skip_vectorization=not vectorize,
-                )
-                for name, dtype, description, vectorize in LegalDocumentSchema
+                    name="document_id",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Unique identifier for the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="document_type",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Type of legal document (judgment, tax interpretation, etc.)",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="title",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Document title/name",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="date_issued",
+                    data_type=wvcc.DataType.TEXT,
+                    description="When the document was published, ISO format date",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="document_number",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Official reference number",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="language",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Document language",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="country",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Country of origin",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="full_text",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Raw full text of the document",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="summary",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Abstract or summary",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="thesis",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Thesis or main point of the document",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="keywords",
+                    data_type=wvcc.DataType.TEXT_ARRAY,
+                    description="Keywords describing the document",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="x",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="X coordinate for visualization",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="y",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="Y coordinate for visualization",
+                    skip_vectorization=True,
+                ),
+                # Nested OBJECT: IssuingBody
+                wvcc.Property(
+                    name="issuing_body",
+                    data_type=wvcc.DataType.OBJECT,
+                    description="Information about the body that issued the legal document",
+                    nested_properties=[
+                        wvcc.Property(name="name", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="jurisdiction", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="type", data_type=wvcc.DataType.TEXT),
+                    ],
+                ),
+                # Flattened metadata fields
+                wvcc.Property(
+                    name="ingestion_date",
+                    data_type=wvcc.DataType.DATE,
+                    description="When document was ingested (ISO format datetime)",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="last_updated",
+                    data_type=wvcc.DataType.DATE,
+                    description="When document was last updated (ISO format datetime)",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="processing_status",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Processing status of the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="source_url",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Source URL of the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="confidence_score",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="Confidence score for data extracted via ML",
+                    skip_vectorization=True,
+                ),  # Keep metadata as a property for backward compatibility (no nested_properties)=
+                # OBJECT_ARRAY: LegalReference
+                wvcc.Property(
+                    name="legal_references",
+                    data_type=wvcc.DataType.OBJECT_ARRAY,
+                    description="References to legal acts, regulations, or previous cases",
+                    nested_properties=[
+                        wvcc.Property(name="ref_id", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="ref_type", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="normalized_citation", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="target_document_id", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="target_segment_id", data_type=wvcc.DataType.TEXT),
+                    ],
+                ),
+                # OBJECT_ARRAY: LegalConcept
+                wvcc.Property(
+                    name="legal_concepts",
+                    data_type=wvcc.DataType.OBJECT_ARRAY,
+                    description="Legal concepts or topics discussed in the document",
+                    nested_properties=[
+                        wvcc.Property(name="concept_name", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="concept_type", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="relevance_score", data_type=wvcc.DataType.NUMBER),
+                    ],
+                ),
+                # OBJECT_ARRAY: Party
+                wvcc.Property(
+                    name="parties",
+                    data_type=wvcc.DataType.OBJECT_ARRAY,
+                    description="Parties involved in the legal case or interpretation",
+                    nested_properties=[
+                        wvcc.Property(name="party_id", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="party_type", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="name", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="role", data_type=wvcc.DataType.TEXT),
+                    ],
+                ),
+                # OBJECT: Outcome
+                wvcc.Property(
+                    name="outcome",
+                    data_type=wvcc.DataType.OBJECT,
+                    description="The outcome or result of the legal document",
+                    nested_properties=[
+                        wvcc.Property(name="decision_type", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="decision_summary", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="winning_party", data_type=wvcc.DataType.TEXT),
+                    ],
+                ),
+                # OBJECT: JudgmentSpecific
+                wvcc.Property(
+                    name="judgment_specific",
+                    data_type=wvcc.DataType.OBJECT,
+                    description="Fields specific to judgment documents",
+                    nested_properties=[
+                        wvcc.Property(name="court_level", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(
+                            name="judges",
+                            data_type=wvcc.DataType.OBJECT_ARRAY,
+                            nested_properties=[
+                                wvcc.Property(name="name", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="role", data_type=wvcc.DataType.TEXT),
+                            ],
+                        ),
+                        wvcc.Property(name="procedural_history", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="verdict", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="relief_granted", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(
+                            name="dissenting_opinions",
+                            data_type=wvcc.DataType.OBJECT_ARRAY,
+                            nested_properties=[
+                                wvcc.Property(name="judge", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
+                            ],
+                        ),
+                    ],
+                ),
+                # OBJECT: TaxInterpretationSpecific
+                wvcc.Property(
+                    name="tax_interpretation_specific",
+                    data_type=wvcc.DataType.OBJECT,
+                    description="Fields specific to tax interpretation documents",
+                    nested_properties=[
+                        wvcc.Property(name="tax_area", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(
+                            name="tax_provisions",
+                            data_type=wvcc.DataType.OBJECT_ARRAY,
+                            nested_properties=[
+                                wvcc.Property(name="provision_id", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="provision_text", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="code_section", data_type=wvcc.DataType.TEXT),
+                            ],
+                        ),
+                        wvcc.Property(name="taxpayer_type", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="interpretation_scope", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(
+                            name="effective_dates",
+                            data_type=wvcc.DataType.OBJECT,
+                            nested_properties=[
+                                wvcc.Property(name="start_date", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="end_date", data_type=wvcc.DataType.TEXT),
+                            ],
+                        ),
+                    ],
+                ),
+                # OBJECT: LegalActSpecific
+                wvcc.Property(
+                    name="legal_act_specific",
+                    data_type=wvcc.DataType.OBJECT,
+                    description="Fields specific to legal acts (statutes, regulations, etc.)",
+                    nested_properties=[
+                        wvcc.Property(name="act_type", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="enactment_date", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(
+                            name="effective_dates",
+                            data_type=wvcc.DataType.OBJECT,
+                            nested_properties=[
+                                wvcc.Property(name="start_date", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="end_date", data_type=wvcc.DataType.TEXT),
+                            ],
+                        ),
+                        wvcc.Property(name="jurisdiction_level", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="legislative_body", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(
+                            name="amendment_history",
+                            data_type=wvcc.DataType.OBJECT_ARRAY,
+                            nested_properties=[
+                                wvcc.Property(name="amendment_date", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="amending_act_id", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="description", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(
+                                    name="affected_segments", data_type=wvcc.DataType.TEXT_ARRAY
+                                ),
+                            ],
+                        ),
+                        wvcc.Property(name="current_status", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="official_publication", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="isap_id", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="parent_act_id", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="codification", data_type=wvcc.DataType.TEXT),
+                    ],
+                ),
+                # OBJECT_ARRAY: DocumentRelationship
+                wvcc.Property(
+                    name="relationships",
+                    data_type=wvcc.DataType.OBJECT_ARRAY,
+                    description="Relationships to other documents",
+                    nested_properties=[
+                        wvcc.Property(name="source_id", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="target_id", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="relationship_type", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="description", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="context_segment_id", data_type=wvcc.DataType.TEXT),
+                        wvcc.Property(name="confidence_score", data_type=wvcc.DataType.NUMBER),
+                        wvcc.Property(name="bidirectional", data_type=wvcc.DataType.BOOL),
+                        wvcc.Property(name="creation_date", data_type=wvcc.DataType.TEXT),
+                    ],
+                ),
+                # OBJECT: LegalAnalysis
+                wvcc.Property(
+                    name="legal_analysis",
+                    data_type=wvcc.DataType.OBJECT,
+                    description="Analysis elements common across document types",
+                    nested_properties=[
+                        wvcc.Property(
+                            name="key_findings",
+                            data_type=wvcc.DataType.OBJECT_ARRAY,
+                            nested_properties=[
+                                wvcc.Property(name="finding_id", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="importance", data_type=wvcc.DataType.NUMBER),
+                            ],
+                        ),
+                        wvcc.Property(
+                            name="reasoning_patterns",
+                            data_type=wvcc.DataType.OBJECT_ARRAY,
+                            nested_properties=[
+                                wvcc.Property(name="pattern_type", data_type=wvcc.DataType.TEXT),
+                                wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
+                            ],
+                        ),
+                        wvcc.Property(
+                            name="policy_considerations",
+                            data_type=wvcc.DataType.OBJECT_ARRAY,
+                            nested_properties=[
+                                wvcc.Property(
+                                    name="consideration_type", data_type=wvcc.DataType.TEXT
+                                ),
+                                wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
+                            ],
+                        ),
+                    ],
+                ),
+                # OBJECT: structured_content (serialize as JSON string if needed)
+                wvcc.Property(
+                    name="structured_content",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Structured representation of document content (JSON string)",
+                ),
+                # section_embeddings: store as JSON string
+                wvcc.Property(
+                    name="section_embeddings",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Vector embeddings for each section for semantic search (JSON string)",
+                ),
             ],
-            vectorizer_config=wvcc.Configure.Vectorizer.text2vec(
-                vectorize_collection_name=False,
-                model="sentence-transformers/all-mpnet-base-v2",
-            ),
+            vectorizer_config=[
+                wvcc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.BASE,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvcc.Configure.VectorIndex.hnsw(),
+                ),
+                wvcc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.DEV,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvcc.Configure.VectorIndex.hnsw(),
+                ),
+                wvcc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.FAST,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvcc.Configure.VectorIndex.hnsw(),
+                ),
+            ],
         )
 
-        # Create LegalDocumentSection collection
+        # Create DocumentChunks collection
         self.safe_create_collection(
-            name="LegalDocumentSection",
-            description="Collection of legal document sections",
+            name=self.DOCUMENT_CHUNKS_COLLECTION,
+            description="Collection of document chunks",
             properties=[
                 wvcc.Property(
-                    name=name,
-                    data_type=wvcc.DataType.TEXT if dtype == str else wvcc.DataType.NUMBER,
-                    description=description,
-                    skip_vectorization=not vectorize,
-                )
-                for name, dtype, description, vectorize in LegalDocumentSectionSchema
-            ] + [
-                wvcc.ReferenceProperty(
-                    name="document",
-                    target_collection="LegalDocument",
+                    name="document_id",
+                    data_type=wvcc.DataType.TEXT,
+                    description="ID of the parent document",
+                    skip_vectorization=True,
                 ),
-            ],
-            vectorizer_config=wvcc.Configure.Vectorizer.text2vec(
-                vectorize_collection_name=False,
-                model="sentence-transformers/all-mpnet-base-v2",
-            ),
-        )
-
-        # Create LegalDocumentSentence collection
-        self.safe_create_collection(
-            name="LegalDocumentSentence",
-            description="Collection of legal document sentences",
-            properties=[
                 wvcc.Property(
-                    name=name,
-                    data_type=wvcc.DataType.TEXT if dtype == str else wvcc.DataType.NUMBER,
-                    description=description,
-                    skip_vectorization=not vectorize,
-                )
-                for name, dtype, description, vectorize in LegalDocumentSentenceSchema
-            ] + [
-                wvcc.ReferenceProperty(
-                    name="document",
-                    target_collection="LegalDocument",
+                    name="document_type",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Type of document",
+                    skip_vectorization=True,
                 ),
-                wvcc.ReferenceProperty(
-                    name="section",
-                    target_collection="LegalDocumentSection",
+                wvcc.Property(
+                    name="language",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Language of the document chunk",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="chunk_id",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="Chunk identifier",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="chunk_text",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Text content of the chunk",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="segment_type",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Type of segment",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="position",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="Order in document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="confidence_score",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="Confidence of segment classification",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="cited_references",
+                    data_type=wvcc.DataType.TEXT_ARRAY,
+                    description="References cited in this chunk",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="tags",
+                    data_type=wvcc.DataType.TEXT_ARRAY,
+                    description="Custom semantic tags for this chunk",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="parent_segment_id",
+                    data_type=wvcc.DataType.TEXT,
+                    description="ID of parent segment",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="x",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="X coordinate for visualization",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="y",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="Y coordinate for visualization",
+                    skip_vectorization=True,
+                ),
+                # Optionally, add section_heading, start_char_index, end_char_index, entities as TEXT/NUMBER/OBJECT if needed
+            ],
+            vectorizer_config=[
+                wvcc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.BASE,
+                    vectorize_collection_name=False,
+                    source_properties=["chunk_text"],
+                    vector_index_config=wvcc.Configure.VectorIndex.hnsw(),
+                ),
+                wvcc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.DEV,
+                    vectorize_collection_name=False,
+                    source_properties=["chunk_text"],
+                    vector_index_config=wvcc.Configure.VectorIndex.hnsw(),
+                ),
+                wvcc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.FAST,
+                    vectorize_collection_name=False,
+                    source_properties=["chunk_text"],
+                    vector_index_config=wvcc.Configure.VectorIndex.hnsw(),
                 ),
             ],
-            vectorizer_config=wvcc.Configure.Vectorizer.text2vec(
-                vectorize_collection_name=False,
-                model="sentence-transformers/all-mpnet-base-v2",
-            ),
         )
 
         logger.info("Collections created successfully")
@@ -166,7 +572,7 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
     @staticmethod
     def uuid_from_document_chunk_id(document_id: str, chunk_id: int) -> str:
         return weaviate.util.generate_uuid5(f"{document_id}_chunk_{chunk_id}")
-        
+
     def search_by_segment_type(self, segment_type: str, limit: int = 10) -> list[dict]:
         """Search for document chunks by segment type."""
         response = self.document_chunks_collection.query.fetch_objects(
@@ -175,114 +581,25 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
         )
         return [item.properties for item in response.objects]
 
-    def get_document_relationships(
-        self,
-        document_id: str,
-        relationship_type: Optional[str] = None,
-        as_source: bool = True,
-        as_target: bool = False,
-    ) -> list[dict]:
-        """Get relationships for a document.
-        
-        Args:
-            document_id: The ID of the document to get relationships for.
-            relationship_type: Optional relationship type to filter by.
-            as_source: Whether to include relationships where this document is the source.
-            as_target: Whether to include relationships where this document is the target.
-        
-        Returns:
-            A list of relationship objects.
-        """
-        relationships_collection = self.client.collections.get("document_relationships")
-        
-        # Build filters
-        filters = None
-        
-        if as_source and not as_target:
-            filters = weaviate.classes.query.Filter.by_property("source_id").equal(document_id)
-        elif as_target and not as_source:
-            filters = weaviate.classes.query.Filter.by_property("target_id").equal(document_id)
-        elif as_source and as_target:
-            source_filter = weaviate.classes.query.Filter.by_property("source_id").equal(document_id)
-            target_filter = weaviate.classes.query.Filter.by_property("target_id").equal(document_id)
-            filters = source_filter.or_.merge(target_filter)
-        else:
-            return []
-        
-        # Add relationship type filter if specified
-        if relationship_type:
-            filters = filters.and_.by_property("relationship_type").equal(relationship_type)
-        
-        # Execute query
-        response = relationships_collection.query.fetch_objects(
-            filters=filters,
-            limit=1000,  # Use a high limit
-        )
-        
-        return [item.properties for item in response.objects]
-        
-    def semantic_search(
-        self, query: str, vector_name: str = "base", limit: int = 10, 
-        document_type: Optional[str] = None, collection_name: str = LEGAL_DOCUMENTS_COLLECTION
-    ) -> list[dict]:
-        """Perform semantic search using a specified named vector.
-        
-        Args:
-            query: The search query.
-            vector_name: The named vector to use for search (base, dev, or semantic).
-            limit: Maximum number of results to return.
-            document_type: Optional filter for document type.
-            collection_name: Collection to search in.
-            
-        Returns:
-            List of matching documents.
-        """
-        collection = self.client.collections.get(collection_name)
-        
-        # Build filters if document_type is provided
-        filters = None
-        if document_type:
-            filters = weaviate.classes.query.Filter.by_property("document_type").equal(document_type)
-        
-        response = collection.query.near_text(
-            query=query,
-            target_vectors=[vector_name],
-            filters=filters,
-            limit=limit,
-        )
-        
-        return [item.properties for item in response.objects]
-
     async def search_by_tags(self, tags: list[str], limit: int = 10) -> list[dict]:
         """Search for document chunks containing specific tags."""
-        # For multiple tags, we need to build a filter with OR conditions
         tag_filters = None
         for tag in tags:
             if tag_filters is None:
                 tag_filters = weaviate.classes.query.Filter.by_property("tags").contains(tag)
             else:
                 tag_filters = tag_filters.or_.by_property("tags").contains(tag)
-        
+
         response = await self.document_chunks_collection.query.fetch_objects(
             filters=tag_filters,
             limit=limit,
         )
         return [item.properties for item in response.objects]
-    
+
     async def semantic_search_in_segment_type(
         self, query: str, segment_type: str, vector_name: str = "base", limit: int = 10
     ) -> list[dict]:
-        """Semantic search within specific segment types using the specified vector.
-        
-        Args:
-            query: The search query.
-            segment_type: The segment type to search in.
-            vector_name: The named vector to use for search (base, dev, or semantic).
-            limit: Maximum number of results to return.
-            
-        Returns:
-            List of matching document chunks.
-        """
+        """Semantic search within specific segment types using the specified vector."""
         response = await self.document_chunks_collection.query.near_text(
             query=query,
             target_vectors=[vector_name],
@@ -290,112 +607,37 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
             limit=limit,
         )
         return [item.properties for item in response.objects]
-        
-    async def create_document_relationship(
-        self,
-        source_id: str,
-        target_id: str,
-        relationship_type: str,
-        description: Optional[str] = None,
-        context_segment_id: Optional[str] = None,
-        confidence_score: Optional[float] = None,
-        bidirectional: bool = False,
-        metadata: Optional[dict] = None,
-    ) -> str:
-        """Create a relationship between two documents."""
-        
-        # Create a UUID for the relationship
-        rel_id = weaviate.util.generate_uuid5(f"{source_id}_{relationship_type}_{target_id}")
-        
-        # Create the relationship object
-        relationship = {
-            "source_id": source_id,
-            "target_id": target_id,
-            "relationship_type": relationship_type,
-            "description": description,
-            "context_segment_id": context_segment_id,
-            "confidence_score": confidence_score,
-            "bidirectional": bidirectional,
-            "creation_date": datetime.datetime.now().isoformat(),
-            "metadata": metadata or {},
-        }
-        
-        # Insert the relationship
-        relationships_collection = self.client.collections.get("document_relationships")
-        await relationships_collection.data.insert(relationship, rel_id)
-        
-        return rel_id
 
-    async def get_citing_documents(self, document_id: str, limit: int = 10) -> list[dict]:
-        """Get documents that cite the specified document."""
-        # Get relationships where the document is the target and relationship type is 'cites'
-        relationships = await self.get_document_relationships(
-            document_id=document_id,
-            relationship_type="cites",
-            as_source=False,
-            as_target=True,
-        )
-        
-        # Get the citing document IDs
-        citing_ids = [rel["source_id"] for rel in relationships]
-        
-        # Limit to the requested number
-        citing_ids = citing_ids[:limit]
-        
-        # If no citing documents, return empty list
-        if not citing_ids:
-            return []
-        
-        # Get the actual documents
-        result = []
-        for doc_id in citing_ids:
-            try:
-                document = await self.legal_documents_collection.data.get_by_id(doc_id)
-                result.append(document.properties)
-            except Exception as e:
-                logger.error(f"Error retrieving citing document {doc_id}: {str(e)}")
-        
-        return result
-        
-    async def semantic_search(
-        self, query: str, vector_name: str = "base", limit: int = 10, 
-        document_type: Optional[str] = None, collection_name: str = LEGAL_DOCUMENTS_COLLECTION
+    def semantic_search(
+        self,
+        query: str,
+        target_vector: str = "base",
+        limit: int = 10,
+        document_type: Optional[str] = None,
+        collection_name: str = LEGAL_DOCUMENTS_COLLECTION,
     ) -> list[dict]:
-        """Perform semantic search using a specified named vector.
-        
-        Args:
-            query: The search query.
-            vector_name: The named vector to use for search (base, dev, or semantic).
-            limit: Maximum number of results to return.
-            document_type: Optional filter for document type.
-            collection_name: Collection to search in.
-            
-        Returns:
-            List of matching documents.
-        """
+        """Perform semantic search using a specified named vector."""
         collection = self.client.collections.get(collection_name)
-        
-        # Build filters if document_type is provided
+
         filters = None
         if document_type:
-            filters = weaviate.classes.query.Filter.by_property("document_type").equal(document_type)
-        
-        response = await collection.query.near_text(
+            filters = weaviate.classes.query.Filter.by_property("document_type").equal(
+                document_type
+            )
+
+        response = collection.query.near_text(
             query=query,
-            target_vectors=[vector_name],
+            target_vector=target_vector,
             filters=filters,
             limit=limit,
         )
-        
+
         return [item.properties for item in response.objects]
 
-    def insert(self, document: Union[LegalDocument, DocumentChunk], collection_name: Optional[str] = None) -> None:
-        """Insert a single document or chunk into the appropriate collection.
-        
-        Args:
-            document: The document or chunk to insert
-            collection_name: Optional collection name override
-        """
+    def insert(
+        self, document: Union[LegalDocument, DocumentChunk], collection_name: Optional[str] = None
+    ) -> None:
+        """Insert a single document or chunk into the appropriate collection."""
         if collection_name is None:
             if isinstance(document, LegalDocument):
                 collection = self.legal_documents_collection
@@ -415,25 +657,14 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
             raise
 
     def search(
-        self, 
-        query: str, 
+        self,
+        query: str,
         collection_name: Optional[str] = None,
         vector_name: str = "base",
         limit: int = 10,
         filters: Optional[weaviate.classes.query.Filter] = None,
     ) -> List[Dict]:
-        """Search for documents using semantic search.
-        
-        Args:
-            query: The search query
-            collection_name: Optional collection name override
-            vector_name: The named vector to use for search (base, dev, or semantic)
-            limit: Maximum number of results to return
-            filters: Optional query filters
-            
-        Returns:
-            List of matching documents
-        """
+        """Search for documents using semantic search."""
         if collection_name is None:
             collection = self.legal_documents_collection
         else:
@@ -452,16 +683,11 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
             raise
 
     def delete(
-        self, 
-        document_id: str, 
+        self,
+        document_id: str,
         collection_name: Optional[str] = None,
     ) -> None:
-        """Delete a document from the specified collection.
-        
-        Args:
-            document_id: ID of the document to delete
-            collection_name: Optional collection name override
-        """
+        """Delete a document from the specified collection."""
         if collection_name is None:
             collection = self.legal_documents_collection
         else:
@@ -472,4 +698,4 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
             logger.info(f"Successfully deleted document {document_id}")
         except Exception as e:
             logger.error(f"Error deleting document {document_id}: {str(e)}")
-            raise 
+            raise

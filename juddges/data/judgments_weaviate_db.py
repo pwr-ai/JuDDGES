@@ -1,13 +1,13 @@
-import weaviate.classes.config as wvcc
 from typing import ClassVar
 
 import weaviate
+import weaviate.classes.config as wvcc
 from juddges.data.base_weaviate_db import WeaviateDatabase
 
 
 class WeaviateJudgmentsDatabase(WeaviateDatabase):
     """Database for court judgments."""
-    
+
     JUDGMENTS_COLLECTION: ClassVar[str] = "judgments"
     JUDGMENT_CHUNKS_COLLECTION: ClassVar[str] = "judgment_chunks"
 
@@ -389,4 +389,4 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
 
     @staticmethod
     def uuid_from_judgment_chunk_id(judgment_id: str, chunk_id: int) -> str:
-        return weaviate.util.generate_uuid5(f"{judgment_id}_chunk_{chunk_id}") 
+        return weaviate.util.generate_uuid5(f"{judgment_id}_chunk_{chunk_id}")
