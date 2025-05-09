@@ -5,20 +5,22 @@ from pprint import pformat
 
 import hydra
 import torch
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 from loguru import logger
 from omegaconf import DictConfig
 from vllm import LLM, SamplingParams
+from vllm.lora.request import LoRARequest
 
 from juddges.config import PredictInfoExtractionConfig
 from juddges.preprocessing.context_truncator import ContextTruncator
-from juddges.preprocessing.text_encoder import TextEncoderForEvalPlainTextFormat
+from juddges.preprocessing.formatters import ConversationFormatter
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 
 torch.set_float32_matmul_precision("high")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
+NUM_GPUS = torch.cuda.device_count()
 
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
@@ -34,34 +36,87 @@ def main(cfg: DictConfig) -> None:
 
     llm = LLM(
         model=config.llm.name,
-        quantization="bitsandbytes",
-        load_format="bitsandbytes",
+        dtype="bfloat16",
         enable_lora=True,
-        qlora_adapter_name_or_path=config.llm.adapter_path_or_last_ckpt_path,
-        max_model_len=config.llm.max_seq_length,
         max_num_seqs=config.llm.batch_size,
+        tensor_parallel_size=NUM_GPUS,
+        gpu_memory_utilization=0.95,
+        seed=config.random_seed,
+    )
+    lora_request = LoRARequest(
+        lora_name="adapter_model",
+        lora_int_id=0,
+        lora_local_path=config.llm.adapter_path_or_last_ckpt_path,
     )
 
-    truncator = ContextTruncator(
-        tokenizer=llm.llm_engine.tokenizer.get_lora_tokenizer(),
-        max_length=config.corrected_max_seq_length,
+    ds = prepare_and_save_dataset_for_prediction(
+        dataset=ds,
+        config=config,
+        llm=llm,
     )
-    encoder = TextEncoderForEvalPlainTextFormat(truncator=truncator)
-    ds = ds.map(encoder, num_proc=NUM_PROC)
 
     params = SamplingParams(
-        max_tokens=config.generate_kwargs.get("max_new_tokens", 100),
-        temperature=config.generate_kwargs.get("temperature", 0.0),
+        max_tokens=config.generate_kwargs.pop("max_new_tokens"),
+        temperature=config.generate_kwargs.pop("temperature"),
     )
+    assert config.generate_kwargs.pop("do_sample")
+    assert not config.generate_kwargs
 
-    outputs = llm.generate(
-        prompts=ds["final_input"],
+    outputs = llm.chat(
+        messages=ds[ConversationFormatter.MESSAGES_FIELD],
         sampling_params=params,
+        lora_request=lora_request,
     )
     results = [{"answer": ans, "gold": gold} for ans, gold in zip(outputs, ds["output"])]
 
     with open(output_file, "w") as f:
         json.dump(results, f, indent="\t", ensure_ascii=False)
+
+
+def prepare_and_save_dataset_for_prediction(
+    dataset: Dataset,
+    config: PredictInfoExtractionConfig,
+    llm: LLM,
+) -> Dataset:
+    tokenizer = llm.get_tokenizer()
+    max_input_length = config.get_max_input_length_accounting_for_output(
+        llm.llm_engine.model_config.max_model_len
+    )
+    context_truncator = ContextTruncator(
+        prompt_without_context=config.prompt.render(context=""),
+        tokenizer=tokenizer,
+        max_length=max_input_length,
+    )
+    dataset = dataset.map(
+        lambda x: context_truncator(context=x[config.dataset.context_field]),
+        batched=False,
+        desc="Truncating context",
+        num_proc=NUM_PROC,
+    )
+
+    formatter = ConversationFormatter(
+        tokenizer=None,
+        prompt=config.prompt,
+        dataset_context_field=config.dataset.context_field,
+        dataset_output_field=None,
+        use_output=False,
+        format_as_chat=False,
+    )
+    cols_to_remove = set(dataset.column_names).difference(
+        set(["num_truncated_tokens", "truncated_ratio"])
+    )
+    dataset = dataset.map(
+        formatter,
+        batched=False,
+        remove_columns=cols_to_remove,
+        desc="Formatting dataset",
+        num_proc=NUM_PROC,
+    )
+
+    logger.info(f"Saving dataset to {config.dataset_file}")
+    dataset.to_json(config.dataset_file, force_ascii=False)
+
+    return dataset
 
 
 if __name__ == "__main__":

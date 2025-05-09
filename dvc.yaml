@@ -165,6 +165,32 @@ stages:
       - data/experiments/predict/fine_tuned/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
       - data/experiments/predict/fine_tuned/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
+  predict_swiss_franc_loans_on_fine_tuned_vllm:
+    matrix:
+      <<: *sft_models
+      seed: ${seeds}
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/predict_vllm.py
+      dataset=${item.llm_dataset.dataset}
+      llm=${item.llm_dataset.llm}
+      prompt=${item.llm_dataset.prompt}
+      ie_schema=${item.llm_dataset.ie_schema}
+      random_seed=${item.seed}
+      llm.adapter_path=data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
+      output_dir=data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
+    deps:
+      - scripts/sft/predict_vllm.py
+      - configs/predict.yaml
+      - configs/llm/${item.llm_dataset.llm}.yaml
+      - configs/prompt/${item.llm_dataset.prompt}.yaml
+      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
+      - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
+    outs:
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
+
+
   predict_with_api:
     matrix:
       dataset:
