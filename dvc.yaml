@@ -231,95 +231,26 @@ stages:
     outs:
       - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/metrics.json
 
-  evaluate_api_models:
+  evaluate_llm_as_judge:
     matrix:
-      dataset:
-        - en-court-instruct
-        - pl-court-instruct
-      llm:
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
-      seed: [997]
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/${item.dataset}/${item.llm}/outputs_${item.seed}.json
-      --num-proc=-1
-    deps:
-      - scripts/sft/evaluate.py
-      - data/experiments/predict/${item.dataset}/${item.llm}/outputs_${item.seed}.json
-    outs:
-      - data/experiments/predict/${item.dataset}/${item.llm}/metrics_${item.seed}.json
-
-  evaluate_llm_as_judge_pl:
-    matrix:
-      judge_llm:
-        - gpt_4o_mini
-      evaluated_llm:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
-        - Bielik-7B-Instruct-v0.1
-        - Bielik-7B-Instruct-v0.1-fine-tuned
-        - Bielik-11B-v2.2-Instruct
-        - Bielik-11B-v2.2-Instruct-fine-tuned
+      <<: *sft_models
       seed: ${seeds}
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
-      api_llm=${item.judge_llm}
-      answers_file=data/experiments/predict/pl-court-instruct/${item.evaluated_llm}/outputs_${item.seed}.json
-      out_metric_file=data/experiments/predict/pl-court-instruct/${item.evaluated_llm}/judge_metrics_${item.seed}.json
-      prompt=pl
-    deps:
-      - scripts/sft/evaluate_llm_as_judge.py
-      - data/experiments/predict/pl-court-instruct/${item.evaluated_llm}/outputs_${item.seed}.json
-    outs:
-      - data/experiments/predict/pl-court-instruct/${item.evaluated_llm}/judge_metrics_${item.seed}.json
-
-  evaluate_llm_as_judge_en:
-    matrix:
+      model_type:
+        - raw
+        - fine_tuned
       judge_llm:
-        - gpt_4o_mini
-      evaluated_llm:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
-      seed: ${seeds}
+        - gpt-4o-mini-2024-07-18
     cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
-      api_llm=${item.judge_llm}
-      answers_file=data/experiments/predict/en-court-instruct/${item.evaluated_llm}/outputs_${item.seed}.json
-      out_metric_file=data/experiments/predict/en-court-instruct/${item.evaluated_llm}/judge_metrics_${item.seed}.json
-      prompt=en
+      PYTHONPATH=. python scripts/sft/llm_as_judge.py
+      data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml
+      --judge-model=${item.judge_llm}
     deps:
-      - scripts/sft/evaluate_llm_as_judge.py
-      - data/experiments/predict/en-court-instruct/${item.evaluated_llm}/outputs_${item.seed}.json
+      - scripts/sft/llm_as_judge.py
+      - configs/ie_schema/swiss_franc_loans.yaml
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
     outs:
-      - data/experiments/predict/en-court-instruct/${item.evaluated_llm}/judge_metrics_${item.seed}.json
-
-  evaluate_llm_as_judge_api_models:
-    matrix:
-      language:
-        - pl
-        - en
-      judge_llm:
-        - gpt_4o_mini
-      evaluated_llm:
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
-      seed: [997]
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
-      api_llm=${item.judge_llm}
-      answers_file=data/experiments/predict/${item.language}-court-instruct/${item.evaluated_llm}/outputs_${item.seed}.json
-      out_metric_file=data/experiments/predict/${item.language}-court-instruct/${item.evaluated_llm}/judge_metrics_${item.seed}.json
-      prompt=${item.language}
-    deps:
-      - scripts/sft/evaluate_llm_as_judge.py
-      - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_llm}/outputs_${item.seed}.json
-    outs:
-      - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_llm}/judge_metrics_${item.seed}.json
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/llm_as_judge_${item.judge_llm}.json
 
   summarize_ngram_metrics:
     matrix:
