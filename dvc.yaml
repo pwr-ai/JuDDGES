@@ -80,6 +80,17 @@ stages:
       - data/datasets/pl/swiss_franc_loans/test.jsonl
       - data/datasets/pl/swiss_franc_loans/dataset_info.json
 
+  build_en_appealcourt_coded_dataset:
+    cmd: >-
+      PYTHONPATH=. python scripts/dataset/build_en_appealcourt_coded_dataset.py
+      data/datasets/en/en_appealcourt_coded
+    deps:
+      - scripts/dataset/build_en_appealcourt_coded_dataset.py
+    outs:
+      - data/datasets/en/en_appealcourt_coded/train.json
+      - data/datasets/en/en_appealcourt_coded/test.json
+      - data/datasets/en/en_appealcourt_coded/dataset_info.json
+
   ### ---------------------------- Fine-tuning ---------------------------- ###
   sft:
     matrix: &sft_models
