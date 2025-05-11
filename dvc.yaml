@@ -83,9 +83,11 @@ stages:
   build_en_appealcourt_coded_dataset:
     cmd: >-
       PYTHONPATH=. python scripts/dataset/build_en_appealcourt_coded_dataset.py
-      data/datasets/en/en_appealcourt_coded
+      --target-dir data/datasets/en/en_appealcourt_coded
+      --schema-file configs/ie_schema/en_appealcourt.yaml
     deps:
       - scripts/dataset/build_en_appealcourt_coded_dataset.py
+      - configs/ie_schema/en_appealcourt.yaml
     outs:
       - data/datasets/en/en_appealcourt_coded/train.json
       - data/datasets/en/en_appealcourt_coded/test.json

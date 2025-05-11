@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import typer
+import yaml
 from datasets import load_dataset
 from langchain_core.utils.json import parse_json_markdown
 from loguru import logger
@@ -19,8 +20,11 @@ MAX_OUTPUT_TOKENS = 5_000
 MAX_INPUT_TOKENS = 30_000
 
 
-def main(target_path: Path = typer.Argument(..., help="Path to save the processed dataset")):
-    target_path.mkdir(parents=True, exist_ok=True)
+def main(
+    target_dir: Path = typer.Option(..., help="Path to save the processed dataset"),
+    schema_file: Path = typer.Option(..., help="Path to the schema file"),
+):
+    target_dir.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(EN_DATASET_REPO)
 
@@ -32,6 +36,9 @@ def main(target_path: Path = typer.Argument(..., help="Path to save the processe
         "tokenizer": TOKENIZER,
         "output_column": OUTPUT_COLUMN,
     }
+
+    with open(schema_file, "r") as f:
+        schema = yaml.safe_load(f)
 
     for split_name, data in ds.items():
         data = data.rename_column(OUTPUT_COLUMN, "output").select_columns(["context", "output"])
@@ -69,23 +76,26 @@ def main(target_path: Path = typer.Argument(..., help="Path to save the processe
         size_before_filtering = len(df)
         df = df[df["output"].notna()]
 
+        if not df["output"].apply(lambda x: set(x.keys()) == set(schema.keys())).all():
+            raise ValueError("Schema columns do not match dataset columns")
+
         df["output"] = df["output"].apply(json.dumps)
 
         stats[split_name]["filtered_by_all_missing_values"] = size_before_filtering - len(df)
         stats[split_name]["final_size"] = len(df)
         logger.info(f"[{split_name}] Final dataset size: {len(df)}")
 
-        f_name = target_path / f"{split_name}.json"
+        f_name = target_dir / f"{split_name}.json"
         logger.info(f"[{split_name}] Saving to {f_name}")
         df.to_json(f_name, orient="records", indent=4)
 
-    stats_path = target_path / "dataset_info.json"
+    stats_path = target_dir / "dataset_info.json"
     logger.info(f"[{split_name}] Saving stats to {stats_path}")
     with open(stats_path, "w") as f:
         json.dump(stats, f, indent=4)
 
     # check dataset loads
-    ds = load_dataset("json", data_dir=target_path)
+    ds = load_dataset("json", data_dir=target_dir)
     logger.info(f"Dataset correctly loaded: {ds}")
 
 
