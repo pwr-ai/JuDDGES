@@ -5950,3 +5950,19 @@ stages:
       hash: md5
       md5: 5b631a7cc8f0a2cae11876c6bc04fdab
       size: 1375605
+  summarize_metrics@data/experiments/predict/raw/pl_court_swiss_franc_loans:
+    cmd: PYTHONPATH=. python scripts/sft/summarize_metrics.py --root-dir data/experiments/predict/raw/pl_court_swiss_franc_loans
+    deps:
+    - path: scripts/sft/summarize_metrics.py
+      hash: md5
+      md5: 4fbb921d5d4ab3bf11e6f6228c07d162
+      size: 2562
+    outs:
+    - path: data/experiments/predict/raw/pl_court_swiss_franc_loans/metrics_judge_summary.md
+      hash: md5
+      md5: d5a55762acefd655b1fbb4a62114d710
+      size: 5463
+    - path: data/experiments/predict/raw/pl_court_swiss_franc_loans/metrics_ngram_summary.md
+      hash: md5
+      md5: a50eb78bcfa4d9c5f83da81ae3727ce3
+      size: 7573

@@ -245,7 +245,15 @@ stages:
 
   evaluate_llm_as_judge:
     matrix:
-      <<: *sft_models
+      llm_dataset:
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: bielik_11b_v23_instruct
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans
       seed: ${seeds}
       model_type:
         - raw
@@ -264,10 +272,11 @@ stages:
     outs:
       - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/llm_as_judge_${item.judge_llm}.json
 
-  summarize_ngram_metrics:
+  summarize_metrics:
     matrix:
       dir:
-        - data/experiments/predict/raw/pl-court-frankowe-instruct
+        - data/experiments/predict/raw/pl_court_swiss_franc_loans
+        - data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans
     cmd: >-
       PYTHONPATH=. python scripts/sft/summarize_metrics.py
       --root-dir ${item.dir}
@@ -276,16 +285,5 @@ stages:
     metrics:
       - ${item.dir}/metrics_ngram_summary.md:
           cache: false
-
-  summarize_judge_metrics:
-    matrix:
-      dir:
-        - data/experiments/predict/raw/pl-court-frankowe-instruct
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/summarize_metrics.py
-      --root-dir ${item.dir}
-    deps:
-      - scripts/sft/summarize_metrics.py
-    metrics:
       - ${item.dir}/metrics_judge_summary.md:
           cache: false
