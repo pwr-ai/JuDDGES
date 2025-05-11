@@ -117,7 +117,7 @@ def get_llm_tokenizer(
         logger.info(f"Loading adapter from {llm_config.adapter_path}")
         with warnings.catch_warnings():
             warnings.filterwarnings(
-                "ignore",
+                "error",
                 category=UserWarning,
                 message="Found missing adapter keys while loading the checkpoint*",
             )

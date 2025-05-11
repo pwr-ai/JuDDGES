@@ -3615,9 +3615,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/pllum_12b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
       hash: md5
-      md5: 9268475cc0b4f1cfccbce148f253a2c9.dir
-      size: 1446865635
-      nfiles: 92
+      md5: d796f96ce472c0bcf2f75da296116e72.dir
+      size: 982050413
+      nfiles: 36
   sft@llm_dataset0:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
       llm=llama_3.1_8b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
@@ -3930,9 +3930,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/llama_3.2_3b_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
       hash: md5
-      md5: 0f3cfbf31a401015b44b6fde91decb2b.dir
-      size: 263948441
-      nfiles: 32
+      md5: 471349362b4aa6f97c24fcdb912f4794.dir
+      size: 458665721
+      nfiles: 36
   predict_swiss_franc_loans@llm_dataset1-42:
     cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
       llm=llama_3.2_3b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
@@ -4441,9 +4441,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/bielik_11b_v23_instruct/pl_court_swiss_franc_loans/info_extraction_json/swiss_franc_loans/
       hash: md5
-      md5: 9c02f24ec34e301c2173c44533bc1ac7.dir
-      size: 541088937
-      nfiles: 40
+      md5: 66b3f54524a1337937378c3237dbc758.dir
+      size: 1065748713
+      nfiles: 44
   predict_swiss_franc_loans@llm_dataset0-42:
     cmd: PYTHONPATH=. python scripts/sft/predict.py dataset=pl_court_swiss_franc_loans
       llm=llama_3.1_8b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans
@@ -5685,3 +5685,268 @@ stages:
       hash: md5
       md5: 9046c243c6ca71fba0975954c55d58c1
       size: 4086625
+  summarize_ngram_metrics@data/experiments/predict/raw/pl_court_swiss_franc_loans:
+    cmd: PYTHONPATH=. python scripts/sft/summarize_metrics.py --root-dir data/experiments/predict/raw/pl_court_swiss_franc_loans
+    deps:
+    - path: scripts/sft/summarize_metrics.py
+      hash: md5
+      md5: d32748e2e667e257fdc2bad5ee2859a6
+      size: 2975
+    outs:
+    - path: data/experiments/predict/raw/pl_court_swiss_franc_loans/metrics_ngram_summary.md
+      hash: md5
+      md5: a50eb78bcfa4d9c5f83da81ae3727ce3
+      size: 7573
+  summarize_ngram_metrics@data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans:
+    cmd: PYTHONPATH=. python scripts/sft/summarize_metrics.py --root-dir data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans
+    deps:
+    - path: scripts/sft/summarize_metrics.py
+      hash: md5
+      md5: d32748e2e667e257fdc2bad5ee2859a6
+      size: 2975
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/metrics_ngram_summary.md
+      hash: md5
+      md5: 262a91ceb9fb7a5ece2d3c09a1d4dcad
+      size: 7573
+  evaluate_llm_as_judge@llm_dataset1-997-fine_tuned-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_997/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_997/predictions.jsonl
+      hash: md5
+      md5: 9046c243c6ca71fba0975954c55d58c1
+      size: 4086625
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_997/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: 494e5a7df566a3f0148bab3ae63e6bcb
+      size: 1376344
+  evaluate_llm_as_judge@llm_dataset1-7312-raw-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      hash: md5
+      md5: a338865019b4c8ed4cddef6192448fd3
+      size: 4090177
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_7312/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: 6fa14a11a9e9b4c2a7903773d2442167
+      size: 1376218
+  evaluate_llm_as_judge@llm_dataset1-997-raw-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_997/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_997/predictions.jsonl
+      hash: md5
+      md5: 9046c243c6ca71fba0975954c55d58c1
+      size: 4086625
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_997/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: 494e5a7df566a3f0148bab3ae63e6bcb
+      size: 1376344
+  evaluate_llm_as_judge@llm_dataset1-7312-fine_tuned-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      hash: md5
+      md5: a338865019b4c8ed4cddef6192448fd3
+      size: 4090177
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_7312/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: 6fa14a11a9e9b4c2a7903773d2442167
+      size: 1376218
+  evaluate_llm_as_judge@llm_dataset1-42-raw-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl
+      hash: md5
+      md5: ef6522822c5061a853eed0f7a93435b4
+      size: 4088740
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/bielik_11b_v23_instruct/info_extraction_json/swiss_franc_loans/seed_42/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: 6d5952ec8039e3f0bcf552403b75ad2d
+      size: 1376535
+  evaluate_llm_as_judge@llm_dataset0-7312-fine_tuned-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      hash: md5
+      md5: 8a6472ecd48f8b4257afd607739ed134
+      size: 4515197
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_7312/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: c6534931000c0562c33cd66cb1f04d2f
+      size: 1375550
+  evaluate_llm_as_judge@llm_dataset0-7312-raw-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/raw/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_7312/predictions.jsonl
+      hash: md5
+      md5: bcd04c56528267f2d7244fd457a1222f
+      size: 4520563
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_7312/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: 28c6f73f45d73ef1583efcb9797bf8ba
+      size: 1375629
+  evaluate_llm_as_judge@llm_dataset0-42-fine_tuned-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl
+      hash: md5
+      md5: c0c5335198fd13f14e8420b4786672cc
+      size: 4513391
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_42/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: e9edaf5e9e8a248e117643dc6cc46854
+      size: 1375695
+  evaluate_llm_as_judge@llm_dataset0-42-raw-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/raw/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl
+      hash: md5
+      md5: 94934654b2a418d6edd8dd38452c2050
+      size: 4527883
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/raw/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_42/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: fa15e1bcd19363be96e991ac31950bcf
+      size: 1375627
+  evaluate_llm_as_judge@llm_dataset0-997-fine_tuned-gpt-4o-mini-2024-07-18:
+    cmd: PYTHONPATH=. python scripts/sft/llm_as_judge.py 
+      data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_997/predictions.jsonl
+      configs/ie_schema/swiss_franc_loans.yaml --judge-model=gpt-4o-mini-2024-07-18
+    deps:
+    - path: configs/ie_schema/swiss_franc_loans.yaml
+      hash: md5
+      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
+      size: 6221
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_997/predictions.jsonl
+      hash: md5
+      md5: 0dbfb11d83f59d479a8765cf29facf0a
+      size: 4517358
+    - path: scripts/sft/llm_as_judge.py
+      hash: md5
+      md5: 86e6c038a8f496387ff6526997679441
+      size: 6547
+    outs:
+    - path: 
+        data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/llama_3.2_3b_instruct/info_extraction_json/swiss_franc_loans/seed_997/llm_as_judge_gpt-4o-mini-2024-07-18.json
+      hash: md5
+      md5: 5b631a7cc8f0a2cae11876c6bc04fdab
+      size: 1375605
