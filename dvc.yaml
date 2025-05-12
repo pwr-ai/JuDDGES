@@ -203,28 +203,6 @@ stages:
       - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
       - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
-  predict_with_api:
-    matrix:
-      dataset:
-        - pl-court-instruct
-        - en-court-instruct
-      llm:
-        - gpt-4o
-        - gpt-4o-mini
-      seed:
-        - 997
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/predict_with_api.py
-      dataset=${item.dataset}
-      llm=${item.llm}
-      seed=${item.seed}
-      output_file=data/experiments/predict/${item.dataset}/open_ai_${item.llm}/outputs_${item.seed}.json
-    deps:
-      - scripts/sft/predict_with_api.py
-      - configs/predict_with_api.yaml
-    outs:
-      - data/experiments/predict/${item.dataset}/open_ai_${item.llm}/outputs_${item.seed}.json
-
   ### ---------------------------- Evaluation ---------------------------- ###
   evaluate: # use with NUM_PROC
     matrix:

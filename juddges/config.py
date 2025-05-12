@@ -40,7 +40,7 @@ class LLMConfig(BaseModel, extra="forbid"):
         return self.adapter_path is not None
 
     @cached_property
-    def adapter_path_or_last_ckpt_path(self) -> Path:
+    def adapter_path_or_first_ckpt_path(self) -> Path:
         if (self.adapter_path / "adapter_model.safetensors").exists():
             return self.adapter_path
 
@@ -50,16 +50,16 @@ class LLMConfig(BaseModel, extra="forbid"):
                 f"No adapter_model.safetensors or checkpoint dir found in {self.adapter_path}"
             )
 
-        last_checkpoint_adapter_path, *_ = sorted(
+        first_checkpoint_adapter_path, *_ = sorted(
             checkpoints,
             key=lambda x: int(x.stem.split("-")[-1]),
-            reverse=True,
+            reverse=False,
         )
         logger.warning(
-            "adapter_path was set to checkpoints dir, using last checkpoint "
-            f"(set specific checkpoint path as adapter_path to use other checkpoint): {last_checkpoint_adapter_path}"
+            "adapter_path was set to checkpoints dir, using FIRST checkpoint "
+            f"(set specific checkpoint path as adapter_path to use other checkpoint): {first_checkpoint_adapter_path}"
         )
-        return last_checkpoint_adapter_path
+        return first_checkpoint_adapter_path
 
 
 class EmbeddingModelConfig(BaseModel, extra="forbid"):
