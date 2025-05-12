@@ -1,0 +1,6 @@
+outs:
+- md5: 29a04794899ee05471c57b50d856e2c7.dir
+  size: 61310172
+  nfiles: 1
+  hash: md5
+  path: swiss_franc_loans_annotated

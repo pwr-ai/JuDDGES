@@ -203,6 +203,41 @@ stages:
       - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
       - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
+  predict_swiss_franc_loans_raw_vllm:
+    matrix:
+      llm_dataset:
+        - dataset: pl_court_swiss_franc_loans_annotated
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans_annotated
+        - dataset: pl_court_swiss_franc_loans_annotated
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans_annotated
+        - dataset: pl_court_swiss_franc_loans_annotated
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_json
+          ie_schema: swiss_franc_loans_annotated
+      seed: ${seeds}
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/predict_vllm.py
+      dataset=${item.llm_dataset.dataset}
+      llm=${item.llm_dataset.llm}
+      prompt=${item.llm_dataset.prompt}
+      ie_schema=${item.llm_dataset.ie_schema}
+      random_seed=${item.seed}
+      output_dir=data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
+    deps:
+      - scripts/sft/predict_vllm.py
+      - configs/predict.yaml
+      - configs/llm/${item.llm_dataset.llm}.yaml
+      - configs/prompt/${item.llm_dataset.prompt}.yaml
+      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
+    outs:
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
+
   ### ---------------------------- Evaluation ---------------------------- ###
   evaluate: # use with NUM_PROC
     matrix:
