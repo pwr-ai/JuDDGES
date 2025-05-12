@@ -4,7 +4,10 @@ from pydantic import BaseModel as PydanticModel
 from pydantic import Field
 from pydantic_core.core_schema import ModelField
 
+from label_studio_toolkit.schemas.utils import SchemaUtilsMixin
 
+
+# todo: check if this is needed
 def generate_default_fallback_validate(original_field_validate):
     def default_fallback_validate(self, v, values, *, loc, cls=None):
         value, error = original_field_validate(self, v, values, loc=loc, cls=cls)
@@ -15,6 +18,7 @@ def generate_default_fallback_validate(original_field_validate):
     return default_fallback_validate
 
 
+# todo: check if this is needed
 class BaseModel(PydanticModel):
     @classmethod
     def parse_obj_with_default_fallback(cls, obj):
@@ -24,6 +28,17 @@ class BaseModel(PydanticModel):
             return cls.parse_obj(obj)
         finally:
             ModelField.validate = original_field_validate
+
+    @classmethod
+    def model_validate(cls, obj, *args, **kwargs):
+        if isinstance(obj, dict):
+            for field_name, field in cls.__annotations__.items():
+                if field_name in obj and obj[field_name] is not None:
+                    origin = getattr(field, "__origin__", None)
+                    if origin is list and isinstance(obj[field_name], str):
+                        obj[field_name] = [obj[field_name]]
+
+        return super().model_validate(obj, *args, **kwargs)
 
 
 class TakNie(str, Enum):
@@ -146,7 +161,7 @@ class Zabezpieczenie(str, Enum):
     NIE_BYLO_WNIOSKU = "Nie było wniosku o zabezpieczenie"
 
 
-class SwissFrancJudgmentAnnotation(BaseModel):
+class SwissFrancJudgmentAnnotation(BaseModel, SchemaUtilsMixin):
     sprawa_frankowiczow: SprawaFrankowiczow | None = Field(
         None, description="Czy sprawa dotyczy kredytu frankowego (CHF)?"
     )

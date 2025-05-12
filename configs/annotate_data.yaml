@@ -11,7 +11,7 @@ dataset:
 
 text_field: "text"
 model_version: ${model.name}
-annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation 
+annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation
 
 output_dir: data/analysis/sprawy_frankowe/annotations/${model.name}
 
