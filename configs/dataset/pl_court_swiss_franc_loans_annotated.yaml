@@ -1,0 +1,6 @@
+name: data/datasets/pl/swiss_franc_loans_annotated
+language: pl
+context_field: context
+output_field: output
+
+max_output_tokens: 1_000
