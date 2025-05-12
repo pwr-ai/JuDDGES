@@ -123,7 +123,7 @@ def get_llm_tokenizer(
             )
             model = PeftModelForCausalLM.from_pretrained(
                 model=model,
-                model_id=llm_config.adapter_path_or_last_ckpt_path,
+                model_id=llm_config.adapter_path_or_first_ckpt_path,
             )
             model = model.merge_and_unload(safe_merge=True)
 

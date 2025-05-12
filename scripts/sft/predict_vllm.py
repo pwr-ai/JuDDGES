@@ -40,14 +40,18 @@ def main(cfg: DictConfig) -> None:
         enable_lora=True,
         max_num_seqs=config.llm.batch_size,
         tensor_parallel_size=NUM_GPUS,
-        gpu_memory_utilization=0.95,
         seed=config.random_seed,
     )
-    lora_request = LoRARequest(
-        lora_name="adapter_model",
-        lora_int_id=0,
-        lora_local_path=config.llm.adapter_path_or_last_ckpt_path,
-    )
+
+    if config.llm.should_load_adapter:
+        logger.info("Loading LoRA adapter")
+        lora_request = LoRARequest(
+            lora_name="sft_adapter",
+            lora_int_id=1,
+            lora_path=str(config.llm.adapter_path_or_first_ckpt_path),
+        )
+    else:
+        lora_request = None
 
     ds = prepare_and_save_dataset_for_prediction(
         dataset=ds,
@@ -66,6 +70,7 @@ def main(cfg: DictConfig) -> None:
         messages=ds[ConversationFormatter.MESSAGES_FIELD],
         sampling_params=params,
         lora_request=lora_request,
+        add_generation_prompt=True,
     )
     results = [{"answer": ans, "gold": gold} for ans, gold in zip(outputs, ds["output"])]
 
