@@ -17,7 +17,7 @@ not_annotation_fields:
   - schema
   - language
 
-annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation 
+annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation
 
 
 model:
