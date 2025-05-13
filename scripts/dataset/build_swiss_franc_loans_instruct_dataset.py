@@ -11,7 +11,8 @@ from tabulate import tabulate
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer
 
-from juddges.utils.misc import log_size_change, validate_yaml
+from juddges.utils.misc import log_size_change
+from juddges.utils.validate_schema import validate_output_structure
 
 DEFAULT_MAX_TOKENS = 64_000
 DEFAULT_TOKENIZER_NAME = "meta-llama/Llama-3.1-8B-Instruct"
@@ -150,7 +151,11 @@ def filter_by_schema_mismatch(
     schema: dict[str, dict[str, Any]],
     dataset: list[dict[str, str]],
 ) -> list[dict[str, str]]:
-    return [item for item in dataset if validate_yaml(item["output"], schema)["num_errors"] == 0]
+    return [
+        item
+        for item in dataset
+        if validate_output_structure(item["output"], schema)["num_errors"] == 0
+    ]
 
 
 if __name__ == "__main__":

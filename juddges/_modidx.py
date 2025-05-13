@@ -60,4 +60,5 @@ d = { 'settings': { 'branch': 'master',
             'juddges.utils.logging': {},
             'juddges.utils.misc': {},
             'juddges.utils.pipeline': {},
+            'juddges.utils.validate_schema': {},
             'juddges.utils.versioning': {}}}

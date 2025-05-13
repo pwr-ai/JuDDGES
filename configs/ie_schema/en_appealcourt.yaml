@@ -3,14 +3,15 @@ ConvCourtName:
   items:
     type: string
   description: "Name(s) of the court where the defendant was convicted or pleaded guilty."
-  example: ["Crown Court at Southwark", "Magistrates Court of Liverpool", "Central Criminal Court"]
+  example: ["Crown Court at Southwark"]
 
 ConvictPleaDate:
   type: list
   items:
-    type: string
+      type: date
+      format: ISO 8601
   description: "Date(s) on which the defendant was convicted or pleaded guilty"
-  example: ["2003-01-22", "2002-05-21", "2004-12-01"]
+  example: ["2003-01-22"]
 
 ConvictOffence:
   type: list
@@ -29,9 +30,10 @@ AcquitOffence:
 ConfessPleadGuilty:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Yes", "No"]
   description: "Did the defendant confess or plead guilty?"
-  example: ["pleaded guilty on 3rd April 2002", "pleaded not guilty", "No, denied offence", "Yes-Appellant1", "Yes", "No"]
+  example: ["Yes"]
 
 PleaPoint:
   type: list
@@ -43,16 +45,17 @@ PleaPoint:
 RemandDecision:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Remanded into custody", "Unconditional Bail", "Conditional Bail", "No"]
   description: "Remand decision post-conviction"
-  example: ["remanded on unconditional bail", "bail with curfew", "detained", "no", "Unconditional Bail", "Conditional Bail", "Remanded into custody", ]
+  example: ["Unconditional Bail"]
 
 RemandCustodyTime:
   type: list
   items:
-    type: string
-  description: "Duration of any remand in custody"
-  example: ["38 days that he had spent on remand", "3 months", "30 days"]
+    type: int
+  description: "Duration in days of any remand in custody"
+  example: ["4"]
 
 SentCourtName:
   type: list
@@ -66,28 +69,30 @@ Sentence:
   items:
     type: string
   description: "Sentence(s) imposed"
-  example: ["2 years imprisonment", "£500 fine", "5 years custody"]
+  example: ["2 years imprisonment", "£500 fine"]
 
 SentServe:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Concurrent", "Concurrently", "Combination", "Consecutive", "Consecutively", "Single"]
   description: "How sentences run"
-  example: ["served concurrently", "consecutive", "Combination"]
+  example: ["Concurrent"]
 
 WhatAncillary:
   type: list
   items:
     type: string
   description: "Ancillary orders applied by the court"
-  example: ["Restraining order", "Compensation order", "Confiscation order", "Financial reporting order"]
+  example: ["Restraining order", "Compensation order"]
 
 OffSex:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["All Female", "All Male", "Mixed"]
   description: "Gender(s) of the defendant(s)"
-  example: ["male", "female", "male and female", "All Male", "Mixed"]
+  example: ["All Female"]
 
 OffAgeOffence:
   type: list
@@ -99,58 +104,65 @@ OffAgeOffence:
 OffJobOffence:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Employed", "Unemployed", "Student", "Child", "Retired", "Other"]
   description: "Employment status at offence"
-  example: ["self-employed", "Student", "unemployed", "self-employed gardener", "Employed", "Unemployed", "Student", "junior manager"]
+  example: ["Employed"]
 
 OffHomeOffence:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Fixed Address", "Temporary Accommodation", "Homeless", "Sectioned"]
   description: "Accommodation status at offence"
-  example: ["Fixed addresses", "hostel where he had been living", "appellant was homeless", "Temporary/not fixed", "Fixed Address", "Temporary Accommodation"]
+  example: ["Fixed Address"]
 
 OffMentalOffence:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Had mental health problems", "Learning/developmental", "Has learning difficulties", "Other"]
   description: "Learning/developmental or mental-health issues noted"
-  example: ["Mental health problems/difficulties", "learning disabilities", "Developmental /learning", "depression", "Had mental health problems", "Has learning difficulties", "mental health problems being severe reactive depression, requiring treatment"]
+  example: ["Had mental health problems"]
 
 OffIntoxOffence:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Yes-drinking", "Yes-drinking&drugs", "Yes-drugs", "No"]
   description: "Intoxication status"
-  example: ["drunk and violent", "had taken heroin", "drink and drugs", "intoxicated with drugs and alcohol", "Yes-drinking&drugs", "Yes-drugs"]
+  example: ["Yes-drugs"]
 
 OffVicRelation:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Acquaintance", "Stranger", "Relative"]
   description: "Relationship defendant→victim"
-  example: ["Stranger", "Spouse", "ex-partner", "Related & Acquainted", "Relative", "Acquaintance"]
+  example: ["Acquaintance"]
 
 VictimType:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Individual person", "Individuals", "Company", "Organisation"]
   description: "Type of victim"
-  example: ["shop", "council", "individual person", "Individual person", "Government"]
+  example: ["Individual person"]
 
 VicNum:
   type: list
   items:
     type: string
   description: "Number of victims or ratio"
-  example: ["1 of 3", "two of 36", "1-3 of 4", "2"]
+  example: ["two of 36"]
 
 VicSex:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["All Female", "All Male", "Mixed"]
   description: "Gender(s) of victim(s)"
-  example: ["female", "both male and female", "Mixed", "All Male"]
+  example: ["All Female"]
 
 VicAgeOffence:
   type: list
@@ -162,30 +174,34 @@ VicAgeOffence:
 VicJobOffence:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Employed", "Unemployed", "Student", "Retired", "Child", "Other"]
   description: "Employment status of victim(s)"
-  example: ["unemployed", "Student", "Employed", "Retired", "self-employed"]
+  example: ["Employed"]
 
 VicHomeOffence:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Homeless", "Fixed Address", "Temporary Accommodation", "Sectioned"]
   description: "Accommodation status of victim(s)"
-  example: ["homeless",  "Fixed Address", "Temporary accommodation", "Sectioned"]
+  example: ["Homeless"]
 
 VicMentalOffence:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Had mental health problems", "Learning/developmental", "Has learning difficulties", "Other"]
   description: "Learning/developmental or mental-health issues for victim(s)"
-  example: ["mental health issues and learning disability", "Autism", "Had mental health problems", "Other"]
+  example: ["Had mental health problems"]
 
 VicIntoxOffence:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Yes-drinking", "Yes-drinking&drugs", "Yes-drugs", "No"]
   description: "Victim’s intoxication status"
-  example: ["drunk", "cocaine use", "Yes-drugs", "Yes-drinking", "Yes-drinking&drugs", "No"]
+  example: ["Yes-drugs"]
 
 ProsEvidTypeTrial:
   type: list
@@ -204,9 +220,10 @@ DefEvidTypeTrial:
 PreSentReport:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["High risk of harm", "Low risk of reoffending", "High risk of reoffending", "Medium risk of reoffending", "Medium risk of harm", "Low risk of harm"]
   description: "Risk level from pre-sentence report"
-  example: ["high risk of reoffending", "low risk of the appellant re-offending, but a medium risk of harm to the public.", "medium risk of harm", "High risk of reoffending", "Medium risk of harm"]
+  example: ["High risk of harm"]
 
 AggFactSent:
   type: list
@@ -225,23 +242,25 @@ MitFactSent:
 VicImpactStatement:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Yes", "No"]
   description: "Was a victim impact statement provided?"
-  example: ["victim impact statement", "No", "Yes"]
+  example: ["Yes"]
 
 Appellant:
   type: list
   items:
-    type: string
+    type: enum
+    choices: ["Offender", "Attorney General", "Appellant", "Other"]
   description: "Who brings the appeal"
-  example: ["offender", "solicitor general", "Offenders"]
+  example: ["Offender"]
 
 CoDefAccNum:
   type: list
   items:
-    type: string
+    type: int
   description: "Number of co-defendants/co-accused"
-  example: ["1", "two", "2"]
+  example: ["2"]
 
 AppealAgainst:
   type: list
