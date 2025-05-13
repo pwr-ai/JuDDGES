@@ -208,16 +208,24 @@ stages:
       llm_dataset:
         - dataset: pl_court_swiss_franc_loans_annotated
           llm: llama_3.1_8b_instruct
-          prompt: info_extraction_json
+          prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans_annotated
         - dataset: pl_court_swiss_franc_loans_annotated
           llm: llama_3.2_3b_instruct
-          prompt: info_extraction_json
+          prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans_annotated
         - dataset: pl_court_swiss_franc_loans_annotated
           llm: mistral_nemo_instruct_2407
-          prompt: info_extraction_json
+          prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans_annotated
+        - dataset: pl_court_swiss_franc_loans_annotated
+          llm: pllum_12b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans_annotated
+          llm: bielik_11b_v23_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict_vllm.py
