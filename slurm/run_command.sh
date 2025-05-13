@@ -76,7 +76,7 @@ fi
 
 # =====Run the script using apptainer image=====
 export NUM_PROC=$SLURM_CPUS_PER_GPU
-export PYTHONPATH="$PYTHONPATH:."
+export PYTHONPATH="$PYTHONPATH:$WORKDIR"
 
 cd $WORKDIR || {
     echo "Error: Failed to change to directory $WORKDIR"
