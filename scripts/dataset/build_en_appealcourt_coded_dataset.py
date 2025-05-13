@@ -82,6 +82,11 @@ def main(
         if not df["output"].apply(lambda x: set(x.keys()) == set(schema.keys())).all():
             raise ValueError("Schema columns do not match dataset columns")
 
+        size_before_filtering_by_age = len(df)
+        df = df[df["output"].apply(has_valid_age)]
+        stats[split_name]["filtered_by_age"] = size_before_filtering_by_age - len(df)
+        logger.info(f"[{split_name}] Filtered by age: {stats[split_name]['filtered_by_age']}")
+
         df["output"] = df["output"].apply(map_remand_custody_time)
 
         df["output"] = df["output"].apply(json.dumps)
@@ -149,6 +154,23 @@ def value_or_none(item: list[str] | str) -> str | list[str] | None:
             return item
     else:
         raise ValueError(f"Invalid value type: {type(item)}")
+
+
+def has_valid_age(item: dict[str, Any]) -> bool:
+    for age_col in ["OffAgeOffence", "VicAgeOffence"]:
+        if item[age_col] is None:
+            continue
+        try:
+            if isinstance(item[age_col], list):
+                for age in item[age_col]:
+                    int(age)
+            elif isinstance(item[age_col], str):
+                int(item[age_col])
+            else:
+                raise ValueError(f"Invalid age type: {type(item[age_col])}")
+        except (ValueError, TypeError):
+            return False
+    return True
 
 
 def map_remand_custody_time(item: dict[str, Any]) -> list[int] | None:
