@@ -97,9 +97,9 @@ OffSex:
 OffAgeOffence:
   type: list
   items:
-    type: string
+    type: int
   description: "Age of defendant at offence"
-  example: ["21 years old", "age of 34", "28-42", "20s or 30s", "between thirty two and 35", "aged between 11 or 12 and 14 or 15 years old"]
+  example: ["21", "34"]
 
 OffJobOffence:
   type: list
@@ -167,9 +167,9 @@ VicSex:
 VicAgeOffence:
   type: list
   items:
-    type: string
+    type: int
   description: "Age of victim(s) at offence"
-  example: ["30 years of age", "41 or 42", "40-42", "11-12 and 14-15"]
+  example: ["31"]
 
 VicJobOffence:
   type: list
