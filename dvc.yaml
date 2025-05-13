@@ -226,6 +226,18 @@ stages:
           llm: bielik_11b_v23_instruct
           prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans
+        - dataset: en_appealcourt_coded
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+        - dataset: en_appealcourt_coded
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+        - dataset: en_appealcourt_coded
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
       seed: ${seeds}
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict_vllm.py
