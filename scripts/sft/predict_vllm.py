@@ -108,7 +108,7 @@ def prepare_and_save_dataset_for_prediction(
         format_as_chat=False,
     )
     cols_to_remove = set(dataset.column_names).difference(
-        set(["num_truncated_tokens", "truncated_ratio"])
+        set(["num_truncated_tokens", "truncated_ratio", "output"])
     )
     dataset = dataset.map(
         formatter,

@@ -39,6 +39,8 @@ fi
 export HF_TOKEN
 export WORKDIR
 export HF_HOME="$TMPDIR/.cache/huggingface"
+export VLLM_CACHE_ROOT="$TMPDIR/.cache/vllm"
+export TRITON_CACHE_DIR="$TMPDIR/.cache/triton"
 
 export RANK=$SLURM_PROCID
 export LOCAL_RANK=$SLURM_LOCALID
