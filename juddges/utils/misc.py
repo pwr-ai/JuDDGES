@@ -1,5 +1,4 @@
 import re
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -9,67 +8,6 @@ from datasets import Dataset
 from loguru import logger
 
 yaml_pattern: re.Pattern = re.compile(r"```(?:ya?ml)?(?P<yaml>[^`]*)", re.MULTILINE | re.DOTALL)
-
-
-def validate_yaml(
-    yaml_str: str | dict[str, Any],
-    schema: dict[str, dict[str, Any]],
-) -> dict[str, Any]:
-    """
-    Simple function to validate YAML against schema.
-    Returns (is_valid, list_of_errors)
-    """
-    data = parse_yaml(yaml_str)
-
-    if not isinstance(data, dict):
-        raise ValueError(f"Invalid data parsed (must be a dictionary): {data}")
-
-    errors = defaultdict(list)
-    for field, field_schema in schema.items():
-        if field not in data:
-            errors["error_type"].append("missing")
-            errors["field_name"].append(field)
-            errors["field_type"].append(field_schema["type"])
-            errors["field_schema"].append(field_schema)
-            errors["value"].append(None)
-            continue
-
-        value = data[field]
-        if value is None or value == "":
-            continue
-
-        field_type = field_schema["type"]
-
-        if field_type == "enum" and value not in field_schema["choices"]:
-            errors["error_type"].append("bad_value")
-            errors["field_name"].append(field)
-            errors["field_type"].append(field_type)
-            errors["field_schema"].append(field_schema)
-            errors["value"].append(value)
-        elif field_type == "date" and not isinstance(value, str):
-            errors["error_type"].append("bad_value")
-            errors["field_name"].append(field)
-            errors["field_type"].append(field_type)
-            errors["field_schema"].append(field_schema)
-            errors["value"].append(value)
-        elif field_type == "list" and not isinstance(value, list):
-            errors["error_type"].append("bad_value")
-            errors["field_name"].append(field)
-            errors["field_type"].append(field_type)
-            errors["field_schema"].append(field_schema)
-            errors["value"].append(value)
-
-    for field, value in data.items():
-        if field not in schema:
-            errors["error_type"].append("unknown_field")
-            errors["field_name"].append(field)
-            errors["field_type"].append(None)
-            errors["field_schema"].append(None)
-            errors["value"].append(value)
-
-    errors["num_errors"] = len(errors["error_type"])
-
-    return dict(errors)
 
 
 def parse_yaml(text: str) -> Any:
