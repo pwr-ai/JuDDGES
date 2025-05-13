@@ -1,6 +1,6 @@
 import json
 import os
-from pathlib import Path
+import sys
 from pprint import pformat
 
 import hydra
@@ -16,6 +16,7 @@ from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.formatters import ConversationFormatter
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
+from juddges.utils.misc import save_yaml
 
 torch.set_float32_matmul_precision("high")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -29,8 +30,13 @@ def main(cfg: DictConfig) -> None:
     config = PredictInfoExtractionConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
-    output_file = Path(config.output_dir)
-    output_file.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        config.output_dir.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        logger.error(
+            f"Output directory {config.output_dir} already exists. Remove stale outputs first."
+        )
+        sys.exit(1)
 
     ds = load_dataset(config.dataset.name, split="test")
 
@@ -72,9 +78,13 @@ def main(cfg: DictConfig) -> None:
         lora_request=lora_request,
         add_generation_prompt=True,
     )
-    results = [{"answer": ans, "gold": gold} for ans, gold in zip(outputs, ds["output"])]
+    results = [
+        {"answer": ans.outputs[0].text, "gold": gold} for ans, gold in zip(outputs, ds["output"])
+    ]
 
-    with open(output_file, "w") as f:
+    save_yaml(config.model_dump(), config.config_file)
+
+    with open(config.predictions_file, "w") as f:
         json.dump(results, f, indent="\t", ensure_ascii=False)
 
 

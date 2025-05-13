@@ -11,8 +11,8 @@ from loguru import logger
 from tqdm import tqdm
 
 SLURM_SCRIPT = "./slurm/run_command.sh"
-MIN_WAIT_TIME = 5
-MAX_WAIT_TIME = 20
+MIN_WAIT_TIME = 10
+MAX_WAIT_TIME = 30
 
 
 def main(
