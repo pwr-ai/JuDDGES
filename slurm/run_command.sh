@@ -23,33 +23,31 @@ source ./slurm/.env
 set +a # Disable automatic export after loading
 
 # Validate required environment variables
-required_vars=("WANDB_API_KEY" "HF_TOKEN" "SIF_IMAGE_PATH" "WORKDIR")
+required_vars=("HF_TOKEN" "WORKDIR")
 for var in "${required_vars[@]}"; do
     if [ -z "${!var:-}" ]; then
         echo "Error: Required environment variable $var is not set"
         exit 1
     fi
 done
-
-# Validate SIF image exists
-if [ ! -f "$SIF_IMAGE_PATH" ]; then
-    echo "Error: SIF image not found at $SIF_IMAGE_PATH"
-    exit 1
-fi
-
 # Validate WORKDIR exists
 if [ ! -d "$WORKDIR" ]; then
     echo "Error: WORKDIR $WORKDIR does not exist"
     exit 1
 fi
 
-export WANDB_API_KEY
 export HF_TOKEN
-export SIF_IMAGE_PATH
 export WORKDIR
+export HF_HOME="$TMPDIR/.cache/huggingface"
 
+export RANK=$SLURM_PROCID
+export LOCAL_RANK=$SLURM_LOCALID
 export NODES=($(scontrol show hostnames $SLURM_JOB_NODELIST | tr '\n' '\n'))
 export WORLD_SIZE=$(($SLURM_GPUS_ON_NODE * $SLURM_JOB_NUM_NODES))
+export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+export MASTER_PORT=$((10000 + $SLURM_PROCID))
+
+echo "RANK: $RANK, LOCAL_RANK: $LOCAL_RANK, NODES: ${NODES[@]}, WORLD_SIZE: $WORLD_SIZE, MASTER_ADDR: $MASTER_ADDR, MASTER_PORT: $MASTER_PORT"
 
 # =====Parse command line arguments=====
 run_cmd=""
@@ -76,28 +74,19 @@ fi
 
 # =====Run the script using apptainer image=====
 export NUM_PROC=$SLURM_CPUS_PER_GPU
-export PYTHONPATH="$PYTHONPATH."
+export PYTHONPATH="$PYTHONPATH:."
 
 cd $WORKDIR || {
     echo "Error: Failed to change to directory $WORKDIR"
     exit 1
 }
+source $WORKDIR/.venv/bin/activate || {
+    echo "Error: Failed to activate virtual environment"
+    exit 1
+    }
 
-echo "Running the following command with apptainer: $run_cmd"
+echo "Running the following command: $run_cmd"
 
 srun --kill-on-bad-exit=1 \
     --jobid $SLURM_JOB_ID \
-    apptainer run \
-        --fakeroot \
-        --bind "$TMPDIR:$TMPDIR" \
-        --bind "$WORKDIR:$WORKDIR" \
-        --bind "$HOME:$HOME" \
-        --nv \
-        "$SIF_IMAGE_PATH" \
-        bash -c "$run_cmd"
-
-EXIT_CODE=$?
-if [ $EXIT_CODE -ne 0 ]; then
-    echo "Error: Command failed with exit code $EXIT_CODE"
-fi
-exit $EXIT_CODE
+    bash -c "$run_cmd"
