@@ -34,11 +34,13 @@ def main(cfg: DictConfig):
 
     with get_openai_callback() as cb:
         for name, df in dataset.items():
-            if name == "train":
+            if name == "test" and cfg.skip_test:
+                continue
+            if name == "train" and cfg.skip_train:
                 continue
             datapoints = []
             annotations = asyncio.run(async_annotate(annotator, df, cfg))
-            for (_, row), annotation in zip(df.iterrows(), annotations):
+            for (i, row), annotation in zip(df.iterrows(), annotations):
                 datapoint = {
                     **annotation.model_dump(mode="json"),
                     "text": row[cfg.text_field],
