@@ -65,7 +65,6 @@ def main(cfg: DictConfig) -> None:
         config=config,
         llm=llm,
     )
-    ds = ds.select(range(10))
 
     params = SamplingParams(
         max_tokens=config.generate_kwargs.pop("max_new_tokens"),
