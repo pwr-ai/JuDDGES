@@ -127,6 +127,18 @@ stages:
     outs:
       - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
 
+  ### ---------------------------- Evaluate with human annotations ---------------------------- ###
+  convert_splits_to_predcictions:
+    cmd: >-
+      PYTHONPATH=. python scripts/dataset/convert_pl_swiss_franc_loans_splits_to_eval_data.py
+      --dataset-name-or-path data/datasets/pl/swiss_franc_loans
+      --output-dir data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/
+    deps:
+      - scripts/dataset/convert_pl_swiss_franc_loans_splits_to_eval_data.py
+      - data/datasets/pl/swiss_franc_loans
+    outs:
+      - data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/predictions.json
+
   ### ---------------------------- Prediction ---------------------------- ###
   predict_swiss_franc_loans_raw_vllm:
     matrix:

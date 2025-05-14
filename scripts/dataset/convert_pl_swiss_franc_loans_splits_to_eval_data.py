@@ -15,6 +15,7 @@ def main(
     ),
     output_dir: Path = typer.Option(..., help="Path to the output directory"),
 ):
+    output_dir.mkdir(parents=True, exist_ok=True)
     ds = get_dataset(dataset_name_or_path=dataset_name_or_path, split=None)
     results = []
     for gpt_item, annotated_item in zip(ds["test"], ds["annotated"], strict=True):
