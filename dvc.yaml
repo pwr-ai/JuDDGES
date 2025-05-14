@@ -96,23 +96,23 @@ stages:
       llm_dataset:
         - dataset: pl_court_swiss_franc_loans
           llm: llama_3.1_8b_instruct
-          prompt: info_extraction_json
+          prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans
         - dataset: pl_court_swiss_franc_loans
           llm: llama_3.2_3b_instruct
-          prompt: info_extraction_json
+          prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans
         - dataset: pl_court_swiss_franc_loans
           llm: mistral_nemo_instruct_2407
-          prompt: info_extraction_json
+          prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans
         - dataset: pl_court_swiss_franc_loans
           llm: pllum_12b_instruct
-          prompt: info_extraction_json
+          prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans
         - dataset: pl_court_swiss_franc_loans
           llm: bielik_11b_v23_instruct
-          prompt: info_extraction_json
+          prompt: info_extraction_annotated_json
           ie_schema: swiss_franc_loans
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py
