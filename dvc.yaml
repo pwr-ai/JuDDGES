@@ -87,7 +87,7 @@ stages:
       - scripts/dataset/build_en_appealcourt_coded_dataset.py
       - configs/ie_schema/en_appealcourt.yaml
     outs:
-      - data/datasets/en/en_appealcourt_coded/test.json
+      - data/datasets/en/en_appealcourt_coded/annotated.json
       - data/datasets/en/en_appealcourt_coded/dataset_info.json
 
   ### ---------------------------- Fine-tuning ---------------------------- ###
@@ -128,57 +128,71 @@ stages:
       - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
 
   ### ---------------------------- Prediction ---------------------------- ###
-  predict_swiss_franc_loans:
+  predict_swiss_franc_loans_raw_vllm:
     matrix:
-      <<: *sft_models
+      llm_dataset:
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: pllum_12b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: bielik_11b_v23_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        ###
+        - dataset: en_appealcourt_coded
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+        - dataset: en_appealcourt_coded
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+        - dataset: en_appealcourt_coded
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
       seed: ${seeds}
+      split:
+        - annotated
     cmd: >-
-      PYTHONPATH=. python scripts/sft/predict.py
+      PYTHONPATH=. python scripts/sft/predict_vllm.py
       dataset=${item.llm_dataset.dataset}
       llm=${item.llm_dataset.llm}
       prompt=${item.llm_dataset.prompt}
       ie_schema=${item.llm_dataset.ie_schema}
       random_seed=${item.seed}
+      split=${item.split}
+      output_dir=data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
     deps:
-      - scripts/sft/predict.py
+      - scripts/sft/predict_vllm.py
       - configs/predict.yaml
       - configs/llm/${item.llm_dataset.llm}.yaml
       - configs/prompt/${item.llm_dataset.prompt}.yaml
       - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
     outs:
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
-      - data/experiments/predict/raw/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
-
-  predict_swiss_franc_loans_on_fine_tuned:
-    matrix:
-      <<: *sft_models
-      seed: ${seeds}
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/predict.py
-      dataset=${item.llm_dataset.dataset}
-      llm=${item.llm_dataset.llm}
-      prompt=${item.llm_dataset.prompt}
-      ie_schema=${item.llm_dataset.ie_schema}
-      random_seed=${item.seed}
-      llm.adapter_path=data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
-      output_dir=data/experiments/predict/fine_tuned/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
-    deps:
-      - scripts/sft/predict.py
-      - configs/predict.yaml
-      - configs/llm/${item.llm_dataset.llm}.yaml
-      - configs/prompt/${item.llm_dataset.prompt}.yaml
-      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
-      - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
-    outs:
-      - data/experiments/predict/fine_tuned/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
-      - data/experiments/predict/fine_tuned/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
-      - data/experiments/predict/fine_tuned/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
   predict_swiss_franc_loans_on_fine_tuned_vllm:
     matrix:
       <<: *sft_models
       seed: ${seeds}
+      split:
+        - annotated
     cmd: >-
       PYTHONPATH=. python scripts/sft/predict_vllm.py
       dataset=${item.llm_dataset.dataset}
@@ -186,8 +200,9 @@ stages:
       prompt=${item.llm_dataset.prompt}
       ie_schema=${item.llm_dataset.ie_schema}
       random_seed=${item.seed}
+      split=${item.split}
       llm.adapter_path=data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
-      output_dir=data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
+      output_dir=data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
     deps:
       - scripts/sft/predict_vllm.py
       - configs/predict.yaml
@@ -196,64 +211,10 @@ stages:
       - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
       - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
     outs:
-      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
-      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
-      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
-  predict_swiss_franc_loans_raw_vllm:
-    matrix:
-      llm_dataset:
-        - dataset: pl_court_swiss_franc_loans_annotated
-          llm: llama_3.1_8b_instruct
-          prompt: info_extraction_annotated_json
-          ie_schema: swiss_franc_loans_annotated
-        - dataset: pl_court_swiss_franc_loans_annotated
-          llm: llama_3.2_3b_instruct
-          prompt: info_extraction_annotated_json
-          ie_schema: swiss_franc_loans_annotated
-        - dataset: pl_court_swiss_franc_loans_annotated
-          llm: mistral_nemo_instruct_2407
-          prompt: info_extraction_annotated_json
-          ie_schema: swiss_franc_loans_annotated
-        - dataset: pl_court_swiss_franc_loans_annotated
-          llm: pllum_12b_instruct
-          prompt: info_extraction_annotated_json
-          ie_schema: swiss_franc_loans
-        - dataset: pl_court_swiss_franc_loans_annotated
-          llm: bielik_11b_v23_instruct
-          prompt: info_extraction_annotated_json
-          ie_schema: swiss_franc_loans
-        - dataset: en_appealcourt_coded
-          llm: llama_3.1_8b_instruct
-          prompt: info_extraction_json
-          ie_schema: en_appealcourt
-        - dataset: en_appealcourt_coded
-          llm: llama_3.2_3b_instruct
-          prompt: info_extraction_json
-          ie_schema: en_appealcourt
-        - dataset: en_appealcourt_coded
-          llm: mistral_nemo_instruct_2407
-          prompt: info_extraction_json
-          ie_schema: en_appealcourt
-      seed: ${seeds}
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/predict_vllm.py
-      dataset=${item.llm_dataset.dataset}
-      llm=${item.llm_dataset.llm}
-      prompt=${item.llm_dataset.prompt}
-      ie_schema=${item.llm_dataset.ie_schema}
-      random_seed=${item.seed}
-      output_dir=data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
-    deps:
-      - scripts/sft/predict_vllm.py
-      - configs/predict.yaml
-      - configs/llm/${item.llm_dataset.llm}.yaml
-      - configs/prompt/${item.llm_dataset.prompt}.yaml
-      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
-    outs:
-      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
-      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
-      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
   ### ---------------------------- Evaluation ---------------------------- ###
   evaluate: # use with NUM_PROC
@@ -263,6 +224,8 @@ stages:
       model_type:
         - raw
         - fine_tuned
+      split:
+        - annotated
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
       --output-file data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl

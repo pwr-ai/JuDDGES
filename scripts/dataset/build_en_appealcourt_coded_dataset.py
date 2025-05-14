@@ -99,23 +99,28 @@ def main(
 
         processed_splits.append(df)
 
+    final_split_name = "annotated"
     processed_splits = pd.concat(processed_splits)
-    f_name = target_dir / "test.json"
+    f_name = target_dir / f"{final_split_name}.json"
     logger.info(f"Saving merged splits to {f_name}")
     processed_splits.to_json(f_name, orient="records", indent=4)
 
     stats_path = target_dir / "dataset_info.json"
-    logger.info(f"[{split_name}] Saving stats to {stats_path}")
+    logger.info(f"[{final_split_name}] Saving stats to {stats_path}")
     with open(stats_path, "w") as f:
         json.dump(stats, f, indent=4)
 
     # check dataset loads
-    ds = load_dataset("json", data_dir=target_dir)
+    ds = load_dataset(
+        "json",
+        data_files={final_split_name: f"{final_split_name}.json"},
+        data_dir=target_dir,
+    )
     logger.info(f"Dataset correctly loaded: {ds}")
 
-    logger.info("Checking schema mismatch for test split")
-    check_schema_mismatch(schema, ds["test"])
-    logger.info("Test split correct")
+    logger.info("Checking schema mismatch for annotated split")
+    check_schema_mismatch(schema, ds[final_split_name])
+    logger.info("Annotated split correct")
 
 
 def dict_value_or_none(data: dict[str, Any]) -> dict[str, Any] | None:

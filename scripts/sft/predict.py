@@ -5,12 +5,13 @@ from pprint import pformat
 
 import hydra
 import torch
-from datasets import Dataset, load_dataset
+from datasets import Dataset
 from loguru import logger
 from omegaconf import DictConfig
 from transformers import set_seed
 
 from juddges.config import PredictInfoExtractionConfig
+from juddges.data.dataset_factory import get_dataset
 from juddges.llm.factory import ModelForGeneration, get_llm
 from juddges.llm.predict import predict_with_llm
 from juddges.preprocessing.context_truncator import ContextTruncator
@@ -52,7 +53,7 @@ def main(cfg: DictConfig) -> None:
         )
         sys.exit(1)
 
-    ds = load_dataset(config.dataset.name, split="test")
+    ds = get_dataset(dataset_name_or_path=config.dataset.name, split=config.split)
     ds, reverse_sort_idx = sort_dataset_by_input_length(ds, config.dataset.context_field)
     logger.info("Loading model...")
 

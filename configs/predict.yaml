@@ -22,6 +22,7 @@ generate_kwargs:
   do_sample: true
   temperature: 0.1
 
+split: ???
 random_seed: ???
 
 hydra:

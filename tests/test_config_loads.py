@@ -87,7 +87,6 @@ def test_load_config_peft_fine_tuning(llm: str, dataset: str, prompt: str, ie_sc
     "ie_schema",
     [
         "swiss_franc_loans",
-        "swiss_franc_loans_annotated",
     ],
 )
 def test_load_config_predict(llm: str, dataset: str, prompt: str, ie_schema: str):
