@@ -33,7 +33,7 @@ def main(
 
     dataset = load_dataset(
         str(dataset_source_path),
-        data_files={"annotated": "annotated.json", "test": "test.json"},
+        data_files={"train": "train.json", "annotated": "annotated.json", "test": "test.json"},
     )
 
     assert all(
@@ -75,6 +75,8 @@ def main(
     df_test = dataset["test"].to_pandas()
     df_annotated = dataset["annotated"].to_pandas()
     assert (df_test["context"] == df_annotated["context"]).all()
+
+    assert_no_data_leakage(dataset)
 
     for split_name, split_ds in dataset.items():
         split_ds.to_pandas().to_json(
@@ -169,6 +171,14 @@ def format_instruction(
             }
         )
     return instruct_dataset
+
+
+def assert_no_data_leakage(ds: DatasetDict) -> None:
+    df_train = ds["train"].to_pandas()
+    df_annotated = ds["annotated"].to_pandas()
+    df_test = ds["test"].to_pandas()
+    assert df_train.merge(df_annotated, on="context", how="left")["output_y"].isna().all()
+    assert df_train.merge(df_test, on="context", how="left")["output_y"].isna().all()
 
 
 @log_size_change
