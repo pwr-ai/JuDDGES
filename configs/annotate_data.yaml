@@ -10,6 +10,8 @@ dataset:
     path: data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
 
 text_field: "text"
+skip_test: true
+skip_train: true
 model_version: ${model.name}
 annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation
 
