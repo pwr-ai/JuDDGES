@@ -1,0 +1,6 @@
+outs:
+- md5: 09aadb3a962aaf455018cec682b905e0.dir
+  size: 127152596
+  nfiles: 2
+  hash: md5
+  path: swiss_franc_loans_source
