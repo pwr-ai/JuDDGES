@@ -7,6 +7,7 @@ import pandas as pd
 import typer
 import yaml
 from datasets import Dataset, DatasetDict, load_dataset
+from langchain_core.utils.json import parse_json_markdown
 from loguru import logger
 from tabulate import tabulate
 from tqdm.auto import tqdm
@@ -48,7 +49,14 @@ def main(
         original_split_size = split_ds.num_rows
         dataset[split_name] = filter_by_schema_mismatch(split_ds, schema_path)
         logger.info(
-            f"[{split_name}] Filtered {original_split_size - split_ds.num_rows} items out of {original_split_size}"
+            f"[{split_name}][schema mismatch] Removed {original_split_size - dataset[split_name].num_rows} items out of {original_split_size}"
+        )
+
+    for split_name, split_ds in dataset.items():
+        original_split_size = split_ds.num_rows
+        dataset[split_name] = filter_all_null_outputs(split_ds)
+        logger.info(
+            f"[{split_name}][all null outputs] Removed {original_split_size - dataset[split_name].num_rows} items out of {original_split_size}"
         )
 
     if threshold_tokens is not None:
@@ -60,7 +68,7 @@ def main(
                 threshold_tokens,
             )
             logger.info(
-                f"[{split_name}] Filtered {original_split_size - split_ds.num_rows} items out of {original_split_size}"
+                f"[{split_name}][too long context] Removed {original_split_size - dataset[split_name].num_rows} items out of {original_split_size}"
             )
 
     # assert annotated is the same as test
@@ -69,7 +77,12 @@ def main(
     assert (df_test["context"] == df_annotated["context"]).all()
 
     for split_name, split_ds in dataset.items():
-        split_ds.to_json(output_dir / f"{split_name}.json", orient="records", indent=4)
+        split_ds.to_pandas().to_json(
+            output_dir / f"{split_name}.json",
+            orient="records",
+            indent=4,
+            index=False,
+        )
 
     # Print dataset sizes
     sizes_table = [
@@ -107,6 +120,12 @@ def filter_by_schema_mismatch(ds: Dataset, schema_path: Path) -> Dataset:
     return ds.filter(
         lambda item: validate_output_structure(item["output"], schema, format="json")["num_errors"]
         == 0
+    )
+
+
+def filter_all_null_outputs(ds: Dataset) -> Dataset:
+    return ds.filter(
+        lambda item: any(val is not None for val in parse_json_markdown(item["output"]).values())
     )
 
 

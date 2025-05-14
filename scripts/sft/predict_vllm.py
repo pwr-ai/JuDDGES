@@ -5,13 +5,14 @@ from pprint import pformat
 
 import hydra
 import torch
-from datasets import Dataset, load_dataset
+from datasets import Dataset
 from loguru import logger
 from omegaconf import DictConfig
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
 
 from juddges.config import PredictInfoExtractionConfig
+from juddges.data.dataset_factory import get_dataset
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.formatters import ConversationFormatter
 from juddges.settings import CONFIG_PATH
@@ -38,7 +39,7 @@ def main(cfg: DictConfig) -> None:
         )
         sys.exit(1)
 
-    ds = load_dataset(config.dataset.name, split="test")
+    ds = get_dataset(config.dataset.name, config.split)
 
     llm = LLM(
         model=config.llm.name,
@@ -64,6 +65,7 @@ def main(cfg: DictConfig) -> None:
         config=config,
         llm=llm,
     )
+    ds = ds.select(range(10))
 
     params = SamplingParams(
         max_tokens=config.generate_kwargs.pop("max_new_tokens"),

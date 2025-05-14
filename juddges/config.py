@@ -114,6 +114,7 @@ class FineTuningConfig(BaseModel, extra="forbid"):
 class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     llm: LLMConfig
     dataset: DatasetInfoExtractionConfig
+    split: str
     prompt: PromptInfoExtractionConfig
     ie_schema: dict[str, dict[str, Any]]
     device_map: str
@@ -124,7 +125,7 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
 
     @property
     def predictions_file(self) -> Path:
-        return self.output_dir / "predictions.jsonl"
+        return self.output_dir / "predictions.json"
 
     @property
     def dataset_file(self) -> Path:
