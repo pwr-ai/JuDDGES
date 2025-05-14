@@ -73,10 +73,10 @@ stages:
       - configs/ie_schema/swiss_franc_loans.yaml
       - data/datasets/pl/swiss_franc_loans_source/
     outs:
+      - data/datasets/pl/swiss_franc_loans/train.json
       - data/datasets/pl/swiss_franc_loans/test.json
       - data/datasets/pl/swiss_franc_loans/annotated.json
       - data/datasets/pl/swiss_franc_loans/dataset_info.json
-      # - data/datasets/pl/swiss_franc_loans/train.json
 
   build_en_appealcourt_coded_dataset:
     cmd: >-
