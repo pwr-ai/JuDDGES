@@ -5120,8 +5120,8 @@ stages:
       size: 10159
     - path: scripts/dataset/build_en_appealcourt_coded_dataset.py
       hash: md5
-      md5: 80eb27bbc47648df7e3d7af85cb360b8
-      size: 9507
+      md5: 54f081fab056fded3726c14f09bb752c
+      size: 9486
     outs:
     - path: data/datasets/en/en_appealcourt_coded/dataset_info.json
       hash: md5
@@ -5129,12 +5129,8 @@ stages:
       size: 866
     - path: data/datasets/en/en_appealcourt_coded/test.json
       hash: md5
-      md5: 130236bb8c4bbb6a514294dc1ff193ab
-      size: 2920607
-    - path: data/datasets/en/en_appealcourt_coded/train.json
-      hash: md5
-      md5: 20e2d4e13bdbdc6c0290b1be990dbb83
-      size: 12933023
+      md5: 483c100bf06deea7822cc7e0c3dddb9a
+      size: 15853628
   evaluate@llm_dataset3-42-fine_tuned:
     cmd: PYTHONPATH=. python scripts/sft/evaluate.py --output-file 
       data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans/pllum_12b_instruct/info_extraction_json/swiss_franc_loans/seed_42/predictions.jsonl

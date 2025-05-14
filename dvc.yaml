@@ -89,7 +89,6 @@ stages:
       - scripts/dataset/build_en_appealcourt_coded_dataset.py
       - configs/ie_schema/en_appealcourt.yaml
     outs:
-      - data/datasets/en/en_appealcourt_coded/train.json
       - data/datasets/en/en_appealcourt_coded/test.json
       - data/datasets/en/en_appealcourt_coded/dataset_info.json
 
