@@ -63,22 +63,20 @@ stages:
   build_swiss_franc_loans_instruct_dataset:
     cmd: >-
       PYTHONPATH=. python scripts/dataset/build_swiss_franc_loans_instruct_dataset.py
-      --train-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
-      --test-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
+      --dataset-source-path data/datasets/pl/swiss_franc_loans_source/
       --output-dir data/datasets/pl/swiss_franc_loans
       --tokenizer-name meta-llama/Llama-3.1-8B-Instruct
       --schema-path configs/ie_schema/swiss_franc_loans.yaml
-      --output-format json
       --threshold-tokens 64_000
     deps:
       - scripts/dataset/build_swiss_franc_loans_instruct_dataset.py
       - configs/ie_schema/swiss_franc_loans.yaml
-      - data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
-      - data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
+      - data/datasets/pl/swiss_franc_loans_source/
     outs:
-      - data/datasets/pl/swiss_franc_loans/train.jsonl
-      - data/datasets/pl/swiss_franc_loans/test.jsonl
+      - data/datasets/pl/swiss_franc_loans/test.json
+      - data/datasets/pl/swiss_franc_loans/annotated.json
       - data/datasets/pl/swiss_franc_loans/dataset_info.json
+      # - data/datasets/pl/swiss_franc_loans/train.json
 
   build_en_appealcourt_coded_dataset:
     cmd: >-
@@ -291,7 +289,7 @@ stages:
         - raw
         - fine_tuned
       judge_llm:
-        - gpt-4o-mini-2024-07-18
+        - gpt-4.1-mini-2025-04-14
     cmd: >-
       PYTHONPATH=. python scripts/sft/llm_as_judge.py
       data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl

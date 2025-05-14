@@ -1,229 +1,256 @@
+sprawa_frankowiczow:
+  type: enum
+  choices: ['Tak', 'Nie', 'Badanie wzorca umownego']
+  description: "Czy sprawa dotyczy kredytu frankowego (CHF)?"
+  required: false
+
 apelacja:
   type: string
-  description: "Określenie apelacji, w której znajduje się sąd rozpoznający sprawę"
-  example: "Apelacja warszawska"
+  description: "Określenie apelacji, w której znajduje się sąd rozpoznający sprawę. 'Zanonimizowano' jeśli niemożliwe do ustalenia bo zanonimizowano."
+  required: false
+
+data_wyroku:
+  type: string
+  description: "Data wydania wyroku w formacie YYYY-MM-DD"
+  required: false
 
 typ_sadu:
   type: enum
-  choices: [Sąd Rejonowy, Sąd Okręgowy, Sąd Frankowy, Sąd Apelacyjny]
+  choices: ['Sąd Rejonowy', 'Sąd Okręgowy', 'Sąd Frankowy', 'Sąd Ochrony Konkurencji i Konsumentów']
   description: "Typ sądu rozpoznającego sprawę"
-  example: "Sąd Rejonowy"
+  required: false
 
 instancja_sadu:
   type: enum
-  choices: [Sąd I instancji, Sąd odwoławczy]
+  choices: ['Sąd I instancji', 'Sąd odwoławczy']
   description: "Czy sąd jest I instancji czy odwoławczy"
-  example: "Sąd I instancji"
+  required: false
 
 podstawa_prawna:
   type: string
   description: "Podstawa prawna roszczenia"
-  example: "Art. 385(1) Kodeksu cywilnego"
+  required: false
 
 podstawa_prawna_podana:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy powód podał podstawę prawną?"
-  example: true
+  required: false
 
 rodzaj_roszczenia:
   type: enum
-  choices: [O ustalenie istnienia/nieistnienia stosunku prawnego, O ukształtowanie stosunku prawnego, O zapłatę, Roszczenia dodatkowe]
+  choices: ['O ustalenie istnienia/nieistnienia stosunku prawnego', 'O ukształtowanie stosunku prawnego', 'O zapłatę', 'Roszczenia dodatkowe', 'Dotyczy wzorca umownego']
   description: "Rodzaj roszczenia"
-  example: "O zapłatę"
+  required: false
 
 modyfikacje_powodztwa:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy były modyfikacje powództwa"
-  example: true
+  required: false
 
 typ_modyfikacji:
   type: enum
-  choices: [Rodzaj roszczenia, Kwoty roszczenia]
+  choices: ['Rodzaj roszczenia', 'Kwoty roszczenia']
   description: "Typ modyfikacji powództwa"
-  example: "Kwoty roszczenia"
+  required: false
 
 status_kredytobiorcy:
   type: enum
-  choices: [Konsument, Przedsiębiorca]
+  choices: ['Konsument', 'Przedsiębiorca', 'Nie sprawdzano']
   description: "Status kredytobiorcy"
-  example: "Konsument"
+  required: false
 
 wspoluczestnictwo_powodowe:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy współuczestnictwo po stronie powodowej"
-  example: false
+  required: false
+
+wspoluczestnictwo_pozwanego:
+  type: enum
+  choices: ['Tak', 'Nie']
+  description: "Czy współuczestnictwo po stronie pozwanej"
+  required: false
 
 typ_wspoluczestnictwa:
   type: enum
-  choices: [Małżeństwo, Konkubinat, Inni członkowie rodziny, Spadkobiercy]
+  choices: ['Małżeństwo', 'Konkubinat', 'Spadkodawcy', 'Inny rodzaj']
   description: "Rodzaj współuczestnictwa"
-  example: "Małżeństwo"
+  required: false
 
-rola_pozwanego:
+strony_umowy:
   type: enum
-  choices: [Strona umowy, Następca prawny]
-  description: "Czy pozwany faktycznie był stroną umowy czy następcą prawnym"
-  example: "Strona umowy"
+  choices: ['Strona umowy', 'Następca prawny']
+  description: "Czy powód był stroną umowy czy następcą prawnym"
+  required: false
 
 wczesniejsze_skargi_do_rzecznika:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy były uprzednie skargi do rzecznika finansowego"
-  example: false
+  required: false
 
 umowa_kredytowa:
   type: enum
-  choices: [Zawarta bezpośrednio w banku, Z udziałem pośrednika]
+  choices: ['Zawarta bezpośrednio w banku', 'Z udziałem pośrednika']
   description: "Czy umowa kredytowa zawierana bezpośrednio w banku czy z pośrednikiem"
-  example: "Zawarta bezpośrednio w banku"
+  required: false
 
 klauzula_niedozwolona:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Istnienie klauzuli niedozwolonej w umowie"
-  example: true
+  required: false
 
 wpisana_do_rejestru_uokik:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy klauzula wpisana do rejestru klauzul niedozwolonych UOKiK"
-  example: true
+  required: false
 
 waluta_splaty:
   type: enum
-  choices: [PLN, CHF]
+  choices: ['PLN', 'CHF']
   description: "Waluta spłaty"
-  example: "CHF"
+  required: false
 
 aneks_do_umowy:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy był aneks do umowy"
-  example: true
+  required: false
 
 data_aneksu:
-  type: date
-  format: ISO 8601
-  description: "Data aneksu"
-  example: "2023-01-15"
+  type: string
+  description: "Data aneksu w formacie YYYY-MM-DD"
+  required: false
 
 przedmiot_aneksu:
   type: enum
-  choices: [Zmiana waluty spłaty, Inne kwestie]
+  choices: ['Zmiana waluty spłaty', 'Inne kwestie']
   description: "Czego dotyczył aneks"
-  example: "Zmiana waluty spłaty"
+  required: false
 
 status_splaty_kredytu:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy kredyt był spłacony, w tym w trakcie procesu"
-  example: true
-
-data_wyroku:
-  type: date
-  format: ISO 8601
-  description: "Data wydania wyroku"
-  example: "2024-11-30"
+  required: false
 
 rozstrzygniecie_sadu:
   type: string
   description: "Rozstrzygnięcie"
-  example: "Oddalenie powództwa"
+  required: false
 
 typ_rozstrzygniecia:
   type: enum
-  choices: [Uwzględnienie powództwa w całości, Uwzględnienie powództwa w części, Oddalenie powództwa, Oddalenie apelacji, Zmiana wyroku, Przekazanie do ponownego rozpoznania]
+  choices: ['Uwzględnienie powództwa w całości', 'Uwzględnienie powództwa w części', 'Oddalenie powództwa', 'Oddalenie apelacji', 'Zmiana wyroku', 'Przekazanie do ponownego rozpoznania']
   description: "Typ rozstrzygnięcia"
-  example: "Oddalenie powództwa"
+  required: false
 
 sesja_sadowa:
   type: enum
-  choices: [Rozprawa, Posiedzenie niejawne]
+  choices: ['Rozprawa', 'Posiedzenie niejawne']
   description: "Czy wyrok wydano na rozprawie czy na posiedzeniu niejawnym"
-  example: "Rozprawa"
+  required: false
 
 dowody:
   type: list
   items:
     type: enum
-    choices: [Przesłuchanie stron, Przesłuchanie świadków, Dowód z opinii biegłego]
+    choices: ['Przesłuchanie stron', 'Przesłuchanie świadków', 'Dowód z opinii biegłego', 'Dowód z dokumentów']
   description: "Jakie dowody zostały przeprowadzone"
-  example: ["Przesłuchanie stron", "Dowód z opinii biegłego"]
+  required: false
 
 oswiadczenie_niewaznosci:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy odbierano oświadczenie powoda o skutkach nieważności umowy"
-  example: false
+  required: false
 
 odwolanie_do_sn:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy odwołano się do orzecznictwa SN"
-  example: true
+  required: false
 
 odwolanie_do_tsue:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy odwołano się do orzecznictwa TSUE"
-  example: true
+  required: false
 
 teoria_prawna:
   type: enum
-  choices: [Teoria dwóch kondykcji, Teoria salda]
+  choices: ['Teoria dwóch kondykcji', 'Teoria salda']
   description: "Teoria prawna, na której oparto wyrok"
-  example: "Teoria dwóch kondykcji"
+  required: false
 
-zarzut_zatrzymania_lub_potracenia:
-  type: boolean
-  description: "Czy uwzględniono zarzut zatrzymania lub potrącenia"
-  example: false
+zarzut_zatrzymania:
+  type: enum
+  choices: ['Tak', 'Nie', 'Nie podniesiono takiego zarzutu']
+  description: "Czy uwzględniono zarzut zatrzymania"
+  required: false
+
+zarzut_potracenia:
+  type: enum
+  choices: ['Tak', 'Nie', 'Nie podniesiono takiego zarzutu']
+  description: "Czy uwzględniono zarzut potrącenia"
+  required: false
 
 odsetki_ustawowe:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy uwzględniono odsetki ustawowe"
-  example: true
+  required: false
 
 data_rozpoczecia_odsetek:
   type: enum
-  choices: [Od dnia wezwania do zapłaty, Od daty wytoczenia powództwa, Od daty wydania wyroku, Od innej daty]
+  choices: ['Od dnia wezwania do zapłaty', 'Od daty wytoczenia powództwa', 'Od daty wydania wyroku', 'Od innej daty']
   description: "Data rozpoczęcia naliczania odsetek"
-  example: "Od daty wydania wyroku"
+  required: false
 
 koszty_postepowania:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy zasądzono zwrot kosztów postępowania"
-  example: true
+  required: false
 
 beneficjent_kosztow:
   type: string
   description: "Na rzecz której strony zasądzono zwrot kosztów"
-  example: "Pozwany"
+  required: false
 
 zabezpieczenie_udzielone:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie', 'Nie było wniosku o zabezpieczenie']
   description: "Czy udzielono zabezpieczenia"
-  example: true
+  required: false
 
 rodzaj_zabezpieczenia:
   type: string
   description: "Rodzaj zabezpieczenia"
-  example: "Wstrzymanie egzekucji"
+  required: false
 
 zabezpieczenie_pierwsza_instancja:
-  type: boolean
+  type: enum
+  choices: ['Tak', 'Nie']
   description: "Czy zabezpieczenia udzielił sąd I instancji"
-  example: true
+  required: false
 
 czas_trwania_sprawy:
   type: string
   description: "Czas rozpoznania sprawy – od złożenia pozwu do wydania wyroku"
-  example: "2 lata 3 miesiące"
+  required: false
 
 wynik_sprawy:
   type: enum
-  choices: [Wygrana kredytobiorcy, Wygrana banku, Częściowe uwzględnienie roszczeń obu stron]
+  choices: ['Wygrana kredytobiorcy', 'Wygrana banku', 'Częściowe uwzględnienie roszczeń obu stron']
   description: "Ocena, czy bank czy kredytobiorca wygrał sprawę"
-  example: "Wygrana kredytobiorcy"
+  required: false
 
-szczegoły_wyniku_sprawy:
+szczegoly_wyniku_sprawy:
   type: string
   description: "Szczegóły dotyczące wyniku sprawy"
-  example: "Kredytobiorca wygrał, umowa uznana za nieważną"
-
-sprawa_frankowiczów:
-  type: boolean
-  description: "Czy sprawa dotyczy kredytu frankowego (CHF)"
-  example: true
+  required: false

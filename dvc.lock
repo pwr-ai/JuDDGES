@@ -3560,41 +3560,36 @@ stages:
       size: 1045558
   build_swiss_franc_loans_instruct_dataset:
     cmd: PYTHONPATH=. python scripts/dataset/build_swiss_franc_loans_instruct_dataset.py
-      --train-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
-      --test-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
-      --output-dir data/datasets/pl/swiss_franc_loans --tokenizer-name meta-llama/Llama-3.1-8B-Instruct
-      --schema-path configs/ie_schema/swiss_franc_loans.yaml --output-format json
-      --threshold-tokens 64_000
+      --dataset-source-path data/datasets/pl/swiss_franc_loans_source/ --output-dir
+      data/datasets/pl/swiss_franc_loans --tokenizer-name meta-llama/Llama-3.1-8B-Instruct
+      --schema-path configs/ie_schema/swiss_franc_loans.yaml --threshold-tokens 64_000
     deps:
     - path: configs/ie_schema/swiss_franc_loans.yaml
       hash: md5
-      md5: 77b05d2d13a64620a7da7b3ddf5f3a57
-      size: 6221
-    - path: data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
+      md5: b914c6a8a0772d7a7f3fcd890c09273c
+      size: 6889
+    - path: data/datasets/pl/swiss_franc_loans_source/
       hash: md5
-      md5: 4adbda0e8e448bd23837decd6b96899b
-      size: 366891772
-    - path: data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
-      hash: md5
-      md5: f8f043fedf4fb337e0b1088585fcf42b
-      size: 78916967
+      md5: 09aadb3a962aaf455018cec682b905e0.dir
+      size: 127152596
+      nfiles: 2
     - path: scripts/dataset/build_swiss_franc_loans_instruct_dataset.py
       hash: md5
-      md5: 141a0da72de353d23802d36e38bc25fd
-      size: 5294
+      md5: c42a3f12cc949a169cfaf3b567e92d67
+      size: 6079
     outs:
+    - path: data/datasets/pl/swiss_franc_loans/annotated.json
+      hash: md5
+      md5: 69562f82c11fb617f44700130d0d6c7e
+      size: 54937644
     - path: data/datasets/pl/swiss_franc_loans/dataset_info.json
       hash: md5
-      md5: d5fc169c83ea5865c1c951c5aeab29ff
-      size: 8003
-    - path: data/datasets/pl/swiss_franc_loans/test.jsonl
+      md5: d9b7a75bc23b68738672a746e5254348
+      size: 8928
+    - path: data/datasets/pl/swiss_franc_loans/test.json
       hash: md5
-      md5: e7bc0622f639231d7899470f4703d86b
-      size: 62342764
-    - path: data/datasets/pl/swiss_franc_loans/train.jsonl
-      hash: md5
-      md5: b3c0f1f0061c463aee056156eaceeaaa
-      size: 322839112
+      md5: bc38cd97106f2a54f11e14d2c0e8ff1a
+      size: 54185647
   sft@llm_dataset3:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
       llm=pllum_12b_instruct prompt=info_extraction_json ie_schema=swiss_franc_loans

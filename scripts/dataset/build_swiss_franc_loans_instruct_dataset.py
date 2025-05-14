@@ -6,6 +6,7 @@ from typing import Any, Literal
 import pandas as pd
 import typer
 import yaml
+from datasets import Dataset, DatasetDict, load_dataset
 from loguru import logger
 from tabulate import tabulate
 from tqdm.auto import tqdm
@@ -19,83 +20,72 @@ DEFAULT_TOKENIZER_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 
 
 def main(
-    train_ds_path: Path = typer.Option(..., help="Path to the train dataset"),
-    test_ds_path: Path = typer.Option(..., help="Path to the test dataset"),
+    dataset_source_path: Path = typer.Option(..., help="Path to the dataset source file"),
     threshold_tokens: int | None = typer.Option(
         DEFAULT_MAX_TOKENS, help="Maximum number of tokens to use for the dataset"
     ),
     schema_path: Path = typer.Option(..., help="Path to the schema file"),
     tokenizer_name: str = typer.Option(DEFAULT_TOKENIZER_NAME, help="Name of the tokenizer to use"),
-    output_format: str = typer.Option("json", help="Format of the output column"),
     output_dir: Path = typer.Option(..., help="Path to the output directory"),
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    train_df = pd.read_pickle(train_ds_path)
-    test_df = pd.read_pickle(test_ds_path)
+    dataset = load_dataset(
+        str(dataset_source_path),
+        data_files={"annotated": "annotated.json", "test": "test.json"},
+    )
 
-    assert train_df.columns.tolist() == test_df.columns.tolist()
+    assert all(
+        set(split_ds.column_names) == {"context", "output"} for split_ds in dataset.values()
+    ), "All splits must have the same columns"
 
-    train_df = remove_duplicates(train_df)
-    test_df = remove_duplicates(test_df)
+    dataset["test"] = get_test_items_matching_annotated(dataset)
 
     with open(schema_path, "r") as f:
         schema = yaml.safe_load(f)
 
-    train_instruct_dataset = format_instruction(
-        train_df,
-        schema,
-        output_format,
-    )
-    original_train_size = len(train_instruct_dataset)
-    train_instruct_dataset = filter_by_schema_mismatch(schema, train_instruct_dataset)
-    logger.info(
-        f"Filtered {original_train_size - len(train_instruct_dataset)} items out of {original_train_size}"
-    )
-
-    test_instruct_dataset = format_instruction(
-        test_df,
-        schema,
-        output_format,
-    )
-    original_test_size = len(test_instruct_dataset)
-    test_instruct_dataset = filter_by_schema_mismatch(schema, test_instruct_dataset)
-    logger.info(
-        f"Filtered {original_test_size - len(test_instruct_dataset)} items out of {original_test_size}"
-    )
+    for split_name, split_ds in dataset.items():
+        original_split_size = split_ds.num_rows
+        dataset[split_name] = filter_by_schema_mismatch(split_ds, schema_path)
+        logger.info(
+            f"[{split_name}] Filtered {original_split_size - split_ds.num_rows} items out of {original_split_size}"
+        )
 
     if threshold_tokens is not None:
-        train_instruct_dataset = filter_too_long_contexts(
-            train_instruct_dataset,
-            tokenizer_name,
-            threshold_tokens,
-        )
-        test_instruct_dataset = filter_too_long_contexts(
-            test_instruct_dataset,
-            tokenizer_name,
-            threshold_tokens,
-        )
+        for split_name, split_ds in dataset.items():
+            original_split_size = split_ds.num_rows
+            dataset[split_name] = filter_too_long_contexts(
+                split_ds,
+                tokenizer_name,
+                threshold_tokens,
+            )
+            logger.info(
+                f"[{split_name}] Filtered {original_split_size - split_ds.num_rows} items out of {original_split_size}"
+            )
 
-    with open(output_dir / "train.jsonl", "w") as f:
-        json.dump(train_instruct_dataset, f, indent="\t", ensure_ascii=False)
+    # assert annotated is the same as test
+    df_test = dataset["test"].to_pandas()
+    df_annotated = dataset["annotated"].to_pandas()
+    assert (df_test["context"] == df_annotated["context"]).all()
 
-    with open(output_dir / "test.jsonl", "w") as f:
-        json.dump(test_instruct_dataset, f, indent="\t", ensure_ascii=False)
+    for split_name, split_ds in dataset.items():
+        split_ds.to_json(output_dir / f"{split_name}.json", orient="records", indent=4)
 
     # Print dataset sizes
     sizes_table = [
         ["Split", "Size"],
-        ["Train", len(train_instruct_dataset)],
-        ["Test", len(test_instruct_dataset)],
+        *[[split_name, split_ds.num_rows] for split_name, split_ds in dataset.items()],
     ]
     print("\nDataset sizes:")
     print(tabulate(sizes_table, headers="firstrow", tablefmt="grid"))
 
     # Save dataset info
     dataset_info = {
-        "source_files": {"train": str(train_ds_path), "test": str(test_ds_path)},
+        "source_files": {
+            split_name: str(output_dir / f"{split_name}.json") for split_name in dataset.keys()
+        },
         "parameters": {"tokenizer_name": tokenizer_name, "threshold_tokens": threshold_tokens},
-        "output_sizes": {"train": len(train_instruct_dataset), "test": len(test_instruct_dataset)},
+        "output_sizes": {split_name: split_ds.num_rows for split_name, split_ds in dataset.items()},
         "schema": schema,
     }
 
@@ -108,6 +98,35 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     df["hash"] = df.apply(lambda row: hashlib.md5(str(row["text"]).encode()).hexdigest(), axis=1)
     df = df.drop_duplicates(subset=["hash"]).drop(columns=["hash"])
     return df
+
+
+def filter_by_schema_mismatch(ds: Dataset, schema_path: Path) -> Dataset:
+    with open(schema_path, "r") as f:
+        schema = yaml.safe_load(f)
+
+    return ds.filter(
+        lambda item: validate_output_structure(item["output"], schema, format="json")["num_errors"]
+        == 0
+    )
+
+
+def get_test_items_matching_annotated(dataset: DatasetDict) -> Dataset:
+    def get_matching_test_item(annotated_item: dict[str, Any]) -> dict[str, Any]:
+        found_items = []
+        for test_item in dataset["test"]:
+            if annotated_item["context"] == test_item["context"]:
+                found_items.append(test_item)
+        if not len(found_items) == 1:
+            raise ValueError(f"Found {len(found_items)} items")
+        return found_items[0]
+
+    test_items_matching_annotated = []
+    for annotated_item in tqdm(dataset["annotated"], "Matching test and annotated items"):
+        found_item = get_matching_test_item(annotated_item)
+        assert found_item["context"] == annotated_item["context"]
+        test_items_matching_annotated.append(found_item)
+
+    return Dataset.from_pandas(pd.DataFrame(test_items_matching_annotated))
 
 
 def format_instruction(
@@ -135,27 +154,16 @@ def format_instruction(
 
 @log_size_change
 def filter_too_long_contexts(
-    dataset: list[dict[str, str]],
+    dataset: Dataset,
     tokenizer_name: str,
     threshold_tokens: int,
-) -> pd.DataFrame:
+) -> Dataset:
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
     lengths = tokenizer(
         [item["context"] for item in dataset],
         return_length=True,
     )["length"]
-    return [item for item, length in zip(dataset, lengths) if length <= threshold_tokens]
-
-
-def filter_by_schema_mismatch(
-    schema: dict[str, dict[str, Any]],
-    dataset: list[dict[str, str]],
-) -> list[dict[str, str]]:
-    return [
-        item
-        for item in dataset
-        if validate_output_structure(item["output"], schema)["num_errors"] == 0
-    ]
+    return dataset.filter(lambda _, idx: lengths[idx] <= threshold_tokens, with_indices=True)
 
 
 if __name__ == "__main__":
