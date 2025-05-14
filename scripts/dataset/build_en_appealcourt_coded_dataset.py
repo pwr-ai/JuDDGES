@@ -4,6 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import typer
 import yaml
 from datasets import Dataset, load_dataset
@@ -42,6 +43,7 @@ def main(
     with open(schema_file, "r") as f:
         schema = yaml.safe_load(f)
 
+    processed_splits = []
     for split_name, data in ds.items():
         data = data.rename_column(OUTPUT_COLUMN, "output").select_columns(["context", "output"])
 
@@ -95,9 +97,12 @@ def main(
         stats[split_name]["final_size"] = len(df)
         logger.info(f"[{split_name}] Final dataset size: {len(df)}")
 
-        f_name = target_dir / f"{split_name}.json"
-        logger.info(f"[{split_name}] Saving to {f_name}")
-        df.to_json(f_name, orient="records", indent=4)
+        processed_splits.append(df)
+
+    processed_splits = pd.concat(processed_splits)
+    f_name = target_dir / "test.json"
+    logger.info(f"Saving merged splits to {f_name}")
+    processed_splits.to_json(f_name, orient="records", indent=4)
 
     stats_path = target_dir / "dataset_info.json"
     logger.info(f"[{split_name}] Saving stats to {stats_path}")
@@ -107,10 +112,6 @@ def main(
     # check dataset loads
     ds = load_dataset("json", data_dir=target_dir)
     logger.info(f"Dataset correctly loaded: {ds}")
-
-    logger.info("Checking schema mismatch for train split")
-    check_schema_mismatch(schema, ds["train"])
-    logger.info("Train split correct")
 
     logger.info("Checking schema mismatch for test split")
     check_schema_mismatch(schema, ds["test"])
