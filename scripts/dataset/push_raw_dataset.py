@@ -15,7 +15,7 @@ from juddges.data.pl_court_repo import (
     prepare_dataset_card,
     prepare_hf_repo_commit_operations,
 )
-from juddges.settings import PL_JUDGEMENTS_PATH_RAW
+from juddges.settings import PL_JUDGMENTS_PATH_RAW
 
 typer.rich_utils.STYLE_ERRORS = False
 
@@ -32,7 +32,7 @@ def main(
         help="Repository ID",
     ),
     data_files_dir: Path = typer.Option(
-        PL_JUDGEMENTS_PATH_RAW,
+        PL_JUDGMENTS_PATH_RAW,
         help="Path to the dataset directory",
     ),
     dataset_card_template: Path = typer.Option(

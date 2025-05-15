@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import streamlit as st
 
 from juddges.dashboards.utils.search_utils import (
@@ -9,7 +7,7 @@ from juddges.dashboards.utils.search_utils import (
 from juddges.data_models import Judgment
 
 
-def display_search_results(items: List[Dict]) -> None:
+def display_search_results(items: list[dict]) -> None:
     """Display search results in a formatted way using cards and columns.
 
     Args:

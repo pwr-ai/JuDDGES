@@ -1,106 +1,13 @@
-import os
-import re
-from abc import ABC, abstractmethod
-from typing import Any, ClassVar, List, Optional
-
-import weaviate.classes.config as wvcc
-from dotenv import load_dotenv
-from loguru import logger
-from weaviate.classes.init import Auth
+from typing import ClassVar
 
 import weaviate
-from juddges.settings import ROOT_PATH
-
-logger.info(f"Environment variables loaded from {ROOT_PATH / '.env'} file")
-load_dotenv(ROOT_PATH / ".env", override=True)
-
-
-class WeaviateDatabase(ABC): 
-    def __init__(
-        self,
-        host: str = os.environ["WV_URL"],
-        port: str = os.environ["WV_PORT"],
-        grpc_port: str = os.environ["WV_GRPC_PORT"],
-        api_key: str = os.environ["WV_API_KEY"],
-    ):
-        self.host = host
-        self.port = port
-        self.grpc_port = grpc_port
-        self.__api_key = api_key
-
-        self.client: weaviate.WeaviateAsyncClient
-
-    async def __aenter__(self) -> "WeaviateDatabase":
-        self.client = weaviate.use_async_with_custom(
-            http_host=self.host,
-            http_port=self.port,
-            http_secure=False,
-            grpc_host=self.host,
-            grpc_port=self.grpc_port,
-            grpc_secure=False,
-            auth_credentials=self.api_key,
-        )
-        await self.client.connect()
-        await self.async_create_collections()
-        return self
-
-    async def __aexit__(self, exc_type, exc_value, traceback) -> None:
-        if self.client and self.client.is_connected():
-            await self.client.close()
-
-    async def close(self) -> None:
-        await self.__aexit__(None, None, None)
-
-    @property
-    def api_key(self):
-        if self.__api_key is not None:
-            return Auth.api_key(self.__api_key)
-        logger.error("No API key provided")
-        return None
-
-    @abstractmethod
-    async def async_create_collections(self) -> None:
-        pass
-
-    async def async_insert_batch(
-        self,
-        collection: weaviate.collections.Collection,
-        objects: list[dict[str, Any]],
-    ) -> None:
-        try:
-            response = await collection.data.insert_many(objects)
-            if response.has_errors:
-                # Log each error with detailed information
-                for i, err in enumerate(response.errors):
-                    obj_id = objects[i].get("id", "unknown")
-                    logger.error(f"Error inserting object {obj_id}: {err.message}")
-                # Raise a consolidated error
-                errors = [f"Object {i}: {err.message}" for i, err in enumerate(response.errors)]
-                raise ValueError(f"Error ingesting batch: {errors}")
-        except Exception as e:
-            logger.error(f"Exception during batch insertion: {str(e)}")
-            raise
-
-    async def async_get_uuids(self, collection: weaviate.collections.Collection) -> list[str]:
-        result = []
-        async for obj in collection.iterator(return_properties=[]):
-            result.append(str(obj.uuid))
-        return result
-
-    async def async_safe_create_collection(self, *args: Any, **kwargs: Any) -> None:
-        try:
-            await self.client.collections.create(*args, **kwargs)
-        except weaviate.exceptions.UnexpectedStatusCodeError as err:
-            if (
-                re.search(r"class name (\w+?) already exists", err.message)
-                and err.status_code == 422
-            ):
-                pass
-            else:
-                raise
+import weaviate.classes.config as wvcc
+from juddges.data.base_weaviate_db import WeaviateDatabase
 
 
 class WeaviateJudgmentsDatabase(WeaviateDatabase):
+    """Database for court judgments."""
+
     JUDGMENTS_COLLECTION: ClassVar[str] = "judgments"
     JUDGMENT_CHUNKS_COLLECTION: ClassVar[str] = "judgment_chunks"
 
@@ -132,12 +39,22 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
         config = await self.judgment_chunks_collection.config.get()
         return [prop.name for prop in config.properties]
 
+    def get_collection(self, collection_name: str) -> weaviate.collections.Collection:
+        return self.client.collections.get(collection_name)
+
     async def async_create_collections(self) -> None:
         await self.async_safe_create_collection(
             name=self.JUDGMENTS_COLLECTION,
             properties=[
                 wvcc.Property(
                     name="judgment_id",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                # Source of the data, can be one of: [pl-court, nsa, tax-interpretation]
+                wvcc.Property(
+                    name="source",
                     data_type=wvcc.DataType.TEXT,
                     index_filterable=True,
                     index_searchable=True,
@@ -188,7 +105,7 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                     index_searchable=True,
                 ),
                 wvcc.Property(
-                    name="content",
+                    name="xml_content",
                     data_type=wvcc.DataType.TEXT,
                     index_filterable=True,
                     index_searchable=True,
@@ -276,8 +193,10 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                     index_searchable=True,
                 ),
                 wvcc.Property(
-                    name="text_legal_bases",
+                    name="extracted_legal_bases",
                     data_type=wvcc.DataType.OBJECT_ARRAY,
+                    index_filterable=True,
+                    index_searchable=True,
                     nested_properties=[
                         wvcc.Property(
                             name="text",
@@ -317,8 +236,116 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                     index_filterable=True,
                     index_searchable=True,
                 ),
+                # Plain-text references to legal acts
+                wvcc.Property(
+                    name="references",
+                    data_type=wvcc.DataType.TEXT_ARRAY,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                # the country of origin of the judgment (one of [Poland, England])
+                wvcc.Property(
+                    name="country",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="court_type",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="submission_date",
+                    data_type=wvcc.DataType.DATE,
+                    index_filterable=True,
+                ),
+                wvcc.Property(
+                    name="finality",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="related_docket_numbers",
+                    data_type=wvcc.DataType.OBJECT_ARRAY,
+                    index_filterable=True,
+                    index_searchable=True,
+                    nested_properties=[
+                        wvcc.Property(
+                            name="judgment_id",
+                            data_type=wvcc.DataType.TEXT,
+                            index_filterable=True,
+                            index_searchable=True,
+                        ),
+                        wvcc.Property(
+                            name="docket_number",
+                            data_type=wvcc.DataType.TEXT,
+                            index_filterable=True,
+                            index_searchable=True,
+                        ),
+                        wvcc.Property(
+                            name="judgment_date",
+                            data_type=wvcc.DataType.DATE,
+                            index_filterable=True,
+                        ),
+                        wvcc.Property(
+                            name="judgment_type",
+                            data_type=wvcc.DataType.TEXT,
+                            index_filterable=True,
+                            index_searchable=True,
+                        ),
+                    ],
+                ),
+                wvcc.Property(
+                    name="challenged_authority",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="official_collection",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="glosa_information",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="reasons_for_judgment",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="dissenting_opinion",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="judge_rapporteur",
+                    data_type=wvcc.DataType.TEXT,
+                    index_filterable=True,
+                    index_searchable=True,
+                ),
+                wvcc.Property(
+                    name="x",
+                    data_type=wvcc.DataType.NUMBER,
+                    index_filterable=True,
+                ),
+                wvcc.Property(
+                    name="y",
+                    data_type=wvcc.DataType.NUMBER,
+                    index_filterable=True,
+                ),
             ],
-            vectorizer_config=wvcc.Configure.Vectorizer.none(),
+            vectorizer_config=wvcc.Configure.Vectorizer.text2vec_transformers(),
         )
         await self.async_safe_create_collection(
             name=self.JUDGMENT_CHUNKS_COLLECTION,
@@ -340,6 +367,16 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                     index_filterable=True,
                     index_searchable=True,
                 ),
+                wvcc.Property(
+                    name="x",
+                    data_type=wvcc.DataType.NUMBER,
+                    index_filterable=True,
+                ),
+                wvcc.Property(
+                    name="y",
+                    data_type=wvcc.DataType.NUMBER,
+                    index_filterable=True,
+                ),
             ],
             vectorizer_config=wvcc.Configure.Vectorizer.text2vec_transformers(),
             references=[
@@ -349,19 +386,6 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
                 )
             ],
         )
-
-    # For backward compatibility
-    async def create_collections(self) -> None:
-        await self.async_create_collections()
-        
-    async def insert_batch(self, collection, objects):
-        await self.async_insert_batch(collection, objects)
-        
-    async def get_uuids(self, collection):
-        return await self.async_get_uuids(collection)
-        
-    async def _safe_create_collection(self, *args, **kwargs):
-        await self.async_safe_create_collection(*args, **kwargs)
 
     @staticmethod
     def uuid_from_judgment_chunk_id(judgment_id: str, chunk_id: int) -> str:

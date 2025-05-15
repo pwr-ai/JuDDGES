@@ -20,9 +20,9 @@ SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
 FRANKOWICZE_DATA_PATH = DATA_PATH / "analysis" / "sprawy_frankowe"
 ARTICLE_111_DATA_PATH = DATA_PATH / "analysis" / "agitacja_wyborcza"
 
-PL_JUDGEMENTS_PATH = DATA_PATH / "datasets" / "pl"
-PL_COURT_DEP_ID_2_NAME = PL_JUDGEMENTS_PATH / "court_id_2_name.csv"
-PL_JUDGEMENTS_PATH_RAW = PL_JUDGEMENTS_PATH / "pl-court-raw" / "data"
+PL_JUDGMENTS_PATH = DATA_PATH / "datasets" / "pl"
+PL_COURT_DEP_ID_2_NAME = PL_JUDGMENTS_PATH / "court_id_2_name.csv"
+PL_JUDGMENTS_PATH_RAW = PL_JUDGMENTS_PATH / "pl-court-raw" / "data"
 
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
@@ -30,6 +30,20 @@ TEXT_EMBEDDING_MODEL = "sdadas/mmlw-roberta-large"
 
 # NSA
 NSA_DATA_PATH = DATA_PATH / "datasets" / "nsa"
+
+
+class VectorName:
+    """Available vector names for semantic search.
+
+    These vector names are used to specify which vector embedding to use for semantic search:
+    - BASE: Default vector for general search
+    - DEV: Vector for development/testing
+    - FAST: Optimized vector for speed over accuracy
+    """
+
+    BASE = "base"
+    DEV = "dev"
+    FAST = "fast"
 
 
 def num_tokens_from_string(
@@ -77,9 +91,7 @@ def prepare_langchain_cache() -> None:
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 
 
-def prepare_mlflow(
-    experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost"
-) -> None:
+def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost") -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)
 
