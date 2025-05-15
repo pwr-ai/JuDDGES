@@ -18,3 +18,27 @@ def get_dataset(dataset_name_or_path: str | Path, split: str | None) -> Dataset:
         )
     else:
         raise ValueError(f"Dataset {dataset_name_or_path} not supported.")
+
+
+if __name__ == "__main__":
+    from huggingface_hub import DatasetCardData
+
+    ds = get_dataset("data/datasets/pl/swiss_franc_loans", split=None)
+
+    card_data = DatasetCardData(
+        configs=[
+            {
+                "config_name": "default",
+                "data_files": [
+                    {
+                        "split": split,
+                        "path": f"{split}.json",
+                    }
+                    for split in ds.keys()
+                ],
+            }
+        ],
+        dataset_info=ds["train"].info._to_yaml_dict(),
+    )
+
+    print(card_data)
