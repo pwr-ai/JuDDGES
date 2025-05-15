@@ -312,6 +312,49 @@ stages:
     outs:
       - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/llm_as_judge_${item.judge_llm}.json
 
+  evaluate_llm_as_judge_on_fine_tuned:
+    matrix:
+      llm_dataset:
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: pllum_12b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: bielik_11b_v23_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+      seed: ${seeds}
+      split:
+        - annotated
+      model_type:
+        - fine_tuned
+      judge_llm:
+        - gpt-4.1-mini-2025-04-14
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/llm_as_judge.py
+      data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
+      configs/ie_schema/swiss_franc_loans.yaml
+      --judge-model=${item.judge_llm}
+    deps:
+      - scripts/sft/llm_as_judge.py
+      - configs/ie_schema/swiss_franc_loans.yaml
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
+    outs:
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/llm_as_judge_${item.judge_llm}.json
+
+
   evaluate_llm_as_judge_on_preannotations:
     matrix:
       pred_schema:
