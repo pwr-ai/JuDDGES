@@ -12,9 +12,11 @@ from langchain_core.utils.json import parse_json_markdown
 from loguru import logger
 from transformers import AutoTokenizer
 
+from juddges.data.dataset_factory import get_dataset
 from juddges.utils.validate_schema import validate_output_structure
 
 EN_DATASET_REPO = "JuDDGES/en-appealcourt-coded-instruct_v02"
+EN_TEST_SPLIT_FILE = "data/datasets/en/en_appealcourt_coded_source/test.json"
 OUTPUT_COLUMN = "output_2"
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
@@ -30,7 +32,6 @@ def main(
     target_dir.mkdir(parents=True, exist_ok=True)
 
     ds = load_dataset(EN_DATASET_REPO)
-
     tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)
 
     stats = defaultdict(dict)
@@ -100,10 +101,17 @@ def main(
         processed_splits.append(df)
 
     final_split_name = "annotated"
-    processed_splits = pd.concat(processed_splits)
+    annotated_split = pd.concat(processed_splits)
+
+    test_split_data = load_dataset("json", data_files={"test": EN_TEST_SPLIT_FILE})["test"]
+    assert (annotated_split["context"] == test_split_data["context"]).all()
+    test_split_f_name = target_dir / "test.json"
+    logger.info(f"Saving test split to {test_split_f_name}")
+    test_split_data.to_pandas().to_json(test_split_f_name, orient="records", indent=4)
+
     f_name = target_dir / f"{final_split_name}.json"
     logger.info(f"Saving merged splits to {f_name}")
-    processed_splits.to_json(f_name, orient="records", indent=4)
+    annotated_split.to_json(f_name, orient="records", indent=4)
 
     stats_path = target_dir / "dataset_info.json"
     logger.info(f"[{final_split_name}] Saving stats to {stats_path}")
@@ -111,16 +119,13 @@ def main(
         json.dump(stats, f, indent=4)
 
     # check dataset loads
-    ds = load_dataset(
-        "json",
-        data_files={final_split_name: f"{final_split_name}.json"},
-        data_dir=target_dir,
-    )
+    ds = get_dataset(str(target_dir), split=None)
     logger.info(f"Dataset correctly loaded: {ds}")
 
-    logger.info("Checking schema mismatch for annotated split")
-    check_schema_mismatch(schema, ds[final_split_name])
-    logger.info("Annotated split correct")
+    for split_name, split_data in ds.items():
+        logger.info(f"Checking schema mismatch for {split_name} split")
+        check_schema_mismatch(schema, split_data)
+        logger.info(f"{split_name} split correct")
 
 
 def dict_value_or_none(data: dict[str, Any]) -> dict[str, Any] | None:

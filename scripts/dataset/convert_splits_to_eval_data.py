@@ -5,12 +5,10 @@ import typer
 
 from juddges.data.dataset_factory import get_dataset
 
-PL_SWISS_FRANC_LOANS_DATASET = "data/datasets/pl/swiss_franc_loans"
-
 
 def main(
     dataset_name_or_path: str = typer.Option(
-        PL_SWISS_FRANC_LOANS_DATASET,
+        ...,
         help="Path to the dataset",
     ),
     output_dir: Path = typer.Option(..., help="Path to the output directory"),
@@ -21,8 +19,8 @@ def main(
     for gpt_item, annotated_item in zip(ds["test"], ds["annotated"], strict=True):
         results.append(
             {
-                "answer": gpt_item,
-                "gold": annotated_item,
+                "answer": gpt_item["output"],
+                "gold": annotated_item["output"],
             }
         )
 

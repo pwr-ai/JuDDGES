@@ -86,7 +86,9 @@ stages:
     deps:
       - scripts/dataset/build_en_appealcourt_coded_dataset.py
       - configs/ie_schema/en_appealcourt.yaml
+      - data/datasets/en/en_appealcourt_coded_source/
     outs:
+      - data/datasets/en/en_appealcourt_coded/test.json
       - data/datasets/en/en_appealcourt_coded/annotated.json
       - data/datasets/en/en_appealcourt_coded/dataset_info.json
 
@@ -129,15 +131,21 @@ stages:
 
   ### ---------------------------- Evaluate with human annotations ---------------------------- ###
   convert_splits_to_predcictions:
+    matrix:
+      datasets_outputs:
+        - dataset: data/datasets/pl/swiss_franc_loans
+          output_dir: data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/
+        - dataset: data/datasets/en/en_appealcourt_coded
+          output_dir: data/experiments/predict/raw/en_appealcourt_coded/test/gpt_4.1/
     cmd: >-
-      PYTHONPATH=. python scripts/dataset/convert_pl_swiss_franc_loans_splits_to_eval_data.py
-      --dataset-name-or-path data/datasets/pl/swiss_franc_loans
-      --output-dir data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/
+      PYTHONPATH=. python scripts/dataset/convert_splits_to_eval_data.py
+      --dataset-name-or-path ${item.datasets_outputs.dataset}
+      --output-dir ${item.datasets_outputs.output_dir}
     deps:
-      - scripts/dataset/convert_pl_swiss_franc_loans_splits_to_eval_data.py
-      - data/datasets/pl/swiss_franc_loans
+      - scripts/dataset/convert_splits_to_eval_data.py
+      - ${item.datasets_outputs.dataset}
     outs:
-      - data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/predictions.json
+      - ${item.datasets_outputs.output_dir}/predictions.json
 
   ### ---------------------------- Prediction ---------------------------- ###
   predict_raw_vllm:
@@ -276,6 +284,27 @@ stages:
       - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
     outs:
       - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/llm_as_judge_${item.judge_llm}.json
+
+  evaluate_llm_as_judge_on_preannotations:
+    matrix:
+      pred_schema:
+        - pred_path: data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/
+          schema: configs/ie_schema/swiss_franc_loans.yaml
+        - pred_path: data/experiments/predict/raw/en_appealcourt_coded/test/gpt_4.1/
+          schema: configs/ie_schema/en_appealcourt.yaml
+      judge_llm:
+        - gpt-4.1-mini-2025-04-14
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/llm_as_judge.py
+      ${item.pred_schema.pred_path}/predictions.json
+      ${item.pred_schema.schema}
+      --judge-model=${item.judge_llm}
+    deps:
+      - scripts/sft/llm_as_judge.py
+      - ${item.pred_schema.schema}
+      - ${item.pred_schema.pred_path}/predictions.json
+    outs:
+      - ${item.pred_schema.pred_path}/llm_as_judge_${item.judge_llm}.json
 
   summarize_metrics:
     matrix:
