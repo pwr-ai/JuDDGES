@@ -1,0 +1,5 @@
+outs:
+- md5: 31fa03c8dc0c22ee9dfca11099e00795
+  size: 76714277
+  hash: md5
+  path: test_annotations_dataset.json

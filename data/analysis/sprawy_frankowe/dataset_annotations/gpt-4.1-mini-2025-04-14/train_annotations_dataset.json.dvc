@@ -1,0 +1,5 @@
+outs:
+- md5: de7d7335fa8cad5a57ebdc7b77ef1bed
+  size: 357884894
+  hash: md5
+  path: train_annotations_dataset.json
