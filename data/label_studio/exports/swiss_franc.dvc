@@ -1,0 +1,6 @@
+outs:
+- md5: cafdddca3ffa1d99cea8cd60757f77d2.dir
+  size: 51588138
+  nfiles: 2
+  hash: md5
+  path: swiss_franc
