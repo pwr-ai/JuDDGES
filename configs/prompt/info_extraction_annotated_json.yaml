@@ -31,3 +31,11 @@ content: |
     ====
     {context}
     ====
+
+    Odpowiedz, stosując się do następującego formatu:
+    - Sformatuj odpowiedź jako JSON Markdown,
+    - Podaj tylko wartości dla pól ze schematu {{<nazwa_pola>: <wartość>}}, bez dodatkowych informacji, np. typu pola
+    - Upewnij się, że wszystkie pola schematu są uwzględnione,
+    - Poza JSON nie dodawaj żadnych dodatkowych komentarzy
+
+    Odpowiedź:

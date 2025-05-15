@@ -45,11 +45,11 @@ def main(cfg: DictConfig) -> None:
     config = PredictInfoExtractionConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
-    try:
-        config.output_dir.mkdir(parents=True, exist_ok=False)
-    except FileExistsError:
+    config.output_dir.mkdir(parents=True, exist_ok=True)
+
+    if config.predictions_file.exists():
         logger.error(
-            f"Output directory {config.output_dir} already exists. Remove stale outputs first."
+            f"Output file {config.predictions_file} already exists. Remove stale outputs first."
         )
         sys.exit(1)
 

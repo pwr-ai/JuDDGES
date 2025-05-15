@@ -140,7 +140,7 @@ stages:
       - data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/predictions.json
 
   ### ---------------------------- Prediction ---------------------------- ###
-  predict_swiss_franc_loans_raw_vllm:
+  predict_raw_vllm:
     matrix:
       llm_dataset:
         - dataset: pl_court_swiss_franc_loans
