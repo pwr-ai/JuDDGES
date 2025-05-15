@@ -4,6 +4,7 @@ defaults:
   - _self_
 
 dataset:
+  type: parquet
   train:
     path: data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
   test:

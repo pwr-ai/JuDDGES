@@ -68,9 +68,16 @@ async def async_annotate(
 
 
 def load_dataset(cfg: DictConfig) -> dict[str, pd.DataFrame]:
-    train = pd.read_pickle(cfg.dataset.train.path)
-    test = pd.read_pickle(cfg.dataset.test.path)
-    return {"train": train, "test": test}
+    if cfg.dataset.type == "parquet":
+        train = pd.read_parquet(cfg.dataset.train.path)
+        test = pd.read_parquet(cfg.dataset.test.path)
+        return {"train": train, "test": test}
+    elif cfg.dataset.type == "hf":
+        dataset = load_dataset(cfg.dataset)
+        return {name: dataset[name].to_pandas() for name in dataset.keys()}
+    else:
+        raise ValueError(f"Invalid dataset type: {cfg.dataset.type}")
+
 
 
 if __name__ == "__main__":
