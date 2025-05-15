@@ -241,9 +241,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/llama_3.1_8b_instruct/pl_court_swiss_franc_loans/info_extraction_annotated_json/swiss_franc_loans/
       hash: md5
-      md5: dafa64624dedf0834d04e477c4a1a08a.dir
-      size: 740808293
-      nfiles: 36
+      md5: 1d5d79c970a7bcf56d7d55e5553a4a0c.dir
+      size: 456027043
+      nfiles: 33
   sft@llm_dataset1:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
       llm=llama_3.2_3b_instruct prompt=info_extraction_annotated_json ie_schema=swiss_franc_loans
@@ -264,9 +264,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/llama_3.2_3b_instruct/pl_court_swiss_franc_loans/info_extraction_annotated_json/swiss_franc_loans/
       hash: md5
-      md5: d15a420f9bef7411f36e60dd16dc7e41.dir
-      size: 458675602
-      nfiles: 36
+      md5: 9cf9946b232212054e145bce6d2d649a.dir
+      size: 343989699
+      nfiles: 27
   sft@llm_dataset2:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
       llm=mistral_nemo_instruct_2407 prompt=info_extraction_annotated_json ie_schema=swiss_franc_loans
@@ -287,9 +287,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/mistral_nemo_instruct_2407/pl_court_swiss_franc_loans/info_extraction_annotated_json/swiss_franc_loans/
       hash: md5
-      md5: 491ea09041d21048f8773aba4d3e62e1.dir
-      size: 982072040
-      nfiles: 36
+      md5: 01c6444360a5cee7cda016bf4d813355.dir
+      size: 245502567
+      nfiles: 9
   sft@llm_dataset3:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
       llm=pllum_12b_instruct prompt=info_extraction_annotated_json ie_schema=swiss_franc_loans
@@ -310,9 +310,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/pllum_12b_instruct/pl_court_swiss_franc_loans/info_extraction_annotated_json/swiss_franc_loans/
       hash: md5
-      md5: 06a9e98c766ba98557f1a7ead818733b.dir
-      size: 982059115
-      nfiles: 36
+      md5: 9a604a49cb13d3dda3a9e46d50bdbc39.dir
+      size: 245499369
+      nfiles: 9
   sft@llm_dataset4:
     cmd: PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py dataset=pl_court_swiss_franc_loans
       llm=bielik_11b_v23_instruct prompt=info_extraction_annotated_json ie_schema=swiss_franc_loans
@@ -333,9 +333,9 @@ stages:
     - path: 
         data/experiments/peft-fine-tune/bielik_11b_v23_instruct/pl_court_swiss_franc_loans/info_extraction_annotated_json/swiss_franc_loans/
       hash: md5
-      md5: a9506f723af5fc72dab123386b3943ce.dir
-      size: 532853288
-      nfiles: 22
+      md5: f9e6926b427b342450771d5c9a151bb0.dir
+      size: 266419948
+      nfiles: 11
   summarize_metrics@data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans:
     cmd: PYTHONPATH=. python scripts/sft/summarize_metrics.py --root-dir data/experiments/predict/fine_tuned/pl_court_swiss_franc_loans
     deps:
