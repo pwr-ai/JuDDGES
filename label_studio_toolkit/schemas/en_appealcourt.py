@@ -148,22 +148,27 @@ class AppellantEnum(str, Enum):
 
 class AppealCourtAnnotation(BaseModel, SchemaUtilsMixin):
     ConvCourtName: list[str] | None = Field(
-        None, description="Name(s) of the court where the defendant was convicted or pleaded guilty. Example: ['Crown Court at Southwark']"
+        None,
+        description="Name(s) of the court where the defendant was convicted or pleaded guilty. Example: ['Crown Court at Southwark']",
     )
     ConvictPleaDate: list[str] | None = Field(
-        None, description="Date(s) on which the defendant was convicted or pleaded guilty. Example: ['2003-01-22']"
+        None,
+        description="Date(s) on which the defendant was convicted or pleaded guilty. Example: ['2003-01-22']",
     )
     ConvictOffence: list[str] | None = Field(
-        None, description="Offence(s) of which the defendant was convicted. Example: ['Dangerous driving (death by)', 'Aggravated burglary', 'Supply of controlled drugs (including conspiracy to)', 'Manslaughter', 'Pervert the course of justice', 'Intent to endanger life']"
+        None,
+        description="Offence(s) of which the defendant was convicted. Example: ['Dangerous driving (death by)', 'Aggravated burglary', 'Supply of controlled drugs (including conspiracy to)', 'Manslaughter', 'Pervert the course of justice', 'Intent to endanger life']",
     )
     AcquitOffence: list[str] | None = Field(
-        None, description="Offence(s) of which the defendant was acquitted. Example: ['Theft', 'Money laundering', 'Criminal damage', 'Perjury']"
+        None,
+        description="Offence(s) of which the defendant was acquitted. Example: ['Theft', 'Money laundering', 'Criminal damage', 'Perjury']",
     )
     ConfessPleadGuilty: list[ConfessPleadGuiltyEnum] | None = Field(
         None, description="Did the defendant confess or plead guilty? Example: ['Yes']"
     )
     PleaPoint: list[str] | None = Field(
-        None, description="Stage at which the plea was entered. Example: ['in police presence', 'at first court appearance', 'on day of trial', 'on re-arraignment', 'earliest opportunity']"
+        None,
+        description="Stage at which the plea was entered. Example: ['in police presence', 'at first court appearance', 'on day of trial', 'on re-arraignment', 'earliest opportunity']",
     )
     RemandDecision: list[RemandDecisionEnum] | None = Field(
         None, description="Remand decision post-conviction. Example: ['Unconditional Bail']"
@@ -172,7 +177,8 @@ class AppealCourtAnnotation(BaseModel, SchemaUtilsMixin):
         None, description="Duration in days of any remand in custody. Example: [4]"
     )
     SentCourtName: list[str] | None = Field(
-        None, description="Name(s) of the court where the defendant was sentenced. Example: ['Crown Court at Canterbury', 'Newcastle Crown Court', 'Southend Crown Court']"
+        None,
+        description="Name(s) of the court where the defendant was sentenced. Example: ['Crown Court at Canterbury', 'Newcastle Crown Court', 'Southend Crown Court']",
     )
     Sentence: list[str] | None = Field(
         None, description="Sentence(s) imposed. Example: ['2 years imprisonment', '£500 fine']"
@@ -181,7 +187,8 @@ class AppealCourtAnnotation(BaseModel, SchemaUtilsMixin):
         None, description="How sentences run. Example: ['Concurrent']"
     )
     WhatAncillary: list[str] | None = Field(
-        None, description="Ancillary orders applied by the court. Example: ['Restraining order', 'Compensation order']"
+        None,
+        description="Ancillary orders applied by the court. Example: ['Restraining order', 'Compensation order']",
     )
     OffSex: list[OffSexEnum] | None = Field(
         None, description="Gender(s) of the defendant(s). Example: ['All Female']"
@@ -196,7 +203,8 @@ class AppealCourtAnnotation(BaseModel, SchemaUtilsMixin):
         None, description="Accommodation status at offence. Example: ['Fixed Address']"
     )
     OffMentalOffence: list[OffMentalOffenceEnum] | None = Field(
-        None, description="Learning/developmental or mental-health issues noted. Example: ['Had mental health problems']"
+        None,
+        description="Learning/developmental or mental-health issues noted. Example: ['Had mental health problems']",
     )
     OffIntoxOffence: list[OffIntoxOffenceEnum] | None = Field(
         None, description="Intoxication status. Example: ['Yes-drugs']"
@@ -223,25 +231,30 @@ class AppealCourtAnnotation(BaseModel, SchemaUtilsMixin):
         None, description="Accommodation status of victim(s). Example: ['Homeless']"
     )
     VicMentalOffence: list[VicMentalOffenceEnum] | None = Field(
-        None, description="Learning/developmental or mental-health issues for victim(s). Example: ['Had mental health problems']"
+        None,
+        description="Learning/developmental or mental-health issues for victim(s). Example: ['Had mental health problems']",
     )
     VicIntoxOffence: list[VicIntoxOffenceEnum] | None = Field(
         None, description="Victim's intoxication status. Example: ['Yes-drugs']"
     )
     ProsEvidTypeTrial: list[str] | None = Field(
-        None, description="Evidence types by prosecution. Example: ['CCTV', 'DNA match', 'Victim testimony', 'Expert report/testimony']"
+        None,
+        description="Evidence types by prosecution. Example: ['CCTV', 'DNA match', 'Victim testimony', 'Expert report/testimony']",
     )
     DefEvidTypeTrial: list[str] | None = Field(
-        None, description="Evidence types by defence. Example: ['Offender denies offence', 'No DNA evidence', 'Alibi claim']"
+        None,
+        description="Evidence types by defence. Example: ['Offender denies offence', 'No DNA evidence', 'Alibi claim']",
     )
     PreSentReport: list[PreSentReportEnum] | None = Field(
         None, description="Risk level from pre-sentence report. Example: ['High risk of harm']"
     )
     AggFactSent: list[str] | None = Field(
-        None, description="Aggravating factors at sentencing. Example: ['offence committed while on bail', 'use of a weapon to frighten or injure victim']"
+        None,
+        description="Aggravating factors at sentencing. Example: ['offence committed while on bail', 'use of a weapon to frighten or injure victim']",
     )
     MitFactSent: list[str] | None = Field(
-        None, description="Mitigating factors at sentencing. Example: ['offender showed genuine remorse', 'Offender has no relevant previous convictions']"
+        None,
+        description="Mitigating factors at sentencing. Example: ['offender showed genuine remorse', 'Offender has no relevant previous convictions']",
     )
     VicImpactStatement: list[VicImpactStatementEnum] | None = Field(
         None, description="Was a victim impact statement provided? Example: ['Yes']"
@@ -253,26 +266,34 @@ class AppealCourtAnnotation(BaseModel, SchemaUtilsMixin):
         None, description="Number of co-defendants/co-accused. Example: [2]"
     )
     AppealAgainst: list[str] | None = Field(
-        None, description="Ground(s) for appeal. Example: ['Conviction is unsafe', 'Sentence is unduly lenient', 'Conviction unsafe', 'appeal against sentence']"
+        None,
+        description="Ground(s) for appeal. Example: ['Conviction is unsafe', 'Sentence is unduly lenient', 'Conviction unsafe', 'appeal against sentence']",
     )
     AppealGround: list[str] | None = Field(
-        None, description="Specific legal grounds of appeal. Example: ['jury exposed to prejudicial evidence', 'trial judge misdirected jury', 'excessive sentence', 'co-def received 33% credit/reduction in sentence, appellant received only 25%']"
+        None,
+        description="Specific legal grounds of appeal. Example: ['jury exposed to prejudicial evidence', 'trial judge misdirected jury', 'excessive sentence', 'co-def received 33% credit/reduction in sentence, appellant received only 25%']",
     )
     SentGuideWhich: list[str] | None = Field(
-        None, description="Sentencing guidelines or statutes cited such as s./section __ of (the) __ Act __ or [Sentencing Council's (definitive) Guideline/s on/for… /Totality (principle/ of)…. Example: ['section 25(1)(a) of the Identity Cards Act 2006', 'section 155 of the Powers of Criminal Courts (Sentencing) Act 2000', 'section 52 of the Firearms Act 1968']"
+        None,
+        description="Sentencing guidelines or statutes cited such as s./section __ of (the) __ Act __ or [Sentencing Council's (definitive) Guideline/s on/for… /Totality (principle/ of)…. Example: ['section 25(1)(a) of the Identity Cards Act 2006', 'section 155 of the Powers of Criminal Courts (Sentencing) Act 2000', 'section 52 of the Firearms Act 1968']",
     )
     AppealOutcome: list[str] | None = Field(
-        None, description="Outcome of the appeal. Example: ['Dismissed', 'Allowed & Conviction Quashed', 'Dismissed-Failed', 'Appeal allowed and sentence reduced by 106 days']"
+        None,
+        description="Outcome of the appeal. Example: ['Dismissed', 'Allowed & Conviction Quashed', 'Dismissed-Failed', 'Appeal allowed and sentence reduced by 106 days']",
     )
     ReasonQuashConv: list[str] | None = Field(
-        None, description="Reasons for quashing conviction. Example: ['The confiscation orders could not be upheld', 'indictment charged the appellant in an impermissible manner', 'procedural irregularity', 'jury misdirection']"
+        None,
+        description="Reasons for quashing conviction. Example: ['The confiscation orders could not be upheld', 'indictment charged the appellant in an impermissible manner', 'procedural irregularity', 'jury misdirection']",
     )
     ReasonSentExcessNotLenient: list[str] | None = Field(
-        None, description="Reasons why sentence was unduly excessive. Example: ['lack of consideration for personal mitigation', 'Mitigating factors should have been considered, such as young age of offenders', 'seriousness of offence is too high']"
+        None,
+        description="Reasons why sentence was unduly excessive. Example: ['lack of consideration for personal mitigation', 'Mitigating factors should have been considered, such as young age of offenders', 'seriousness of offence is too high']",
     )
     ReasonSentLenientNotExcess: list[str] | None = Field(
-        None, description="Reasons why sentence was unduly lenient. Example: ['judge did not refer to relevant guideline', 'Offence difficult to sentence as it happened in the past when offender was a child']"
+        None,
+        description="Reasons why sentence was unduly lenient. Example: ['judge did not refer to relevant guideline', 'Offence difficult to sentence as it happened in the past when offender was a child']",
     )
     ReasonDismiss: list[str] | None = Field(
-        None, description="Reasons for dismissal of the appeal. Example: ['original sentence fell within guideline range', 'no ground for appeal', 'judge made correct ruling', 'no prejudice caused to offender', 'judge categorised offence correctly']"
+        None,
+        description="Reasons for dismissal of the appeal. Example: ['original sentence fell within guideline range', 'no ground for appeal', 'judge made correct ruling', 'no prejudice caused to offender', 'judge categorised offence correctly']",
     )

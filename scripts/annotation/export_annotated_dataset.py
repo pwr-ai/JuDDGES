@@ -7,20 +7,27 @@ import numpy as np
 import pandas as pd
 import typer
 
+from label_studio_toolkit.schemas.en_appealcourt import AppealCourtAnnotation
 from label_studio_toolkit.schemas.swiss_frank import SwissFrancJudgmentAnnotation
+
+SCHEMA_MAP = {
+    "swiss_frank": SwissFrancJudgmentAnnotation,
+    "en_appealcourt": AppealCourtAnnotation,
+}
 
 
 def main(
     input_file: Path = typer.Option(...),
     output_path: Path = typer.Option(...),
+    schema: str = typer.Option(...),
 ):
     df = pd.read_parquet(input_file)
-
+    schema = SCHEMA_MAP[schema]
     output_data = []
 
     for i, entry in df.iterrows():
         values = {k: v for k, v in dict(entry).items() if isinstance(v, np.ndarray) or pd.notna(v)}
-        datapoint = SwissFrancJudgmentAnnotation(**values)
+        datapoint = schema(**values)
         output_data.append(
             {
                 "context": entry["text"],
@@ -34,7 +41,7 @@ def main(
         json.dump(output_data, f, indent=4, ensure_ascii=False)
 
     with open(output_path / "schema.yaml", "w") as f:
-        f.write(SwissFrancJudgmentAnnotation.get_schema_string())
+        f.write(schema.get_schema_string())
 
 
 if __name__ == "__main__":

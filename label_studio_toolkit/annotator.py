@@ -32,8 +32,8 @@ class LangChainAnnotator(Annotator):
         assert isinstance(result, self.schema)
         return result
 
-    async def async_annotate(self, input_data: dict[str, Any]) -> BaseModel:
-        result = await self.chain.ainvoke({"text": input_data})
+    async def async_annotate(self, input_data: dict[str, Any], language: str) -> BaseModel:
+        result = await self.chain.ainvoke({"text": input_data, "language": language})
         assert isinstance(result, self.schema)
         return result
 

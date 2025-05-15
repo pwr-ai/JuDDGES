@@ -1,0 +1,5 @@
+outs:
+- md5: 1a6c5c0928896f2e0c2b74d47abb3360
+  size: 7996730
+  hash: md5
+  path: test_annotations.parquet
