@@ -1,4 +1,3 @@
-import datetime
 from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from loguru import logger
@@ -10,7 +9,7 @@ from juddges.data.schemas import (
     DocumentChunk,
     LegalDocument,
 )
-from juddges.settings import TEXT_EMBEDDING_MODEL, VectorName
+from juddges.settings import VectorName
 
 
 class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
@@ -191,18 +190,13 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                     description="Y coordinate for visualization",
                     skip_vectorization=True,
                 ),
-                # Nested OBJECT: IssuingBody
+                # Flattened fields for previously nested objects (store as JSON string)
                 wvcc.Property(
                     name="issuing_body",
-                    data_type=wvcc.DataType.OBJECT,
-                    description="Information about the body that issued the legal document",
-                    nested_properties=[
-                        wvcc.Property(name="name", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="jurisdiction", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="type", data_type=wvcc.DataType.TEXT),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Information about the body that issued the legal document",
+                    skip_vectorization=True,
                 ),
-                # Flattened metadata fields
                 wvcc.Property(
                     name="ingestion_date",
                     data_type=wvcc.DataType.DATE,
@@ -232,210 +226,187 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                     data_type=wvcc.DataType.NUMBER,
                     description="Confidence score for data extracted via ML",
                     skip_vectorization=True,
-                ),  # Keep metadata as a property for backward compatibility (no nested_properties)=
-                # OBJECT_ARRAY: LegalReference
+                ),
                 wvcc.Property(
                     name="legal_references",
-                    data_type=wvcc.DataType.OBJECT_ARRAY,
-                    description="References to legal acts, regulations, or previous cases",
-                    nested_properties=[
-                        wvcc.Property(name="ref_id", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="ref_type", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="normalized_citation", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="target_document_id", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="target_segment_id", data_type=wvcc.DataType.TEXT),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: References to legal acts, regulations, or previous cases",
+                    skip_vectorization=True,
                 ),
-                # OBJECT_ARRAY: LegalConcept
                 wvcc.Property(
                     name="legal_concepts",
-                    data_type=wvcc.DataType.OBJECT_ARRAY,
-                    description="Legal concepts or topics discussed in the document",
-                    nested_properties=[
-                        wvcc.Property(name="concept_name", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="concept_type", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="relevance_score", data_type=wvcc.DataType.NUMBER),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Legal concepts or topics discussed in the document",
+                    skip_vectorization=True,
                 ),
-                # OBJECT_ARRAY: Party
                 wvcc.Property(
                     name="parties",
-                    data_type=wvcc.DataType.OBJECT_ARRAY,
-                    description="Parties involved in the legal case or interpretation",
-                    nested_properties=[
-                        wvcc.Property(name="party_id", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="party_type", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="name", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="role", data_type=wvcc.DataType.TEXT),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Parties involved in the legal case or interpretation",
+                    skip_vectorization=True,
                 ),
-                # OBJECT: Outcome
                 wvcc.Property(
                     name="outcome",
-                    data_type=wvcc.DataType.OBJECT,
-                    description="The outcome or result of the legal document",
-                    nested_properties=[
-                        wvcc.Property(name="decision_type", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="decision_summary", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="winning_party", data_type=wvcc.DataType.TEXT),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: The outcome or result of the legal document",
+                    skip_vectorization=True,
                 ),
-                # OBJECT: JudgmentSpecific
                 wvcc.Property(
                     name="judgment_specific",
-                    data_type=wvcc.DataType.OBJECT,
-                    description="Fields specific to judgment documents",
-                    nested_properties=[
-                        wvcc.Property(name="court_level", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(
-                            name="judges",
-                            data_type=wvcc.DataType.OBJECT_ARRAY,
-                            nested_properties=[
-                                wvcc.Property(name="name", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="role", data_type=wvcc.DataType.TEXT),
-                            ],
-                        ),
-                        wvcc.Property(name="procedural_history", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="verdict", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="relief_granted", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(
-                            name="dissenting_opinions",
-                            data_type=wvcc.DataType.OBJECT_ARRAY,
-                            nested_properties=[
-                                wvcc.Property(name="judge", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
-                            ],
-                        ),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Fields specific to judgment documents",
+                    skip_vectorization=True,
                 ),
-                # OBJECT: TaxInterpretationSpecific
                 wvcc.Property(
                     name="tax_interpretation_specific",
-                    data_type=wvcc.DataType.OBJECT,
-                    description="Fields specific to tax interpretation documents",
-                    nested_properties=[
-                        wvcc.Property(name="tax_area", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(
-                            name="tax_provisions",
-                            data_type=wvcc.DataType.OBJECT_ARRAY,
-                            nested_properties=[
-                                wvcc.Property(name="provision_id", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="provision_text", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="code_section", data_type=wvcc.DataType.TEXT),
-                            ],
-                        ),
-                        wvcc.Property(name="taxpayer_type", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="interpretation_scope", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(
-                            name="effective_dates",
-                            data_type=wvcc.DataType.OBJECT,
-                            nested_properties=[
-                                wvcc.Property(name="start_date", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="end_date", data_type=wvcc.DataType.TEXT),
-                            ],
-                        ),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Fields specific to tax interpretation documents",
+                    skip_vectorization=True,
                 ),
-                # OBJECT: LegalActSpecific
                 wvcc.Property(
                     name="legal_act_specific",
-                    data_type=wvcc.DataType.OBJECT,
-                    description="Fields specific to legal acts (statutes, regulations, etc.)",
-                    nested_properties=[
-                        wvcc.Property(name="act_type", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="enactment_date", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(
-                            name="effective_dates",
-                            data_type=wvcc.DataType.OBJECT,
-                            nested_properties=[
-                                wvcc.Property(name="start_date", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="end_date", data_type=wvcc.DataType.TEXT),
-                            ],
-                        ),
-                        wvcc.Property(name="jurisdiction_level", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="legislative_body", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(
-                            name="amendment_history",
-                            data_type=wvcc.DataType.OBJECT_ARRAY,
-                            nested_properties=[
-                                wvcc.Property(name="amendment_date", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="amending_act_id", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="description", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(
-                                    name="affected_segments", data_type=wvcc.DataType.TEXT_ARRAY
-                                ),
-                            ],
-                        ),
-                        wvcc.Property(name="current_status", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="official_publication", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="isap_id", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="parent_act_id", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="codification", data_type=wvcc.DataType.TEXT),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Fields specific to legal acts (statutes, regulations, etc.)",
+                    skip_vectorization=True,
                 ),
-                # OBJECT_ARRAY: DocumentRelationship
                 wvcc.Property(
                     name="relationships",
-                    data_type=wvcc.DataType.OBJECT_ARRAY,
-                    description="Relationships to other documents",
-                    nested_properties=[
-                        wvcc.Property(name="source_id", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="target_id", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="relationship_type", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="description", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="context_segment_id", data_type=wvcc.DataType.TEXT),
-                        wvcc.Property(name="confidence_score", data_type=wvcc.DataType.NUMBER),
-                        wvcc.Property(name="bidirectional", data_type=wvcc.DataType.BOOL),
-                        wvcc.Property(name="creation_date", data_type=wvcc.DataType.TEXT),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Relationships to other documents",
+                    skip_vectorization=True,
                 ),
-                # OBJECT: LegalAnalysis
                 wvcc.Property(
                     name="legal_analysis",
-                    data_type=wvcc.DataType.OBJECT,
-                    description="Analysis elements common across document types",
-                    nested_properties=[
-                        wvcc.Property(
-                            name="key_findings",
-                            data_type=wvcc.DataType.OBJECT_ARRAY,
-                            nested_properties=[
-                                wvcc.Property(name="finding_id", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="importance", data_type=wvcc.DataType.NUMBER),
-                            ],
-                        ),
-                        wvcc.Property(
-                            name="reasoning_patterns",
-                            data_type=wvcc.DataType.OBJECT_ARRAY,
-                            nested_properties=[
-                                wvcc.Property(name="pattern_type", data_type=wvcc.DataType.TEXT),
-                                wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
-                            ],
-                        ),
-                        wvcc.Property(
-                            name="policy_considerations",
-                            data_type=wvcc.DataType.OBJECT_ARRAY,
-                            nested_properties=[
-                                wvcc.Property(
-                                    name="consideration_type", data_type=wvcc.DataType.TEXT
-                                ),
-                                wvcc.Property(name="text", data_type=wvcc.DataType.TEXT),
-                            ],
-                        ),
-                    ],
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Analysis elements common across document types",
+                    skip_vectorization=True,
                 ),
-                # OBJECT: structured_content (serialize as JSON string if needed)
                 wvcc.Property(
                     name="structured_content",
                     data_type=wvcc.DataType.TEXT,
-                    description="Structured representation of document content (JSON string)",
+                    description="JSON string: Structured representation of document content",
+                    skip_vectorization=True,
                 ),
-                # section_embeddings: store as JSON string
                 wvcc.Property(
                     name="section_embeddings",
                     data_type=wvcc.DataType.TEXT,
-                    description="Vector embeddings for each section for semantic search (JSON string)",
+                    description="JSON string: Vector embeddings for each section for semantic search",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="metadata",
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: System metadata for the document",
+                    skip_vectorization=True,
+                ),
+                # Additional properties from mapping
+                wvcc.Property(
+                    name="publication_date",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Publication date of the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="source_id",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Court ID",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="judgment_type",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Type of judgment",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="raw_content",
+                    data_type=wvcc.DataType.TEXT,
+                    description="XML content of the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="presiding_judge",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Presiding judge information",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="judges",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Judges involved in the case",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="legal_bases",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Legal bases for the judgment",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="publisher",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Publisher of the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="recorder",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Recorder of the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="reviser",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Reviser of the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="num_pages",
+                    data_type=wvcc.DataType.NUMBER,
+                    description="Number of pages in the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="volume_number",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Volume number",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="volume_type",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Volume type",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="court_name",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Name of the court",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="department_name",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Name of the department",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="extracted_legal_bases",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Extracted legal bases",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="references",
+                    data_type=wvcc.DataType.TEXT,
+                    description="References in the document",
+                    skip_vectorization=True,
+                ),
+                wvcc.Property(
+                    name="court_type",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Type of court",
+                    skip_vectorization=True,
                 ),
             ],
             vectorizer_config=[
@@ -515,15 +486,15 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                 ),
                 wvcc.Property(
                     name="cited_references",
-                    data_type=wvcc.DataType.TEXT_ARRAY,
-                    description="References cited in this chunk",
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: References cited in this chunk",
                     skip_vectorization=True,
                 ),
                 wvcc.Property(
                     name="tags",
-                    data_type=wvcc.DataType.TEXT_ARRAY,
-                    description="Custom semantic tags for this chunk",
-                    skip_vectorization=False,
+                    data_type=wvcc.DataType.TEXT,
+                    description="JSON string: Custom semantic tags for this chunk",
+                    skip_vectorization=True,
                 ),
                 wvcc.Property(
                     name="parent_segment_id",
@@ -543,7 +514,6 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                     description="Y coordinate for visualization",
                     skip_vectorization=True,
                 ),
-                # Optionally, add section_heading, start_char_index, end_char_index, entities as TEXT/NUMBER/OBJECT if needed
             ],
             vectorizer_config=[
                 wvcc.Configure.NamedVectors.text2vec_transformers(

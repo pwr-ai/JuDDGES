@@ -1,5 +1,6 @@
 import gc
 import hashlib
+import json
 import math
 import os
 from abc import ABC, abstractmethod
@@ -20,6 +21,7 @@ from juddges.config import EmbeddingConfig
 from juddges.data.config import IngestConfig
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
 from juddges.data.ingesters import ChunkIngester, DocumentIngester
+from juddges.data.loaders import DATASET_COLUMN_MAPPINGS, remap_row
 from juddges.data.schemas import DocumentChunk, DocumentType, LegalDocument
 from juddges.settings import CONFIG_PATH, ROOT_PATH
 from juddges.utils.config import resolve_config
@@ -51,6 +53,8 @@ else:
     DEFAULT_MAX_DOCUMENTS = None
     DEFAULT_PROCESSING_PROC = 4  # max(1, multiprocessing.cpu_count() - 2)
     DEFAULT_INGEST_PROC = 2  # max(1, int(DEFAULT_PROCESSING_PROC / 2))
+
+EMBEDDING_KEY = "embedding"
 
 
 def generate_deterministic_uuid(document_id: str, chunk_id: str = None) -> str:
@@ -103,22 +107,47 @@ class CollectionIngester(ABC):
         collection_name: str,
         db: Optional[WeaviateLegalDocumentsDatabase] = None,
         config: Optional[IngestConfig] = None,
+        columns_to_ingest: list[str] = None,
     ):
         self.collection_name = collection_name
         self.db = db
         self.config = config or IngestConfig()
+        self.columns_to_ingest = columns_to_ingest
 
-    def ingest(self, dataset: Dataset) -> None:
+    def ingest(self, dataset: Dataset, embedding_dataset: Dataset) -> None:
         """
         Ingest the dataset into Weaviate.
 
         Args:
             dataset: The dataset to ingest
+            embedding_dataset: The dataset with the embeddings
+            columns_to_ingest: The columns to ingest
         """
+        if self.columns_to_ingest:
+            logger.info(f"Selecting columns: {self.columns_to_ingest}")
+            document_columns = set(dataset.column_names).intersection(set(self.columns_to_ingest))
+            logger.info(f"Document columns: {document_columns}")
+            embedding_columns = set(embedding_dataset.column_names).intersection(
+                set(self.columns_to_ingest)
+            )
+            logger.info(f"Embedding columns: {embedding_columns}")
+            dataset = dataset.select_columns(document_columns)
+            embedding_dataset = embedding_dataset.select_columns(embedding_columns)
+
         # Limit dataset size if max_documents is specified
         if self.config.max_documents is not None:
             logger.info(f"Limiting ingestion to first {self.config.max_documents} documents")
             dataset = dataset.select(range(min(self.config.max_documents, dataset.num_rows)))
+
+            # Get the set of judgment_ids from the filtered dataset
+            document_ids = set(dataset["document_id"])
+            logger.info(f"Filtering embedding dataset to match {len(document_ids)} document IDs")
+
+            # Filter embedding dataset to only include embeddings for documents in the dataset
+            embedding_dataset = embedding_dataset.filter(
+                lambda example: example["document_id"] in document_ids,
+                num_proc=self.config.processing_proc,
+            )
 
         num_rows = dataset.num_rows
 
@@ -150,7 +179,7 @@ class CollectionIngester(ABC):
             total_batches = math.ceil(dataset.num_rows / self.config.batch_size)
             logger.info(f"Processing {total_batches} batches with size {self.config.batch_size}")
 
-            self._process_batches(dataset, total_batches)
+            self._process_batches(dataset, embedding_dataset, total_batches)
 
             final_count = self.db.get_collection_size(collection)
             logger.info(f"Final number of objects in collection: {final_count}")
@@ -166,7 +195,9 @@ class CollectionIngester(ABC):
         # This is implemented by subclasses
         return dataset
 
-    def _process_batches(self, dataset: Dataset, total_batches: int) -> None:
+    def _process_batches(
+        self, dataset: Dataset, embedding_dataset: Dataset, total_batches: int
+    ) -> None:
         """Process all batches from the dataset."""
         if self.config.processing_proc > 1:
             logger.info(f"Using parallel processing with {self.config.ingest_proc} workers")
@@ -176,6 +207,7 @@ class CollectionIngester(ABC):
                     future = executor.submit(
                         self.process_batch,
                         dataset=dataset,
+                        embedding_dataset=embedding_dataset,
                         batch_idx=batch_idx,
                     )
                     futures.append(future)
@@ -204,6 +236,7 @@ class CollectionIngester(ABC):
             ):
                 self.process_batch(
                     dataset=dataset,
+                    embedding_dataset=embedding_dataset,
                     batch_idx=batch_idx,
                 )
 
@@ -211,6 +244,7 @@ class CollectionIngester(ABC):
     def process_batch(
         self,
         dataset: Dataset,
+        embedding_dataset: Dataset,
         batch_idx: int,
     ) -> None:
         """Process a single batch of the dataset."""
@@ -224,11 +258,13 @@ class ChunkIngester(CollectionIngester):
         self,
         db: Optional[WeaviateLegalDocumentsDatabase] = None,
         config: Optional[IngestConfig] = None,
+        columns_to_ingest: list[str] = None,
     ):
         super().__init__(
             collection_name=WeaviateLegalDocumentsDatabase.DOCUMENT_CHUNKS_COLLECTION,
             db=db,
             config=config,
+            columns_to_ingest=columns_to_ingest,
         )
 
     def _filter_existing_objects(self, dataset: Dataset, collection: Any, num_rows: int) -> Dataset:
@@ -245,7 +281,7 @@ class ChunkIngester(CollectionIngester):
             for batch_idx in range(0, num_rows, self.config.batch_size):
                 batch_end = min(batch_idx + self.config.batch_size, num_rows)
                 batch = dataset[batch_idx:batch_end]
-                for jid, cid in zip(batch["judgment_id"], batch["chunk_id"]):
+                for jid, cid in zip(batch["document_id"], batch["chunk_id"]):
                     yield generate_deterministic_uuid(jid, cid)
 
         # Filter out chunks that already exist in collection
@@ -255,7 +291,7 @@ class ChunkIngester(CollectionIngester):
 
         # Filter dataset to include only new chunks
         def filter_chunks(item):
-            return generate_deterministic_uuid(item["judgment_id"], item["chunk_id"]) not in uuids
+            return generate_deterministic_uuid(item["document_id"], item["chunk_id"]) not in uuids
 
         filtered_dataset = dataset.filter(
             filter_chunks,
@@ -268,73 +304,73 @@ class ChunkIngester(CollectionIngester):
 
     def process_batch(
         self,
-        dataset: Dataset,
+        dataset: Dataset,  # Document dataset
+        embedding_dataset: Dataset,  # Chunk embedding dataset
         batch_idx: int,
     ) -> None:
-        """Process and insert a batch of embeddings into Weaviate."""
-        batch = dataset[
+        # Get the batch of chunks
+        batch = embedding_dataset[
             batch_idx * self.config.batch_size : (batch_idx + 1) * self.config.batch_size
         ]
+
+        # Build a lookup for document attributes by document_id
+        doc_lookup = {doc_id: idx for idx, doc_id in enumerate(dataset["document_id"])}
+        # List of document-level attributes to merge into chunk
+        doc_attrs_keys = ["language", "country", "date_issued", "document_type"]
+
         try:
-            if not self._validate_batch(batch):
-                logger.error("Skipping invalid batch")
-                return
-
             collection = self.db.document_chunks_collection
-
-            # Pre-generate all UUIDs for this batch
             uuids_to_insert = []
-            for jid, cid in zip(batch["judgment_id"], batch["chunk_id"]):
-                uuid = generate_deterministic_uuid(jid, cid)
+            for doc_id, chunk_id in zip(batch["document_id"], batch["chunk_id"]):
+                uuid = generate_deterministic_uuid(doc_id, chunk_id)
                 uuids_to_insert.append(uuid)
 
-            # Use simple fixed-size batch
             with collection.batch.fixed_size(batch_size=self.config.batch_size) as batch_op:
-                for idx, (jid, cid, text, emb) in enumerate(
-                    zip(
-                        batch["judgment_id"],
-                        batch["chunk_id"],
-                        batch["chunk_text"],
-                        batch["embedding"],
+                for i in range(len(batch["document_id"])):
+                    doc_id = batch["document_id"][i]
+                    chunk_id = batch["chunk_id"][i]
+                    doc_idx = doc_lookup.get(doc_id)
+                    doc_attrs = {
+                        k: dataset[k][doc_idx]
+                        for k in doc_attrs_keys
+                        if doc_idx is not None and k in dataset.column_names
+                    }
+                    # Serialize JSON fields if needed
+                    cited_references = (
+                        batch.get("cited_references", [None])[i]
+                        if "cited_references" in batch
+                        else None
                     )
-                ):
-                    # Generate deterministic UUID for this chunk
-                    uuid = uuids_to_insert[idx]
-
-                    # Create chunk properties using schema-defined fields
+                    if cited_references is not None and not isinstance(cited_references, str):
+                        cited_references = json.dumps(cited_references)
+                    tags = batch.get("tags", [None])[i] if "tags" in batch else None
+                    if tags is not None and not isinstance(tags, str):
+                        tags = json.dumps(tags)
                     chunk = DocumentChunk(
-                        document_id=jid,
-                        document_type=DocumentType.JUDGMENT,
-                        chunk_id=cid,
-                        chunk_text=text,
-                        # Add optional fields if available in your batch
-                        segment_type=batch.get("segment_type", [None])[0],
-                        position=batch.get("position", [None])[0],
-                        confidence_score=batch.get("confidence_score", [None])[0],
-                        cited_references=batch.get("cited_references", [None])[0],
-                        tags=batch.get("tags", [None])[0],
-                        parent_segment_id=batch.get("parent_segment_id", [None])[0],
-                        section_heading=batch.get("section_heading", [None])[0],
-                        start_char_index=batch.get("start_char_index", [None])[0],
-                        end_char_index=batch.get("end_char_index", [None])[0],
+                        document_id=doc_id,
+                        document_type=doc_attrs.get("document_type", DocumentType.JUDGMENT),
+                        chunk_id=chunk_id,
+                        chunk_text=batch["chunk_text"][i],
+                        position=batch.get("position", [None])[i] if "position" in batch else None,
+                        cited_references=cited_references,
+                        tags=tags,
+                        language=doc_attrs.get("language"),
+                        country=doc_attrs.get("country"),
+                        date_issued=doc_attrs.get("date_issued"),
                     ).dict(exclude_none=True)
-
-                    # Add object to batch with vector and deterministic UUID
                     batch_op.add_object(
-                        uuid=uuid,
+                        uuid=uuids_to_insert[i],
                         properties=chunk,
                         vector={
-                            "base": emb,  # Primary embedding
-                            "dev": emb,  # Development embedding
-                            "fast": emb,  # Fast embedding
+                            "base": batch["embedding"][i],
+                            "dev": batch["embedding"][i],
+                            "fast": batch["embedding"][i],
                         },
                     )
-
-            logger.info("Successfully processed batch of chunks")
+            logger.info("Successfully processed batch of chunks with merged document attributes")
             gc.collect()
-
         except Exception as e:
-            logger.error(f"Error processing batch: {str(e)}")
+            logger.error(f"Error processing chunk batch: {str(e)}")
             raise
 
     def _validate_batch(self, batch: dict[str, list[Any]]) -> bool:
@@ -375,12 +411,16 @@ class DocumentIngester(CollectionIngester):
         self,
         db: Optional[WeaviateLegalDocumentsDatabase] = None,
         config: Optional[IngestConfig] = None,
+        columns_to_ingest: list[str] = None,
+        default_column_values: Optional[dict[str, Any]] = None,
     ):
         super().__init__(
             collection_name=WeaviateLegalDocumentsDatabase.LEGAL_DOCUMENTS_COLLECTION,
             db=db,
             config=config,
+            columns_to_ingest=columns_to_ingest,
         )
+        self.default_column_values = default_column_values or {}
 
     def _filter_existing_objects(self, dataset: Dataset, collection: Any, num_rows: int) -> Dataset:
         """Filter out documents that already exist in the collection."""
@@ -395,7 +435,7 @@ class DocumentIngester(CollectionIngester):
             for batch_idx in range(0, num_rows, self.config.batch_size):
                 batch_end = min(batch_idx + self.config.batch_size, num_rows)
                 batch = dataset[batch_idx:batch_end]
-                for jid in batch["judgment_id"]:
+                for jid in batch["document_id"]:
                     yield generate_deterministic_uuid(jid)
 
         # Filter out documents that already exist in collection
@@ -405,7 +445,7 @@ class DocumentIngester(CollectionIngester):
 
         # Filter dataset to include only new documents
         def filter_docs(item):
-            return generate_deterministic_uuid(item["judgment_id"]) not in uuids
+            return generate_deterministic_uuid(item["document_id"]) not in uuids
 
         filtered_dataset = dataset.filter(
             filter_docs,
@@ -419,6 +459,7 @@ class DocumentIngester(CollectionIngester):
     def process_batch(
         self,
         dataset: Dataset,
+        embedding_dataset: Dataset,
         batch_idx: int,
     ) -> None:
         """Process and insert a batch of documents into Weaviate."""
@@ -431,60 +472,68 @@ class DocumentIngester(CollectionIngester):
 
             # Pre-generate UUIDs for this batch
             uuids_to_insert = []
-            for jid in batch["judgment_id"]:
+            for jid in batch["document_id"]:
                 uuid = generate_deterministic_uuid(jid)
                 uuids_to_insert.append(uuid)
 
             # Use simple fixed-size batch
             with collection.batch.fixed_size(batch_size=self.config.batch_size) as batch_op:
-                for i in range(len(batch["judgment_id"])):
+                for i in range(len(batch["document_id"])):
                     # Get deterministic UUID for this document
                     uuid = uuids_to_insert[i]
 
-                    # Get all available properties from the batch that match the schema
-                    property_names = set(self.db.legal_documents_properties).intersection(
-                        batch.keys()
-                    )
-                    missing_properties = set(self.db.legal_documents_properties).difference(
-                        batch.keys()
-                    )
-                    logger.warning(
-                        f"Found missing properties compared to weaviate schema: {missing_properties}, "
-                        f"uploading only {property_names}"
-                    )
-                    properties = {key: batch[key][i] for key in property_names}
+                    properties = {}
+                    for key in self.columns_to_ingest:
+                        if key == EMBEDDING_KEY:
+                            continue
+                        value = batch[key][i]
+                        if (
+                            value is None or (isinstance(value, float) and np.isnan(value))
+                        ) and key in self.default_column_values:
+                            value = self.default_column_values[key]
+                        properties[key] = value
+                    # Add any default columns not present in the batch
+                    for key, value in self.default_column_values.items():
+                        if key not in properties or properties[key] is None:
+                            properties[key] = value
+
                     properties = process_judgment_dates(properties)
 
                     # Create a LegalDocument instance with the available properties
                     doc = LegalDocument(
-                        document_id=batch["judgment_id"][i],
-                        document_type=DocumentType.JUDGMENT,
+                        document_id=properties.get("document_id"),
+                        document_type=properties.get("document_type"),
                         # Add core fields
                         title=properties.get("title"),
                         date_issued=properties.get("date_issued"),
                         document_number=properties.get("document_number"),
-                        language=properties.get("language", "pl"),
-                        country=properties.get("country", "Poland"),
+                        language=properties.get("language"),
+                        country=properties.get("country"),
                         full_text=properties.get("full_text"),
                         summary=properties.get("summary"),
-                        # Add nested objects if available
                         issuing_body=properties.get("issuing_body"),
-                        segmentation_info=properties.get("segmentation_info"),
                         legal_references=properties.get("legal_references"),
                         legal_concepts=properties.get("legal_concepts"),
                         outcome=properties.get("outcome"),
-                        judgment_specific=properties.get("judgment_specific"),
-                        metadata=properties.get("metadata"),
                     ).dict(exclude_none=True)
+
+                    # get embedding from embedding_dataset
+                    embedding = embedding_dataset.filter(
+                        lambda x: x["document_id"] == batch["document_id"][i]
+                    )
+                    if len(embedding) == 0:
+                        logger.warning(f"No embedding found for document {batch['document_id'][i]}")
+                        continue
+                    embedding = embedding[0]["embedding"]
 
                     # Add object to batch with vector and deterministic UUID
                     batch_op.add_object(
                         uuid=uuid,
                         properties=doc,
                         vector={
-                            "base": batch["embedding"][i],  # Primary embedding
-                            "dev": batch["embedding"][i],  # Development embedding
-                            "fast": batch["embedding"][i],  # Fast embedding
+                            "base": embedding,  # Primary embedding
+                            "dev": embedding,  # Development embedding
+                            "fast": embedding,  # Fast embedding
                         },
                     )
 
@@ -513,14 +562,25 @@ class DatasetLoader:
         self._check_embeddings_exist()
         chunks_path = Path(self.config.output_dir) / self.config.CHUNK_EMBEDDINGS_DIR
         logger.info(f"Loading chunk dataset from {chunks_path}")
-        return load_dataset("parquet", data_dir=chunks_path, split="train")
+        return load_dataset(
+            "parquet", data_dir=chunks_path, split="train", num_proc=self.config.num_output_shards
+        )
 
-    def load_document_dataset(self) -> Dataset:
-        """Load document embeddings dataset."""
+    def load_document_embeddings_dataset(self) -> Dataset:
+        """Load document embeddings dataset, chunked embeddings are already aggregated."""
         self._check_embeddings_exist()
         docs_path = Path(self.config.output_dir) / self.config.AGG_EMBEDDINGS_DIR
-        logger.info(f"Loading document dataset from {docs_path}")
-        return load_dataset("parquet", data_dir=docs_path, split="train")
+        logger.info(f"Loading document embeddings dataset from {docs_path}")
+        return load_dataset(
+            "parquet", data_dir=docs_path, split="train", num_proc=self.config.num_output_shards
+        )
+
+    def load_document_dataset(self) -> Dataset:
+        """Load document dataset, meaning the dataset with the original text, attributes, etc."""
+        logger.info(f"Loading document dataset from {self.config.dataset_name}")
+        return load_dataset(
+            self.config.dataset_name, split="train", num_proc=self.config.num_output_shards
+        )
 
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="embedding.yaml")
@@ -562,32 +622,43 @@ def main(cfg: DictConfig) -> None:
         # Ensure the collections exist
         db.create_collections()
 
-        # Process document data
-        try:
-            document_dataset = loader.load_document_dataset()
-            logger.info(f"Loaded document dataset with {document_dataset.num_rows} rows")
+        embedding_dataset = loader.load_document_embeddings_dataset()
+        logger.info(f"Loaded document embeddings dataset with {embedding_dataset.num_rows} rows")
+        document_dataset = loader.load_document_dataset()
+        logger.info(f"Loaded document dataset with {document_dataset.num_rows} rows")
 
-            # Ingest documents
-            document_ingester = DocumentIngester(db=db, config=ingest_config)
-            document_ingester.ingest(document_dataset)
+        # Remap columns if mapping is available
+        mapping = DATASET_COLUMN_MAPPINGS.get(config.dataset_name)
+        if mapping:
+            document_dataset = document_dataset.map(
+                lambda row: remap_row(row, mapping), num_proc=config.num_output_shards
+            )
+            embedding_dataset = embedding_dataset.map(
+                lambda row: remap_row(row, mapping), num_proc=config.num_output_shards
+            )
 
-            # Free up memory
-            del document_dataset
-            gc.collect()
-        except Exception as e:
-            logger.error(f"Error processing document data: {e}")
-            logger.warning("Continuing with chunk ingestion...")
+        # Ingest documents
+        document_ingester = DocumentIngester(
+            db=db,
+            config=ingest_config,
+            columns_to_ingest=list(mapping.values()) + ["embedding"],
+            default_column_values=config.default_column_values,
+        )
+        document_ingester.ingest(dataset=document_dataset, embedding_dataset=embedding_dataset)
 
-        # Process chunk data
-        try:
-            chunk_dataset = loader.load_chunk_dataset()
-            logger.info(f"Loaded chunk dataset with {chunk_dataset.num_rows} rows")
+        # Free up memory
+        del embedding_dataset
+        gc.collect()
 
-            # Ingest chunks
-            chunk_ingester = ChunkIngester(db=db, config=ingest_config)
-            chunk_ingester.ingest(chunk_dataset)
-        except Exception as e:
-            logger.error(f"Error processing chunk data: {e}")
+        chunks_embeddings_dataset = loader.load_chunk_dataset()
+        logger.info(f"Loaded chunk dataset with {chunks_embeddings_dataset.num_rows} rows")
+
+        chunk_ingester = ChunkIngester(
+            db=db,
+            config=ingest_config,
+            columns_to_ingest=list(mapping.keys()) + ["embedding", "chunk_id", "chunk_text"],
+        )
+        chunk_ingester.ingest(dataset=document_dataset, embedding_dataset=chunks_embeddings_dataset)
 
     logger.info("Ingestion completed")
 

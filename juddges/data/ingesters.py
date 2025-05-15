@@ -14,6 +14,7 @@ from loguru import logger
 from tqdm import tqdm
 
 from juddges.data.config import IngestConfig
+from juddges.data.loaders import DATASET_COLUMN_MAPPINGS, remap_row
 from juddges.data.schemas import DocumentChunk, DocumentType, LegalDocument
 from juddges.data.utils import generate_deterministic_uuid
 from juddges.utils.date_utils import process_judgment_dates
@@ -31,6 +32,7 @@ class CollectionIngester(ABC):
         collection_name: str,
         db: Optional["WeaviateLegalDocumentsDatabase"] = None,
         config: Optional[IngestConfig] = None,
+        columns_to_ingest: list[str] = None,
     ):
         """
         Initialize a collection ingester.
@@ -43,6 +45,7 @@ class CollectionIngester(ABC):
         self.collection_name = collection_name
         self.db = db
         self.config = config or IngestConfig()
+        self.columns_to_ingest = columns_to_ingest
 
     def ingest(self, dataset: Dataset) -> None:
         """
@@ -51,6 +54,12 @@ class CollectionIngester(ABC):
         Args:
             dataset: The dataset to ingest
         """
+        # Remap columns if mapping is available
+        dataset_name = getattr(self.config, "dataset_name", None)
+        mapping = DATASET_COLUMN_MAPPINGS.get(dataset_name)
+        if mapping:
+            dataset = dataset.map(lambda row: remap_row(row, mapping))
+
         # Limit dataset size if max_documents is specified
         if self.config.max_documents is not None:
             logger.info(f"Limiting ingestion to first {self.config.max_documents} documents")

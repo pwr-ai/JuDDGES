@@ -85,6 +85,7 @@ class EmbeddingConfig(BaseModel, extra="forbid"):
     max_documents: Optional[int] = None
     ingest_batch_size: int = 32
     upsert: bool = True
+    default_column_values: Optional[dict[str, Any]] = None
 
     @property
     def chunk_embeddings_dir(self) -> Path:

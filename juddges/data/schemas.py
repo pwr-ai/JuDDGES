@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field
@@ -83,6 +84,13 @@ class LegalReference(BaseModel):
     target_segment_id: Optional[str] = Field(
         None, description="ID of the specific segment being referenced"
     )
+    address: Optional[str] = Field(
+        None,
+        description="Official publication reference (e.g., 'Dz. U. z 1964 r. Nr 43, poz. 296')",
+    )
+    art: Optional[str] = Field(None, description="Article references (e.g., 'art. 98;art. 99')")
+    isap_id: Optional[str] = Field(None, description="ISAP identifier for Polish legal acts")
+    title: Optional[str] = Field(None, description="Full title of the referenced legal act")
 
 
 class LegalConcept(BaseModel):
@@ -135,6 +143,7 @@ class JudgmentSpecific(BaseModel):
     verdict: Optional[str] = None
     relief_granted: Optional[str] = None
     dissenting_opinions: Optional[List[DissentingOpinion]] = None
+    judgment_type: Optional[str] = None
 
 
 class TaxProvision(BaseModel):
@@ -331,17 +340,20 @@ class DocumentChunk(BaseModel):
     document_type: DocumentType
     chunk_id: int
     chunk_text: str
-    segment_type: Optional[SegmentType] = Field(None, description="Semantic type of segment")
+    date_issued: Optional[datetime] = Field(None, description="Date of the document")
+    publication_date: Optional[datetime] = Field(None, description="Date of publication")
+    segment_type: Optional[str] = Field(None, description="Semantic type of segment")
     position: Optional[int] = Field(None, description="Order in document")
     confidence_score: Optional[float] = Field(
         None, description="Confidence of segment classification"
     )
-    cited_references: Optional[List[str]] = Field(
-        None, description="References cited in this chunk"
+    cited_references: Optional[str] = Field(
+        None, description="JSON string: References cited in this chunk"
     )
-    tags: Optional[List[str]] = Field(None, description="Custom semantic tags for this chunk")
+    tags: Optional[str] = Field(
+        None, description="JSON string: Custom semantic tags for this chunk"
+    )
     parent_segment_id: Optional[str] = Field(None, description="ID of parent segment")
-    # Vector search positioning
     x: Optional[float] = None
     y: Optional[float] = None
 
@@ -349,62 +361,68 @@ class DocumentChunk(BaseModel):
 class LegalDocument(BaseModel):
     """Base schema for all legal documents."""
 
-    # Common fields across document types
     document_id: str = Field(description="Unique identifier")
-    document_type: DocumentType = Field(description="Type of legal document")
+    document_type: str = Field(description="Type of legal document")
     title: Optional[str] = Field(None, description="Document title/name")
-    date_issued: Optional[str] = Field(
+    date_issued: Optional[datetime] = Field(
         None, description="When the document was published, ISO format date"
     )
-    issuing_body: Optional[IssuingBody] = None
+    publication_date: Optional[datetime] = Field(
+        None, description="When the document was published, ISO format date"
+    )
+    issuing_body: Optional[str] = Field(
+        None, description="JSON string: Information about the body that issued the legal document"
+    )
     language: Optional[str] = Field(None, description="Document language")
     document_number: Optional[str] = Field(None, description="Official reference number")
     country: Optional[str] = Field(None, description="Country of origin")
-
-    # Text content
     full_text: Optional[str] = Field(None, description="Raw full text")
     summary: Optional[str] = Field(None, description="Abstract or summary")
-
-    # Enhanced structured content
-    structured_content: Optional[DocumentStructure] = None
-
-    # References and concepts
-    legal_references: Optional[List[LegalReference]] = None
-    legal_concepts: Optional[List[LegalConcept]] = None
-    parties: Optional[List[Party]] = None
-
-    # Outcome
-    outcome: Optional[Outcome] = None
-
-    # Type-specific fields
-    judgment_specific: Optional[JudgmentSpecific] = None
-    tax_interpretation_specific: Optional[TaxInterpretationSpecific] = None
-    legal_act_specific: Optional[LegalActSpecific] = None  # New field for legal acts
-
-    # Relationships to other documents
-    relationships: Optional[List[DocumentRelationship]] = None
-
-    # Analysis
-    legal_analysis: Optional[LegalAnalysis] = None
-
-    # Vector data
-    embedding_model: Optional[str] = Field(
-        None, description="The model used to generate embeddings"
-    )
-    section_embeddings: Optional[Dict[str, List[float]]] = Field(
-        None, description="Vector embeddings for each section for semantic search"
-    )
-
-    # System metadata
-    metadata: Optional[DocumentMetadata] = None
-
-    # Additional fields specific to tax interpretations
     thesis: Optional[str] = Field(None, description="Thesis or main point of the document")
     keywords: Optional[List[str]] = None
-
-    # For vector search positioning
     x: Optional[float] = None
     y: Optional[float] = None
+    ingestion_date: Optional[str] = None
+    last_updated: Optional[str] = None
+    processing_status: Optional[str] = None
+    source_url: Optional[str] = None
+    confidence_score: Optional[float] = None
+    legal_references: Optional[str] = Field(
+        None, description="JSON string: References to legal acts, regulations, or previous cases"
+    )
+    legal_concepts: Optional[str] = Field(
+        None, description="JSON string: Legal concepts or topics discussed in the document"
+    )
+    parties: Optional[str] = Field(
+        None, description="JSON string: Parties involved in the legal case or interpretation"
+    )
+    outcome: Optional[str] = Field(
+        None, description="JSON string: The outcome or result of the legal document"
+    )
+    judgment_specific: Optional[str] = Field(
+        None, description="JSON string: Fields specific to judgment documents"
+    )
+    tax_interpretation_specific: Optional[str] = Field(
+        None, description="JSON string: Fields specific to tax interpretation documents"
+    )
+    legal_act_specific: Optional[str] = Field(
+        None, description="JSON string: Fields specific to legal acts (statutes, regulations, etc.)"
+    )
+    relationships: Optional[str] = Field(
+        None, description="JSON string: Relationships to other documents"
+    )
+    legal_analysis: Optional[str] = Field(
+        None, description="JSON string: Analysis elements common across document types"
+    )
+    structured_content: Optional[str] = Field(
+        None, description="JSON string: Structured representation of document content"
+    )
+    section_embeddings: Optional[str] = Field(
+        None, description="JSON string: Vector embeddings for each section for semantic search"
+    )
+    metadata: Optional[str] = Field(
+        None, description="JSON string: System metadata for the document"
+    )
 
     def to_weaviate_object(self) -> Dict:
         """Convert the document to a format suitable for Weaviate ingestion."""

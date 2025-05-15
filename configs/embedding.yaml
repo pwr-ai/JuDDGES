@@ -23,3 +23,8 @@ hydra:
   output_subdir: null
   run:
     dir: .
+
+default_column_values:
+  country: "Poland"
+  language: "pl"
+  document_type: "judgment"
