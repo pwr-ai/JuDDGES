@@ -3,6 +3,7 @@ from pathlib import Path
 
 import hydra
 import pandas as pd
+from datasets import load_dataset
 from dotenv import load_dotenv
 from hydra.utils import get_class
 from langchain.globals import set_llm_cache
@@ -24,7 +25,7 @@ load_dotenv()
 )
 def main(cfg: DictConfig):
     set_llm_cache(SQLiteCache(database_path=cfg.model.request_cache_db))
-    dataset = load_dataset(cfg)
+    dataset = get_dataset(cfg)
 
     schema = get_class(cfg.annotation_schema)
     schema_json = schema.model_json_schema()
@@ -46,7 +47,7 @@ def main(cfg: DictConfig):
                     "text": row[cfg.text_field],
                     "LLM": cfg.model_version,
                     "schema": schema_json,
-                    "language": "polish",
+                    "language": cfg.language,
                 }
                 datapoints.append(datapoint)
 
@@ -62,22 +63,21 @@ async def async_annotate(
 
     async def annotate_row(row: pd.Series) -> dict:
         async with semaphore:
-            return await annotator.async_annotate(row[cfg.text_field])
+            return await annotator.async_annotate(row[cfg.text_field], cfg.language)
 
     return await tqdm_asyncio.gather(*[annotate_row(row) for _, row in df.iterrows()])
 
 
-def load_dataset(cfg: DictConfig) -> dict[str, pd.DataFrame]:
+def get_dataset(cfg: DictConfig) -> dict[str, pd.DataFrame]:
     if cfg.dataset.type == "parquet":
         train = pd.read_parquet(cfg.dataset.train.path)
         test = pd.read_parquet(cfg.dataset.test.path)
         return {"train": train, "test": test}
     elif cfg.dataset.type == "hf":
-        dataset = load_dataset(cfg.dataset)
+        dataset = load_dataset(cfg.dataset.path)
         return {name: dataset[name].to_pandas() for name in dataset.keys()}
     else:
         raise ValueError(f"Invalid dataset type: {cfg.dataset.type}")
-
 
 
 if __name__ == "__main__":
