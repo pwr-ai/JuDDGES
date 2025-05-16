@@ -303,11 +303,11 @@ stages:
     cmd: >-
       PYTHONPATH=. python scripts/sft/llm_as_judge.py
       data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
-      configs/ie_schema/swiss_franc_loans.yaml
+      configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
       --judge-model=${item.judge_llm}
     deps:
       - scripts/sft/llm_as_judge.py
-      - configs/ie_schema/swiss_franc_loans.yaml
+      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
       - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
     outs:
       - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/llm_as_judge_${item.judge_llm}.json
@@ -339,7 +339,7 @@ stages:
       split:
         - annotated
       model_type:
-        - fine_tuned
+        - fine_tuned_vllm
       judge_llm:
         - gpt-4.1-mini-2025-04-14
     cmd: >-
@@ -381,6 +381,9 @@ stages:
       dir:
         - data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated
         - data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated
+        - data/experiments/predict/fine_tuned_vllm/pl_court_swiss_franc_loans/annotated
+        - data/experiments/predict/raw/pl_court_swiss_franc_loans/test
+        - data/experiments/predict/raw/en_appealcourt_coded/test
     cmd: >-
       PYTHONPATH=. python scripts/sft/summarize_metrics.py
       --root-dir ${item.dir}
