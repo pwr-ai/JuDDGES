@@ -1,21 +1,21 @@
 import os
 import re
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, List, Optional
+from typing import Any, ClassVar
 
-import weaviate.classes.config as wvcc
 from dotenv import load_dotenv
 from loguru import logger
-from weaviate.classes.init import Auth
 
 import weaviate
+import weaviate.classes.config as wvcc
 from juddges.settings import ROOT_PATH
+from weaviate.classes.init import Auth
 
 logger.info(f"Environment variables loaded from {ROOT_PATH / '.env'} file")
 load_dotenv(ROOT_PATH / ".env", override=True)
 
 
-class WeaviateDatabase(ABC): 
+class WeaviateDatabase(ABC):
     def __init__(
         self,
         host: str = os.environ["WV_URL"],
@@ -353,13 +353,13 @@ class WeaviateJudgmentsDatabase(WeaviateDatabase):
     # For backward compatibility
     async def create_collections(self) -> None:
         await self.async_create_collections()
-        
+
     async def insert_batch(self, collection, objects):
         await self.async_insert_batch(collection, objects)
-        
+
     async def get_uuids(self, collection):
         return await self.async_get_uuids(collection)
-        
+
     async def _safe_create_collection(self, *args, **kwargs):
         await self.async_safe_create_collection(*args, **kwargs)
 

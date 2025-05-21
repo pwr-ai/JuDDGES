@@ -1,0 +1,6 @@
+name: data/datasets/en/en_appealcourt_coded
+language: en
+context_field: context
+output_field: output_1
+
+max_output_tokens: 800

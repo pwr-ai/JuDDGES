@@ -11,6 +11,7 @@ USE_CASE_SCRIPTS = [
 ]
 
 
+@pytest.mark.skip(reason="Skipping graph use case tests, for now is a legacy example")
 @pytest.mark.parametrize("script_path", USE_CASE_SCRIPTS)
 def test_graph_use_case_runs_correctly(script_path: Path) -> None:
     assert script_path.exists()

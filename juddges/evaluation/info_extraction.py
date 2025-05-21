@@ -2,13 +2,13 @@ from tqdm import tqdm
 
 from juddges.evaluation.eval_full_text import FullTextCHRFScorer
 from juddges.evaluation.eval_structured import StructuredChrfEvaluator
-from juddges.evaluation.parse import parse_results
+from juddges.evaluation.parse import T_format, parse_results
 
 
 class InfoExtractionEvaluator:
-    def __init__(self, num_proc: int, verbose: bool = True):
+    def __init__(self, num_proc: int, format: T_format, verbose: bool = True):
         self.verbose = verbose
-
+        self.format = format
         self.structured_evaluators = [
             StructuredChrfEvaluator(num_proc=num_proc),
         ]
@@ -17,7 +17,7 @@ class InfoExtractionEvaluator:
         ]
 
     def evaluate(self, results: list[dict[str, str]]) -> dict[str, dict[str, float]]:
-        parsed = parse_results(results)
+        parsed = parse_results(results, self.format)
 
         metrics = {
             "stats": {

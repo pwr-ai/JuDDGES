@@ -17,7 +17,7 @@ from openai import APIConnectionError, BaseModel, RateLimitError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
 from tqdm import tqdm
 
-from juddges.config import DatasetConfig
+from juddges.config import DatasetInfoExtractionConfig
 from juddges.preprocessing.context_truncator import ContextTruncatorTiktoken
 from juddges.preprocessing.text_encoder import TextEncoderForEvalPlainTextFormat
 from juddges.settings import CONFIG_PATH
@@ -31,7 +31,7 @@ MAX_RETRY_WAIT = 60
 
 
 class PredictWithAPIConfig(BaseModel, extra="forbid"):
-    dataset: DatasetConfig
+    dataset: DatasetInfoExtractionConfig
     model_version: str
     max_seq_len: int | None
     temperature: float

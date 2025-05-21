@@ -1,11 +1,16 @@
 import datetime
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import Literal
+
+from langchain_core.utils.json import parse_json_markdown
 
 from juddges.utils.misc import parse_yaml
 
 EMPTY_ANSWER = ""
 DATE_FMT = "%Y-%m-%d"
+
+T_format = Literal["json", "yaml"]
 
 
 @dataclass
@@ -18,6 +23,7 @@ class ParseResults:
 
 def parse_results(
     results: list[dict[str, str]],
+    format: T_format,
 ) -> ParseResults:
     """Parses the results of the model into gold and predicted dictionaries.
 
@@ -33,10 +39,10 @@ def parse_results(
 
     num_preds_parse_errors = 0
     for item in results:
-        gold = _parse_item(item["gold"])
+        gold = _parse_item(item["gold"], format)
         assert gold is not None
 
-        preds = _parse_item(item["answer"])
+        preds = _parse_item(item["answer"], format)
         if preds is None:
             num_preds_parse_errors += 1
             failed_preds_parse_mask.append(True)
@@ -60,8 +66,8 @@ def parse_results(
     )
 
 
-def _parse_item(item: str) -> dict[str, str] | None:
-    """Parses yaml model output to a dictionary.
+def _parse_item(item: str, format: T_format) -> dict[str, str] | None:
+    """Parses JSON model output to a dictionary.
     The following format is applied:
         - dates -> string formatted according to DATE_FMT
         - lists -> comma-separated sorted strings
@@ -69,7 +75,13 @@ def _parse_item(item: str) -> dict[str, str] | None:
         - If the input cannot be parsed, returns None.
     """
     try:
-        data = parse_yaml(item)
+        if format == "json":
+            data = parse_json_markdown(item)
+        elif format == "yaml":
+            data = parse_yaml(item)
+        else:
+            raise ValueError(f"Invalid format: {format}")
+
     except Exception:
         return None
 

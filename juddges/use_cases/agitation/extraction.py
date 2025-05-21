@@ -34,9 +34,7 @@ async def extract_judgment_information(
         DataFrame with extracted information
     """
 
-    logger.info(
-        f"Starting information extraction using {MODEL_NAME} model on {len(df)} judgments"
-    )
+    logger.info(f"Starting information extraction using {MODEL_NAME} model on {len(df)} judgments")
 
     # Create the extraction chain
     extraction_chain = prepare_information_extraction_chain(model_name=MODEL_NAME)
@@ -47,9 +45,7 @@ async def extract_judgment_information(
     judgments_properties = df.properties.tolist()
 
     # Use tqdm to show progress
-    for batch in tqdm(
-        chunked(judgments_properties, batch_size), total=len(df) / batch_size
-    ):
+    for batch in tqdm(chunked(judgments_properties, batch_size), total=len(df) / batch_size):
         extracted_data += extraction_chain.batch(
             [
                 {

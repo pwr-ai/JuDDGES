@@ -1,12 +1,18 @@
 defaults:
-  - model: ???
-  - dataset: pl-court-instruct
+  - llm: ???
+  - dataset: ???
+  - prompt: ???
+  - ie_schema: ???
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
-model:
+llm:
   padding_side: right
+
+prompt:
+  language: ${dataset.language}
+  ie_schema: ${ie_schema}
 
 training_args:
   run_name: ${run_name}
@@ -39,12 +45,12 @@ peft_args:
   target_modules: "all-linear"
 
 max_context_size: 32_000
-truncate_context: True
+truncate_context: False
 wandb_entity: graph-ml-lab-wust
 wandb_project: juddges-fine-tune
 
-output_dir: data/experiments/peft-fine-tune/${hydra:runtime.choices.model}/${hydra:runtime.choices.dataset}
-run_name: ${hydra:runtime.choices.model}_${hydra:runtime.choices.dataset}_fine_tune
+output_dir: data/experiments/peft-fine-tune/${hydra:runtime.choices.llm}/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.prompt}/${hydra:runtime.choices.ie_schema}
+run_name: ${hydra:runtime.choices.llm}_${hydra:runtime.choices.dataset}_${hydra:runtime.choices.prompt}_${hydra:runtime.choices.ie_schema}_fine_tune
 
 hydra:
   output_subdir: null

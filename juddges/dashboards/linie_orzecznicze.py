@@ -5,7 +5,7 @@ from juddges.case_law_trends.visualisations import (
     plot_distributions,
     plot_distributions_stacked,
 )
-from juddges.prompts.information_extraction import SWISS_FRANC_LOAN_SCHEMA
+from juddges.prompts.schemas.frank_loans import SWISS_FRANC_LOAN_SCHEMA
 from juddges.settings import FRANKOWICZE_DATA_PATH
 
 st.title("Analiza Linii Orzeczniczych")
