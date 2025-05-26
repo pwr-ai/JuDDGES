@@ -1,0 +1,194 @@
+{
+  "@context": {
+    "@language": "en",
+    "@vocab": "https://schema.org/",
+    "arrayShape": "cr:arrayShape",
+    "citeAs": "cr:citeAs",
+    "column": "cr:column",
+    "conformsTo": "dct:conformsTo",
+    "cr": "http://mlcommons.org/croissant/",
+    "data": {
+      "@id": "cr:data",
+      "@type": "@json"
+    },
+    "dataBiases": "cr:dataBiases",
+    "dataCollection": "cr:dataCollection",
+    "dataType": {
+      "@id": "cr:dataType",
+      "@type": "@vocab"
+    },
+    "dct": "http://purl.org/dc/terms/",
+    "extract": "cr:extract",
+    "field": "cr:field",
+    "fileProperty": "cr:fileProperty",
+    "fileObject": "cr:fileObject",
+    "fileSet": "cr:fileSet",
+    "format": "cr:format",
+    "includes": "cr:includes",
+    "isArray": "cr:isArray",
+    "isLiveDataset": "cr:isLiveDataset",
+    "jsonPath": "cr:jsonPath",
+    "key": "cr:key",
+    "md5": "cr:md5",
+    "parentField": "cr:parentField",
+    "path": "cr:path",
+    "personalSensitiveInformation": "cr:personalSensitiveInformation",
+    "recordSet": "cr:recordSet",
+    "references": "cr:references",
+    "regex": "cr:regex",
+    "repeated": "cr:repeated",
+    "replace": "cr:replace",
+    "sc": "https://schema.org/",
+    "separator": "cr:separator",
+    "source": "cr:source",
+    "subField": "cr:subField",
+    "transform": "cr:transform",
+    "examples": {
+      "@id": "cr:examples",
+      "@type": "@json"
+    },
+    "rai": "http://mlcommons.org/croissant/RAI/"
+  },
+  "@type": "sc:Dataset",
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "repo",
+      "name": "repo",
+      "description": "The Hugging Face git repository.",
+      "contentUrl": "https://huggingface.co/datasets/JuDDGES/pl-swiss-franc-loans/tree/refs%2Fconvert%2Fparquet",
+      "encodingFormat": "git+https",
+      "sha256": "https://github.com/mlcommons/croissant/issues/80"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "parquet-files-for-config-default",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/x-parquet",
+      "includes": "default/*/*.parquet"
+    }
+  ],
+  "recordSet": [
+    {
+      "@type": "cr:RecordSet",
+      "dataType": "cr:Split",
+      "key": {
+        "@id": "default_splits/split_name"
+      },
+      "@id": "default_splits",
+      "name": "default_splits",
+      "description": "Splits for the default config.",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "@id": "default_splits/split_name",
+          "dataType": "sc:Text"
+        }
+      ],
+      "data": [
+        {
+          "default_splits/split_name": "train"
+        },
+        {
+          "default_splits/split_name": "test"
+        },
+        {
+          "default_splits/split_name": "annotated"
+        }
+      ]
+    },
+    {
+      "@type": "cr:RecordSet",
+      "@id": "default",
+      "description": "JuDDGES/pl-swiss-franc-loans - 'default' subset\n\nAdditional information:\n- 3 splits: train, test, annotated",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "@id": "default/split",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "fileProperty": "fullpath"
+            },
+            "transform": {
+              "regex": "default/(?:partial-)?(train|test|annotated)/.+parquet$"
+            }
+          },
+          "references": {
+            "field": {
+              "@id": "default_splits/split_name"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/context",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "context"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/output",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "output"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "conformsTo": "http://mlcommons.org/croissant/1.1",
+  "name": "pl-swiss-franc-loans",
+  "description": "\n\t\n\t\t\n\t\tSwiss Franc Loans Judgments - Information Extraction\n\t\n\nDataset for training and evaluating Large Language Models (LLMs) for information extraction in domain of Polish court judgments ragarding Swiss Franc loans cases.\n\n\t\n\t\t\n\t\tDataset Details\n\t\n\nThe instruction dataset for Polish was created using a semi-automatic process. First, legal experts (lawyers) designed extraction schemas and coding guidelines for the key legal attributes to be extracted from judgments. Using these schemas, we… See the full description on the dataset page: https://huggingface.co/datasets/JuDDGES/pl-swiss-franc-loans.",
+  "alternateName": [
+    "JuDDGES/pl-swiss-franc-loans",
+    "Polish Court Swiss Franc Loans"
+  ],
+  "creator": {
+    "@type": "Organization",
+    "name": "JuDDGES",
+    "url": "https://huggingface.co/JuDDGES"
+  },
+  "keywords": [
+    "text2text-generation",
+    "abstractive-qa",
+    "expert-generated, machine-generated",
+    "JuDDGES/pl-court-raw",
+    "Polish",
+    "cc-by-4.0",
+    "1K - 10K",
+    "json",
+    "Text",
+    "Datasets",
+    "pandas",
+    "Croissant",
+    "Polars",
+    "🇺🇸 Region: US",
+    "information-extraction",
+    "legal",
+    "swiss-franc-loans",
+    "polish-court"
+  ],
+  "license": "https://choosealicense.com/licenses/cc-by-4.0/",
+  "url": "https://huggingface.co/datasets/JuDDGES/pl-swiss-franc-loans",
+  "datePublished": "2025-04-01",
+  "version": "1.0.0",
+  "citeAs": "Augustyniak Ł., Binkowski J., Sawczyn A., Bernaczyk M., Kamiński K., Tirunagari S., Windridge D., Dhami M., Boukacem-Zeghmouri C., Fillaud C., Kajdanowicz T. \"JuDDGES: A Unified, Multilingual Dataset of Legal Judgments for Legal AI and Analytics\"."
+}
