@@ -297,7 +297,6 @@ stages:
         - annotated
       model_type:
         - raw_vllm
-        # - fine_tuned
       judge_llm:
         - gpt-4.1-mini-2025-04-14
     cmd: >-

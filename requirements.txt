@@ -51,7 +51,7 @@ torchmetrics==1.6.1
 transformers==4.51.3
 trl==0.16.1
 typer>=0.15.2
-# vllm==0.8.4
+vllm==0.9.1
 wandb==0.19.0
 weaviate-client==4.8.1
 xlsxwriter==3.2.0

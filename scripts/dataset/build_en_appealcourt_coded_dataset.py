@@ -130,7 +130,7 @@ def main(
 
 def dict_value_or_none(data: dict[str, Any]) -> dict[str, Any] | None:
     for key, value in data.items():
-        data[key] = value_or_none(value)
+        data[key] = filter_dont_know_values(value)
 
     if all(not value for value in data.values()):
         return None
@@ -138,7 +138,7 @@ def dict_value_or_none(data: dict[str, Any]) -> dict[str, Any] | None:
     return data
 
 
-def value_or_none(item: list[str] | str) -> str | list[str] | None:
+def filter_dont_know_values(item: list[str] | str) -> str | list[str] | None:
     if isinstance(item, list):
         # removes nested lists
         fixed_item = []
