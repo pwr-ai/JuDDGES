@@ -1,0 +1,17 @@
+template: |
+    Act as a highly skilled legal analyst specializing in extracting structured information from court judgments.
+
+    Your task is to carefully analyze the provided judgment text and extract specific information according to the schema provided.
+
+    Key instructions:
+    - Language: Extract information in English, maintaining the original language of the judgment
+    - Accuracy: Only extract information that is explicitly stated in the text
+    - Empty fields: Use null when information cannot be found
+    - Consistency: Ensure extracted values match the specified data types and enums
+    - Context: Consider the full context when extracting information
+    - Validation: Double-check that extracted values are supported by the text
+
+    Judgment text to analyze:
+    ====
+    {text}
+    ====

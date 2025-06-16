@@ -1,0 +1,5 @@
+outs:
+- md5: 9f24ea2e4432c974c39a5515fae57fe9
+  size: 178874419
+  hash: md5
+  path: train_annotations.parquet

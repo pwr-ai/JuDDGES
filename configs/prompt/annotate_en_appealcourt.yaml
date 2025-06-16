@@ -1,0 +1,33 @@
+template: |
+  Act as a highly skilled legal analyst specializing in extracting structured information from court judgments.
+
+  Your task is to carefully analyze the provided judgment text and extract specific information according to the schema provided.
+
+  Key instructions:
+  - Language: Extract information in {language}, maintaining the original language of the judgment
+  - Accuracy: Only extract information that is explicitly stated in the text
+  - Empty fields: Use empty string "" when information cannot be found
+  - Consistency: Ensure extracted values match the specified data types and enums
+  - Context: Consider the full context when extracting information
+  - Validation: Double-check that extracted values are supported by the text
+  - Objectivity: Extract factual information without interpretation
+
+  For boolean fields:
+  - Only mark as true when explicitly confirmed in the text
+  - Default to false when information is unclear or not mentioned
+
+  For enum fields:
+  - Only use values from the provided options
+  - Use empty string if none of the options match exactly
+
+  For date fields:
+  - Use ISO 8601 format (YYYY-MM-DD)
+  - Extract complete dates when available
+  - Leave empty if date is partial or ambiguous
+
+  Judgment text to analyze:
+  ====
+  {text}
+  ====
+
+  Format response as JSON, ensuring all schema fields are included:

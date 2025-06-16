@@ -1,0 +1,515 @@
+<View>
+  <Style>
+    .root {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      gap: 20px;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .column:first-child {
+      flex: 7;
+    }
+
+    .column:last-child {
+      flex: 3;
+    }
+
+    .document {
+      border: 1px solid rgb(75, 114, 98);
+      padding: 10px;
+      border-radius: 5px;
+      background-color:rgb(224, 230, 227);
+      overflow-y: auto;
+      flex: 1;
+      margin-bottom: 10px;
+    }
+
+    .questions {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #f8f9fa;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .section {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 5px;
+      background-color: #ffffff;
+    }
+
+    .section-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #495057;
+    }
+
+    .header-basic {
+      color: #6A5ACD;
+    }
+
+    .header-court {
+      color: #2E8B57;
+    }
+
+    .header-legal {
+      color: #FF4500;
+    }
+
+    .header-parties {
+      color: #DC143C;
+    }
+
+    .header-case {
+      color: #4B0082;
+    }
+
+    .header-verdict {
+      color: #008080;
+    }
+
+    .section-basic {
+      border: 2px solid #6A5ACD;
+      background-color: #EDEDFD;
+    }
+
+    .section-court {
+      border: 2px solid rgb(128, 46, 139);
+      background-color: rgb(245, 234, 243);
+    }
+
+    .section-legal {
+      border: 2px solid #FF4500;
+      background-color: #FFF4EC;
+    }
+
+    .section-parties {
+      border: 2px solid #DC143C;
+      background-color: #FDECEC;
+    }
+
+    .section-case {
+      border: 2px solid #4B0082;
+      background-color:rgb(243, 234, 253);
+    }
+
+    .section-verdict {
+      border: 2px solid rgb(126, 128, 0);
+      background-color:rgb(245, 245, 230);
+    }
+  </Style>
+
+  <View className="root">
+    <Header value="Analiza Orzeczenia Frankowego" />
+    <View className="container">
+      <!-- Left Column - Document -->
+      <View className="column">
+        <View className="document">
+          <Header value="Orzeczenie" />
+          <Text name="text" value="$text"/>
+        </View>
+      </View>
+
+      <!-- Right Column - Questions -->
+      <View className="column">
+        <View className="questions">
+          <Header value="Analiza Orzeczenia" />
+          <Collapse>
+            <!-- Basic Information Section -->
+            <Panel value="Informacje Podstawowe" className="section-header header-basic">
+              <View className="section section-basic">
+                <!-- Sprawa Frankowiczów -->
+                <Header value="Sprawa Frankowiczów" />
+                <Text name="sprawa_frankowiczow_desc" value="Czy sprawa dotyczy kredytu frankowego (CHF)?" />
+                <Choices name="sprawa_frankowiczow" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                  <Choice value="Badanie wzorca umownego" />
+                </Choices>
+
+                <!-- Apelacja -->
+                <Header value="Apelacja" />
+                <Text name="apelacja_desc" value="Określenie apelacji, w której znajduje się sąd rozpoznający sprawę (np. 'Apelacja warszawska').
+                'Zanonimizowano' jeśli niemożliwe do ustalenia bo zanonimizowano." />
+                <TextArea name="apelacja" toName="text" rows="1" maxSubmissions="1" placeholder="Wpisz apelację tutaj..." />
+
+                <!-- Data Wyroku -->
+                <Header value="Data Wyroku" />
+                <Text name="data_wyroku_desc" value="Data wydania wyroku w formacie YYYY-MM-DD (np. '2024-11-30')" />
+                <TextArea name="data_wyroku" toName="text" rows="1" maxSubmissions="1" />
+              </View>
+            </Panel>
+
+            <!-- Court Information Section -->
+            <Panel value="Informacje o Sądzie" className="section-header header-court">
+              <View className="section section-court">
+                <!-- Typ Sądu -->
+                <Header value="Typ Sądu" />
+                <Text name="typ_sadu_desc" value="Typ sądu rozpoznającego sprawę (np. 'Sąd Rejonowy')" />
+                <Choices name="typ_sadu" toName="text" choice="single">
+                  <Choice value="Sąd Rejonowy" />
+                  <Choice value="Sąd Okręgowy" />
+                  <Choice value="Sąd Frankowy" />
+                  <Choice value="Sąd Ochrony Konkurencji i Konsumentów" />
+                </Choices>
+
+                <!-- Instancja Sądu -->
+                <Header value="Instancja Sądu" />
+                <Text name="instancja_sadu_desc" value="Czy sąd jest I instancji czy odwoławczy (np. 'Sąd I instancji')" />
+                <Choices name="instancja_sadu" toName="text" choice="single">
+                  <Choice value="Sąd I instancji" />
+                  <Choice value="Sąd odwoławczy" />
+                </Choices>
+
+                <!-- Sesja Sądowa -->
+                <Header value="Sesja Sądowa" />
+                <Text name="sesja_sadowa_desc" value="Czy wyrok wydano na rozprawie czy na posiedzeniu niejawnym?" />
+                <Choices name="sesja_sadowa" toName="text" choice="single">
+                  <Choice value="Rozprawa" />
+                  <Choice value="Posiedzenie niejawne" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Legal Basis Section -->
+            <Panel value="Podstawa Prawna" className="section-header header-legal">
+              <View className="section section-legal">
+                <!-- Podstawa Prawna -->
+                <Header value="Podstawa Prawna" />
+                <Text name="podstawa_prawna_desc" value="Podstawa prawna roszczenia (np. 'Art. 385(1) Kodeksu cywilnego')" />
+                <TextArea name="podstawa_prawna" toName="text" rows="1" maxSubmissions="1" placeholder="Wpisz podstawę prawną..." />
+
+                <!-- Podstawa Prawna Podana -->
+                <Header value="Podstawa Prawna Podana" />
+                <Text name="podstawa_prawna_podana_desc" value="Czy powód podał podstawę prawną?" />
+                <Choices name="podstawa_prawna_podana" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Rodzaj Roszczenia -->
+                <Header value="Rodzaj Roszczenia" />
+                <Text name="rodzaj_roszczenia_desc" value="Rodzaj roszczenia (np. 'O zapłatę')" />
+                <Choices name="rodzaj_roszczenia" toName="text" choice="single">
+                  <Choice value="O ustalenie istnienia/nieistnienia stosunku prawnego" />
+                  <Choice value="O ukształtowanie stosunku prawnego" />
+                  <Choice value="O zapłatę" />
+                  <Choice value="Roszczenia dodatkowe" />
+                  <Choice value="Dotyczy wzorca umownego" />
+                </Choices>
+
+                <!-- Modyfikacje Powództwa -->
+                <Header value="Modyfikacje Powództwa" />
+                <Text name="modyfikacje_powodztwa_desc" value="Czy były modyfikacje powództwa?" />
+                <Choices name="modyfikacje_powodztwa" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Typ Modyfikacji -->
+                <Header value="Typ Modyfikacji" />
+                <Text name="typ_modyfikacji_desc" value="Typ modyfikacji powództwa (np. 'Kwoty roszczenia')" />
+                <Choices name="typ_modyfikacji" toName="text" choice="single">
+                  <Choice value="Rodzaj roszczenia" />
+                  <Choice value="Kwoty roszczenia" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Parties Section -->
+            <Panel value="Strony Postępowania" className="section-header header-parties">
+              <View className="section section-parties">
+                <!-- Status Kredytobiorcy -->
+                <Header value="Status Kredytobiorcy" />
+                <Text name="status_kredytobiorcy_desc" value="Status kredytobiorcy" />
+                <Choices name="status_kredytobiorcy" toName="text" choice="single">
+                  <Choice value="Konsument" />
+                  <Choice value="Przedsiębiorca" />
+                  <Choice value="Nie sprawdzano" />
+                </Choices>
+
+                <!-- Współuczestnictwo -->
+                <Header value="Współuczestnictwo" />
+                <Text name="wspoluczestnictwo_powodowe_desc" value="Czy współuczestnictwo po stronie powodowej?" />
+                <Choices name="wspoluczestnictwo_powodowe" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <Text name="wspoluczestnictwo_pozwanego_desc" value="Czy współuczestnictwo po stronie pozwanej?" />
+                <Choices name="wspoluczestnictwo_pozwanego" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Typ Współuczestnictwa -->
+                <Header value="Typ Współuczestnictwa" />
+                <Text name="typ_wspoluczestnictwa_desc" value="Rodzaj współuczestnictwa (np. 'Małżeństwo')" />
+                <Choices name="typ_wspoluczestnictwa" toName="text" choice="single">
+                  <Choice value="Małżeństwo" />
+                  <Choice value="Konkubinat" />
+                  <Choice value="Spadkodawcy" />
+                  <Choice value="Inny rodzaj" />
+                </Choices>
+
+                <!-- Strony umowy -->
+                <Header value="Strony umowy" />
+                <Text name="strony_umowy_desc" value="Czy powód był stroną umowy czy następcą prawnym?" />
+                <Choices name="strony_umowy" toName="text" choice="single">
+                  <Choice value="Strona umowy" />
+                  <Choice value="Następca prawny" />
+                </Choices>
+
+                <!-- Wcześniejsze Skargi do Rzecznika -->
+                <Header value="Wcześniejsze Skargi do Rzecznika" />
+                <Text name="wczesniejsze_skargi_do_rzecznika_desc" value="Czy były uprzednie skargi do rzecznika finansowego?" />
+                <Choices name="wczesniejsze_skargi_do_rzecznika" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Case Details Section -->
+            <Panel value="Szczegóły Sprawy" className="section-header header-case">
+              <View className="section section-case">
+                <!-- Umowa Kredytowa -->
+                <Header value="Umowa Kredytowa" />
+                <Text name="umowa_kredytowa_desc" value="Czy umowa kredytowa zawierana bezpośrednio w banku czy z pośrednikiem?" />
+                <Choices name="umowa_kredytowa" toName="text" choice="single">
+                  <Choice value="Zawarta bezpośrednio w banku" />
+                  <Choice value="Z udziałem pośrednika" />
+                </Choices>
+
+                <!-- Klauzula Niedozwolona -->
+                <Header value="Klauzula Niedozwolona" />
+                <Text name="klauzula_niedozwolona_desc" value="Istnienie klauzuli niedozwolonej w umowie?" />
+                <Choices name="klauzula_niedozwolona" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Klauzula wpisana do rejestru UOKiK -->
+                <Header value="Wpisana do Rejestru UOKiK" />
+                <Text name="wpisana_do_rejestru_uokik_desc" value="Czy klauzula wpisana do rejestru klauzul niedozwolonych UOKiK?" />
+                <Choices name="wpisana_do_rejestru_uokik" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Waluta Spłaty -->
+                <Header value="Waluta Spłaty" />
+                <Text name="waluta_splaty_desc" value="Waluta spłaty (np. 'CHF')" />
+                <Choices name="waluta_splaty" toName="text" choice="single">
+                  <Choice value="PLN" />
+                  <Choice value="CHF" />
+                </Choices>
+
+                <!-- Aneks do Umowy -->
+                <Header value="Aneks do Umowy" />
+                <Text name="aneks_do_umowy_desc" value="Czy był aneks do umowy?" />
+                <Choices name="aneks_do_umowy" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Data Aneksu -->
+                <Header value="Data Aneksu" />
+                <Text name="data_aneksu_desc" value="Data aneksu w formacie YYYY-MM-DD (np. '2023-01-15')" />
+                <TextArea name="data_aneksu" toName="text" rows="1" maxSubmissions="1" />
+
+                <!-- Przedmiot Aneksu -->
+                <Header value="Przedmiot Aneksu" />
+                <Text name="przedmiot_aneksu_desc" value="Czego dotyczył aneks (np. 'Zmiana waluty spłaty')" />
+                <Choices name="przedmiot_aneksu" toName="text" choice="single">
+                  <Choice value="Zmiana waluty spłaty" />
+                  <Choice value="Inne kwestie" />
+                </Choices>
+
+                <!-- Status Spłaty Kredytu -->
+                <Header value="Status Spłaty Kredytu" />
+                <Text name="status_splaty_kredytu_desc" value="Czy kredyt był spłacony, w tym w trakcie procesu?" />
+                <Choices name="status_splaty_kredytu" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Verdict Section -->
+            <Panel value="Rozstrzygnięcie" className="section-header header-verdict">
+              <View className="section section-verdict">
+                <!-- Dowody -->
+                <Header value="Dowody" />
+                <Text name="dowody_desc" value="Jakie dowody zostały przeprowadzone?" />
+                <Choices name="dowody" toName="text" choice="multiple">
+                  <Choice value="Przesłuchanie stron" />
+                  <Choice value="Przesłuchanie świadków" />
+                  <Choice value="Dowód z opinii biegłego" />
+                  <Choice value="Dowód z dokumentów" />
+                </Choices>
+
+                <!-- Oświadczenie Nieważności -->
+                <Header value="Oświadczenie Nieważności" />
+                <Text name="oswiadczenie_niewaznosci_desc" value="Czy odbierano oświadczenie powoda o skutkach nieważności umowy?" />
+                <Choices name="oswiadczenie_niewaznosci" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Odwołanie do SN -->
+                <Header value="Odwołanie do SN" />
+                <Text name="odwolanie_do_sn_desc" value="Czy odwołano się do orzecznictwa SN?" />
+                <Choices name="odwolanie_do_sn" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Odwołanie do TSUE -->
+                <Header value="Odwołanie do TSUE" />
+                <Text name="odwolanie_do_tsue_desc" value="Czy odwołano się do orzecznictwa TSUE?" />
+                <Choices name="odwolanie_do_tsue" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Teoria Prawna -->
+                <Header value="Teoria Prawna" />
+                <Text name="teoria_prawna_desc" value="Teoria prawna, na której oparto wyrok (np. 'Teoria dwóch kondykcji')" />
+                <Choices name="teoria_prawna" toName="text" choice="single">
+                  <Choice value="Teoria dwóch kondykcji" />
+                  <Choice value="Teoria salda" />
+                </Choices>
+
+                <!-- Zarzut Zatrzymania lub Potrącenia -->
+                <Header value="Zarzut Zatrzymania lub Potrącenia" />
+                <Text name="zarzut_zatrzymania_desc" value="Czy uwzględniono zarzut zatrzymania?" />
+                <Choices name="zarzut_zatrzymania" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                  <Choice value="Nie podniesiono takiego zarzutu" />
+                </Choices>
+
+                <Text name="zarzut_potracenia_desc" value="Czy uwzględniono zarzut potrącenia?" />
+                <Choices name="zarzut_potracenia" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                  <Choice value="Nie podniesiono takiego zarzutu" />
+                </Choices>
+
+                <!-- Odsetki Ustawowe -->
+                <Header value="Odsetki Ustawowe" />
+                <Text name="odsetki_ustawowe_desc" value="Czy uwzględniono odsetki ustawowe?" />
+                <Choices name="odsetki_ustawowe" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Data Rozpoczęcia Odsetek -->
+                <Header value="Data Rozpoczęcia Odsetek" />
+                <Text name="data_rozpoczecia_odsetek_desc" value="Data rozpoczęcia naliczania odsetek" />
+                <Choices name="data_rozpoczecia_odsetek" toName="text" choice="single">
+                  <Choice value="Od dnia wezwania do zapłaty" />
+                  <Choice value="Od daty wytoczenia powództwa" />
+                  <Choice value="Od daty wydania wyroku" />
+                  <Choice value="Od innej daty" />
+                </Choices>
+
+                <!-- Zabezpieczenie -->
+                <Header value="Zabezpieczenie" />
+                <Text name="zabezpieczenie_udzielone_desc" value="Czy udzielono zabezpieczenia?" />
+                <Choices name="zabezpieczenie_udzielone" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                  <Choice value="Nie było wniosku o zabezpieczenie" />
+                </Choices>
+
+                <!-- Rodzaj Zabezpieczenia -->
+                <Header value="Rodzaj Zabezpieczenia" />
+                <Text name="rodzaj_zabezpieczenia_desc" value="Rodzaj zabezpieczenia (np. 'Wstrzymanie egzekucji')" />
+                <TextArea name="rodzaj_zabezpieczenia" toName="text" rows="1" maxSubmissions="1" />
+
+                <!-- Zabezpieczenie Pierwsza Instancja -->
+                <Header value="Zabezpieczenie Pierwsza Instancja" />
+                <Text name="zabezpieczenie_pierwsza_instancja_desc" value="Czy zabezpieczenia udzielił sąd I instancji?" />
+                <Choices name="zabezpieczenie_pierwsza_instancja" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Czas Trwania Sprawy -->
+                <Header value="Czas Trwania Sprawy" />
+                <Text name="czas_trwania_sprawy_desc" value="Czas rozpoznania sprawy – od złożenia pozwu do wydania wyroku (np. '2 lata 3 miesiące')" />
+                <TextArea name="czas_trwania_sprawy" toName="text" rows="1" maxSubmissions="1" />
+
+                <!-- Rozstrzygnięcie Sądu -->
+                <Header value="Rozstrzygnięcie Sądu" />
+                <Text name="rozstrzygniecie_sadu_desc" value="Rozstrzygnięcie (np. 'Oddalenie powództwa')" />
+                <TextArea name="rozstrzygniecie_sadu" toName="text" rows="1" maxSubmissions="1" />
+
+                <!-- Typ Rozstrzygnięcia -->
+                <Header value="Typ Rozstrzygnięcia" />
+                <Text name="typ_rozstrzygniecia_desc" value="Typ rozstrzygnięcia (np. 'Oddalenie powództwa')" />
+                <Choices name="typ_rozstrzygniecia" toName="text" choice="single">
+                  <Choice value="Uwzględnienie powództwa w całości" />
+                  <Choice value="Uwzględnienie powództwa w części" />
+                  <Choice value="Oddalenie powództwa" />
+                  <Choice value="Oddalenie apelacji" />
+                  <Choice value="Zmiana wyroku" />
+                  <Choice value="Przekazanie do ponownego rozpoznania" />
+                </Choices>
+
+                <!-- Koszty Postępowania -->
+                <Header value="Koszty Postępowania" />
+                <Text name="koszty_postepowania_desc" value="Czy zasądzono zwrot kosztów postępowania?" />
+                <Choices name="koszty_postepowania" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+
+                <!-- Beneficjent Kosztów -->
+                <Header value="Beneficjent Kosztów" />
+                <Text name="beneficjent_kosztow_desc" value="Na rzecz której strony zasądzono zwrot kosztów (np. 'Pozwany')" />
+                <TextArea name="beneficjent_kosztow" toName="text" rows="1" maxSubmissions="1" />
+
+                <!-- Wynik Sprawy -->
+                <Header value="Wynik Sprawy" />
+                <Text name="wynik_sprawy_desc" value="Ocena, czy bank czy kredytobiorca wygrał sprawę (np. 'Wygrana kredytobiorcy')" />
+                <Choices name="wynik_sprawy" toName="text" choice="single">
+                  <Choice value="Wygrana kredytobiorcy" />
+                  <Choice value="Wygrana banku" />
+                  <Choice value="Częściowe uwzględnienie roszczeń obu stron" />
+                </Choices>
+
+                <!-- Szczegóły Wyniku Sprawy -->
+                <Header value="Szczegóły Wyniku Sprawy" />
+                <Text name="szczegoly_wyniku_sprawy_desc" value="Szczegóły dotyczące wyniku sprawy (np. 'Kredytobiorca wygrał, umowa uznana za nieważną')" />
+                <TextArea name="szczegoly_wyniku_sprawy" toName="text" rows="1" maxSubmissions="1" />
+              </View>
+            </Panel>
+          </Collapse>
+        </View>
+      </View>
+    </View>
+  </View>
+</View>
