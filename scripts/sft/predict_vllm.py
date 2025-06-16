@@ -24,6 +24,9 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 NUM_GPUS = torch.cuda.device_count()
 
+logger.info(f"NUM_PROC: {NUM_PROC}")
+logger.info(f"NUM_GPUS: {NUM_GPUS}, CUDA_VISIBLE_DEVICES: {os.getenv('CUDA_VISIBLE_DEVICES')}")
+
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict.yaml")
 @torch.inference_mode()
@@ -49,6 +52,7 @@ def main(cfg: DictConfig) -> None:
         tensor_parallel_size=NUM_GPUS,
         seed=config.random_seed,
         enable_prefix_caching=True,
+        max_model_len=config.max_context_size,
     )
 
     if config.llm.should_load_adapter:
@@ -70,7 +74,6 @@ def main(cfg: DictConfig) -> None:
     params = SamplingParams(
         max_tokens=config.generate_kwargs.pop("max_new_tokens"),
         temperature=config.generate_kwargs.pop("temperature"),
-        enable_prefix_caching=True,
     )
     assert config.generate_kwargs.pop("do_sample")
     assert not config.generate_kwargs
@@ -81,12 +84,19 @@ def main(cfg: DictConfig) -> None:
         lora_request=lora_request,
         add_generation_prompt=True,
     )
+
     results = [
-        {"answer": ans.outputs[0].text, "gold": gold} for ans, gold in zip(outputs, ds["output"])
+        {
+            "answer": ans.outputs[0].text,
+            "gold": gold,
+            "finish_reason": ans.outputs[0].finish_reason,
+        }
+        for ans, gold in zip(outputs, ds["output"])
     ]
 
     save_yaml(config.model_dump(), config.config_file)
 
+    logger.info(f"Saving results to {config.predictions_file}")
     with open(config.predictions_file, "w") as f:
         json.dump(results, f, indent="\t", ensure_ascii=False)
 

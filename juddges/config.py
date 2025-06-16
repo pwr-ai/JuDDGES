@@ -119,6 +119,7 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     ie_schema: dict[str, dict[str, Any]]
     device_map: str
     output_dir: Path
+    max_context_size: int | None = None
     truncate_context: bool
     generate_kwargs: dict[str, Any] = Field(default_factory=dict)
     random_seed: int
@@ -137,5 +138,12 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
         """Path to the file with config."""
         return self.output_dir / "config.yaml"
 
-    def get_max_input_length_accounting_for_output(self, max_position_embeddings: int) -> int:
+    def get_max_input_length_accounting_for_output(
+        self,
+        max_position_embeddings: int | None,
+    ) -> int:
+        if max_position_embeddings is None:
+            assert self.max_context_size is not None
+            max_position_embeddings = self.max_context_size
+
         return max_position_embeddings - self.dataset.max_output_tokens
