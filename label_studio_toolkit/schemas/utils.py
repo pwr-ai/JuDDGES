@@ -54,15 +54,23 @@ class SchemaUtilsMixin:
             # Handle list types
             if get_origin(field_type) is list:
                 item_type = get_args(field_type)[0]
+                schema_parts.append(f"{field_name}:")
+                schema_parts.append("  type: list")
+                schema_parts.append("  items:")
+
                 if isinstance(item_type, type) and issubclass(item_type, Enum):
-                    schema_parts.append(f"{field_name}:")
-                    schema_parts.append("  type: list")
-                    schema_parts.append("  items:")
                     schema_parts.append("    type: enum")
                     schema_parts.append(f"    choices: {[e.value for e in item_type]}")
-                    schema_parts.append(f'  description: "{description}"')
-                    if is_optional:
-                        schema_parts.append("  required: false")
+                elif item_type is str:
+                    schema_parts.append("    type: string")
+                elif item_type is int:
+                    schema_parts.append("    type: integer")
+                else:
+                    raise ValueError(f"Unknown list item type: {item_type}")
+
+                schema_parts.append(f'  description: "{description}"')
+                if is_optional:
+                    schema_parts.append("  required: false")
             # Handle Enum types
             elif isinstance(field_type, type) and issubclass(field_type, Enum):
                 schema_parts.append(f"{field_name}:")
