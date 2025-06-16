@@ -1,0 +1,20 @@
+defaults:
+  - model: ../api_model/gpt_4.1
+  - prompt: annotate_en_appealcourt
+  - _self_
+
+dataset:
+  type: hf
+  path: "JuDDGES/en-appealcourt"
+
+text_field: "context"
+skip_test: true
+skip_train: true
+language: "english"
+model_version: ${model.name}
+annotation_schema: label_studio_toolkit.schemas.en_appealcourt.AppealCourtAnnotation
+
+output_dir: data/analysis/en-appealcourt/annotations/${model.name}
+
+model:
+  request_cache_db: .langchain_annotation_cache.db
