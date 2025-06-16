@@ -48,6 +48,7 @@ def main(cfg: DictConfig) -> None:
         max_num_seqs=config.llm.batch_size,
         tensor_parallel_size=NUM_GPUS,
         seed=config.random_seed,
+        enable_prefix_caching=True,
     )
 
     if config.llm.should_load_adapter:
@@ -69,6 +70,7 @@ def main(cfg: DictConfig) -> None:
     params = SamplingParams(
         max_tokens=config.generate_kwargs.pop("max_new_tokens"),
         temperature=config.generate_kwargs.pop("temperature"),
+        enable_prefix_caching=True,
     )
     assert config.generate_kwargs.pop("do_sample")
     assert not config.generate_kwargs
