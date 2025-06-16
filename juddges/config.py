@@ -34,6 +34,7 @@ class LLMConfig(BaseModel, extra="forbid"):
     batch_size: int
     use_4bit: bool
     use_unsloth: bool = False
+    chat_template_kwargs: dict[str, Any] = Field(default_factory=dict)
 
     @property
     def should_load_adapter(self) -> bool:
@@ -119,7 +120,7 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     ie_schema: dict[str, dict[str, Any]]
     device_map: str
     output_dir: Path
-    max_context_size: int | None = None
+    max_model_len: int | None = None
     truncate_context: bool
     generate_kwargs: dict[str, Any] = Field(default_factory=dict)
     random_seed: int
@@ -143,7 +144,7 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
         max_position_embeddings: int | None,
     ) -> int:
         if max_position_embeddings is None:
-            assert self.max_context_size is not None
-            max_position_embeddings = self.max_context_size
+            assert self.max_model_len is not None
+            max_position_embeddings = self.max_model_len
 
         return max_position_embeddings - self.dataset.max_output_tokens
