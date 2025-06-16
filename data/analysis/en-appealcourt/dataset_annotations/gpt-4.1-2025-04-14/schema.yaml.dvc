@@ -1,0 +1,5 @@
+outs:
+- md5: 252177275156a1b2a8fe6aed2acda4da
+  size: 9716
+  hash: md5
+  path: schema.yaml
