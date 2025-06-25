@@ -1,0 +1,243 @@
+<View>
+  <Style>
+    .root {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      gap: 20px;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .column:first-child {
+      flex: 7;
+    }
+
+    .column:last-child {
+      flex: 3;
+    }
+
+    .document {
+      border: 1px solid rgb(75, 114, 98);
+      padding: 10px;
+      border-radius: 5px;
+      background-color:rgb(224, 230, 227);
+      overflow-y: auto;
+      flex: 1;
+      margin-bottom: 10px;
+    }
+
+    .questions {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #f8f9fa;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .section {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 5px;
+      background-color: #ffffff;
+    }
+
+    .section-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #495057;
+    }
+
+    .header-basic {
+      color: #6A5ACD;
+    }
+
+    .header-legal {
+      color: #FF4500;
+    }
+
+    .header-claims {
+      color: #2E8B57;
+    }
+
+    .header-evidence {
+      color: #DC143C;
+    }
+
+    .header-digital {
+      color: #4B0082;
+    }
+
+    .header-rights {
+      color: #008080;
+    }
+
+    .section-basic {
+      border: 2px solid #6A5ACD;
+      background-color: #EDEDFD;
+    }
+
+    .section-legal {
+      border: 2px solid #FF4500;
+      background-color: #FFF4EC;
+    }
+
+    .section-claims {
+      border: 2px solid #2E8B57;
+      background-color: #F0FFF0;
+    }
+
+    .section-evidence {
+      border: 2px solid #DC143C;
+      background-color: #FDECEC;
+    }
+
+    .section-digital {
+      border: 2px solid #4B0082;
+      background-color:rgb(243, 234, 253);
+    }
+
+    .section-rights {
+      border: 2px solid #008080;
+      background-color:rgb(240, 255, 255);
+    }
+  </Style>
+
+  <View className="root">
+    <Header value="Analiza Naruszenia Dóbr Osobistych" />
+    <View className="container">
+      <!-- Left Column - Document -->
+      <View className="column">
+        <View className="document">
+          <Header value="Orzeczenie" />
+          <Text name="text" value="$text"/>
+        </View>
+      </View>
+
+      <!-- Right Column - Questions -->
+      <View className="column">
+        <View className="questions">
+          <Header value="Analiza Dóbr Osobistych" />
+          <Collapse>
+            <!-- Basic Information Section -->
+            <Panel value="Informacje Podstawowe" className="section-header header-basic">
+              <View className="section section-basic">
+                <!-- Naruszenie Dóbr Osobistych -->
+                <Header value="Naruszenie Dóbr Osobistych" />
+                <Text name="naruszenie_dobr_osobistych_desc" value="Czy sprawa dotyczy naruszenia dóbr osobistych?" />
+                <Choices name="naruszenie_dobr_osobistych" toName="text" choice="single" required="true">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Legal Basis Section -->
+            <Panel value="Podstawa Prawna" className="section-header header-legal">
+              <View className="section section-legal">
+                <!-- Podstawa Prawna -->
+                <Header value="Podstawa Prawna" />
+                <Text name="podstawa_prawna_desc" value="Podstawa prawna – artykuły Kodeksu Cywilnego" />
+                <Choices name="podstawa_prawna" toName="text" choice="multiple">
+                  <Choice value="23 KC" />
+                  <Choice value="24 KC" />
+                  <Choice value="448 KC" />
+                  <Choice value="Inne" />
+                </Choices>
+
+                <!-- Inne Podstawy Prawne -->
+                <Header value="Inne Podstawy Prawne" />
+                <Text name="inne_podstawy_prawne_desc" value="Inne podstawy prawne, jeśli wybrano opcję 'Inne' (każdą oddzielnie zatwierdź)" />
+                <TextArea name="inne_podstawy_prawne" toName="text" rows="1" maxSubmissions="20" placeholder="Wpisz inne podstawy prawne, każdą w nowej linii..." />
+              </View>
+            </Panel>
+
+            <!-- Claims Section -->
+            <Panel value="Rodzaje Żądań" className="section-header header-claims">
+              <View className="section section-claims">
+                <!-- Zadania -->
+                <Header value="Rodzaje Żądań" />
+                <Text name="zadania_desc" value="Rodzaje żądań występujące w sprawie" />
+                <Choices name="zadania" toName="text" choice="multiple">
+                  <Choice value="Zaniechania działania" />
+                  <Choice value="Żądanie ażeby pozwany dopełnił czynności potrzebnych do usunięcia skutków naruszenia. W szczególności ażeby złożyła oświadczenie odpowiedniej treści i w odpowiedniej formie" />
+                  <Choice value="Zadośćuczynienia pieniężnego" />
+                  <Choice value="Zapłaty odpowiedniej sumy pieniężnej na wskazany cel społeczny" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Evidence Section -->
+            <Panel value="Rodzaje Dowodów" className="section-header header-evidence">
+              <View className="section section-evidence">
+                <!-- Dowody -->
+                <Header value="Dowody" />
+                <Text name="dowody_desc" value="Rodzaje dowodów przedstawione w sprawie" />
+                <Choices name="dowody" toName="text" choice="multiple">
+                  <Choice value="Przesłuchanie świadków" />
+                  <Choice value="Przesłuchanie stron" />
+                  <Choice value="Dokumenty" />
+                  <Choice value="Zrzut ekranu/print screen" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Digital Platforms Section -->
+            <Panel value="Portale Internetowe" className="section-header header-digital">
+              <View className="section section-digital">
+                <!-- Portale Społecznościowe -->
+                <Header value="Portale Społecznościowe" />
+                <Text name="portale_spolecznosciowe_desc" value="Portale społecznościowe lub internetowe wskazane w sprawie" />
+                <Choices name="portale_spolecznosciowe" toName="text" choice="multiple">
+                  <Choice value="Facebook" />
+                  <Choice value="Instagram" />
+                  <Choice value="TikTok" />
+                  <Choice value="Linkedin" />
+                  <Choice value="Forum dyskusyjne" />
+                  <Choice value="Naruszenie w internecie" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Personal Rights Types Section -->
+            <Panel value="Rodzaje Dóbr Osobistych" className="section-header header-rights">
+              <View className="section section-rights">
+                <!-- Rodzaj Dobra Osobistego -->
+                <Header value="Dobra Osobiste" />
+                <Text name="rodzaj_dobra_osobistego_desc" value="Rodzaj dobra osobistego, które zostało naruszone" />
+                <Choices name="rodzaj_dobra_osobistego" toName="text" choice="multiple">
+                  <Choice value="Zdrowie" />
+                  <Choice value="Wolność" />
+                  <Choice value="Cześć" />
+                  <Choice value="Swoboda sumienia" />
+                  <Choice value="Nazwisko lub pseudonim" />
+                  <Choice value="Wizerunek" />
+                  <Choice value="Tajemnica korespondencji" />
+                  <Choice value="Nietykalność mieszkania" />
+                  <Choice value="Twórczość naukowa, artystyczna, wynalazcza i racjonalizatorska" />
+                  <Choice value="Inne" />
+                </Choices>
+              </View>
+            </Panel>
+          </Collapse>
+        </View>
+      </View>
+    </View>
+  </View>
+</View>
