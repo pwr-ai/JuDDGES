@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 from typing import Any
 
-import pandas as pd
 import typer
 import yaml
 from dotenv import load_dotenv
@@ -20,15 +19,18 @@ load_dotenv()
 MAX_CONCURRENT_CALLS = 20
 CACHE_DB = ".llm_as_judge_cache.db"
 
-# Prompts credit: https://github.com/langchain-ai/openevals/blob/main/python/openevals/json/match.py
-SYSTEM_PROMPT = """You are an LLM that evaluates the accuracy of structured outputs.
-Make sure to evaluate each key the users ask you to evaluate separately. Assign the score
-for each key based on its own criteria - DO NOT convolute the scores of different keys.
-Also only evaluate the output vs. the reference output based on the criteria. DO NOT EVALUATE
-BASED ON ANYTHING ELSE. If the output does not match the reference output in some way that
-is not mentioned in the criteria that is not a problem and you should ignore those discrepancies.
-Only focus on finding discrepancies based on the criteria. If there is a None value being compared
-to a non-None value, you should assign a score of 0. For lists provide average scores for each item."""
+# Prompt based on: https://github.com/langchain-ai/openevals/blob/main/python/openevals/json/match.py
+SYSTEM_PROMPT = """
+You are an LLM that evaluates the accuracy of structured outputs.
+* Make sure to evaluate each key the users ask you separately.
+* Assign the score for each key based on its own criteria - DO NOT convolute the scores of different keys.
+* Only evaluate the output vs. the reference output based on the criteria. DO NOT EVALUATE BASED ON ANYTHING ELSE.
+* If the output does not match the reference output in some way that is not mentioned in the criteria that is not a problem and you should ignore those discrepancies.
+* If there is a None value being compared to a non-None value, you should assign a score of 0.
+* For lists provide average scores for each item, ignore the order of the items.
+* You should ignore minor typos and formatting differences.
+* If a key is in the reference but missing in the output, assign score 0; ignore extra keys in output.
+"""
 
 USER_PROMPT = """Please evaluate the accuracy of the following output keys according to these schema:
 {schema}
@@ -70,8 +72,23 @@ def main(
             "type": "object",
             "properties": {
                 key: {
-                    "type": "number",
-                    "description": "The score, either 0, 1 for a single item, or average for list items",
+                    "type": "object",
+                    "properties": {
+                        "score": {
+                            "type": "number",
+                            "description": "The score, either 0, 1 for a single item, or average for list items",
+                        },
+                        "missing": {
+                            "type": "boolean",
+                            "description": "Flag determining if the key was missing in assessed outputs",
+                        },
+                        "rationale": {
+                            "type": "string",
+                            "description": "Additional explanation of decision, whenever assessment is controversial",
+                        },
+                    },
+                    "required": ["score", "missing", "rationale"],
+                    "additionalProperties": False,
                 }
                 for key in schema.keys()
             },
@@ -92,7 +109,10 @@ def main(
         try:
             parsed_output = parse_json_markdown(item["answer"])
         except json.JSONDecodeError:
-            results[idx] = dict.fromkeys(schema.keys(), 0)
+            results[idx] = {
+                key: {"score": 0, "missing": False, "rationale": "JSON parsing error"}
+                for key in schema.keys()
+            }
             num_parsing_errors += 1
             continue
 
@@ -100,7 +120,14 @@ def main(
             outputs[idx] = parsed_output
             reference_outputs[idx] = parse_json_markdown(item["gold"])
         else:
-            results[idx] = dict.fromkeys(schema.keys(), 0)
+            results[idx] = {
+                key: {
+                    "score": 0,
+                    "missing": False,
+                    "rationale": "Output is not a valid JSON object",
+                }
+                for key in schema.keys()
+            }
             num_parsing_errors += 1
 
     judge = LLMJudge(structured_llm, max_concurrent_calls=max_concurrent_calls)
@@ -114,7 +141,25 @@ def main(
 
     output_file = predictions_file.with_name(f"llm_as_judge_{judge_model}.json")
 
-    aggregated_results = pd.DataFrame(results.values()).mean(axis=0).to_dict()
+    # Extract scores for aggregation
+    score_data = {}
+    missing_data = {}
+    for result in results.values():
+        for key, evaluation in result.items():
+            if key not in score_data:
+                score_data[key] = []
+                missing_data[key] = []
+            score_data[key].append(evaluation["score"])
+            missing_data[key].append(evaluation["missing"])
+
+    aggregated_results = {
+        key: {
+            "mean_score": sum(scores) / len(scores) if scores else 0,
+            "missing_rate": sum(missing) / len(missing) if missing else 0,
+        }
+        for key, scores in score_data.items()
+        for missing in [missing_data[key]]
+    }
 
     final_results = {
         "stats": {
