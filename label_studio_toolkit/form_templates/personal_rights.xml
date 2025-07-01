@@ -88,6 +88,18 @@
       color: #008080;
     }
 
+    .header-violator {
+      color: #8B008B;
+    }
+
+    .header-location {
+      color: #1E90FF;
+    }
+
+    .header-scale {
+      color: #FF6347;
+    }
+
     .section-basic {
       border: 2px solid #6A5ACD;
       background-color: #EDEDFD;
@@ -116,6 +128,21 @@
     .section-rights {
       border: 2px solid #008080;
       background-color:rgb(240, 255, 255);
+    }
+
+    .section-violator {
+      border: 2px solid #8B008B;
+      background-color: #F8F0FF;
+    }
+
+    .section-location {
+      border: 2px solid #1E90FF;
+      background-color: #F0F8FF;
+    }
+
+    .section-scale {
+      border: 2px solid #FF6347;
+      background-color: #FFF5EE;
     }
   </Style>
 
@@ -157,7 +184,6 @@
                 <Choices name="podstawa_prawna" toName="text" choice="multiple">
                   <Choice value="23 KC" />
                   <Choice value="24 KC" />
-                  <Choice value="448 KC" />
                   <Choice value="Inne" />
                 </Choices>
 
@@ -165,6 +191,98 @@
                 <Header value="Inne Podstawy Prawne" />
                 <Text name="inne_podstawy_prawne_desc" value="Inne podstawy prawne, jeśli wybrano opcję 'Inne' (każdą oddzielnie zatwierdź)" />
                 <TextArea name="inne_podstawy_prawne" toName="text" rows="1" maxSubmissions="20" placeholder="Wpisz inne podstawy prawne, każdą w nowej linii..." />
+              </View>
+            </Panel>
+
+            <!-- Violator Information Section -->
+            <Panel value="Informacje o Naruszającym" className="section-header header-violator">
+              <View className="section section-violator">
+                <!-- Rodzaj Naruszającego -->
+                <Header value="Rodzaj Naruszającego" />
+                <Text name="rodzaj_naruszajacego_desc" value="Kto naruszył dobra osobiste - czy instytucja/firma czy osoba prywatna" />
+                <Choices name="rodzaj_naruszajacego" toName="text" choice="single">
+                  <Choice value="Instytucja/firma" />
+                  <Choice value="Osoba prywatna" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Personal Rights Types Section -->
+            <Panel value="Rodzaje Dóbr Osobistych" className="section-header header-rights">
+              <View className="section section-rights">
+                <!-- Rodzaj Dobra Osobistego -->
+                <Header value="Dobra Osobiste" />
+                <Text name="rodzaj_dobra_osobistego_desc" value="Rodzaj dobra osobistego, które zostało naruszone" />
+                <Choices name="rodzaj_dobra_osobistego" toName="text" choice="multiple">
+                  <Choice value="Zdrowie" />
+                  <Choice value="Wolność" />
+                  <Choice value="Cześć" />
+                  <Choice value="Swoboda sumienia" />
+                  <Choice value="Nazwisko lub pseudonim" />
+                  <Choice value="Wizerunek" />
+                  <Choice value="Tajemnica korespondencji" />
+                  <Choice value="Nietykalność mieszkania" />
+                  <Choice value="Twórczość naukowa, artystyczna, wynalazcza i racjonalizatorska" />
+                  <Choice value="Inne" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Description Section -->
+            <Panel value="Opis Naruszenia" className="section-header header-location">
+              <View className="section section-location">
+                <!-- Opis Naruszenia -->
+                <Header value="Opis Naruszenia" />
+                <Text name="opis_naruszenia_desc" value="Opis naruszenia dobra osobistego np. zacytowanie" />
+                <TextArea name="opis_naruszenia" toName="text" rows="3" placeholder="Opisz szczegóły naruszenia..." />
+              </View>
+            </Panel>
+
+            <!-- Location Section -->
+            <Panel value="Miejsce Naruszenia" className="section-header header-location">
+              <View className="section section-location">
+                <!-- Miejsce Naruszenia -->
+                <Header value="Miejsce Naruszenia" />
+                <Text name="miejsce_naruszenia_desc" value="Jakie było miejsce naruszenia" />
+                <Choices name="miejsce_naruszenia" toName="text" choice="single">
+                  <Choice value="Miejsce publiczne" />
+                  <Choice value="Miejsce prywatne" />
+                  <Choice value="Miejsce pracy" />
+                  <Choice value="W internecie" />
+                </Choices>
+
+                <!-- Naruszenie w mediach społecznościowych -->
+                <Header value="Naruszenie w Mediach Społecznościowych" />
+                <Text name="naruszenie_media_spolecznosciowe_desc" value="Czy naruszenie zaszło na mediach społecznościowych" />
+                <Choices name="naruszenie_media_spolecznosciowe" toName="text" choice="single">
+                  <Choice value="Tak" />
+                  <Choice value="Nie" />
+                </Choices>
+              </View>
+
+            <!-- Digital Platforms Section -->
+              <View className="section section-digital">
+                <!-- Portale Społecznościowe -->
+                <Header value="Portale Społecznościowe" />
+                <Text name="portale_spolecznosciowe_desc" value="Portale społecznościowe lub internetowe, gdzie doszło do naruszenia" />
+                <Choices name="portale_spolecznosciowe" toName="text" choice="multiple">
+                  <Choice value="Facebook" />
+                  <Choice value="Instagram" />
+                  <Choice value="TikTok" />
+                  <Choice value="Linkedin" />
+                  <Choice value="Forum dyskusyjne" />
+                  <Choice value="Inne miejsce w internecie" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Scale Section -->
+            <Panel value="Skala Naruszenia" className="section-header header-scale">
+              <View className="section section-scale">
+                <!-- Skala Naruszenia -->
+                <Header value="Skala Naruszenia" />
+                <Text name="skala_naruszenia_desc" value="Skala 0-5 oceny stopnia naruszenia dóbr osobistych. 0 - brak naruszenia, 1 - bardzo lekkie, 2 - lekkie, 3 - średnie, 4 - mocne, 5 - bardzo mocne" />
+                <Number name="skala_naruszenia" toName="text" min="0" max="5" step="1" placeholder="Wpisz liczbę od 0 do 5" />
               </View>
             </Panel>
 
@@ -194,44 +312,6 @@
                   <Choice value="Przesłuchanie stron" />
                   <Choice value="Dokumenty" />
                   <Choice value="Zrzut ekranu/print screen" />
-                </Choices>
-              </View>
-            </Panel>
-
-            <!-- Digital Platforms Section -->
-            <Panel value="Portale Internetowe" className="section-header header-digital">
-              <View className="section section-digital">
-                <!-- Portale Społecznościowe -->
-                <Header value="Portale Społecznościowe" />
-                <Text name="portale_spolecznosciowe_desc" value="Portale społecznościowe lub internetowe wskazane w sprawie" />
-                <Choices name="portale_spolecznosciowe" toName="text" choice="multiple">
-                  <Choice value="Facebook" />
-                  <Choice value="Instagram" />
-                  <Choice value="TikTok" />
-                  <Choice value="Linkedin" />
-                  <Choice value="Forum dyskusyjne" />
-                  <Choice value="Naruszenie w internecie" />
-                </Choices>
-              </View>
-            </Panel>
-
-            <!-- Personal Rights Types Section -->
-            <Panel value="Rodzaje Dóbr Osobistych" className="section-header header-rights">
-              <View className="section section-rights">
-                <!-- Rodzaj Dobra Osobistego -->
-                <Header value="Dobra Osobiste" />
-                <Text name="rodzaj_dobra_osobistego_desc" value="Rodzaj dobra osobistego, które zostało naruszone" />
-                <Choices name="rodzaj_dobra_osobistego" toName="text" choice="multiple">
-                  <Choice value="Zdrowie" />
-                  <Choice value="Wolność" />
-                  <Choice value="Cześć" />
-                  <Choice value="Swoboda sumienia" />
-                  <Choice value="Nazwisko lub pseudonim" />
-                  <Choice value="Wizerunek" />
-                  <Choice value="Tajemnica korespondencji" />
-                  <Choice value="Nietykalność mieszkania" />
-                  <Choice value="Twórczość naukowa, artystyczna, wynalazcza i racjonalizatorska" />
-                  <Choice value="Inne" />
                 </Choices>
               </View>
             </Panel>
