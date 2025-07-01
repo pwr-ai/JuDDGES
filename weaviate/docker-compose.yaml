@@ -1,6 +1,5 @@
 name: legal_ai
 
-
 services:
   weaviate:
     command:

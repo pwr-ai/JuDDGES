@@ -161,3 +161,7 @@ logs/
 slurm/juddges.sif
 *.sif
 local_notebooks/
+data/datasets/pl/
+data/experiments/
+.claude/settings.local.json
+CLAUDE.md

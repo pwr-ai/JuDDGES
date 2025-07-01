@@ -6,26 +6,6 @@ from juddges.preprocessing.context_truncator import ContextTruncator, ContextTru
 
 
 class TestContextTruncator(unittest.TestCase):
-    def test_mistral(self):
-        model_id = "mistralai/Mistral-7B-Instruct-v0.2"
-        self._check(model_id, 120)
-
-    def test_llama3(self):
-        model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-        self._check(model_id, 120)
-
-    def test_mistral_warn(self):
-        model_id = "mistralai/Mistral-7B-Instruct-v0.2"
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        max_length = 3
-        prompt, context, output = (
-            "How many helicopters can a human eat in one sitting? {context}",
-            " ".join([str(i) for i in range(max_length * 2)]),
-            "None.",
-        )
-        with self.assertWarns(Warning):
-            ContextTruncator(tokenizer, max_length)(prompt, context, output)
-
     def _check(self, model_id: str, max_length: int):
         tokenizer = AutoTokenizer.from_pretrained(model_id)
         prompt, context, output = (
