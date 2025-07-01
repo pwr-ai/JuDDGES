@@ -41,6 +41,9 @@ RUN chmod 1777 /tmp \
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY pyproject.toml .
+COPY juddges/ ./juddges/
+COPY README.md .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install uv && uv pip install --system -e . && \
+    pip install pandas requests pyarrow
