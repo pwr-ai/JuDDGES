@@ -30,6 +30,12 @@ def save_yaml(data: Any, path: Path) -> None:
         yaml.dump(data, f)
 
 
+def load_yaml(config_path: Path) -> dict:
+    """Load YAML configuration file."""
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
+
+
 def sort_dataset_by_input_length(ds: Dataset, field: str) -> tuple[Dataset, list[int]]:
     """Sorts a dataset by the length of a field.
 
