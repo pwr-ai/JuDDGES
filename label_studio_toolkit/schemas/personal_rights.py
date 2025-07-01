@@ -11,7 +11,6 @@ class TakNie(str, Enum):
 class PodstawaPrawna(str, Enum):
     ART_23_KC = "23 KC"
     ART_24_KC = "24 KC"
-    ART_448_KC = "448 KC"
     INNE = "Inne"
 
 
@@ -35,7 +34,7 @@ class PortalInternetowy(str, Enum):
     TIKTOK = "TikTok"
     LINKEDIN = "Linkedin"
     FORUM = "Forum dyskusyjne"
-    INTERNET = "Naruszenie w internecie"
+    INNE = "Inne miejsce w internecie"
 
 
 class DobroOsobiste(str, Enum):
@@ -51,6 +50,18 @@ class DobroOsobiste(str, Enum):
     INNE = "Inne"
 
 
+class MiejsceNaruszenia(str, Enum):
+    PUBLICZNE = "Miejsce publiczne"
+    PRYWATNE = "Miejsce prywatne"
+    PRACY = "Miejsce pracy"
+    INTERNET = "W internecie"
+
+
+class RodzajNaruszajacego(str, Enum):
+    INSTYTUCJA_FIRMA = "Instytucja/firma"
+    OSOBA_PRYWATNA = "Osoba prywatna"
+
+
 class PersonalRightsAnnotation(BaseModel):
     naruszenie_dobr_osobistych: TakNie = Field(
         ..., description="Czy sprawa dotyczy naruszenia dóbr osobistych"
@@ -59,13 +70,34 @@ class PersonalRightsAnnotation(BaseModel):
         None, description="Podstawa prawna – artykuły Kodeksu Cywilnego"
     )
     inne_podstawy_prawne: list[str] | None = Field(
-        None, description="Inne podstawy prawne, jeśli wybrano opcję 'Inne'"
+        None,
+        description="Inne podstawy prawne, jeśli wybrano opcję 'Inne'. Każdy artykuł wprowadź oddzielnie",
     )
-    zadania: list[Zadanie] | None = Field(None, description="Rodzaje żądań występujące w sprawie")
-    dowody: list[Dowod] | None = Field(None, description="Rodzaje dowodów przedstawione w sprawie")
-    portale_spolecznosciowe: list[PortalInternetowy] | None = Field(
-        None, description="Portale społecznościowe lub internetowe wskazane w sprawie"
+    rodzaj_naruszajacego: RodzajNaruszajacego | None = Field(
+        None, description="Kto naruszył dobra osobiste - czy instytucja/firma czy osoba prywatna"
     )
     rodzaj_dobra_osobistego: list[DobroOsobiste] | None = Field(
         None, description="Rodzaj dobra osobistego, które zostało naruszone"
     )
+    opis_naruszenia: str | None = Field(
+        None, description="Opis naruszenia dobra osobistego np. zacytowanie"
+    )
+    miejsce_naruszenia: MiejsceNaruszenia | None = Field(
+        None, description="Jakie było miejsce naruszenia"
+    )
+    naruszenie_media_spolecznosciowe: bool | None = Field(
+        None,
+        description="Czy naruszenie zaszło na mediach społecznościowych. Jeśli niedotyczy pozostaw puste",
+    )
+    portale_spolecznosciowe: list[PortalInternetowy] | None = Field(
+        None,
+        description="Portale społecznościowe lub internetowe, gdzie doszło do naruszenia. Jeśli niedotyczy pozostaw puste",
+    )
+    skala_naruszenia: int | None = Field(
+        None,
+        description="Skala 1-5 oceny stopnia naruszenia dóbr osobistych. 0 - brak naruszenia, 1 - bardzo lekkie, 2 - lekkie, 3 - średnie, 4 - mocne, 5 - bardzo mocne",
+        ge=0,
+        le=5,
+    )
+    zadania: list[Zadanie] | None = Field(None, description="Rodzaje żądań występujące w sprawie")
+    dowody: list[Dowod] | None = Field(None, description="Rodzaje dowodów przedstawione w sprawie")
