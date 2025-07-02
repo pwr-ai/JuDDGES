@@ -1,3 +1,4 @@
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,31 @@ def load_yaml(config_path: Path) -> dict:
     """Load YAML configuration file."""
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
+
+
+def save_json(data: Any, path: Path) -> None:
+    """Saves a dictionary to a JSON file."""
+    with open(path, "w") as f:
+        json.dump(data, f, indent=4)
+
+
+def save_jsonl(data: list[dict], path: Path) -> None:
+    """Saves a list of dictionaries to a JSONL file."""
+    with open(path, "w") as f:
+        for item in data:
+            f.write(json.dumps(item) + "\n")
+
+
+def load_json(path: Path) -> Any:
+    """Loads a JSON file."""
+    with open(path, "r") as f:
+        return json.load(f)
+
+
+def load_jsonl(path: Path) -> list[dict]:
+    """Loads a JSONL file."""
+    with open(path, "r") as f:
+        return [json.loads(line) for line in f]
 
 
 def sort_dataset_by_input_length(ds: Dataset, field: str) -> tuple[Dataset, list[int]]:
