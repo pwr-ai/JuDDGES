@@ -85,7 +85,7 @@ class PersonalRightsAnnotation(BaseModel):
     miejsce_naruszenia: MiejsceNaruszenia | None = Field(
         None, description="Jakie było miejsce naruszenia"
     )
-    naruszenie_media_spolecznosciowe: bool | None = Field(
+    naruszenie_media_spolecznosciowe: TakNie | None = Field(
         None,
         description="Czy naruszenie zaszło na mediach społecznościowych. Jeśli niedotyczy pozostaw puste",
     )
