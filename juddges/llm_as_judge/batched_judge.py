@@ -44,6 +44,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
             "json_schema": {
                 "name": "ScoreEvaluation",
                 "description": "Evaluation scores for each field in the output",
+                "strict": True,
                 "schema": {
                     "type": "object",
                     "properties": {

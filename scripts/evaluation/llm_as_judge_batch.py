@@ -1,0 +1,46 @@
+import os
+from pathlib import Path
+
+import typer
+from dotenv import load_dotenv
+from openai import OpenAI
+
+from juddges.llm_as_judge.batched_judge import BatchedStructuredOutputJudge
+from juddges.utils.misc import save_json
+
+load_dotenv()
+
+API_KEY = os.environ["OPENAI_API_KEY"]
+
+
+def main(
+    action: str = typer.Argument(..., help="Action to perform"),
+    predictions_dir: Path = typer.Argument(..., help="Path to directory with predictions"),
+    judge_model: str = typer.Option(..., help="Name of the LLM model to use"),
+) -> None:
+    """Evaluate predictions using LLM as judge."""
+    client = OpenAI(api_key=API_KEY)
+    judge = BatchedStructuredOutputJudge(
+        client=client,
+        judge_model=judge_model,
+        predictions_dir=predictions_dir,
+    )
+
+    results = None
+    if action == "submit":
+        judge.run_submit_batch_api_pipeline()
+    elif action == "download_and_process_results":
+        results = judge.run_download_and_process_results_pipeline()
+    elif action == "process_results":
+        results = judge.process_batch_api_results(None, None, None)
+    else:
+        raise ValueError(
+            f"Invalid action: {action}; expected one of: submit, download_and_process_results, process_results"
+        )
+
+    if results is not None:
+        save_json(results.model_dump(), judge.output_file)
+
+
+if __name__ == "__main__":
+    typer.run(main)
