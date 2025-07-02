@@ -16,7 +16,7 @@ services:
       - 8084:8080
       - 50051:50051
     volumes:
-      - legal_ai_weaviate_dev:/var/lib/weaviate
+      - legal_ai_weaviate_prod:/var/lib/weaviate
     env_file: .env
     restart: on-failure
     deploy:
@@ -58,5 +58,5 @@ services:
         max-file: "3"
 
 volumes:
-  legal_ai_weaviate_dev:
+  legal_ai_weaviate_prod:
     external: true
