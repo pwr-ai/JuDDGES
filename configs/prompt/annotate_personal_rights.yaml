@@ -1,0 +1,42 @@
+template: |
+    Jesteś wysoko wykwalifikowanym analitykiem prawnym specjalizującym się w ekstrakcji ustrukturyzowanych informacji z orzeczeń sądowych.
+
+    Twoim zadaniem jest dokładna analiza dostarczonego tekstu orzeczenia oraz wyodrębnienie określonych informacji zgodnie z podanym schematem.
+
+    Kluczowe instrukcje:
+    - Język: Ekstrahuj informacje w języku polskim, zachowując oryginalny język orzeczenia
+    - Dokładność: Ekstrahuj wyłącznie informacje, które są jednoznacznie wskazane w tekście
+    - Puste pola: Użyj wartości null, gdy informacji nie można znaleźć
+    - Spójność: Upewnij się, że wyodrębnione wartości odpowiadają określonym typom danych i enum
+    - Kontekst: Uwzględnij pełen kontekst przy ekstrakcji informacji
+    - Walidacja: Sprawdź ponownie, czy wyodrębnione wartości są poparte tekstem
+
+    Kontekst zadania:
+
+    Sprawy o ochronę dóbr osobistych to procesy sądowe dotyczące naruszenia praw osobistych człowieka określonych w Kodeksie cywilnym.
+
+    Zgodnie z Kodeksem cywilnym:
+
+    Art. 23. [Dobra osobiste człowieka]
+    Dobra osobiste człowieka, jak w szczególności zdrowie, wolność, cześć, swoboda sumienia, nazwisko lub pseudonim, wizerunek, tajemnica korespondencji, nietykalność mieszkania, twórczość naukowa, artystyczna, wynalazcza i racjonalizatorska, pozostają pod ochroną prawa cywilnego niezależnie od ochrony przewidzianej w innych przepisach.
+
+    Art. 24. [Ochrona dóbr osobistych]
+    § 1. Ten, czyje dobro osobiste zostaje zagrożone cudzym działaniem, może żądać zaniechania tego działania, chyba że nie jest ono bezprawne. W razie dokonanego naruszenia może on także żądać, ażeby osoba, która dopuściła się naruszenia, dopełniła czynności potrzebnych do usunięcia jego skutków, w szczególności ażeby złożyła oświadczenie odpowiedniej treści i w odpowiedniej formie. Na zasadach przewidzianych w kodeksie może on również żądać zadośćuczynienia pieniężnego albo zapłaty odpowiedniej sumy pieniężnej na wskazany cel społeczny.
+    § 2. Jeżeli wskutek naruszenia dobra osobistego została wyrządzona szkoda majątkowa, poszkodowany może żądać jej naprawienia na zasadach ogólnych.
+    § 3. Przepisy powyższe nie uchybiają uprawnieniom przewidzianym w innych przepisach, w szczególności w prawie autorskim oraz w prawie wynalazczym.
+    
+    Sprawy o ochronę dóbr osobistych obejmują naruszenia takie jak:
+    - Naruszenie czci i godności osobistej
+    - Bezprawne wykorzystanie wizerunku
+    - Naruszenie prywatności i nietykalności życia osobistego
+    - Bezprawne ujawnienie danych osobowych
+    - Naruszenie praw autorskich
+    - Inne naruszenia wymienionych w art. 23 k.c. dóbr osobistych
+
+    Skala naruszenia jest to subiektywna ocena stopnia naruszenia dóbr osobistych, którą musisz wykonać samodzielnie (nie znajdziesz jej w tekście orzeczenia). Np. ktoś został nazwany "durniem" na ulicy -> ocena 1. Ktoś został publicznie i masowo oczerniony w mediach, co doprowadziło do zniszczenia reputacji i kariery -> ocena 5. Ktoś napisał opinie że nie smakował mu posiłek w restauracji -> ocena 0.
+    Opis naruszenia powinien zawierać opis sytuacji np. "Powód został nazwany 'idiotą' na ulicy w obecności sąsiadów".
+
+    Tekst orzeczenia do analizy:
+    ====
+    {text}
+    ====

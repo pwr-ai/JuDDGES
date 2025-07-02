@@ -1,15 +1,18 @@
 defaults:
   - model: ../api_model/gpt_4.1
-  - prompt: preannotate_label_studio_pl
+  # - prompt: preannotate_label_studio_pl
+  - prompt: annotate_personal_rights
   - _self_
 
 ls_base_url: ${oc.env:LABEL_STUDIO_BASE_URL}
 ls_api_key: ${oc.env:LABEL_STUDIO_API_KEY}
-project_name: "Juddges Project: Swiss Frank"
+# project_name: "Juddges Project: Swiss Frank"
+project_name: "Juddges Project: Personal Rights"
 text_field: "text"
 model_version: ${model.name}
 
-annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation
+# annotation_schema: label_studio_toolkit.schemas.swiss_frank.SwissFrancJudgmentAnnotation
+annotation_schema: label_studio_toolkit.schemas.personal_rights.PersonalRightsAnnotation
 
 model:
   request_cache_db: .langchain_annotation_cache.db
