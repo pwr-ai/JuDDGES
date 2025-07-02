@@ -1,69 +1,76 @@
 # Weaviate Docker Setup
 
-This directory contains Docker configuration for running Weaviate with transformer models for vector search in the JuDDGES project.
+This directory contains the Docker configuration for running Weaviate vector database with custom transformer models for the JuDDGES legal AI project.
 
-## Prerequisites
+## Quick Start
 
-- Docker and Docker Compose installed
-- Sufficient system resources (see deployment configuration in docker-compose.yaml)
+1. **Setup environment variables**:
+   ```bash
+   cp example.env .env
+   # Edit .env with your configuration
+   ```
 
-## Environment Setup
+2. **Create Docker volumes and start services**:
+   ```bash
+   ./setup_docker.sh
+   ```
 
-1. Create a `.env` file in this directory with the following variables:
+3. **Or manually**:
+   ```bash
+   docker volume create legal_ai_weaviate_prod
+   docker compose up -d
+   ```
 
-```
-# Weaviate settings
-QUERY_DEFAULTS_LIMIT=20
-AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
-PERSISTENCE_DATA_PATH=/var/lib/weaviate
-DEFAULT_VECTORIZER_MODULE=text2vec-transformers
-ENABLE_MODULES=text2vec-transformers
-TRANSFORMERS_INFERENCE_API=http://t2v-transformers:8080
-CLUSTER_HOSTNAME=node1
+## Configuration
 
-# Model settings
-MODEL_ENV=sdadas/mmlw-roberta-large
-```
+### Environment Variables (.env)
 
-2. Prepare the external volume:
+Copy `example.env` to `.env` and configure:
 
+- `AUTHENTICATION_APIKEY_ALLOWED_KEYS`: API key for authentication
+- `AUTHENTICATION_APIKEY_USERS`: Username for API access
+- `MODEL_NAME`: Transformer model name (e.g., `sdadas/mmlw-roberta-large`)
+- `ENABLE_CUDA`: Set to `1` to enable GPU acceleration
+
+### Services
+
+- **weaviate**: Main vector database (port 8084)
+- **t2v-transformers**: Custom transformer service for embeddings
+
+### Volumes
+
+- `legal_ai_weaviate_prod`: External volume for persistent data storage
+
+## Usage
+
+### Start Services
 ```bash
-docker volume create legal_ai_weaviate
+docker compose up -d
 ```
 
-## Building and Running
-
-Build and start the containers:
-
+### Stop Services
 ```bash
-docker-compose up -d
+docker compose down
 ```
 
-To stop the containers:
-
+### View Logs
 ```bash
-docker-compose down
+docker compose logs -f weaviate
+docker compose logs -f t2v-transformers
 ```
 
-## Accessing Weaviate
+### Access Weaviate
+- **API**: http://localhost:8084
+- **Console**: http://localhost:8084/v1/meta
 
-Once running, Weaviate will be accessible at:
-- http://localhost:8084/v1
+## Resource Limits
 
-## Customizing the Transformer Model
-
-The transformer model is specified in the Dockerfile. To use a different model:
-
-1. Edit `hf_transformers.dockerfile` to change the model
-2. Update the MODEL_ENV in your `.env` file
-3. Rebuild the containers:
-
-```bash
-docker-compose build --no-cache
-docker-compose up -d
-```
+- **Weaviate**: 25 CPUs, 60GB RAM
+- **Transformers**: 8 CPUs, 16GB RAM
 
 ## Troubleshooting
 
-- If you encounter memory issues, adjust the resource limits in the docker-compose.yaml file
-- Check logs with `docker-compose logs weaviate` or `docker-compose logs t2v-transformers`
+1. **Volume issues**: Run `./setup_docker.sh` to create required volumes
+2. **GPU not detected**: Ensure `ENABLE_CUDA=1` in `.env` and Docker supports GPU
+3. **Authentication errors**: Check API key and user configuration in `.env`
+4. **Memory issues**: Adjust resource limits in `docker-compose.yaml` if needed
