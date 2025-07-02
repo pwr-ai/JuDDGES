@@ -139,7 +139,6 @@ class StructuredOutputJudgeBase:
     def structured_response_schema_from_extraction_schema(self) -> dict[str, Any]:
         return {
             "name": "ScoreEvaluation",
-            "type": "json_schema",
             "description": "Evaluation scores for each field in the output",
             "parameters": {
                 "type": "object",
@@ -168,6 +167,7 @@ class StructuredOutputJudgeBase:
         self.judge_dir.mkdir(parents=True, exist_ok=True)
 
     def load_predictions(self) -> ParsedPredictions:
+        # todo: extract path management and pred loading to injected class
         with open(self.predictions_file) as f:
             preds = json.load(f)
         if not all("answer" in pred_item and "gold" in pred_item for pred_item in preds):
@@ -225,3 +225,23 @@ class StructuredOutputJudgeBase:
 
     def get_zero_scores(self) -> dict[str, Any]:
         return dict.fromkeys(self.schema.keys(), 0.0)
+
+    # todo: move to child class
+    def merge_judge_results_with_failed_items(
+        self,
+        parsed_preds: ParsedPredictions,
+        eval_results: dict[int, ItemEvalResult],
+    ) -> EvalResults:
+        results = []
+        for idx in range(parsed_preds.num_items):
+            try:
+                res = eval_results[idx]
+            except KeyError:
+                res = ItemEvalResult(
+                    status="parsing_error",
+                    error=parsed_preds.errors[idx],
+                    result=self.get_zero_scores(),
+                )
+            results.append(res)
+
+        return EvalResults(results=results, ie_schema=self.schema)

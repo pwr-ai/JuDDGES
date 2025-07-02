@@ -50,19 +50,7 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
         )
         eval_results = {idx: res for idx, res in zip(dataset_messages.keys(), results_list)}
 
-        results = []
-        for idx in range(parsed_preds.num_items):
-            try:
-                res = eval_results[idx]
-            except KeyError:
-                res = ItemEvalResult(
-                    status="parsing_error",
-                    error=parsed_preds.errors[idx],
-                    result=self.get_zero_scores(),
-                )
-            results.append(res)
-
-        return EvalResults(results=results, ie_schema=self.schema)
+        return self.merge_judge_results_with_failed_items(parsed_preds, eval_results)
 
     async def evaluate_single_item(
         self,
