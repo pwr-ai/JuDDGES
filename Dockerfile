@@ -26,9 +26,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists \
     && rm -rf /tmp
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH=$PYTHONPATH:/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 RUN chmod 1777 /tmp \
     && sh -c "$(wget --progress=dot:giga -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
@@ -43,7 +43,8 @@ WORKDIR /app
 
 COPY pyproject.toml .
 COPY juddges/ ./juddges/
+COPY scripts/ ./scripts/
 COPY README.md .
 
-RUN pip install uv && uv pip install --system -e . && \
-    pip install pandas requests pyarrow
+RUN pip install uv && \
+    uv pip install --system -e .
