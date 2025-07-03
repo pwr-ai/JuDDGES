@@ -5,6 +5,23 @@ from pydantic import BaseModel
 from tqdm import tqdm
 
 
+def sanitize_prediction_data(data):
+    """Recursively sanitize data to remove null bytes and problematic characters."""
+    if isinstance(data, str):
+        # Remove null bytes and other control characters that can cause JSON/DB issues
+        sanitized = data.replace("\x00", "")  # Remove null bytes
+        sanitized = sanitized.replace("\ufffd", "")  # Remove replacement characters
+        # Remove other problematic control characters except common whitespace
+        sanitized = "".join(char for char in sanitized if ord(char) >= 32 or char in "\t\n\r")
+        return sanitized
+    elif isinstance(data, list):
+        return [sanitize_prediction_data(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: sanitize_prediction_data(value) for key, value in data.items()}
+    else:
+        return data
+
+
 class LabelStudioClient:
     def __init__(self, base_url: str, api_key: str, project_name: str) -> None:
         self.ls = LabelStudio(base_url=base_url, api_key=api_key)
@@ -32,7 +49,10 @@ class LabelStudioClient:
 
     def create_prediction(self, prediction: BaseModel, model_version: str) -> PredictionValue:
         prediction_result = []
-        for control_key, control_value in prediction.model_dump().items():
+        # Sanitize the prediction data before processing
+        prediction_data = sanitize_prediction_data(prediction.model_dump())
+
+        for control_key, control_value in prediction_data.items():
             if control_value is None:
                 continue
             control = self.label_interface.get_control(control_key)
@@ -42,7 +62,9 @@ class LabelStudioClient:
         return prediction_value
 
     def push_prediction(self, task_id: int, prediction: PredictionValue) -> None:
-        self.ls.predictions.create(task=task_id, **prediction.model_dump())  # type: ignore
+        # Sanitize the prediction data before sending to Label Studio
+        prediction_dict = sanitize_prediction_data(prediction.model_dump())
+        self.ls.predictions.create(task=task_id, **prediction_dict)  # type: ignore
 
     def _get_project(self, project_name: str) -> Project | None:
         projects = [p for p in self.ls.projects.list() if p.title == project_name]
