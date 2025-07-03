@@ -28,6 +28,9 @@ class DatasetConfig:
     chunk_strategy: str = "recursive"  # How to chunk documents
     max_chunk_size: int = 1000
     chunk_overlap: int = 200
+    embedding_path: Optional[str] = None  # Path to pre-computed embeddings
+    num_proc: Optional[int] = None  # Number of processes for parallel processing
+    batch_size: int = 1000  # Batch size for dataset operations
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

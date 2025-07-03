@@ -1,5 +1,5 @@
 defaults:
-  - embedding_model: sdadas/mmlw-roberta-large
+  - embedding_model: mmlw-roberta-large
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled

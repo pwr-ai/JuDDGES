@@ -56,7 +56,17 @@ class RobustDataConverter:
         self, batch: Dict[str, List[Any]], config: DatasetConfig
     ) -> ConversionResult:
         """Convert a batch of data according to dataset configuration."""
-        logger.debug(f"Converting batch of {len(batch.get('document_id', []))} rows")
+        if "document_id" in batch:
+            # Ensure document_id is a list for consistency
+            logger.debug(f"Converting batch of {len(batch.get('document_id', []))} rows")
+        elif "judgment_id" in batch:
+            logger.debug(
+                f"Converting batch of {len(batch.get('judgment_id', []))} rows using judgment_id"
+            )
+        elif "id" in batch:
+            logger.debug(f"Converting batch of {len(batch.get('id', []))} rows using id")
+        else:
+            raise Exception("Batch must contain 'document_id', 'judgment_id', or 'id' field")
 
         converted_batch = {}
         all_errors = []

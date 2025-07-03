@@ -3,8 +3,10 @@ Universal dataset processor for handling any HuggingFace dataset.
 """
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import numpy as np
 from datasets import Dataset, load_dataset
 from loguru import logger
 
@@ -157,9 +159,17 @@ class UniversalDatasetProcessor:
                     processing_time_seconds=time.time() - start_time,
                 )
 
-            # Load the full dataset
-            logger.info(f"Loading full dataset: {dataset_name}")
-            dataset = self._load_full_dataset(dataset_name)
+            # Load the full dataset (with max_documents limit if specified)
+            max_docs = (
+                ingest_config.max_documents
+                if ingest_config and ingest_config.max_documents
+                else None
+            )
+            if max_docs:
+                logger.info(f"Loading dataset: {dataset_name} (limited to {max_docs} documents)")
+            else:
+                logger.info(f"Loading full dataset: {dataset_name}")
+            dataset = self._load_full_dataset(dataset_name, max_documents=max_docs)
 
             # Process the dataset
             result = self._process_full_dataset(dataset, config, ingest_config, create_embeddings)
@@ -205,9 +215,12 @@ class UniversalDatasetProcessor:
             # Fallback to direct loading
             return load_dataset(dataset_name, split=f"train[:{sample_size}]")
 
-    def _load_full_dataset(self, dataset_name: str) -> Dataset:
-        """Load the complete dataset."""
-        return load_dataset(dataset_name, split="train")
+    def _load_full_dataset(self, dataset_name: str, max_documents: Optional[int] = None) -> Dataset:
+        """Load the complete dataset, optionally limited to max_documents."""
+        if max_documents:
+            return load_dataset(dataset_name, split=f"train[:{max_documents}]")
+        else:
+            return load_dataset(dataset_name, split="train")
 
     def _get_dataset_size(self, dataset_name: str) -> int:
         """Get the total size of a dataset efficiently."""
@@ -362,9 +375,7 @@ class UniversalDatasetProcessor:
         embeddings_dataset = self._create_embeddings(converted_dataset, config)
 
         # Ingest to Weaviate
-        ingestion_result = self._ingest_to_weaviate(
-            converted_dataset, embeddings_dataset, config, ingest_config
-        )
+        ingestion_result = self._ingest_to_weaviate(embeddings_dataset, config, ingest_config)
 
         return ingestion_result
 
@@ -380,32 +391,115 @@ class UniversalDatasetProcessor:
 
         # Apply conversion in batches
         converted_dataset = dataset.map(
-            convert_batch, batched=True, batch_size=1000, desc="Converting dataset"
+            convert_batch,
+            batched=True,
+            batch_size=config.batch_size,
+            desc="Converting dataset",
+            num_proc=config.num_proc,
         )
 
         return converted_dataset
 
     def _create_embeddings(self, dataset: Dataset, config: DatasetConfig) -> Dataset:
-        """Create embeddings for the dataset (placeholder for integration)."""
+        """Create embeddings for the dataset or load pre-computed ones."""
         logger.info("Creating embeddings for dataset")
 
-        # This is a placeholder - in the real implementation, this would:
-        # 1. Chunk the documents according to config.chunk_strategy
-        # 2. Create embeddings using the specified embedding model
-        # 3. Return both document-level and chunk-level embeddings
+        # Check if pre-computed embeddings path is specified in config
+        if config.embedding_path:
+            embeddings_path = Path(config.embedding_path)
+            if embeddings_path.exists():
+                logger.info(f"Loading pre-computed embeddings from {embeddings_path}")
+                try:
+                    # Load the embeddings dataset from parquet files
+                    # The embeddings are saved as weighted_avg_embeddings_{i}.parquet files
+                    embeddings_dataset = load_dataset(
+                        "parquet", data_dir=str(embeddings_path), split="train"
+                    )
 
-        # For now, create mock embeddings
+                    # Determine the document ID column name in embeddings
+                    embedding_columns = embeddings_dataset.column_names
+                    doc_id_col = (
+                        "document_id" if "document_id" in embedding_columns else "judgment_id"
+                    )
+
+                    # Rename the document ID column in embeddings to match the main dataset if needed
+                    if doc_id_col != "document_id":
+                        embeddings_dataset = embeddings_dataset.rename_column(
+                            doc_id_col, "document_id"
+                        )
+
+                    logger.info(
+                        f"Dataset has {len(dataset)} documents, embeddings have {len(embeddings_dataset)} entries"
+                    )
+
+                    # Filter embeddings if there are more embeddings than documents in dataset
+                    if len(embeddings_dataset) > len(dataset):
+                        doc_ids_needed = set(dataset["document_id"])
+                        logger.info(
+                            f"Filtering embeddings to only include {len(doc_ids_needed)} needed documents"
+                        )
+
+                        embeddings_dataset = embeddings_dataset.filter(
+                            lambda x: x["document_id"] in doc_ids_needed,
+                            desc="Filtering embeddings by document_id",
+                            num_proc=config.num_proc,
+                        )
+                        logger.info(
+                            f"Filtered embeddings dataset to {len(embeddings_dataset)} entries"
+                        )
+
+                    # Create document_id to embedding mapping
+                    doc_id_to_embedding = {
+                        row["document_id"]: row["embedding"] for row in embeddings_dataset
+                    }
+
+                    def add_embeddings_vectorized(examples):
+                        embeddings = []
+                        for doc_id in examples["document_id"]:
+                            if doc_id in doc_id_to_embedding:
+                                embeddings.append(doc_id_to_embedding[doc_id])
+                            else:
+                                logger.warning(f"No embedding found for document_id: {doc_id}")
+                                embeddings.append([0.1] * 768)
+                        examples["embedding"] = embeddings
+                        return examples
+
+                    result_dataset = dataset.map(
+                        add_embeddings_vectorized,
+                        batched=True,
+                        batch_size=config.batch_size,
+                        num_proc=config.num_proc,
+                    )
+                    logger.info(
+                        f"Successfully loaded pre-computed embeddings for {len(result_dataset)} documents"
+                    )
+                    return result_dataset
+
+                except Exception as e:
+                    logger.error(f"Failed to load pre-computed embeddings: {e}")
+                    logger.info("Falling back to mock embeddings")
+            else:
+                logger.warning(f"Embedding path specified but doesn't exist: {embeddings_path}")
+                logger.info("Falling back to mock embeddings")
+
+        # Fallback to mock embeddings if no pre-computed ones exist
+        logger.info("No pre-computed embeddings found, using mock embeddings")
+
         def add_mock_embeddings(batch):
             batch_size = len(batch["document_id"])
             # Mock 768-dimensional embeddings
             batch["embedding"] = [[0.1] * 768 for _ in range(batch_size)]
             return batch
 
-        return dataset.map(add_mock_embeddings, batched=True)
+        return dataset.map(
+            add_mock_embeddings,
+            batched=True,
+            batch_size=config.batch_size,
+            num_proc=config.num_proc,
+        )
 
     def _ingest_to_weaviate(
         self,
-        dataset: Dataset,
         embeddings_dataset: Dataset,
         config: DatasetConfig,
         ingest_config: Optional[IngestConfig],
@@ -423,20 +517,36 @@ class UniversalDatasetProcessor:
 
         try:
             with WeaviateLegalDocumentsDatabase() as db:
-                # Create collections with adaptive schema
-                schema_properties = self.schema_adapter.create_adaptive_schema(config)
-                # Note: In real implementation, you'd update the database schema here
+                # Ensure schema exists and is up to date
+                logger.info("Checking and updating Weaviate schema")
+                try:
+                    # Get sample data for schema creation
+                    sample_data = embeddings_dataset[0] if len(embeddings_dataset) > 0 else {}
+                    schema_properties = self.schema_adapter.create_adaptive_schema(config, sample_data)
+                    
+                    # Ensure collections exist in Weaviate
+                    db.create_collections()
+                    logger.info("Schema validation completed")
+                except Exception as schema_error:
+                    logger.error(f"Schema creation/validation failed: {schema_error}")
+                    raise
 
                 # Ingest documents
+                logger.info(f"Starting document ingestion for {embeddings_dataset.num_rows} documents")
                 doc_ingester = DocumentIngester(db=db, config=ingest_config)
-                doc_ingester.ingest(dataset, embeddings_dataset)
-                ingested_docs = dataset.num_rows
+                doc_ingester.ingest(embeddings_dataset)
+                ingested_docs = embeddings_dataset.num_rows
+                logger.info(f"Successfully ingested {ingested_docs} documents")
 
                 # Create and ingest chunks (if embeddings were created)
                 if "chunk_text" in embeddings_dataset.column_names:
+                    logger.info("Starting chunk ingestion")
                     chunk_ingester = ChunkIngester(db=db, config=ingest_config)
-                    chunk_ingester.ingest(dataset, embeddings_dataset)
+                    chunk_ingester.ingest(embeddings_dataset)
                     ingested_chunks = embeddings_dataset.num_rows
+                    logger.info(f"Successfully ingested {ingested_chunks} chunks")
+                else:
+                    logger.info("No chunk_text column found, skipping chunk ingestion")
 
         except Exception as e:
             error_msg = f"Ingestion failed: {e}"
@@ -446,8 +556,8 @@ class UniversalDatasetProcessor:
         return ProcessResult(
             success=len(errors) == 0,
             dataset_name=config.name,
-            total_rows=dataset.num_rows,
-            processed_rows=dataset.num_rows,
+            total_rows=embeddings_dataset.num_rows,
+            processed_rows=embeddings_dataset.num_rows,
             errors=errors,
             warnings=warnings,
             ingested_documents=ingested_docs,
