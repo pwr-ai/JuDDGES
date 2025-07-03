@@ -124,6 +124,7 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     truncate_context: bool
     generate_kwargs: dict[str, Any] = Field(default_factory=dict)
     random_seed: int
+    parallel: Literal["tensor", "pipeline"] | None = None
 
     @property
     def predictions_file(self) -> Path:

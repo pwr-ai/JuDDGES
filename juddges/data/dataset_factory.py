@@ -11,6 +11,12 @@ def get_dataset(dataset_name_or_path: str | Path, split: str | None) -> Dataset:
             data_files={"train": "train.json", "test": "test.json", "annotated": "annotated.json"},
             split=split,
         )
+    elif dataset_name_or_path == "data/datasets/pl/personal_rights":
+        return load_dataset(
+            dataset_name_or_path,
+            data_files={"train": "train.json"},
+            split=split,
+        )
     elif dataset_name_or_path == "data/datasets/en/en_appealcourt_coded":
         return load_dataset(
             dataset_name_or_path,

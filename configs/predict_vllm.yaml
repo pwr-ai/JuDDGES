@@ -27,6 +27,7 @@ generate_kwargs:
 split: ???
 random_seed: ???
 max_model_len: null # by default inferred from model config, but sometimes rope scaling is advised anyway
+parallel: null # either 'tensor' or 'pipeline' (former for DDP-like, latter for pipeline parallelism)
 
 hydra:
   output_subdir: null
