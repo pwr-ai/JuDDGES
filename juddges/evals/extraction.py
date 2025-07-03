@@ -1,10 +1,8 @@
-import json
 from collections import defaultdict
 from typing import Any
 
-from langchain_core.utils.json import parse_json_markdown
 from loguru import logger
-from tqdm import tqdm
+from tqdm import trange
 
 from juddges.evals.metrics import (
     evaluate_date,
@@ -13,6 +11,7 @@ from juddges.evals.metrics import (
     evaluate_number,
     evaluate_string_rouge,
 )
+from juddges.llm_as_judge.data_model import ParsedPredictions
 
 
 class ExtractionEvaluator:
@@ -29,33 +28,27 @@ class ExtractionEvaluator:
             if props["type"] == "enum"
         }
 
-    def run(self, predictions: list[dict[str, Any]]) -> dict[str, Any]:
+    def run(self, parsed_preds: ParsedPredictions) -> dict[str, Any]:
         """Runs the evaluation over a list of predictions."""
         per_record_results = []
         parsing_errors = 0
-
-        filtered_predictions = [
-            (idx, p) for idx, p in enumerate(predictions) if p["finish_reason"] == "stop"
-        ]
-
-        for idx, pred in tqdm(filtered_predictions, desc="Evaluating records"):
+        for idx in trange(parsed_preds.num_items, desc="Evaluating records"):
             try:
-                answer = parse_json_markdown(pred["answer"])
-                gold = parse_json_markdown(pred["gold"])
-
-                record_result = self.evaluate_record(answer, gold)
+                pred_item = parsed_preds.predictions[idx]
+            except KeyError:
+                parsing_errors += 1
+                per_record_results.append(parsed_preds.errors[idx])
+                continue
+            else:
+                gold_item = parsed_preds.gold[idx]
+                record_result = self.evaluate_record(pred_item, gold_item)
                 per_record_results.append({"index": idx, **record_result})
 
-            except (json.JSONDecodeError, ValueError) as e:
-                logger.error(f"Error parsing record {idx}: {e}")
-                parsing_errors += 1
-                per_record_results.append({"index": idx, "error": str(e)})
-
         return self.aggregate_results(
-            per_record_results,
-            len(predictions),
-            len(filtered_predictions),
-            parsing_errors,
+            per_record_results=per_record_results,
+            total_records=len(parsed_preds.predictions),
+            filtered_records=len(parsed_preds.errors),
+            parsing_errors=parsing_errors,
         )
 
     def evaluate_record(
@@ -197,7 +190,7 @@ class ExtractionEvaluator:
             return "enum"
         elif properties.get("type") == "list":
             return "list"
-        elif properties.get("type") == "number":
+        elif properties.get("type") in ["number", "integer"]:
             return "number"
         elif properties.get("type") == "string":
             return "string"
@@ -208,6 +201,13 @@ class ExtractionEvaluator:
         """Determines the choices of a field based on schema properties."""
         choices = self.schema[name]["choices"]
         assert isinstance(choices, list) and len(choices) > 0
-        if self.schema[name]["required"] is False:
+
+        try:
+            required = self.schema[name]["required"]
+        except KeyError:
+            logger.warning(f"Field {name} has no required property, assuming it is required")
+            required = True
+
+        if not required:
             choices = [None] + choices
         return choices
