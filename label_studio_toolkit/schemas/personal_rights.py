@@ -2,6 +2,8 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
+from label_studio_toolkit.schemas.utils import SchemaUtilsMixin
+
 
 class TakNie(str, Enum):
     TAK = "Tak"
@@ -62,7 +64,7 @@ class RodzajNaruszajacego(str, Enum):
     OSOBA_PRYWATNA = "Osoba prywatna"
 
 
-class PersonalRightsAnnotation(BaseModel):
+class PersonalRightsAnnotation(BaseModel, SchemaUtilsMixin):
     naruszenie_dobr_osobistych: TakNie = Field(
         ..., description="Czy sprawa dotyczy naruszenia dóbr osobistych"
     )

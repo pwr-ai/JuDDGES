@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Any
 
 from langchain.prompts import PromptTemplate
 from langchain_core.language_models import BaseChatModel
@@ -12,7 +11,7 @@ class Annotator(ABC):
         self.schema = schema
 
     @abstractmethod
-    def annotate(self, input_data: dict[str, Any]) -> BaseModel:
+    def annotate(self, input_data: str) -> BaseModel:
         pass
 
 
@@ -27,12 +26,12 @@ class LangChainAnnotator(Annotator):
         structured_llm = self.llm.with_structured_output(self.schema, method=method)
         self.chain = self.prompt_template | structured_llm
 
-    def annotate(self, input_data: dict[str, Any]) -> BaseModel:
+    def annotate(self, input_data: str) -> BaseModel:
         result = self.chain.invoke({"text": input_data})
         assert isinstance(result, self.schema)
         return result
 
-    async def async_annotate(self, input_data: dict[str, Any], language: str) -> BaseModel:
+    async def async_annotate(self, input_data: str, language: str) -> BaseModel:
         result = await self.chain.ainvoke({"text": input_data, "language": language})
         assert isinstance(result, self.schema)
         return result
