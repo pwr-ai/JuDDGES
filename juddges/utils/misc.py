@@ -25,6 +25,12 @@ def parse_yaml(text: str) -> Any:
     return yaml.safe_load(yaml_str)
 
 
+def save_yaml(data: Any, path: Path) -> None:
+    """Saves a dictionary to a YAML file."""
+    with open(path, "w") as f:
+        yaml.dump(data, f)
+
+
 def sort_dataset_by_input_length(ds: Dataset, field: str) -> tuple[Dataset, list[int]]:
     """Sorts a dataset by the length of a field.
 

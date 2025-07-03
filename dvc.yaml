@@ -17,23 +17,6 @@ stages:
       - data/datasets/pl/pl-court-raw/README.md
       - data/datasets/pl/pl-court-raw/README_files/
 
-  build_instruct_dataset_pl:
-    cmd: >-
-      PYTHONPATH=. python scripts/dataset/build_instruct_dataset_pl.py
-      --dataset-dir data/datasets/pl/raw
-      --repo-id JuDDGES/pl-court-instruct
-    deps:
-      - data/datasets/pl/raw
-      - scripts/dataset/build_instruct_dataset_pl.py
-    desc: "Build instriction dataset (set NUM_JOBS envar) with labels extracted from API/text"
-
-  build_instruct_dataset_en:
-    cmd: >-
-      PYTHONPATH=. python scripts/dataset/build_instruct_dataset_en.py
-      --repo-id JuDDGES/en-court-instruct
-    deps:
-      - scripts/dataset/build_instruct_dataset_en.py
-
   embed:
     matrix:
       model:
@@ -71,220 +54,329 @@ stages:
       - data/datasets/pl/graph/data
       - data/datasets/pl/graph/metadata.yaml
 
-  build_instruct_frankowe_dataset_pl:
+  build_swiss_franc_loans_instruct_dataset:
     cmd: >-
-      PYTHONPATH=. python scripts/dataset/build_instruct_frankowe_dataset_pl.py
-      --train-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
-      --test-ds-path data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
-      --output-dir data/datasets/pl/sprawy_frankowe
+      PYTHONPATH=. python scripts/dataset/build_swiss_franc_loans_instruct_dataset.py
+      --dataset-source-path data/datasets/pl/swiss_franc_loans_source/
+      --output-dir data/datasets/pl/swiss_franc_loans
       --tokenizer-name meta-llama/Llama-3.1-8B-Instruct
+      --schema-path configs/ie_schema/swiss_franc_loans.yaml
       --threshold-tokens 64_000
     deps:
-      - scripts/dataset/build_instruct_frankowe_dataset_pl.py
-      - data/analysis/sprawy_frankowe/extractions_df_2024-12-04.pkl
-      - data/analysis/sprawy_frankowe/extractions_df_2024-12-11_test.pkl
+      - scripts/dataset/build_swiss_franc_loans_instruct_dataset.py
+      - configs/ie_schema/swiss_franc_loans.yaml
+      - data/datasets/pl/swiss_franc_loans_source/
     outs:
-      - data/datasets/pl/sprawy_frankowe/train.jsonl
-      - data/datasets/pl/sprawy_frankowe/test.jsonl
-      - data/datasets/pl/sprawy_frankowe/dataset_info.json
+      - data/datasets/pl/swiss_franc_loans/train.json
+      - data/datasets/pl/swiss_franc_loans/test.json
+      - data/datasets/pl/swiss_franc_loans/annotated.json
+      - data/datasets/pl/swiss_franc_loans/dataset_info.json
+
+  build_en_appealcourt_coded_dataset:
+    cmd: >-
+      PYTHONPATH=. python scripts/dataset/build_en_appealcourt_coded_dataset.py
+      --target-dir data/datasets/en/en_appealcourt_coded
+      --schema-file configs/ie_schema/en_appealcourt.yaml
+    deps:
+      - scripts/dataset/build_en_appealcourt_coded_dataset.py
+      - configs/ie_schema/en_appealcourt.yaml
+      - data/datasets/en/en_appealcourt_coded_source/
+    outs:
+      - data/datasets/en/en_appealcourt_coded/test.json
+      - data/datasets/en/en_appealcourt_coded/annotated.json
+      - data/datasets/en/en_appealcourt_coded/dataset_info.json
 
   ### ---------------------------- Fine-tuning ---------------------------- ###
   sft:
     matrix: &sft_models
-      model_dataset:
-        - dataset: pl-court-frankowe-instruct
-          model: llama_3.1_8b_instruct
-        - dataset: pl-court-frankowe-instruct
-          model: llama_3.2_3b_instruct
-        - dataset: pl-court-frankowe-instruct
-          model: mistral_nemo_instruct_2407
-        - dataset: pl-court-frankowe-instruct
-          model: pllum_12b_instruct
-        - dataset: pl-court-frankowe-instruct
-          model: phi_4
-        - dataset: en-appealcourt-coded-instruct
-          model: llama_3.1_8b_instruct
-        - dataset: en-appealcourt-coded-instruct
-          model: mistral_nemo_instruct_2407
+      llm_dataset:
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: pllum_12b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: bielik_11b_v23_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
     cmd: >-
       PYTHONPATH=. python scripts/sft/fine_tune_deepspeed.py
-      dataset=${item.model_dataset.dataset}
-      model=${item.model_dataset.model}
+      dataset=${item.llm_dataset.dataset}
+      llm=${item.llm_dataset.llm}
+      prompt=${item.llm_dataset.prompt}
+      ie_schema=${item.llm_dataset.ie_schema}
     deps:
       - scripts/sft/fine_tune_deepspeed.py
       - configs/peft_fine_tuning.yaml
-      - configs/model/${item.model_dataset.model}.yaml
+      - configs/llm/${item.llm_dataset.llm}.yaml
     outs:
-      - data/experiments/peft-fine-tune/${item.model_dataset.model}/${item.model_dataset.dataset}/
+      - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
+
+  ### ---------------------------- Evaluate with human annotations ---------------------------- ###
+  convert_splits_to_predcictions:
+    matrix:
+      datasets_outputs:
+        - dataset: data/datasets/pl/swiss_franc_loans
+          output_dir: data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/
+        - dataset: data/datasets/en/en_appealcourt_coded
+          output_dir: data/experiments/predict/raw/en_appealcourt_coded/test/gpt_4.1/
+    cmd: >-
+      PYTHONPATH=. python scripts/dataset/convert_splits_to_eval_data.py
+      --dataset-name-or-path ${item.datasets_outputs.dataset}
+      --output-dir ${item.datasets_outputs.output_dir}
+    deps:
+      - scripts/dataset/convert_splits_to_eval_data.py
+      - ${item.datasets_outputs.dataset}
+    outs:
+      - ${item.datasets_outputs.output_dir}/predictions.json
 
   ### ---------------------------- Prediction ---------------------------- ###
-  predict:
+  predict_raw_vllm:
+    matrix:
+      llm_dataset:
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: pllum_12b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: bielik_11b_v23_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        ###
+        - dataset: en_appealcourt_coded
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+        - dataset: en_appealcourt_coded
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+        - dataset: en_appealcourt_coded
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+      seed: ${seeds}
+      split:
+        - annotated
+    cmd: >-
+      PYTHONPATH=. python scripts/sft/predict_vllm.py
+      dataset=${item.llm_dataset.dataset}
+      llm=${item.llm_dataset.llm}
+      prompt=${item.llm_dataset.prompt}
+      ie_schema=${item.llm_dataset.ie_schema}
+      random_seed=${item.seed}
+      split=${item.split}
+      output_dir=data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
+    deps:
+      - scripts/sft/predict_vllm.py
+      - configs/predict.yaml
+      - configs/llm/${item.llm_dataset.llm}.yaml
+      - configs/prompt/${item.llm_dataset.prompt}.yaml
+      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
+    outs:
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
+
+  predict_swiss_franc_loans_on_fine_tuned_vllm:
     matrix:
       <<: *sft_models
       seed: ${seeds}
+      split:
+        - annotated
     cmd: >-
-      PYTHONPATH=. python scripts/sft/predict.py
-      dataset=${item.model_dataset.dataset}
-      model=${item.model_dataset.model}
+      PYTHONPATH=. python scripts/sft/predict_vllm.py
+      dataset=${item.llm_dataset.dataset}
+      llm=${item.llm_dataset.llm}
+      prompt=${item.llm_dataset.prompt}
+      ie_schema=${item.llm_dataset.ie_schema}
       random_seed=${item.seed}
+      split=${item.split}
+      llm.adapter_path=data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
+      output_dir=data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
     deps:
-      - scripts/sft/predict.py
+      - scripts/sft/predict_vllm.py
       - configs/predict.yaml
-      - configs/model/${item.model_dataset.model}.yaml
+      - configs/llm/${item.llm_dataset.llm}.yaml
+      - configs/prompt/${item.llm_dataset.prompt}.yaml
+      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
+      - data/experiments/peft-fine-tune/${item.llm_dataset.llm}/${item.llm_dataset.dataset}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/
     outs:
-      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/dataset.json
+      - data/experiments/predict/fine_tuned_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/config.yaml
 
-  predict_on_fine_tuned:
-    matrix:
-      model_dataset:
-        - dataset: pl-court-frankowe-instruct
-          model: llama_3.2_3b_instruct
-      seed: ${seeds}
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/predict.py
-      dataset=${item.model_dataset.dataset}
-      model=${item.model_dataset.model}
-      model.adapter_path=data/experiments/fine-tune/${item.model_dataset.dataset}/${item.model_dataset.model}
-      random_seed=${item.seed}
-      output_file=data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
-    deps:
-      - scripts/sft/predict.py
-      - configs/predict.yaml
-      - configs/model/${item.model_dataset.model}.yaml
-    outs:
-      - data/experiments/predict/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
-
-  predict_with_api:
-    matrix:
-      dataset:
-        - pl-court-instruct
-        - en-court-instruct
-      model:
-        - gpt-4o
-        - gpt-4o-mini
-      seed:
-        - 997
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/predict_with_api.py
-      dataset=${item.dataset}
-      model_version=${item.model}
-      seed=${item.seed}
-      output_file=data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
-    deps:
-      - scripts/sft/predict_with_api.py
-      - configs/predict_with_api.yaml
-    outs:
-      - data/experiments/predict/${item.dataset}/open_ai_${item.model}/outputs_${item.seed}.json
 
   ### ---------------------------- Evaluation ---------------------------- ###
   evaluate: # use with NUM_PROC
     matrix:
       <<: *sft_models
       seed: ${seeds}
+      model_type:
+        - raw
+        - fine_tuned
+      split:
+        - annotated
     cmd: >-
       PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
+      --output-file data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
       --num-proc=-1
     deps:
       - scripts/sft/evaluate.py
-      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/outputs_${item.seed}.json
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.jsonl
     outs:
-      - data/experiments/predict/raw/${item.model_dataset.dataset}/${item.model_dataset.model}/metrics_${item.seed}.json
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/metrics.json
 
-  evaluate_api_models:
+  evaluate_llm_as_judge:
     matrix:
-      dataset:
-        - en-court-instruct
-        - pl-court-instruct
-      model:
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
-      seed: [997]
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate.py
-      --output-file data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
-      --num-proc=-1
-    deps:
-      - scripts/sft/evaluate.py
-      - data/experiments/predict/${item.dataset}/${item.model}/outputs_${item.seed}.json
-    outs:
-      - data/experiments/predict/${item.dataset}/${item.model}/metrics_${item.seed}.json
-
-  evaluate_llm_as_judge_pl:
-    matrix:
-      judge_model:
-        - gpt_4o_mini
-      evaluated_model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned
-        - Bielik-7B-Instruct-v0.1
-        - Bielik-7B-Instruct-v0.1-fine-tuned
-        - Bielik-11B-v2.2-Instruct
-        - Bielik-11B-v2.2-Instruct-fine-tuned
+      llm_dataset:
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: pllum_12b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: bielik_11b_v23_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        ###
+        - dataset: en_appealcourt_coded
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+        - dataset: en_appealcourt_coded
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
+        - dataset: en_appealcourt_coded
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_json
+          ie_schema: en_appealcourt
       seed: ${seeds}
+      split:
+        - annotated
+      model_type:
+        - raw_vllm
+      judge_llm:
+        - gpt-4.1-mini-2025-04-14
     cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
-      api_model=${item.judge_model}
-      answers_file=data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
-      out_metric_file=data/experiments/predict/pl-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
-      prompt=pl
+      PYTHONPATH=. python scripts/sft/llm_as_judge.py
+      data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
+      configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
+      --judge-model=${item.judge_llm}
     deps:
-      - scripts/sft/evaluate_llm_as_judge.py
-      - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      - scripts/sft/llm_as_judge.py
+      - configs/ie_schema/${item.llm_dataset.ie_schema}.yaml
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
     outs:
-      - data/experiments/predict/pl-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/llm_as_judge_${item.judge_llm}.json
 
-  evaluate_llm_as_judge_en:
+  evaluate_llm_as_judge_on_fine_tuned:
     matrix:
-      judge_model:
-        - gpt_4o_mini
-      evaluated_model:
-        - Unsloth-Llama-3-8B-Instruct
-        - Unsloth-Llama-3-8B-Instruct-fine-tuned-en
-        - Unsloth-Mistral-Nemo-Instruct-2407
-        - Unsloth-Mistral-Nemo-Instruct-2407-fine-tuned-en
+      llm_dataset:
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.1_8b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: llama_3.2_3b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: mistral_nemo_instruct_2407
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: pllum_12b_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
+        - dataset: pl_court_swiss_franc_loans
+          llm: bielik_11b_v23_instruct
+          prompt: info_extraction_annotated_json
+          ie_schema: swiss_franc_loans
       seed: ${seeds}
+      split:
+        - annotated
+      model_type:
+        - fine_tuned_vllm
+      judge_llm:
+        - gpt-4.1-mini-2025-04-14
     cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
-      api_model=${item.judge_model}
-      answers_file=data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
-      out_metric_file=data/experiments/predict/en-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
-      prompt=en
+      PYTHONPATH=. python scripts/sft/llm_as_judge.py
+      data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
+      configs/ie_schema/swiss_franc_loans.yaml
+      --judge-model=${item.judge_llm}
     deps:
-      - scripts/sft/evaluate_llm_as_judge.py
-      - data/experiments/predict/en-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      - scripts/sft/llm_as_judge.py
+      - configs/ie_schema/swiss_franc_loans.yaml
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
     outs:
-      - data/experiments/predict/en-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      - data/experiments/predict/${item.model_type}/${item.llm_dataset.dataset}/${item.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/llm_as_judge_${item.judge_llm}.json
 
-  evaluate_llm_as_judge_api_models:
+
+  evaluate_llm_as_judge_on_preannotations:
     matrix:
-      language:
-        - pl
-        - en
-      judge_model:
-        - gpt_4o_mini
-      evaluated_model:
-        - open_ai_gpt-4o
-        - open_ai_gpt-4o-mini
-      seed: [997]
+      pred_schema:
+        - pred_path: data/experiments/predict/raw/pl_court_swiss_franc_loans/test/gpt_4.1/
+          schema: configs/ie_schema/swiss_franc_loans.yaml
+        - pred_path: data/experiments/predict/raw/en_appealcourt_coded/test/gpt_4.1/
+          schema: configs/ie_schema/en_appealcourt.yaml
+      judge_llm:
+        - gpt-4.1-mini-2025-04-14
     cmd: >-
-      PYTHONPATH=. python scripts/sft/evaluate_llm_as_judge.py
-      api_model=${item.judge_model}
-      answers_file=data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
-      out_metric_file=data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
-      prompt=${item.language}
+      PYTHONPATH=. python scripts/sft/llm_as_judge.py
+      ${item.pred_schema.pred_path}/predictions.json
+      ${item.pred_schema.schema}
+      --judge-model=${item.judge_llm}
     deps:
-      - scripts/sft/evaluate_llm_as_judge.py
-      - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/outputs_${item.seed}.json
+      - scripts/sft/llm_as_judge.py
+      - ${item.pred_schema.schema}
+      - ${item.pred_schema.pred_path}/predictions.json
     outs:
-      - data/experiments/predict/${item.language}-court-instruct/${item.evaluated_model}/judge_metrics_${item.seed}.json
+      - ${item.pred_schema.pred_path}/llm_as_judge_${item.judge_llm}.json
 
-  summarize_ngram_metrics:
+  summarize_metrics:
     matrix:
       dir:
-        - data/experiments/predict/raw/pl-court-frankowe-instruct
+        - data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated
+        - data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated
+        - data/experiments/predict/fine_tuned_vllm/pl_court_swiss_franc_loans/annotated
+        - data/experiments/predict/raw/pl_court_swiss_franc_loans/test
+        - data/experiments/predict/raw/en_appealcourt_coded/test
     cmd: >-
       PYTHONPATH=. python scripts/sft/summarize_metrics.py
       --root-dir ${item.dir}
@@ -293,16 +385,5 @@ stages:
     metrics:
       - ${item.dir}/metrics_ngram_summary.md:
           cache: false
-
-  summarize_judge_metrics:
-    matrix:
-      dir:
-        - data/experiments/predict/raw/pl-court-frankowe-instruct
-    cmd: >-
-      PYTHONPATH=. python scripts/sft/summarize_metrics.py
-      --root-dir ${item.dir}
-    deps:
-      - scripts/sft/summarize_metrics.py
-    metrics:
       - ${item.dir}/metrics_judge_summary.md:
           cache: false

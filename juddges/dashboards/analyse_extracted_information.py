@@ -3,7 +3,7 @@ import io
 import pandas as pd
 import streamlit as st
 
-from juddges.prompts.information_extraction import EXAMPLE_SCHEMA
+from juddges.prompts.schemas.example import EXAMPLE_SCHEMA
 from juddges.settings import SAMPLE_DATA_PATH
 
 TITLE = "Analyse judgments"
