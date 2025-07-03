@@ -3,47 +3,23 @@ from typing import Any
 from torch import Tensor
 from transformers import PreTrainedTokenizer
 
-from juddges.preprocessing.context_truncator import ContextTruncator, ContextTruncatorTiktoken
+from juddges.preprocessing.context_truncator import ContextTruncatorTiktoken
 
 
-class TextEncoderForEval:
-    """Text encoder preparing evaluation data for instruction dataset (chat-formatted)."""
-
-    def __init__(self, tokenizer: PreTrainedTokenizer, max_length: int, padding: bool | str):
+class TokenizerEncoder:
+    def __init__(self, final_input_field: str, tokenizer: PreTrainedTokenizer):
+        self.final_input_field = final_input_field
         self.tokenizer = tokenizer
-        self.truncator = ContextTruncator(tokenizer, max_length)
-        self.max_length = max_length
-        self.padding = padding
 
     def __call__(self, batch: dict[str, list[Any]]) -> dict[str, Tensor]:
-        texts = []
-
-        for prompt, context in zip(batch["prompt"], batch["context"]):
-            truncated_context = self.truncator(prompt, context)
-            input_message = prompt.format(context=truncated_context)
-            input_chat = [{"role": "user", "content": input_message}]
-            try:
-                final_input = self.tokenizer.apply_chat_template(
-                    input_chat,
-                    add_generation_prompt=True,
-                    tokenize=False,
-                )
-            except ValueError:
-                final_input = input_message
-
-            texts.append(final_input)
-
-        tokenized = self.tokenizer(
-            texts,
-            padding=self.padding,
-            max_length=self.max_length,
+        return self.tokenizer(
+            batch[self.final_input_field],
+            padding=True,
             truncation=False,
             return_tensors="pt",
             return_attention_mask=True,
             return_special_tokens_mask=False,
         )
-
-        return tokenized
 
 
 class TextEncoderForEvalPlainTextFormat:

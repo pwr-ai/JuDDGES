@@ -15,6 +15,7 @@ LOGS_PATH = ROOT_PATH / "logs"
 
 DATA_PATH = ROOT_PATH / "data"
 CONFIG_PATH = ROOT_PATH / "configs"
+PROMPTS_PATH = CONFIG_PATH / "prompt"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
 FRANKOWICZE_DATA_PATH = DATA_PATH / "analysis" / "sprawy_frankowe"
@@ -71,15 +72,12 @@ def get_sqlalchemy_engine() -> Engine:
 
 
 def prepare_langchain_cache() -> None:
-    import langchain
     from langchain_community.cache import SQLAlchemyMd5Cache
 
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 
 
-def prepare_mlflow(
-    experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost"
-) -> None:
+def prepare_mlflow(experiment_name: str = MLFLOW_EXP_NAME, url: str = "localhost") -> None:
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment_name)
 

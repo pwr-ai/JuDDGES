@@ -10,10 +10,10 @@ from juddges.llms import (
     GPT_4o_MINI,
 )
 from juddges.prompts.information_extraction import (
-    SWISS_FRANC_LOAN_SCHEMA,
     prepare_information_extraction_chain,
     prepare_schema_chain,
 )
+from juddges.prompts.schemas.frank_loans import SWISS_FRANC_LOAN_SCHEMA
 from juddges.settings import prepare_langchain_cache, prepare_mlflow
 
 prepare_langchain_cache()

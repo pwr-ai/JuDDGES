@@ -1,5 +1,5 @@
 defaults:
-  - api_model: ???
+  - api_llm: ???
   - _self_
 
 answers_file: ???

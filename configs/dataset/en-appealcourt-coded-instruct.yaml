@@ -1,6 +1,0 @@
-name: JuDDGES/en-appealcourt-coded-instruct
-prompt_field: prompt
-context_field: context
-output_field: output
-
-max_output_tokens: 6_731 # using llama tokenizer
