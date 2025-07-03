@@ -4,14 +4,26 @@ Demonstrate smart column mapping for JuDDGES/pl-court-raw.
 This shows how the system would automatically map fields.
 """
 
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
 from juddges.data.smart_mapper import SmartColumnMapper
 
 
 def main():
     """Show how smart mapping works with JuDDGES/pl-court-raw columns."""
 
-    print("🧠 Smart Column Mapping Demo for JuDDGES/pl-court-raw")
-    print("=" * 60)
+    console = Console()
+
+    console.print(
+        Panel.fit(
+            "🧠 Smart Column Mapping Demo for JuDDGES/pl-court-raw",
+            style="bold blue",
+            border_style="blue",
+        )
+    )
 
     # These are the actual columns from JuDDGES/pl-court-raw dataset
     actual_columns = [
@@ -46,20 +58,27 @@ def main():
         "court_type",
     ]
 
-    print(f"Dataset columns ({len(actual_columns)} total):")
-    for i, col in enumerate(actual_columns, 1):
-        print(f"{i:2d}. {col}")
+    # Create a table for dataset columns
+    columns_table = Table(
+        title=f"Dataset Columns ({len(actual_columns)} total)", box=box.ROUNDED, show_header=True
+    )
+    columns_table.add_column("No.", style="dim", width=4)
+    columns_table.add_column("Column Name", style="cyan")
 
-    print("\n" + "=" * 60)
-    print("SMART MAPPING ANALYSIS")
-    print("=" * 60)
+    for i, col in enumerate(actual_columns, 1):
+        columns_table.add_row(str(i), col)
+
+    console.print(columns_table)
+    console.print()
+
+    console.print(Panel.fit("SMART MAPPING ANALYSIS", style="bold magenta", border_style="magenta"))
 
     mapper = SmartColumnMapper()
     required_fields = ["document_id", "full_text"]
     suggestions = mapper.suggest_mapping(actual_columns, required_fields)
 
-    print("Automatic mapping suggestions with confidence scores:")
-    print()
+    console.print("Automatic mapping suggestions with confidence scores:", style="bold")
+    console.print()
 
     # Group by confidence level
     high_confidence = []
@@ -74,21 +93,24 @@ def main():
         else:
             low_confidence.append((column, suggestion))
 
-    def print_mappings(mappings, title, color):
+    def create_mapping_table(mappings, title, style):
         if mappings:
-            print(f"{color}{title}:{color[:-1] if color.endswith('m') else ''}")
+            table = Table(title=title, box=box.ROUNDED, show_header=True)
+            table.add_column("Source Column", style="cyan")
+            table.add_column("Target Field", style="yellow")
+            table.add_column("Confidence", style="green", justify="right")
+            table.add_column("Reason", style="dim")
+
             for column, suggestion in mappings:
-                print(
-                    f"  {column:<25} → {suggestion.target_field:<20} "
-                    f"({suggestion.confidence:.2f}) {suggestion.reason}"
-                )
-            print()
+                confidence_str = f"{suggestion.confidence:.2f}"
+                table.add_row(column, suggestion.target_field, confidence_str, suggestion.reason)
 
-    print_mappings(high_confidence, "HIGH CONFIDENCE (≥80%)", "\033[92m")  # Green
-    print_mappings(medium_confidence, "MEDIUM CONFIDENCE (50-79%)", "\033[93m")  # Yellow
-    print_mappings(low_confidence, "LOW CONFIDENCE (<50%)", "\033[91m")  # Red
+            console.print(table)
+            console.print()
 
-    print("\033[0m")  # Reset color
+    create_mapping_table(high_confidence, "HIGH CONFIDENCE (≥80%)", "green")
+    create_mapping_table(medium_confidence, "MEDIUM CONFIDENCE (50-79%)", "yellow")
+    create_mapping_table(low_confidence, "LOW CONFIDENCE (<50%)", "red")
 
     # Show field type analysis
     print("=" * 60)
