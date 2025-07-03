@@ -86,6 +86,12 @@ class SchemaUtilsMixin:
                 schema_parts.append(f'  description: "{description}"')
                 if is_optional:
                     schema_parts.append("  required: false")
+            elif field_type is int:
+                schema_parts.append(f"{field_name}:")
+                schema_parts.append("  type: integer")
+                schema_parts.append(f'  description: "{description}"')
+                if is_optional:
+                    schema_parts.append("  required: false")
             else:
                 raise ValueError(f"Unknown field type: {field_type}")
 
