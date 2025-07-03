@@ -86,7 +86,7 @@ class PredictionLoader:
 
     @property
     def ngram_scores_file(self) -> Path:
-        return self.root_dir / f"scores_ngram_{self.judge_name}.json"
+        return self.root_dir / "scores_ngram.json"
 
     def setup_judge_dir(self) -> None:
         if self.judge_name is None:

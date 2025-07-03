@@ -15,25 +15,13 @@ def main(
     Evaluates the quality of extracted information from LLM predictions.
     """
     pred_loader = PredictionLoader(root_dir=predictions_dir, judge_name=None)
-    predictions = pred_loader.load_predictions(verbose=True)
+    parsed_preds = pred_loader.load_predictions(verbose=True)
 
-    schema = pred_loader.schema
+    evaluator = ExtractionEvaluator(pred_loader.schema)
+    results = evaluator.run(parsed_preds)
 
-    # The schema might be nested under a top-level key
-    if len(schema) == 1:
-        schema = next(iter(schema.values()))
-
-    evaluator = ExtractionEvaluator(schema)
-    results = evaluator.run(predictions)
-
-    logger.info(f"Saving evaluation results to {pred_loader.ngram_scores_file}")
-    pred_loader.ngram_scores_file.parent.mkdir(parents=True, exist_ok=True)
-    save_json(results, pred_loader.ngram_scores_file)
-
-    logger.info("Evaluation finished.")
-    logger.info(
-        f"Summary: {results['summary_metrics']['evaluated_records']}/{results['summary_metrics']['total_records']} records evaluated."
-    )
+    save_json(results.model_dump(), pred_loader.ngram_scores_file, ensure_ascii=False)
+    logger.info(f"Saved evaluation results to {pred_loader.ngram_scores_file}")
 
 
 if __name__ == "__main__":

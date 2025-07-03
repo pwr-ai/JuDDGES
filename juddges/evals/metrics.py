@@ -1,14 +1,14 @@
 from collections import Counter
-from typing import Any, Optional
+from typing import Any
 
 from dateutil import parser as date_parser
 from torchmetrics.text import ROUGEScore
 
 
 def evaluate_date(
-    predicted: Optional[str],
-    gold: Optional[str],
-) -> bool:
+    predicted: str | None,
+    gold: str | None,
+) -> int:
     """
     Parses dates and checks for an exact match.
 
@@ -19,23 +19,21 @@ def evaluate_date(
     Returns:
         True if dates match, False otherwise.
     """
-    if predicted is None and gold is None:
-        return True
-    if predicted is None or gold is None:
-        return False
+    if predicted == gold:
+        return 1
 
     try:
         predicted_date = date_parser.parse(predicted)
         gold_date = date_parser.parse(gold)
-        return predicted_date == gold_date
+        return int(predicted_date == gold_date)
     except (ValueError, TypeError):
-        return False
+        return 0
 
 
 def evaluate_number(
     predicted: Any,
     gold: Any,
-) -> bool:
+) -> int:
     """
     Compares two numbers for an exact match.
 
@@ -46,20 +44,13 @@ def evaluate_number(
     Returns:
         True if numbers are equal, False otherwise.
     """
-    if predicted is None and gold is None:
-        return True
-    if predicted is None or gold is None:
-        return False
-    try:
-        return float(predicted) == float(gold)
-    except (ValueError, TypeError):
-        return False
+    return int(predicted == gold)
 
 
 def evaluate_string_rouge(
-    predicted: Optional[str],
-    gold: Optional[str],
-) -> Optional[dict[str, float]]:
+    predicted: str | None,
+    gold: str | None,
+) -> dict[str, float] | None:
     """
     Calculates ROUGE scores for two strings using TorchMetrics.
 
@@ -70,8 +61,10 @@ def evaluate_string_rouge(
     Returns:
         A dictionary with ROUGE scores, or None if inputs are invalid.
     """
-    if not predicted or not gold:
-        return None
+    if predicted == gold:
+        return {"rouge1": 1, "rouge2": 1, "rougeL": 1}
+    elif predicted is None or gold is None:
+        return {"rouge1": 0, "rouge2": 0, "rougeL": 0}
 
     rouge = ROUGEScore()
     scores = rouge([predicted], [gold])
@@ -84,8 +77,8 @@ def evaluate_string_rouge(
 
 
 def evaluate_enum(
-    predicted: Optional[str],
-    gold: Optional[str],
+    predicted: str | None,
+    gold: str | None,
     choices: list[str],
 ) -> dict[str, Any]:
     """
@@ -99,19 +92,13 @@ def evaluate_enum(
     Returns:
         Dictionary with classification metrics and hallucination info.
     """
-    predicted_in_choices = predicted in choices
-    gold_in_choices = gold in choices
-    hallucinated = not predicted_in_choices
-
     return {
-        "match": predicted == gold,
-        "hallucinated": hallucinated,
-        "predicted_in_choices": predicted_in_choices,
-        "gold_in_choices": gold_in_choices,
+        "match": int(predicted == gold),
+        "predicted_in_choices": int(predicted in choices),
     }
 
 
-def evaluate_list_greedy(predicted: Optional[list], gold: Optional[list]) -> dict[str, Any]:
+def evaluate_list_greedy(predicted: list | None, gold: list | None) -> dict[str, Any]:
     """
     Evaluates list matching using a greedy approach.
 

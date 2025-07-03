@@ -1,8 +1,10 @@
 import itertools
 from functools import cached_property
+from math import sqrt
 from statistics import mean, stdev
 from typing import Any, Counter, Literal, defaultdict
 
+from loguru import logger
 from pydantic import BaseModel, Field
 
 from juddges.llm_as_judge.data_model import ParsedPredictions, PredictionLoader
@@ -44,19 +46,36 @@ class EvalResults(BaseModel):
         }
 
     def get_aggregated_scores(self) -> dict[str, Any]:
-        aggregated_scores = defaultdict(list)
+        """Computes mean and standard error of scores for each field and score key.
+        See https://arxiv.org/abs/2411.00640 for more details.
+        """
+        scores_sum = defaultdict(lambda: defaultdict(list))
         for item_res in self.results:
             for key in self.ie_schema.keys():
-                aggregated_scores[key].append(item_res.result[key]["score"])
-        return {
-            key: {
-                "mean_score": sum(scores) / len(scores),
-                "std_score": stdev(scores),
-            }
-            for key, scores in aggregated_scores.items()
-        }
+                try:
+                    scores_data = item_res.result[key]
+                except KeyError:
+                    continue
+                for score_key, score_value in scores_data.items():
+                    if score_value is None:
+                        continue
+                    scores_sum[key][score_key].append(score_value)
+
+        aggregated_scores = {}
+        for key, scores in scores_sum.items():
+            aggregated_scores[key] = {}
+            for score_name, score_values in scores.items():
+                try:
+                    aggregated_scores[key][score_name] = {
+                        "mean_score": sum(score_values) / len(score_values),
+                        "standard_error": stdev(score_values) / sqrt(len(score_values)),
+                    }
+                except Exception as e:
+                    logger.error(f"Error aggregating scores for {key} {score_name}: {e}")
+        return aggregated_scores
 
     def get_statistics(self) -> dict[str, Any]:
+        assert any(res.status == "success" for res in self.results)
         return {
             "total_docs": len(self.results),
             "num_success_evaluations": sum(res.status == "success" for res in self.results),

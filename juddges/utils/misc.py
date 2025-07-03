@@ -37,10 +37,10 @@ def load_yaml(config_path: Path) -> dict:
         return yaml.safe_load(f)
 
 
-def save_json(data: Any, path: Path) -> None:
+def save_json(data: Any, path: Path, **kwargs) -> None:
     """Saves a dictionary to a JSON file."""
     with open(path, "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f, indent=4, **kwargs)
 
 
 def save_jsonl(data: list[dict], path: Path) -> None:
