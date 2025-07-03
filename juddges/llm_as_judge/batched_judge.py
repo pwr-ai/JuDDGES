@@ -122,12 +122,14 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
 
         parsed_preds = self.pred_loader.load_predictions()
 
+        results_indexed = {int(res["custom_id"]): res for res in results}
+
         final_results = []
         for idx in range(parsed_preds.num_items):
             try:
                 # todo: make add validation for the response
                 raw_res = json.loads(
-                    results[idx]["response"]["body"]["choices"][0]["message"]["content"]
+                    results_indexed[idx]["response"]["body"]["choices"][0]["message"]["content"]
                 )
                 res = ItemEvalResult.from_success(
                     result=raw_res,
@@ -152,8 +154,11 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
 
     def run_submit_batch_api_pipeline(self) -> Batch:
         """Prepares and submits batch API requests to OpenAI."""
+        logger.info("Loading predictions...")
         parsed_preds = self.pred_loader.load_predictions()
+        logger.info("Preparing batch API requests...")
         self.prepare_and_save_batch_api_requests(parsed_preds)
+        logger.info("Submitting batch API requests...")
         batch_input_file = self.client.files.create(
             file=self.pred_loader.batch_api_requests_file,
             purpose="batch",
@@ -181,7 +186,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
                 "method": "POST",
                 "url": self.URL,
                 "body": {
-                    "model": self.judge_model,
+                    "model": self.judge_name,
                     "temperature": self.temperature,
                     "response_format": self.structured_response_schema_from_extraction_schema,
                     "messages": messages,
@@ -196,7 +201,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
 
     def get_batch_api_metadata(self) -> dict[str, Any]:
         return {
-            "model": self.judge_model,
+            "model": self.judge_name,
             "temperature": self.temperature,
             "predictions_dir": str(self.pred_loader.root_dir),
         }

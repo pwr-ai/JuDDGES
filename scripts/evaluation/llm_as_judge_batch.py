@@ -3,6 +3,7 @@ from pathlib import Path
 
 import typer
 from dotenv import load_dotenv
+from loguru import logger
 from openai import OpenAI
 
 from juddges.llm_as_judge.batched_judge import BatchedStructuredOutputJudge
@@ -22,7 +23,10 @@ def main(
     """Evaluate predictions using LLM as judge."""
     client = OpenAI(api_key=API_KEY)
     pred_loader = PredictionLoader(root_dir=predictions_dir, judge_name=judge_model)
-    pred_loader.setup_judge_dir()
+
+    if action == "submit":
+        pred_loader.setup_judge_dir()
+
     judge = BatchedStructuredOutputJudge(
         client=client,
         pred_loader=pred_loader,
@@ -42,7 +46,8 @@ def main(
         )
 
     if results is not None:
-        save_json(results.model_dump(), judge.output_file)
+        save_json(results.model_dump(), pred_loader.llm_judge_scores_file, ensure_ascii=False)
+        logger.info(f"Saved results to {pred_loader.llm_judge_scores_file}")
 
 
 if __name__ == "__main__":

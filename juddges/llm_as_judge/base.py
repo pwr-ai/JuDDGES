@@ -3,7 +3,6 @@ from functools import cached_property
 from statistics import mean, stdev
 from typing import Any, Counter, Literal, defaultdict
 
-from loguru import logger
 from pydantic import BaseModel, Field
 
 from juddges.llm_as_judge.data_model import ParsedPredictions, PredictionLoader
@@ -48,12 +47,7 @@ class EvalResults(BaseModel):
         aggregated_scores = defaultdict(list)
         for item_res in self.results:
             for key in self.ie_schema.keys():
-                try:
-                    aggregated_scores[key].append(item_res.result[key]["score"])
-                except KeyError:
-                    breakpoint()
-                    logger.warning(f"Key {key} not found in result {item_res.result}")
-                    aggregated_scores[key].append(0.0)
+                aggregated_scores[key].append(item_res.result[key]["score"])
         return {
             key: {
                 "mean_score": sum(scores) / len(scores),
@@ -140,7 +134,7 @@ class StructuredOutputJudgeBase:
         return dataset_messages
 
     def get_zero_scores(self) -> dict[str, Any]:
-        return dict.fromkeys(self.pred_loader.schema.keys(), 0.0)
+        return {key: {"score": 0.0} for key in self.pred_loader.schema.keys()}
 
     # todo: move to child class
     def merge_judge_results_with_failed_items(

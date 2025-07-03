@@ -2,10 +2,12 @@ import json
 from asyncio.log import logger
 from functools import cached_property
 from pathlib import Path
+from statistics import mean
 from typing import Any
 
 from langchain_core.utils.json import parse_json_markdown
 from pydantic import BaseModel, Field
+from tqdm.auto import tqdm
 
 from juddges.utils.config import load_and_resolve_config
 
@@ -17,6 +19,20 @@ class ParsedPredictions(BaseModel):
     missing_keys: dict[int, list[str]] = Field(default_factory=dict)
     extra_keys: dict[int, list[str]] = Field(default_factory=dict)
     num_items: int
+
+    def get_stats(self) -> dict[str, Any]:
+        return {
+            "num_items": self.num_items,
+            "total_num_parsing_errors": len(self.errors),
+            "total_num_missing_keys": sum(len(keys) for keys in self.missing_keys.values()),
+            "total_num_extra_keys": sum(len(keys) for keys in self.extra_keys.values()),
+            "avg_missing_keys_when_missing_any": mean(
+                len(keys) for keys in self.missing_keys.values() if keys
+            ),
+            "avg_extra_keys_when_missing_any": mean(
+                len(keys) for keys in self.extra_keys.values() if keys
+            ),
+        }
 
 
 class PredictionLoader:
@@ -68,6 +84,10 @@ class PredictionLoader:
             raise ValueError("judge_name must be set before accessing output_file")
         return self.judge_dir / f"scores_llm_as_judge_{self.judge_name}.json"
 
+    @property
+    def ngram_scores_file(self) -> Path:
+        return self.root_dir / f"scores_ngram_{self.judge_name}.json"
+
     def setup_judge_dir(self) -> None:
         if self.judge_name is None:
             raise ValueError("judge_name must be set before setting up judge directory")
@@ -75,7 +95,7 @@ class PredictionLoader:
             logger.warning(f"Judge directory {self.judge_dir} already exists")
         self.judge_dir.mkdir(parents=True, exist_ok=True)
 
-    def load_predictions(self) -> ParsedPredictions:
+    def load_predictions(self, verbose: bool = False) -> ParsedPredictions:
         # todo: extract path management and pred loading to injected class
         with open(self.predictions_file) as f:
             preds = json.load(f)
@@ -87,7 +107,9 @@ class PredictionLoader:
         parsing_errors = {}
         missing_keys = {}
         extra_keys = {}
-        for idx, pred_item in enumerate(preds):
+        for idx, pred_item in enumerate(
+            tqdm(preds, disable=not verbose, desc="Loading predictions")
+        ):
             # we assume gold should always parse without errors
             gold_pred = parse_json_markdown(pred_item["gold"])
             try:
