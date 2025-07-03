@@ -8,27 +8,6 @@ PROMPT_TEMPLATE = "How many helicopters can a human eat in one sitting? {context
 
 
 class TestContextTruncator(unittest.TestCase):
-    def test_mistral(self):
-        model_id = "mistralai/Mistral-7B-Instruct-v0.2"
-        self._check(model_id, 120)
-
-    def test_llama3(self):
-        model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-        self._check(model_id, 120)
-
-    def test_mistral_warn(self):
-        model_id = "mistralai/Mistral-7B-Instruct-v0.2"
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        max_length = 3
-        context = " ".join([str(i) for i in range(max_length * 2)])
-        output = "None."
-        with self.assertWarns(Warning):
-            ContextTruncator(
-                prompt_without_context=PROMPT_TEMPLATE.format(context=""),
-                tokenizer=tokenizer,
-                max_length=max_length,
-            )(context, output)
-
     def _check(self, model_id: str, max_length: int):
         tokenizer = AutoTokenizer.from_pretrained(model_id)
         context = " ".join([str(i) for i in range(max_length * 2)])

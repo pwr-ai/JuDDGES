@@ -1,0 +1,47 @@
+array_fields:
+- judges
+- legal_bases
+- keywords
+- extracted_legal_bases
+- references
+chunk_overlap: 200
+chunk_strategy: recursive
+column_mapping:
+  country: country
+  court_name: court_name
+  docket_number: document_number
+  excerpt: summary
+  full_text: full_text
+  judgment_date: date_issued
+  judgment_id: document_id
+  keywords: keywords
+  legal_bases: legal_bases
+  presiding_judge: presiding_judge
+  thesis: thesis
+  xml_content: raw_content
+  department_id: department_name
+  court_id: court_name
+  publication_date: publication_date
+  last_update: last_update
+date_fields:
+- judgment_date
+- publication_date
+- last_update
+default_values:
+  country: Poland
+  language: pl
+document_type: judgment
+json_fields: []
+max_chunk_size: 1000
+name: JuDDGES/pl-court-raw
+required_fields:
+- document_id
+- full_text
+text_fields:
+- summary
+- xml_content
+- full_text
+- thesis
+embedding_path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings
+num_proc: 10  # Use all available CPU cores
+batch_size: 1000  # Batch size for dataset operations

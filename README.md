@@ -27,10 +27,50 @@ fostering cross-disciplinary and cross-jurisdictional collaboration.
 ## Usage
 
 ### Installation
-The project requires **Python 3.11** and one of the following dependencies:
-- to install necessary dependencies use available `Makefile`, you can
+
+The project requires **Python 3.11** and can be installed using one of the following methods:
+
+#### Option 1: Using UV (Recommended)
+
+UV is a fast, reliable Python package installer and resolver.
+
+1. **Automated Setup (Recommended)**:
+   - For Linux/macOS:
+
+     ```bash
+     chmod +x setup.sh
+     ./setup.sh
+     ```
+
+   - For Windows:
+
+     ```
+     setup.bat
+     ```
+
+2. **Manual Setup**:
+
+   ```bash
+   # Install UV if not already installed
+   pip install uv
+
+   # Create a virtual environment
+   uv venv .venv
+
+   # Activate the environment
+   source .venv/bin/activate  # On Linux/macOS
+   # OR
+   # .venv\Scripts\activate  # On Windows
+
+   # Install the project in development mode
+   uv pip install -e .
+   ```
+
+#### Option 2: Using Make (Legacy)
+
+- To install necessary dependencies use available `Makefile`, you can
   use `python>=3.11`: `make install`
-- if you want to run evaluation and fine-tuning with `unsloth`, use the
+- If you want to run evaluation and fine-tuning with `unsloth`, use the
   following command inside conda environment:
   `make install_unsloth`
 
@@ -40,6 +80,7 @@ The specific details of dataset creation are available in
 [scripts/README.md](scripts/README.md).
 
 ### Inference, fine-tuning and evaluation
+
 All commands for running inference, fine-tuning, and evaluation are declared as stages in the [`dvc.yaml`](dvc.yaml) file (see [DVC docs for details](https://dvc.org/doc/user-guide)).
 Some stages are set up as a matrix, meaning it runs for a combination of different parameters (e.g. models and random seeds).
 Moreover, some scripts are configured with the [hydra](https://github.com/facebookresearch/hydra) tool.
@@ -56,43 +97,54 @@ Below, we provide commands to reproduce each of the stages and point to the appr
 > To run a stage for a single combination of parameters from the DVC matrix, simply run it with its full name, e.g., `predict@Bielik-7B-Instruct-v0.1-42` (check for names with `dvc stage list <stage_name>`).
 
 #### Inference
-  - Configuration file: `configs/predict.yaml`
-  - Platform-specific environment variables:
-    - `CUDA_VISIBLE_DEVICES`: GPU device ID
-    - `NUM_PROC`: Number of processes to run in parallel
-  - Command:
+
+- Configuration file: `configs/predict.yaml`
+- Platform-specific environment variables:
+  - `CUDA_VISIBLE_DEVICES`: GPU device ID
+  - `NUM_PROC`: Number of processes to run in parallel
+- Command:
+
     ```bash
     CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro predict
     ```
- - Outputs: LLM predictions (Information extracted by an LLM)
+
+- Outputs: LLM predictions (Information extracted by an LLM)
 
 #### Fine-tuning
-  - Configuration file: `configs/fine_tuning.yaml`
-  - Platform-specific environment variables:
-    - `CUDA_VISIBLE_DEVICES`: GPU device ID
-    - `NUM_PROC`: Number of processes to run in parallel
-  - Command:
+
+- Configuration file: `configs/fine_tuning.yaml`
+- Platform-specific environment variables:
+  - `CUDA_VISIBLE_DEVICES`: GPU device ID
+  - `NUM_PROC`: Number of processes to run in parallel
+- Command:
+
       ```bash
       CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro sft_unsloth
       ```
-  - Outputs: Trained LLM adapter
+
+- Outputs: Trained LLM adapter
 
 #### Evaluation
+
 1. N-gram-based evaluation
    - Configuration file: `n/a` (command-line arguments as config)
    - Command:
+
       ```bash
       dvc repro evaluate
       ```
+
    - Inputs: Information extracted by an LLM (see `Inference` section)
    - Outputs: Metrics
 
 2. LLM-as-judge evaluation
    - Configuration file: `configs/llm_judge.yaml`
    - Command:
+
       ```bash
       dvc repro evaluate_llm_as_judge
       ```
+
    - Inputs: Information extracted by an LLM (see `Inference` section)
    - Outputs: Metrics
 
@@ -101,13 +153,13 @@ Below, we provide commands to reproduce each of the stages and point to the appr
 The JuDDGES project encompasses several Work Packages (WPs) designed to
 cover all aspects of its objectives, from project management to the open
 science practices and engaging early career researchers. Below is an
-overview of the project’s WPs based on the provided information:
+overview of the project's WPs based on the provided information:
 
 ### WP1: Project Management
 
 **Duration**: 24 Months
 
-**Main Aim**: To ensure the project’s successful completion on time and
+**Main Aim**: To ensure the project's successful completion on time and
 within budget. This includes administrative management, scientific and
 technological management, quality innovation and risk management,
 ethical and legal consideration, and facilitating open science.
@@ -117,7 +169,7 @@ ethical and legal consideration, and facilitating open science.
 **Duration**: 22 Months
 
 **Main Aim**: To establish the data foundation for developing and
-testing the project’s tools. This involves collating/gathering legal
+testing the project's tools. This involves collating/gathering legal
 case records and judgments, developing a coding scheme, training human
 coders, making human-coded data available for WP3, facilitating
 human-in-loop coding for WP3, and enabling WP4 to make data open and
@@ -152,6 +204,6 @@ aim of the JuDDGES project​​.
 
 The universities involved in the JuDDGES project are:
 
-1.  Wroclaw University of Science and Technology (Poland)
-2.  Middlesex University London (UK)
-3.  University of Lyon 1 (France)​​.
+1. Wroclaw University of Science and Technology (Poland)
+2. Middlesex University London (UK)
+3. University of Lyon 1 (France)​​.

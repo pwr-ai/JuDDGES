@@ -1,0 +1,191 @@
+{
+  "@context": {
+    "@language": "en",
+    "@vocab": "https://schema.org/",
+    "arrayShape": "cr:arrayShape",
+    "citeAs": "cr:citeAs",
+    "column": "cr:column",
+    "conformsTo": "dct:conformsTo",
+    "cr": "http://mlcommons.org/croissant/",
+    "data": {
+      "@id": "cr:data",
+      "@type": "@json"
+    },
+    "dataBiases": "cr:dataBiases",
+    "dataCollection": "cr:dataCollection",
+    "dataType": {
+      "@id": "cr:dataType",
+      "@type": "@vocab"
+    },
+    "dct": "http://purl.org/dc/terms/",
+    "extract": "cr:extract",
+    "field": "cr:field",
+    "fileProperty": "cr:fileProperty",
+    "fileObject": "cr:fileObject",
+    "fileSet": "cr:fileSet",
+    "format": "cr:format",
+    "includes": "cr:includes",
+    "isArray": "cr:isArray",
+    "isLiveDataset": "cr:isLiveDataset",
+    "jsonPath": "cr:jsonPath",
+    "key": "cr:key",
+    "md5": "cr:md5",
+    "parentField": "cr:parentField",
+    "path": "cr:path",
+    "personalSensitiveInformation": "cr:personalSensitiveInformation",
+    "recordSet": "cr:recordSet",
+    "references": "cr:references",
+    "regex": "cr:regex",
+    "repeated": "cr:repeated",
+    "replace": "cr:replace",
+    "sc": "https://schema.org/",
+    "separator": "cr:separator",
+    "source": "cr:source",
+    "subField": "cr:subField",
+    "transform": "cr:transform",
+    "examples": {
+      "@id": "cr:examples",
+      "@type": "@json"
+    },
+    "rai": "http://mlcommons.org/croissant/RAI/"
+  },
+  "@type": "sc:Dataset",
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "repo",
+      "name": "repo",
+      "description": "The Hugging Face git repository.",
+      "contentUrl": "https://huggingface.co/datasets/JuDDGES/en-appealcourt/tree/refs%2Fconvert%2Fparquet",
+      "encodingFormat": "git+https",
+      "sha256": "https://github.com/mlcommons/croissant/issues/80"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "parquet-files-for-config-default",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/x-parquet",
+      "includes": "default/*/*.parquet"
+    }
+  ],
+  "recordSet": [
+    {
+      "@type": "cr:RecordSet",
+      "dataType": "cr:Split",
+      "key": {
+        "@id": "default_splits/split_name"
+      },
+      "@id": "default_splits",
+      "name": "default_splits",
+      "description": "Splits for the default config.",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "@id": "default_splits/split_name",
+          "dataType": "sc:Text"
+        }
+      ],
+      "data": [
+        {
+          "default_splits/split_name": "test"
+        },
+        {
+          "default_splits/split_name": "annotated"
+        }
+      ]
+    },
+    {
+      "@type": "cr:RecordSet",
+      "@id": "default",
+      "description": "JuDDGES/en-appealcourt - 'default' subset\n\nAdditional information:\n- 2 splits: test, annotated",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "@id": "default/split",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "fileProperty": "fullpath"
+            },
+            "transform": {
+              "regex": "default/(?:partial-)?(test|annotated)/.+parquet$"
+            }
+          },
+          "references": {
+            "field": {
+              "@id": "default_splits/split_name"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/context",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "context"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/output",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "output"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "conformsTo": "http://mlcommons.org/croissant/1.1",
+  "name": "en-appealcourt",
+  "description": "\n\t\n\t\t\n\t\tEnglish Appeal Court Judgments\n\t\n\nDataset for training and evaluating large language models (LLMs) for information extraction in the domain of publicly available England and Wales Court of Appeal (Criminal Division) judgments. The coding schema includes 43 annotated codes across several categories of judgments, including:\n\nSampling judgments/cases\n\nExtracting basic information on court hearings\n\nExtracting basic information on offence, trial, and sentence\n\nExtracting basic information… See the full description on the dataset page: https://huggingface.co/datasets/JuDDGES/en-appealcourt.",
+  "alternateName": [
+    "JuDDGES/en-appealcourt",
+    "English Appeal Court Judgments"
+  ],
+  "creator": {
+    "@type": "Organization",
+    "name": "JuDDGES",
+    "url": "https://huggingface.co/JuDDGES"
+  },
+  "keywords": [
+    "text2text-generation",
+    "abstractive-qa",
+    "expert-generated, machine-generated",
+    "JuDDGES/en-court-raw",
+    "English",
+    "other",
+    "1K - 10K",
+    "json",
+    "Text",
+    "Datasets",
+    "pandas",
+    "Croissant",
+    "Polars",
+    "🇺🇸 Region: US",
+    "legal",
+    "appeal court",
+    "judgments",
+    "information-extraction"
+  ],
+  "license": "https://choosealicense.com/licenses/other/",
+  "url": "https://huggingface.co/datasets/JuDDGES/en-appealcourt",
+  "datePublished": "2025-04-01",
+  "version": "1.0.0",
+  "citeAs": "Augustyniak Ł., Binkowski J., Sawczyn A., Bernaczyk M., Kamiński K., Tirunagari S., Windridge D., Dhami M., Boukacem-Zeghmouri C., Fillaud C., Kajdanowicz T. \"JuDDGES: A Unified, Multilingual Dataset of Legal Judgments for Legal AI and Analytics\"."
+}
