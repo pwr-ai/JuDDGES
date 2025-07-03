@@ -188,7 +188,9 @@ Przy ustalaniu wysokości zadośćuczynienia należy brać pod uwagę zasięg pu
 
     for doc in sample_polish_docs:
         response = requests.post(
-            f"{WEAVIATE_URL}/v1/objects", json={"class": "PolishLegalDocument", "properties": doc}, headers=HEADERS
+            f"{WEAVIATE_URL}/v1/objects",
+            json={"class": "PolishLegalDocument", "properties": doc},
+            headers=HEADERS,
         )
 
         if response.status_code in [200, 201]:
@@ -251,7 +253,9 @@ Przy ustalaniu wysokości zadośćuczynienia należy brać pod uwagę zasięg pu
         }}
         """
 
-        response = requests.post(f"{WEAVIATE_URL}/v1/graphql", json={"query": graphql_query}, headers=HEADERS)
+        response = requests.post(
+            f"{WEAVIATE_URL}/v1/graphql", json={"query": graphql_query}, headers=HEADERS
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -294,32 +298,32 @@ def show_local_files_available():
     if pl_raw_path.exists():
         parquet_files = list(pl_raw_path.glob("*.parquet"))
         total_size = sum(f.stat().st_size for f in parquet_files) / (1024**3)  # GB
-        print(f"🇵🇱 Polish Court Raw Data:")
+        print("🇵🇱 Polish Court Raw Data:")
         print(f"   📁 Location: {pl_raw_path}")
         print(f"   📊 Files: {len(parquet_files)} parquet files")
         print(f"   💾 Size: {total_size:.1f} GB")
-        print(f"   📄 Estimated: 1,000,000+ documents")
+        print("   📄 Estimated: 1,000,000+ documents")
 
     # English datasets
     en_path = base_path / "en"
     if en_path.exists():
         if (en_path / "csv" / "judgments.csv").exists():
-            print(f"\n🇬🇧 English Court Data:")
+            print("\n🇬🇧 English Court Data:")
             print(f"   📁 CSV: {en_path / 'csv' / 'judgments.csv'}")
 
         if (en_path / "en_judgements_dataset").exists():
             print(f"   📁 Arrow: {en_path / 'en_judgements_dataset'}")
-            print(f"   📄 Estimated: 500,000+ documents")
+            print("   📄 Estimated: 500,000+ documents")
 
     # NSA datasets
     nsa_path = base_path / "nsa"
     if nsa_path.exists():
-        print(f"\n⚖️  NSA (Supreme Administrative Court):")
+        print("\n⚖️  NSA (Supreme Administrative Court):")
         print(f"   📁 Location: {nsa_path}")
-        print(f"   📄 Estimated: 50,000+ documents")
+        print("   📄 Estimated: 50,000+ documents")
 
-    print(f"\n💡 Use any of these local datasets with:")
-    print(f"   python scripts/dataset_manager.py preview 'local:path/to/dataset'")
+    print("\n💡 Use any of these local datasets with:")
+    print("   python scripts/dataset_manager.py preview 'local:path/to/dataset'")
 
 
 if __name__ == "__main__":
@@ -331,8 +335,8 @@ if __name__ == "__main__":
                 "❌ Weaviate not running. Start with: docker run -d --name weaviate-test -p 8084:8080 cr.weaviate.io/semitechnologies/weaviate:1.26.1"
             )
             exit(1)
-    except:
-        print("❌ Cannot connect to Weaviate")
+    except Exception as e:
+        print(f"❌ Cannot connect to Weaviate: {e}")
         exit(1)
 
     ingest_local_polish_sample()

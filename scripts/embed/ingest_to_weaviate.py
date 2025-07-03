@@ -55,9 +55,7 @@ else:
 EMBEDDING_KEY = "embedding"
 
 
-def generate_deterministic_uuid(
-    document_id: str, chunk_id: Optional[str] = None
-) -> str:
+def generate_deterministic_uuid(document_id: str, chunk_id: Optional[str] = None) -> str:
     """
     Generate a deterministic UUID for a document or chunk.
 
@@ -126,15 +124,11 @@ class CollectionIngester(ABC):
         if "document_id" not in dataset.column_names:
             raise ValueError("Dataset must contain 'document_id' column for ingestion")
         if "document_id" not in embedding_dataset.column_names:
-            raise ValueError(
-                "Embedding dataset must contain 'document_id' column for ingestion"
-            )
+            raise ValueError("Embedding dataset must contain 'document_id' column for ingestion")
 
         # Get set of valid document IDs from document dataset
         valid_document_ids = set(dataset["document_id"])
-        logger.info(
-            f"Found {len(valid_document_ids)} valid document IDs in document dataset"
-        )
+        logger.info(f"Found {len(valid_document_ids)} valid document IDs in document dataset")
 
         if self.columns_to_ingest:
             logger.info(f"Selecting columns: {self.columns_to_ingest}")
@@ -143,9 +137,7 @@ class CollectionIngester(ABC):
             )
             logger.info(f"Document columns: {document_columns}")
             embedding_columns = list(
-                set(embedding_dataset.column_names).intersection(
-                    set(self.columns_to_ingest)
-                )
+                set(embedding_dataset.column_names).intersection(set(self.columns_to_ingest))
             )
             logger.info(f"Embedding columns: {embedding_columns}")
             dataset = dataset.select_columns(document_columns)
@@ -153,12 +145,8 @@ class CollectionIngester(ABC):
 
         # Limit dataset size if max_documents is specified
         if self.config.max_documents is not None:
-            logger.info(
-                f"Limiting ingestion to first {self.config.max_documents} documents"
-            )
-            dataset = dataset.select(
-                range(min(self.config.max_documents, dataset.num_rows))
-            )
+            logger.info(f"Limiting ingestion to first {self.config.max_documents} documents")
+            dataset = dataset.select(range(min(self.config.max_documents, dataset.num_rows)))
 
             # Update valid document IDs based on the filtered dataset
             valid_document_ids = set(dataset["document_id"])
@@ -201,12 +189,8 @@ class CollectionIngester(ABC):
                 logger.info("No new objects to insert, skipping.")
                 return
 
-            total_batches = math.ceil(
-                embedding_dataset.num_rows / self.config.batch_size
-            )
-            logger.info(
-                f"Processing {total_batches} batches with size {self.config.batch_size}"
-            )
+            total_batches = math.ceil(embedding_dataset.num_rows / self.config.batch_size)
+            logger.info(f"Processing {total_batches} batches with size {self.config.batch_size}")
 
             self._process_batches(dataset, embedding_dataset, total_batches)
 
@@ -224,9 +208,7 @@ class CollectionIngester(ABC):
     ) -> Dataset:
         """Filter out objects that already exist in the collection."""
         if self.db is None:
-            raise ValueError(
-                "Database connection is required for filtering existing objects"
-            )
+            raise ValueError("Database connection is required for filtering existing objects")
 
         if collection is None:
             collection = self.db.get_collection(self.collection_name)
@@ -249,9 +231,7 @@ class CollectionIngester(ABC):
                 # Check if this is a chunk dataset (has chunk_id) or document dataset
                 if "chunk_id" in batch:
                     # This is a chunk dataset
-                    for doc_id, chunk_id in zip(
-                        batch["document_id"], batch["chunk_id"]
-                    ):
+                    for doc_id, chunk_id in zip(batch["document_id"], batch["chunk_id"]):
                         yield generate_deterministic_uuid(doc_id, chunk_id)
                 else:
                     # This is a document dataset
@@ -267,9 +247,7 @@ class CollectionIngester(ABC):
         def filter_objects(item):
             if "chunk_id" in item:
                 # Chunk filtering
-                uuid = generate_deterministic_uuid(
-                    item["document_id"], item["chunk_id"]
-                )
+                uuid = generate_deterministic_uuid(item["document_id"], item["chunk_id"])
             else:
                 # Document filtering
                 uuid = generate_deterministic_uuid(item["document_id"])
@@ -281,9 +259,7 @@ class CollectionIngester(ABC):
             desc="Filtering out already uploaded objects",
         )
 
-        logger.info(
-            f"Filtered out {num_rows - filtered_dataset.num_rows} existing objects"
-        )
+        logger.info(f"Filtered out {num_rows - filtered_dataset.num_rows} existing objects")
         return filtered_dataset
 
     def _process_batches(
@@ -291,9 +267,7 @@ class CollectionIngester(ABC):
     ) -> None:
         """Process all batches from the dataset."""
         if self.config.processing_proc > 1:
-            logger.info(
-                f"Using parallel processing with {self.config.ingest_proc} workers"
-            )
+            logger.info(f"Using parallel processing with {self.config.ingest_proc} workers")
             with ThreadPoolExecutor(max_workers=self.config.ingest_proc) as executor:
                 futures = []
                 for batch_idx in range(total_batches):
@@ -316,9 +290,7 @@ class CollectionIngester(ABC):
                             except Exception as e:
                                 logger.error(f"Batch processing failed: {str(e)}")
                 except KeyboardInterrupt:
-                    logger.info(
-                        "Keyboard interrupt received. Cancelling remaining tasks..."
-                    )
+                    logger.info("Keyboard interrupt received. Cancelling remaining tasks...")
                     for future in futures:
                         future.cancel()
                     raise
@@ -382,9 +354,7 @@ class ChunkIngester(CollectionIngester):
             Filtered dataset containing only new chunks for valid documents
         """
         if self.db is None:
-            raise ValueError(
-                "Database connection is required for filtering existing chunks"
-            )
+            raise ValueError("Database connection is required for filtering existing chunks")
 
         # Get existing UUIDs
         logger.info("Fetching existing UUIDs from collection...")
@@ -410,10 +380,7 @@ class ChunkIngester(CollectionIngester):
                 return False
 
             # Then check if the chunk is not already in the database
-            return (
-                generate_deterministic_uuid(item["document_id"], item["chunk_id"])
-                not in uuids
-            )
+            return generate_deterministic_uuid(item["document_id"], item["chunk_id"]) not in uuids
 
         filtered_dataset = dataset.filter(
             filter_chunks,
@@ -425,9 +392,7 @@ class ChunkIngester(CollectionIngester):
             removed_invalid_docs = sum(
                 1 for doc_id in dataset["document_id"] if doc_id not in document_ids
             )
-            logger.info(
-                f"Filtered out {removed_invalid_docs} chunks with invalid document IDs"
-            )
+            logger.info(f"Filtered out {removed_invalid_docs} chunks with invalid document IDs")
 
         logger.info(
             f"Filtered out {num_rows - filtered_dataset.num_rows} chunks (existing or with invalid document IDs)"
@@ -442,9 +407,7 @@ class ChunkIngester(CollectionIngester):
     ) -> None:
         # Get the batch of chunks
         batch = embedding_dataset[
-            batch_idx
-            * self.config.batch_size : (batch_idx + 1)
-            * self.config.batch_size
+            batch_idx * self.config.batch_size : (batch_idx + 1) * self.config.batch_size
         ]
 
         # Build a lookup for document attributes by document_id
@@ -461,9 +424,7 @@ class ChunkIngester(CollectionIngester):
                 uuid = generate_deterministic_uuid(doc_id, chunk_id)
                 uuids_to_insert.append(uuid)
 
-            with collection.batch.fixed_size(
-                batch_size=self.config.batch_size
-            ) as batch_op:
+            with collection.batch.fixed_size(batch_size=self.config.batch_size) as batch_op:
                 for i in range(len(batch["document_id"])):
                     doc_id = batch["document_id"][i]
                     chunk_id = batch["chunk_id"][i]
@@ -479,29 +440,21 @@ class ChunkIngester(CollectionIngester):
                         if "cited_references" in batch
                         else None
                     )
-                    if cited_references is not None and not isinstance(
-                        cited_references, str
-                    ):
+                    if cited_references is not None and not isinstance(cited_references, str):
                         cited_references = json.dumps(cited_references)
                     tags = batch.get("tags", [None])[i] if "tags" in batch else None
                     if tags is not None and not isinstance(tags, str):
                         tags = json.dumps(tags)
                     chunk = DocumentChunk(
                         document_id=doc_id,
-                        document_type=doc_attrs.get(
-                            "document_type", DocumentType.JUDGMENT
-                        ),
+                        document_type=doc_attrs.get("document_type", DocumentType.JUDGMENT),
                         chunk_id=chunk_id,
                         chunk_text=batch["chunk_text"][i],
                         date_issued=doc_attrs.get("date_issued"),
-                        publication_date=doc_attrs.get(
-                            "date_issued"
-                        ),  # Same as date_issued
+                        publication_date=doc_attrs.get("date_issued"),  # Same as date_issued
                         segment_type=None,  # Optional field
                         position=(
-                            batch.get("position", [None])[i]
-                            if "position" in batch
-                            else None
+                            batch.get("position", [None])[i] if "position" in batch else None
                         ),
                         confidence_score=None,  # Optional field
                         parent_segment_id=None,  # Optional field
@@ -519,9 +472,7 @@ class ChunkIngester(CollectionIngester):
                             "fast": batch["embedding"][i],
                         },
                     )
-            logger.info(
-                "Successfully processed batch of chunks with merged document attributes"
-            )
+            logger.info("Successfully processed batch of chunks with merged document attributes")
             gc.collect()
         except Exception as e:
             logger.error(f"Error processing chunk batch: {str(e)}")
@@ -544,20 +495,12 @@ class ChunkIngester(CollectionIngester):
             # Validate embedding dimensions
             embedding_shape = np.array(batch["embedding"][0]).shape
             logger.debug(f"Embedding shape: {embedding_shape}")
-            assert (
-                len(embedding_shape) == 1
-            ), f"Invalid embedding shape: {embedding_shape}"
+            assert len(embedding_shape) == 1, f"Invalid embedding shape: {embedding_shape}"
 
             # Check for null values
-            assert all(
-                id_ is not None for id_ in batch["judgment_id"]
-            ), "Found null judgment_id"
-            assert all(
-                chunk is not None for chunk in batch["chunk_text"]
-            ), "Found null chunk_text"
-            assert all(
-                emb is not None for emb in batch["embedding"]
-            ), "Found null embedding"
+            assert all(id_ is not None for id_ in batch["judgment_id"]), "Found null judgment_id"
+            assert all(chunk is not None for chunk in batch["chunk_text"]), "Found null chunk_text"
+            assert all(emb is not None for emb in batch["embedding"]), "Found null embedding"
 
             return True
         except AssertionError as e:
@@ -584,14 +527,10 @@ class DocumentIngester(CollectionIngester):
         )
         self.default_column_values = default_column_values or {}
 
-    def _filter_existing_objects(
-        self, dataset: Dataset, collection: Any, num_rows: int
-    ) -> Dataset:
+    def _filter_existing_objects(self, dataset: Dataset, collection: Any, num_rows: int) -> Dataset:
         """Filter out documents that already exist in the collection."""
         if self.db is None:
-            raise ValueError(
-                "Database connection is required for filtering existing documents"
-            )
+            raise ValueError("Database connection is required for filtering existing documents")
 
         # Get existing UUIDs
         logger.info("Fetching existing UUIDs from collection...")
@@ -622,9 +561,7 @@ class DocumentIngester(CollectionIngester):
             desc="Filtering out already uploaded documents",
         )
 
-        logger.info(
-            f"Filtered out {num_rows - filtered_dataset.num_rows} existing embeddings"
-        )
+        logger.info(f"Filtered out {num_rows - filtered_dataset.num_rows} existing embeddings")
         return filtered_dataset
 
     def process_batch(
@@ -635,9 +572,7 @@ class DocumentIngester(CollectionIngester):
     ) -> None:
         """Process and insert a batch of documents into Weaviate."""
         batch = dataset[
-            batch_idx
-            * self.config.batch_size : (batch_idx + 1)
-            * self.config.batch_size
+            batch_idx * self.config.batch_size : (batch_idx + 1) * self.config.batch_size
         ]
 
         try:
@@ -652,9 +587,7 @@ class DocumentIngester(CollectionIngester):
                 uuids_to_insert.append(uuid)
 
             # Use simple fixed-size batch
-            with collection.batch.fixed_size(
-                batch_size=self.config.batch_size
-            ) as batch_op:
+            with collection.batch.fixed_size(batch_size=self.config.batch_size) as batch_op:
                 for i in range(len(batch["document_id"])):
                     # Get deterministic UUID for this document
                     uuid = uuids_to_insert[i]
@@ -665,8 +598,7 @@ class DocumentIngester(CollectionIngester):
                             continue
                         value = batch[key][i]
                         if (
-                            value is None
-                            or (isinstance(value, float) and np.isnan(value))
+                            value is None or (isinstance(value, float) and np.isnan(value))
                         ) and key in self.default_column_values:
                             value = self.default_column_values[key]
                         properties[key] = value
@@ -684,9 +616,7 @@ class DocumentIngester(CollectionIngester):
                         # Add core fields
                         title=properties.get("title"),
                         date_issued=properties.get("date_issued"),
-                        publication_date=properties.get(
-                            "date_issued"
-                        ),  # Same as date_issued
+                        publication_date=properties.get("date_issued"),  # Same as date_issued
                         document_number=properties.get("document_number"),
                         language=properties.get("language"),
                         country=properties.get("country"),
@@ -699,9 +629,7 @@ class DocumentIngester(CollectionIngester):
                         outcome=properties.get("outcome"),
                         parties=properties.get("parties"),
                         judgment_specific=properties.get("judgment_specific"),
-                        tax_interpretation_specific=properties.get(
-                            "tax_interpretation_specific"
-                        ),
+                        tax_interpretation_specific=properties.get("tax_interpretation_specific"),
                         legal_act_specific=properties.get("legal_act_specific"),
                         relationships=properties.get("relationships"),
                         legal_analysis=properties.get("legal_analysis"),
@@ -715,9 +643,7 @@ class DocumentIngester(CollectionIngester):
                         lambda x: x["document_id"] == batch["document_id"][i]
                     )
                     if len(embedding) == 0:
-                        logger.warning(
-                            f"No embedding found for document {batch['document_id'][i]}"
-                        )
+                        logger.warning(f"No embedding found for document {batch['document_id'][i]}")
                         continue
                     embedding = embedding[0]["embedding"]
 
@@ -749,9 +675,7 @@ class DatasetLoader:
     def _check_embeddings_exist(self) -> None:
         """Check if embeddings path exists."""
         if not Path(self.config.output_dir).exists():
-            raise ValueError(
-                f"Embeddings directory does not exist: {self.config.output_dir}"
-            )
+            raise ValueError(f"Embeddings directory does not exist: {self.config.output_dir}")
         logger.info(f"Using embeddings from {self.config.output_dir}")
 
     def load_chunk_dataset(self) -> Dataset:
@@ -790,9 +714,7 @@ class DatasetLoader:
         )
 
 
-@hydra.main(
-    version_base="1.3", config_path=str(CONFIG_PATH), config_name="embedding.yaml"
-)
+@hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="embedding.yaml")
 def main(cfg: DictConfig) -> None:
     """Run data ingestion into Weaviate."""
     # Resolve the configuration
@@ -814,9 +736,7 @@ def main(cfg: DictConfig) -> None:
     ingest_batch_size = config.ingest_batch_size
     if "ingest_batch_size" in cfg:
         ingest_batch_size = int(cfg.ingest_batch_size)
-        logger.info(
-            f"Overriding ingest_batch_size from command line: {ingest_batch_size}"
-        )
+        logger.info(f"Overriding ingest_batch_size from command line: {ingest_batch_size}")
 
     # Create DatasetLoader and load datasets
     loader = DatasetLoader(config)
@@ -834,9 +754,7 @@ def main(cfg: DictConfig) -> None:
         db.create_collections()
 
         embedding_dataset = loader.load_document_embeddings_dataset()
-        logger.info(
-            f"Loaded document embeddings dataset with {embedding_dataset.num_rows} rows"
-        )
+        logger.info(f"Loaded document embeddings dataset with {embedding_dataset.num_rows} rows")
         document_dataset = loader.load_document_dataset()
         logger.info(f"Loaded document dataset with {document_dataset.num_rows} rows")
 
@@ -860,9 +778,7 @@ def main(cfg: DictConfig) -> None:
             ),
             default_column_values=config.default_column_values,
         )
-        document_ingester.ingest(
-            dataset=document_dataset, embedding_dataset=embedding_dataset
-        )
+        document_ingester.ingest(dataset=document_dataset, embedding_dataset=embedding_dataset)
 
         # Free up memory
         del embedding_dataset
@@ -873,23 +789,18 @@ def main(cfg: DictConfig) -> None:
             chunks_embeddings_dataset = chunks_embeddings_dataset.map(
                 lambda row: remap_row(row, mapping), num_proc=config.num_output_shards
             )
-        logger.info(
-            f"Loaded chunk dataset with {chunks_embeddings_dataset.num_rows} rows"
-        )
+        logger.info(f"Loaded chunk dataset with {chunks_embeddings_dataset.num_rows} rows")
 
         chunk_ingester = ChunkIngester(
             db=db,
             config=ingest_config,
             columns_to_ingest=(
-                list(mapping.keys())
-                + ["embedding", "chunk_id", "chunk_text", "document_id"]
+                list(mapping.keys()) + ["embedding", "chunk_id", "chunk_text", "document_id"]
                 if mapping
                 else ["embedding", "chunk_id", "chunk_text", "document_id"]
             ),
         )
-        chunk_ingester.ingest(
-            dataset=document_dataset, embedding_dataset=chunks_embeddings_dataset
-        )
+        chunk_ingester.ingest(dataset=document_dataset, embedding_dataset=chunks_embeddings_dataset)
 
     logger.info("Ingestion completed")
 

@@ -88,7 +88,7 @@ python scripts/demos/demo_weaviate_ingestion.py
    # Start Weaviate
    cd weaviate/
    docker-compose up -d
-   
+
    # Or use the simple docker command
    docker run -d --name weaviate-test -p 8084:8080 cr.weaviate.io/semitechnologies/weaviate:1.26.1
    ```
@@ -98,7 +98,7 @@ python scripts/demos/demo_weaviate_ingestion.py
    ```bash
    # Try the general Weaviate demo first
    python scripts/demos/demo_weaviate_ingestion.py
-   
+
    # Then try the local dataset demo
    python scripts/demos/demo_local_dataset_ingestion.py
    ```

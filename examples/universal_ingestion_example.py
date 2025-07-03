@@ -45,13 +45,15 @@ def main():
         console.print(f"Dataset: {preview.dataset_name}")
         console.print(f"Total rows: {preview.total_rows:,}")
         console.print(f"Columns: {preview.columns}")
-        console.print(f"Estimated processing time: {preview.estimated_processing_time / 60:.1f} minutes")
+        console.print(
+            f"Estimated processing time: {preview.estimated_processing_time / 60:.1f} minutes"
+        )
 
         console.print("\nSample data:")
         for i, row in enumerate(preview.sample_rows[:2]):
             console.print(f"  Row {i + 1}: {list(row.keys())}")
 
-        console.print(f"\nSuggested mapping:")
+        console.print("\nSuggested mapping:")
         for source, target in preview.suggested_mapping.items():
             console.print(f"  {source} -> {target}")
 
@@ -66,7 +68,7 @@ def main():
             config = processor.register_new_dataset(dataset_name)
             logger.info(f"Successfully registered: {dataset_name}")
 
-        console.print(f"Configuration:")
+        console.print("Configuration:")
         console.print(f"  Document type: {config.document_type}")
         console.print(f"  Required fields: {config.required_fields}")
         console.print(f"  Text fields: {config.text_fields}")
@@ -86,12 +88,14 @@ def main():
 
         if validation_result.resource_estimates:
             estimates = validation_result.resource_estimates
-            console.print(f"\nResource estimates:")
+            console.print("\nResource estimates:")
             console.print(
                 f"  Processing time: {estimates.get('estimated_processing_time_minutes', 0):.1f} minutes"
             )
             console.print(f"  Memory needed: {estimates.get('estimated_memory_mb', 0):.1f} MB")
-            console.print(f"  Recommended batch size: {estimates.get('recommended_batch_size', 32)}")
+            console.print(
+                f"  Recommended batch size: {estimates.get('recommended_batch_size', 32)}"
+            )
 
         # Show any critical issues
         critical_issues = validation_result.get_issues_by_level(ValidationLevel.CRITICAL)
@@ -111,7 +115,7 @@ def main():
             upsert=True,
         )
 
-        console.print(f"Ingestion config:")
+        console.print("Ingestion config:")
         console.print(f"  Max documents: {ingest_config.max_documents}")
         console.print(f"  Batch size: {ingest_config.batch_size}")
         console.print(f"  Upsert enabled: {ingest_config.upsert}")
@@ -147,7 +151,7 @@ def main():
             create_embeddings=True,
             preview_only=False
         )
-        
+
         if result.success:
             logger.info("🎉 Ingestion completed successfully!")
             console.print(f"Documents ingested: {result.ingested_documents}")
@@ -161,15 +165,17 @@ def main():
 
         # Step 7: Show CLI commands for manual operation
         logger.info("\n🛠️ CLI Commands for manual operation:")
-        console.print(f"Preview dataset:")
+        console.print("Preview dataset:")
         console.print(f"  python scripts/dataset_manager.py preview '{dataset_name}'")
-        console.print(f"\nValidate dataset:")
+        console.print("\nValidate dataset:")
         console.print(f"  python scripts/dataset_manager.py validate '{dataset_name}'")
-        console.print(f"\nIngest dataset:")
+        console.print("\nIngest dataset:")
         console.print(
             f"  python scripts/dataset_manager.py ingest '{dataset_name}' --max-docs 100 --dry-run"
         )
-        console.print(f"  python scripts/dataset_manager.py ingest '{dataset_name}' --max-docs 1000")
+        console.print(
+            f"  python scripts/dataset_manager.py ingest '{dataset_name}' --max-docs 1000"
+        )
 
         logger.info("\n✨ Example completed successfully!")
 

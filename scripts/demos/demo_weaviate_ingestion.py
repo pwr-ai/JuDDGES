@@ -234,7 +234,9 @@ def ingest_documents(documents: List[Dict[str, Any]]) -> bool:
     success_count = 0
     for doc in documents:
         response = requests.post(
-            f"{WEAVIATE_URL}/v1/objects", json={"class": "LegalDocument", "properties": doc}, headers=HEADERS
+            f"{WEAVIATE_URL}/v1/objects",
+            json={"class": "LegalDocument", "properties": doc},
+            headers=HEADERS,
         )
 
         if response.status_code in [200, 201]:
@@ -255,7 +257,9 @@ def ingest_chunks(chunks: List[Dict[str, Any]]) -> bool:
     success_count = 0
     for chunk in chunks:
         response = requests.post(
-            f"{WEAVIATE_URL}/v1/objects", json={"class": "DocumentChunk", "properties": chunk}, headers=HEADERS
+            f"{WEAVIATE_URL}/v1/objects",
+            json={"class": "DocumentChunk", "properties": chunk},
+            headers=HEADERS,
         )
 
         if response.status_code in [200, 201]:
@@ -286,7 +290,7 @@ def query_documents(query: str, limit: int = 3):
               }}
               {{
                 path: ["keywords"]
-                operator: Like  
+                operator: Like
                 valueText: "*{query}*"
               }}
             ]
@@ -303,7 +307,9 @@ def query_documents(query: str, limit: int = 3):
     }}
     """
 
-    response = requests.post(f"{WEAVIATE_URL}/v1/graphql", json={"query": graphql_query}, headers=HEADERS)
+    response = requests.post(
+        f"{WEAVIATE_URL}/v1/graphql", json={"query": graphql_query}, headers=HEADERS
+    )
 
     if response.status_code == 200:
         data = response.json()
@@ -342,7 +348,9 @@ def show_statistics():
     }
     """
 
-    response = requests.post(f"{WEAVIATE_URL}/v1/graphql", json={"query": doc_query}, headers=HEADERS)
+    response = requests.post(
+        f"{WEAVIATE_URL}/v1/graphql", json={"query": doc_query}, headers=HEADERS
+    )
     if response.status_code == 200:
         data = response.json()
         doc_count = (
@@ -367,7 +375,9 @@ def show_statistics():
     }
     """
 
-    response = requests.post(f"{WEAVIATE_URL}/v1/graphql", json={"query": chunk_query}, headers=HEADERS)
+    response = requests.post(
+        f"{WEAVIATE_URL}/v1/graphql", json={"query": chunk_query}, headers=HEADERS
+    )
     if response.status_code == 200:
         data = response.json()
         chunk_count = (

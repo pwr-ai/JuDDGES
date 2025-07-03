@@ -2,8 +2,8 @@
 
 import json
 
-import pytest
 import numpy as np
+import pytest
 from datasets import Dataset
 
 from scripts.embed.ingest_to_weaviate import (
@@ -318,7 +318,7 @@ class TestErrorHandlingAndRecovery:
 
         # Test with None database - should raise an appropriate error or handle gracefully
         ingester = DocumentIngester(db=None, config=config)
-        
+
         # Since the current implementation tries to connect to a real database when db=None,
         # we expect this to fail with a connection error rather than succeed
         with pytest.raises(Exception):  # Expect some kind of connection error

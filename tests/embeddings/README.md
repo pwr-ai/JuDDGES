@@ -233,16 +233,16 @@ The test suite requires:
 
 The test suite covers:
 
-✅ UUID generation and determinism  
-✅ Configuration validation  
-✅ Dataset loading and validation  
-✅ Batch processing logic  
-✅ Document ingestion workflows  
-✅ Chunk ingestion workflows  
-✅ Error handling and recovery  
-✅ Performance and memory efficiency  
-✅ Real-world data scenarios  
-✅ Edge cases and boundary conditions  
+✅ UUID generation and determinism
+✅ Configuration validation
+✅ Dataset loading and validation
+✅ Batch processing logic
+✅ Document ingestion workflows
+✅ Chunk ingestion workflows
+✅ Error handling and recovery
+✅ Performance and memory efficiency
+✅ Real-world data scenarios
+✅ Edge cases and boundary conditions
 
 ## Continuous Integration
 

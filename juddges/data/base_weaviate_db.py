@@ -1,17 +1,14 @@
 import os
-import re
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from loguru import logger
+
 import weaviate
+from juddges.settings import ROOT_PATH
 from weaviate import WeaviateClient
 from weaviate.collections import Collection
-from weaviate.collections.classes.config import Configure, Property
-from weaviate.connect import ConnectionParams
-
-from juddges.settings import ROOT_PATH
 
 logger.info(f"Environment variables loaded from {ROOT_PATH / '.env'} file")
 load_dotenv(ROOT_PATH / ".env", override=True)

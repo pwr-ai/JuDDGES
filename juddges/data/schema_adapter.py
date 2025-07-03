@@ -182,7 +182,6 @@ class WeaviateSchemaAdapter:
 
     def _looks_like_date(self, value: str) -> bool:
         """Check if a string value looks like a date."""
-        date_indicators = ["date", "time", "-", "/", ":", "T"]
         if len(value) < 8:  # Too short to be a meaningful date
             return False
 

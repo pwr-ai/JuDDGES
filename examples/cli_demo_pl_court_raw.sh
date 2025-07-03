@@ -1,5 +1,5 @@
 #!/bin/bash
-# 
+#
 # CLI Demo for JuDDGES/pl-court-raw Dataset
 # This script shows all the commands you would use with the Universal Ingestion System
 #
@@ -79,7 +79,7 @@ echo "🎯 What makes this powerful for JuDDGES/pl-court-raw:"
 echo ""
 echo "✅ AUTOMATIC FIELD MAPPING:"
 echo "   judgment_id → document_id"
-echo "   docket_number → document_number" 
+echo "   docket_number → document_number"
 echo "   judgment_date → date_issued"
 echo "   full_text → full_text"
 echo "   court_name → court_name"

@@ -53,15 +53,15 @@ UV is a fast, reliable Python package installer and resolver.
    ```bash
    # Install UV if not already installed
    pip install uv
-   
+
    # Create a virtual environment
    uv venv .venv
-   
+
    # Activate the environment
    source .venv/bin/activate  # On Linux/macOS
    # OR
    # .venv\Scripts\activate  # On Windows
-   
+
    # Install the project in development mode
    uv pip install -e .
    ```

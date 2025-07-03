@@ -238,7 +238,7 @@ The system automatically handles:
 ### Legal Document Types
 
 - **Court Judgments**: decisions, rulings, opinions
-- **Legal Acts**: statutes, regulations, directives  
+- **Legal Acts**: statutes, regulations, directives
 - **Tax Interpretations**: tax authority decisions
 - **Administrative Decisions**: government rulings
 
@@ -284,7 +284,7 @@ from juddges.data.ingesters import DocumentIngester
 ingester = DocumentIngester()
 ingester.ingest(dataset)
 
-# NEW WAY  
+# NEW WAY
 from juddges.data.universal_processor import UniversalDatasetProcessor
 processor = UniversalDatasetProcessor()
 result = processor.process_dataset("dataset-name")

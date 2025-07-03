@@ -88,12 +88,12 @@ class DatasetLoader:
 
     def _check_embeddings_exist(self) -> None:
         """Check if embedding directories exist."""
-        assert self.config.agg_embeddings_dir.exists(), (
-            f"Embeddings directory {self.config.agg_embeddings_dir} does not exist"
-        )
-        assert self.config.chunk_embeddings_dir.exists(), (
-            f"Embeddings directory {self.config.chunk_embeddings_dir} does not exist"
-        )
+        assert (
+            self.config.agg_embeddings_dir.exists()
+        ), f"Embeddings directory {self.config.agg_embeddings_dir} does not exist"
+        assert (
+            self.config.chunk_embeddings_dir.exists()
+        ), f"Embeddings directory {self.config.chunk_embeddings_dir} does not exist"
 
     def load_chunk_dataset(self) -> Dataset:
         """

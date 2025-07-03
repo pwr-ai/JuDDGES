@@ -163,7 +163,7 @@ class DatasetValidator:
         """Validate that the dataset is accessible."""
         try:
             # Try to load just the dataset info
-            dataset_info = load_dataset(dataset_name, split="train[:1]")
+            load_dataset(dataset_name, split="train[:1]")
             result.add_issue(
                 ValidationLevel.INFO, "accessibility", f"Dataset {dataset_name} is accessible"
             )

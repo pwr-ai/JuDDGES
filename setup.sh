@@ -20,4 +20,4 @@ echo "Installing JuDDGES..."
 uv pip install -e .
 
 echo "Setup complete! JuDDGES environment is ready."
-echo "To activate this environment in the future, run: source .venv/bin/activate" 
+echo "To activate this environment in the future, run: source .venv/bin/activate"

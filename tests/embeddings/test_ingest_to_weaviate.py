@@ -96,12 +96,12 @@ class TestCollectionIngester:
         """Create a mock database."""
         db = Mock()
         collection = Mock()
-        
+
         # Properly setup context manager for batch operations
         batch_context = Mock()
         batch_context.__enter__ = Mock(return_value=batch_context)
         batch_context.__exit__ = Mock(return_value=None)
-        
+
         collection.batch.fixed_size.return_value = batch_context
         db.document_chunks_collection = collection
         db.legal_documents_collection = collection
@@ -155,14 +155,10 @@ class TestCollectionIngester:
             {"title": ["Title 1", "Title 2"], "content": ["Content 1", "Content 2"]}
         )
 
-        with pytest.raises(
-            ValueError, match="Dataset must contain 'document_id' column"
-        ):
+        with pytest.raises(ValueError, match="Dataset must contain 'document_id' column"):
             ingester.ingest(invalid_dataset, invalid_dataset)
 
-    def test_columns_filtering(
-        self, mock_db, sample_document_dataset, sample_embedding_dataset
-    ):
+    def test_columns_filtering(self, mock_db, sample_document_dataset, sample_embedding_dataset):
         """Test that column filtering works correctly."""
         config = IngestConfig(max_documents=1)  # Limit to avoid processing
         ingester = ChunkIngester(
@@ -172,9 +168,7 @@ class TestCollectionIngester:
         )
 
         # Mock the process_batch method to avoid actual processing
-        with patch.object(ingester, "process_batch"), patch.object(
-            ingester, "_process_batches"
-        ):
+        with patch.object(ingester, "process_batch"), patch.object(ingester, "_process_batches"):
             ingester.ingest(sample_document_dataset, sample_embedding_dataset)
 
         # Verify that database collections were accessed
@@ -189,7 +183,7 @@ class TestChunkIngester:
         """Create a mock database for chunks."""
         db = Mock()
         collection = Mock()
-        
+
         # Create a proper context manager mock
         class MockBatchContext:
             def __enter__(self):
@@ -200,7 +194,7 @@ class TestChunkIngester:
 
             def add_object(self, *args, **kwargs):
                 pass
-        
+
         batch_context = MockBatchContext()
         collection.batch.fixed_size.return_value = batch_context
         db.document_chunks_collection = collection
@@ -258,15 +252,11 @@ class TestChunkIngester:
         config = IngestConfig(batch_size=8)
         ingester = ChunkIngester(db=mock_db, config=config)
 
-        assert (
-            ingester.collection_name == "document_chunks"
-        )  # Actual constant value
+        assert ingester.collection_name == "document_chunks"  # Actual constant value
         assert ingester.db == mock_db
         assert ingester.config.batch_size == 8
 
-    def test_chunk_batch_processing(
-        self, mock_db, sample_document_dataset, sample_chunk_dataset
-    ):
+    def test_chunk_batch_processing(self, mock_db, sample_document_dataset, sample_chunk_dataset):
         """Test processing a batch of chunks."""
         config = IngestConfig(batch_size=2)
         ingester = ChunkIngester(db=mock_db, config=config)
@@ -279,9 +269,7 @@ class TestChunkIngester:
         )
 
         # Verify the batch processing was called
-        mock_db.document_chunks_collection.batch.fixed_size.assert_called_with(
-            batch_size=2
-        )
+        mock_db.document_chunks_collection.batch.fixed_size.assert_called_with(batch_size=2)
 
     def test_chunk_filtering_by_document_ids(self, mock_db):
         """Test filtering chunks by valid document IDs."""
@@ -314,9 +302,7 @@ class TestChunkIngester:
         assert filtered_dataset.num_rows == 2
         assert set(filtered_dataset["document_id"]) == {"doc_1", "doc_3"}
 
-    def test_chunk_data_merging(
-        self, mock_db, sample_document_dataset, sample_chunk_dataset
-    ):
+    def test_chunk_data_merging(self, mock_db, sample_document_dataset, sample_chunk_dataset):
         """Test that document attributes are properly merged into chunks."""
         config = IngestConfig(batch_size=4)
         ingester = ChunkIngester(db=mock_db, config=config)
@@ -340,7 +326,7 @@ class TestDocumentIngester:
         """Create a mock database for documents."""
         db = Mock()
         collection = Mock()
-        
+
         # Create a proper context manager mock
         class MockBatchContext:
             def __enter__(self):
@@ -351,7 +337,7 @@ class TestDocumentIngester:
 
             def add_object(self, *args, **kwargs):
                 pass
-        
+
         batch_context = MockBatchContext()
         collection.batch.fixed_size.return_value = batch_context
         db.legal_documents_collection = collection
@@ -398,13 +384,9 @@ class TestDocumentIngester:
         config = IngestConfig(batch_size=4)
         default_values = {"processing_status": "completed"}
 
-        ingester = DocumentIngester(
-            db=mock_db, config=config, default_column_values=default_values
-        )
+        ingester = DocumentIngester(db=mock_db, config=config, default_column_values=default_values)
 
-        assert (
-            ingester.collection_name == "legal_documents"
-        )  # Actual constant value
+        assert ingester.collection_name == "legal_documents"  # Actual constant value
         assert ingester.db == mock_db
         assert ingester.config.batch_size == 4
         assert ingester.default_column_values == default_values
@@ -423,9 +405,7 @@ class TestDocumentIngester:
         )
 
         # Verify batch processing was called
-        mock_db.legal_documents_collection.batch.fixed_size.assert_called_with(
-            batch_size=2
-        )
+        mock_db.legal_documents_collection.batch.fixed_size.assert_called_with(batch_size=2)
 
     def test_document_filtering_existing(self, mock_db):
         """Test filtering out existing documents."""
@@ -460,9 +440,7 @@ class TestDocumentIngester:
         config = IngestConfig(batch_size=1)
         default_values = {"processing_status": "completed", "confidence_score": 0.95}
 
-        ingester = DocumentIngester(
-            db=mock_db, config=config, default_column_values=default_values
-        )
+        ingester = DocumentIngester(db=mock_db, config=config, default_column_values=default_values)
 
         ingester.process_batch(
             dataset=sample_document_dataset,
@@ -485,9 +463,7 @@ class TestDatasetLoader:
             config = EmbeddingConfig(
                 output_dir=Path(temp_dir) / "embeddings",
                 dataset_name="test/dataset",
-                embedding_model=EmbeddingModelConfig(
-                    name="test-model", max_seq_length=512
-                ),
+                embedding_model=EmbeddingModelConfig(name="test-model", max_seq_length=512),
                 batch_size=16,
                 num_output_shards=2,
             )
@@ -530,17 +506,13 @@ class TestDatasetLoader:
         assert result == mock_dataset
         mock_load_dataset.assert_called_once_with(
             "parquet",
-            data_dir=str(
-                embedding_config.output_dir / embedding_config.CHUNK_EMBEDDINGS_DIR
-            ),
+            data_dir=str(embedding_config.output_dir / embedding_config.CHUNK_EMBEDDINGS_DIR),
             split="train",
             num_proc=embedding_config.num_output_shards,
         )
 
     @patch("scripts.embed.ingest_to_weaviate.load_dataset")
-    def test_load_document_embeddings_dataset(
-        self, mock_load_dataset, embedding_config
-    ):
+    def test_load_document_embeddings_dataset(self, mock_load_dataset, embedding_config):
         """Test loading document embeddings dataset."""
         mock_dataset = Mock()
         mock_load_dataset.return_value = mock_dataset
@@ -551,9 +523,7 @@ class TestDatasetLoader:
         assert result == mock_dataset
         mock_load_dataset.assert_called_once_with(
             "parquet",
-            data_dir=str(
-                embedding_config.output_dir / embedding_config.AGG_EMBEDDINGS_DIR
-            ),
+            data_dir=str(embedding_config.output_dir / embedding_config.AGG_EMBEDDINGS_DIR),
             split="train",
             num_proc=embedding_config.num_output_shards,
         )
@@ -581,9 +551,7 @@ class TestIntegrationScenarios:
     @pytest.fixture
     def mock_weaviate_db(self):
         """Create a comprehensive mock for WeaviateLegalDocumentsDatabase."""
-        with patch(
-            "scripts.embed.ingest_to_weaviate.WeaviateLegalDocumentsDatabase"
-        ) as MockDB:
+        with patch("scripts.embed.ingest_to_weaviate.WeaviateLegalDocumentsDatabase") as MockDB:
             db_instance = Mock()
             db_instance.__enter__ = Mock(return_value=db_instance)
             db_instance.__exit__ = Mock(return_value=None)
@@ -596,7 +564,7 @@ class TestIntegrationScenarios:
             doc_batch_context = Mock()
             doc_batch_context.__enter__ = Mock(return_value=doc_batch_context)
             doc_batch_context.__exit__ = Mock(return_value=None)
-            
+
             chunk_batch_context = Mock()
             chunk_batch_context.__enter__ = Mock(return_value=chunk_batch_context)
             chunk_batch_context.__exit__ = Mock(return_value=None)
@@ -713,7 +681,7 @@ class TestIntegrationScenarios:
         # The current implementation handles None embeddings gracefully
         # by filtering them out during processing
         ingester.ingest(dataset, invalid_embeddings)
-        
+
         # Verify that ingestion was attempted
         assert mock_weaviate_db.get_collection_size.called
 
@@ -745,9 +713,7 @@ class TestIntegrationScenarios:
         ingester.ingest(large_dataset, large_embeddings)
 
         # Should have processed multiple batches
-        assert (
-            mock_weaviate_db.legal_documents_collection.batch.fixed_size.call_count >= 5
-        )
+        assert mock_weaviate_db.legal_documents_collection.batch.fixed_size.call_count >= 5
 
 
 if __name__ == "__main__":

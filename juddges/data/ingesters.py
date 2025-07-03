@@ -345,15 +345,15 @@ class ChunkIngester(CollectionIngester):
         """
         try:
             assert len(batch["judgment_id"]) > 0, "Batch is empty"
-            assert len(batch["judgment_id"]) == len(batch["chunk_id"]), (
-                "Mismatched lengths between judgment_id and chunk_id"
-            )
-            assert len(batch["judgment_id"]) == len(batch["chunk_text"]), (
-                "Mismatched lengths between judgment_id and chunk_text"
-            )
-            assert len(batch["judgment_id"]) == len(batch["embedding"]), (
-                "Mismatched lengths between judgment_id and embedding"
-            )
+            assert len(batch["judgment_id"]) == len(
+                batch["chunk_id"]
+            ), "Mismatched lengths between judgment_id and chunk_id"
+            assert len(batch["judgment_id"]) == len(
+                batch["chunk_text"]
+            ), "Mismatched lengths between judgment_id and chunk_text"
+            assert len(batch["judgment_id"]) == len(
+                batch["embedding"]
+            ), "Mismatched lengths between judgment_id and embedding"
 
             # Validate embedding dimensions
             embedding_shape = np.array(batch["embedding"][0]).shape

@@ -12,9 +12,6 @@ from pprint import pformat
 
 import hydra
 from dotenv import load_dotenv
-from loguru import logger
-from omegaconf import DictConfig
-
 from embed.weaviate.config import (
     DEBUG,
     DEFAULT_INGEST_BATCH_SIZE,
@@ -25,6 +22,9 @@ from embed.weaviate.config import (
 )
 from embed.weaviate.ingesters import ChunkIngester, DocumentIngester
 from embed.weaviate.loaders import DatasetLoader
+from loguru import logger
+from omegaconf import DictConfig
+
 from juddges.config import EmbeddingConfig
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
 from juddges.settings import CONFIG_PATH, ROOT_PATH

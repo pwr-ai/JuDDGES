@@ -1,7 +1,7 @@
 import json
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from loguru import logger
 from pydantic import BaseModel, Field

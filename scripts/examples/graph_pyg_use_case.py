@@ -54,17 +54,16 @@ class PlCourtGraphDataset(InMemoryDataset):
         except Exception as e:
             print(f"Error processing dataset: {e}")
             # Create minimal dummy data for testing
-            import torch
             from torch_geometric.data import Data
-            
+
             dummy_data = Data(
                 x=torch.randn(10, 16),  # 10 nodes with 16 features
                 edge_index=torch.tensor([[0, 1, 1, 2], [1, 0, 2, 1]], dtype=torch.long),
             )
-            
+
             data_file, index_file = self.processed_paths
             self.save([dummy_data], data_file)
-            
+
             torch.save(
                 {
                     "judgment_idx_2_iid": {},

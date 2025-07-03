@@ -234,4 +234,4 @@ citing_judgments = await db.get_citing_documents(
 7. **Context Preservation**: Understand how segments relate to each other
 8. **Custom Tagging**: Apply domain-specific tags for specialized filtering
 9. **Document Relationships**: Model the complex web of relationships between legal documents
-10. **Legislative Support**: Full support for legal acts with their unique structure and lifecycle 
+10. **Legislative Support**: Full support for legal acts with their unique structure and lifecycle

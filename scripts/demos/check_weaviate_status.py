@@ -73,7 +73,10 @@ def check_weaviate_status():
             """
 
             count_response = requests.post(
-                f"{weaviate_url}/v1/graphql", json={"query": graphql_query}, headers=headers, timeout=10
+                f"{weaviate_url}/v1/graphql",
+                json={"query": graphql_query},
+                headers=headers,
+                timeout=10,
             )
 
             if count_response.status_code == 200:
@@ -140,7 +143,10 @@ def check_weaviate_status():
             """
 
             sample_response = requests.post(
-                f"{weaviate_url}/v1/graphql", json={"query": sample_query}, headers=headers, timeout=10
+                f"{weaviate_url}/v1/graphql",
+                json={"query": sample_query},
+                headers=headers,
+                timeout=10,
             )
 
             if sample_response.status_code == 200:

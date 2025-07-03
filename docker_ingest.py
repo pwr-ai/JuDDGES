@@ -123,14 +123,14 @@ def format_date(date_val):
                 try:
                     dt = datetime.strptime(date_val, fmt)
                     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-                except:
+                except ValueError:
                     continue
             return "2023-01-01T00:00:00Z"
         elif hasattr(date_val, "strftime"):
             return date_val.strftime("%Y-%m-%dT%H:%M:%SZ")
         else:
             return "2023-01-01T00:00:00Z"
-    except:
+    except (ValueError, TypeError):
         return "2023-01-01T00:00:00Z"
 
 

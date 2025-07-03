@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 from datasets import Dataset, load_dataset
 from loguru import logger
 
@@ -317,9 +316,6 @@ class UniversalDatasetProcessor:
     ) -> Dict[str, Any]:
         """Check compatibility with existing Weaviate schema."""
         try:
-            # Create proposed schema
-            proposed_schema = self.schema_adapter.create_adaptive_schema(config, sample_data)
-
             # For now, we'll assume compatibility (in a real implementation,
             # you'd check against existing Weaviate schema)
             return {
@@ -520,10 +516,6 @@ class UniversalDatasetProcessor:
                 # Ensure schema exists and is up to date
                 logger.info("Checking and updating Weaviate schema")
                 try:
-                    # Get sample data for schema creation
-                    sample_data = embeddings_dataset[0] if len(embeddings_dataset) > 0 else {}
-                    schema_properties = self.schema_adapter.create_adaptive_schema(config, sample_data)
-                    
                     # Ensure collections exist in Weaviate
                     db.create_collections()
                     logger.info("Schema validation completed")
@@ -532,7 +524,9 @@ class UniversalDatasetProcessor:
                     raise
 
                 # Ingest documents
-                logger.info(f"Starting document ingestion for {embeddings_dataset.num_rows} documents")
+                logger.info(
+                    f"Starting document ingestion for {embeddings_dataset.num_rows} documents"
+                )
                 doc_ingester = DocumentIngester(db=db, config=ingest_config)
                 doc_ingester.ingest(embeddings_dataset)
                 ingested_docs = embeddings_dataset.num_rows
