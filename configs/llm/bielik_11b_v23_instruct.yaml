@@ -1,0 +1,7 @@
+name: speakleash/Bielik-11B-v2.3-Instruct
+tokenizer_name: ${.name}
+adapter_path: null
+batch_size: 1
+padding: longest
+use_4bit: false
+use_unsloth: false

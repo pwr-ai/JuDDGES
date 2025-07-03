@@ -7,7 +7,6 @@ import asyncio
 import os
 
 import matplotlib.pyplot as plt
-import pandas as pd
 from loguru import logger
 from prompts.schemas.agitation import AGITATION_SCHEMA
 from settings import ARTICLE_111_DATA_PATH, prepare_langchain_cache
@@ -49,9 +48,7 @@ async def main(overwrite: bool = False):
     merged_output_path = ARTICLE_111_DATA_PATH / "all_judgments_merged.pkl"
     filtered_output_path = ARTICLE_111_DATA_PATH / "filtered_judgments.pkl"
     score_dist_path = ARTICLE_111_DATA_PATH / "search_score_distributions.png"
-    judgments_with_extraction_path = (
-        ARTICLE_111_DATA_PATH / "judgments_with_extraction.pkl"
-    )
+    judgments_with_extraction_path = ARTICLE_111_DATA_PATH / "judgments_with_extraction.pkl"
 
     async with WeaviateJudgmentsDatabase() as db:
         # Get all Article 111 § 1 judgments using BM25 search
@@ -71,9 +68,7 @@ async def main(overwrite: bool = False):
         )
 
         # Plot score distributions for both search types
-        plot_search_score_distributions(
-            bm25_judgments_df, vector_judgments_df, score_dist_path
-        )
+        plot_search_score_distributions(bm25_judgments_df, vector_judgments_df, score_dist_path)
 
         # Merge results
         merged_df = merge_judgment_results(bm25_judgments_df, vector_judgments_df)
@@ -86,9 +81,7 @@ async def main(overwrite: bool = False):
 
         logger.info(f"Total judgments before deduplication: {total_before}")
         logger.info(f"Total judgments after deduplication: {total_after}")
-        logger.info(
-            f"Duplicates removed: {duplicate_count} ({duplicate_percentage:.2f}%)"
-        )
+        logger.info(f"Duplicates removed: {duplicate_count} ({duplicate_percentage:.2f}%)")
 
         # Visualize score distribution to help determine thresholds
         # visualize_score_distribution(merged_df, score_viz_path)
