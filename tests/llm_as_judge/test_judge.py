@@ -8,12 +8,13 @@ import pytest
 from langchain_openai import ChatOpenAI
 
 from juddges.llm_as_judge.base import EvalResults
+from juddges.llm_as_judge.data_model import PredictionLoader
 from juddges.llm_as_judge.judge import StructuredOutputJudge
 from juddges.utils.misc import save_yaml
 
 
 @pytest.fixture
-def setup_environment() -> Generator[Path, None, None]:
+def pred_loader() -> Generator[PredictionLoader, None, None]:
     with tempfile.TemporaryDirectory() as temp_dir:
         predictions_dir = Path(temp_dir)
 
@@ -34,7 +35,9 @@ def setup_environment() -> Generator[Path, None, None]:
         config_file = predictions_dir / "config.yaml"
         save_yaml(config_dict, config_file)
 
-        yield predictions_dir
+        pred_loader = PredictionLoader(predictions_dir, judge_name="test_judge")
+        pred_loader.setup_judge_dir()
+        yield pred_loader
 
 
 @pytest.fixture
@@ -54,7 +57,7 @@ def valid_predictions_data() -> list[dict[str, str]]:
 @pytest.fixture
 def mock_client() -> AsyncMock:
     client = AsyncMock(spec=ChatOpenAI)
-    client.model_name = "test-model"
+    client.model_name = "test_judge"
     client.with_structured_output.return_value = client
     client.ainvoke = AsyncMock()
 
@@ -63,21 +66,18 @@ def mock_client() -> AsyncMock:
 
 @pytest.mark.asyncio
 async def test_successful_evaluation(
-    setup_environment: Path,
+    pred_loader: PredictionLoader,
     valid_predictions_data: list[dict[str, str]],
     mock_client: AsyncMock,
 ) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
-    with open(predictions_file, "w") as f:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump(valid_predictions_data, f)
 
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.9}}
 
     judge = StructuredOutputJudge(
         client=mock_client,
-        predictions_dir=predictions_dir,
+        pred_loader=pred_loader,
         verbose=False,
     )
     results = await judge.evaluate()
@@ -91,21 +91,18 @@ async def test_successful_evaluation(
 
 @pytest.mark.asyncio
 async def test_predictions_with_missing_keys(
-    setup_environment: Path, mock_client: AsyncMock
+    pred_loader: PredictionLoader, mock_client: AsyncMock
 ) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
     predictions_with_missing_keys = [
         {"answer": '{"key1": "value1"}', "gold": '{"key1": "gold1", "key2": "gold2"}'}
     ]
 
-    with open(predictions_file, "w") as f:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump(predictions_with_missing_keys, f)
 
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.0}}
 
-    judge = StructuredOutputJudge(client=mock_client, predictions_dir=predictions_dir)
+    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
     results = await judge.evaluate()
 
     assert len(results.results) == 1
@@ -114,10 +111,9 @@ async def test_predictions_with_missing_keys(
 
 
 @pytest.mark.asyncio
-async def test_predictions_with_extra_keys(setup_environment: Path, mock_client: AsyncMock) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
+async def test_predictions_with_extra_keys(
+    pred_loader: PredictionLoader, mock_client: AsyncMock
+) -> None:
     predictions_with_extra_keys = [
         {
             "answer": '{"key1": "value1", "key2": "value2", "key3": "value3"}',
@@ -125,12 +121,12 @@ async def test_predictions_with_extra_keys(setup_environment: Path, mock_client:
         }
     ]
 
-    with open(predictions_file, "w") as f:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump(predictions_with_extra_keys, f)
 
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.9}}
 
-    judge = StructuredOutputJudge(client=mock_client, predictions_dir=predictions_dir)
+    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
     results = await judge.evaluate()
 
     assert len(results.results) == 1
@@ -140,23 +136,20 @@ async def test_predictions_with_extra_keys(setup_environment: Path, mock_client:
 
 @pytest.mark.asyncio
 async def test_parsing_failure_invalid_json(
-    setup_environment: Path,
+    pred_loader: PredictionLoader,
     mock_client: AsyncMock,
 ) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
     invalid_predictions = [
         {"answer": '{"key1": "value1",}', "gold": '{"key1": "gold1", "key2": "gold2"}'},
         {"answer": '{"key1": "value2"}', "gold": '{"key1": "gold2"}'},
     ]
 
-    with open(predictions_file, "w") as f:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump(invalid_predictions, f)
 
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.0}}
 
-    judge = StructuredOutputJudge(client=mock_client, predictions_dir=predictions_dir)
+    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
     results = await judge.evaluate()
 
     assert mock_client.ainvoke.call_count == 1
@@ -168,17 +161,14 @@ async def test_parsing_failure_invalid_json(
 
 @pytest.mark.asyncio
 async def test_parsing_failure_missing_required_keys(
-    setup_environment: Path, mock_client: AsyncMock
+    pred_loader: PredictionLoader, mock_client: AsyncMock
 ) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
     invalid_file_content = '[{"missing_answer_key": "test", "gold": "{}"}]'
 
-    with open(predictions_file, "w") as f:
+    with open(pred_loader.predictions_file, "w") as f:
         f.write(invalid_file_content)
 
-    judge = StructuredOutputJudge(client=mock_client, predictions_dir=predictions_dir)
+    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
 
     with pytest.raises(ValueError, match="Predictions must contain 'answer' and 'gold' keys"):
         await judge.evaluate()
@@ -186,17 +176,16 @@ async def test_parsing_failure_missing_required_keys(
 
 @pytest.mark.asyncio
 async def test_api_failure_all_requests(
-    setup_environment: Path, valid_predictions_data: list[dict[str, str]], mock_client: AsyncMock
+    pred_loader: PredictionLoader,
+    valid_predictions_data: list[dict[str, str]],
+    mock_client: AsyncMock,
 ) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
-    with open(predictions_file, "w") as f:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump(valid_predictions_data, f)
 
     mock_client.ainvoke.side_effect = Exception("API completely down")
 
-    judge = StructuredOutputJudge(client=mock_client, predictions_dir=predictions_dir)
+    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
     results = await judge.evaluate()
 
     assert len(results.results) == 2
@@ -205,14 +194,13 @@ async def test_api_failure_all_requests(
 
 
 @pytest.mark.asyncio
-async def test_empty_predictions_file(setup_environment: Path, mock_client: AsyncMock) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
-    with open(predictions_file, "w") as f:
+async def test_empty_predictions_file(
+    pred_loader: PredictionLoader, mock_client: AsyncMock
+) -> None:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump([], f)
 
-    judge = StructuredOutputJudge(client=mock_client, predictions_dir=predictions_dir)
+    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
     results = await judge.evaluate()
 
     assert len(results.results) == 0
@@ -220,10 +208,9 @@ async def test_empty_predictions_file(setup_environment: Path, mock_client: Asyn
 
 
 @pytest.mark.asyncio
-async def test_concurrency_limit_respected(setup_environment: Path, mock_client: AsyncMock) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
+async def test_concurrency_limit_respected(
+    pred_loader: PredictionLoader, mock_client: AsyncMock
+) -> None:
     large_predictions = [
         {
             "answer": f'{{"key1": "value{i}", "key2": "value{i}"}}',
@@ -232,13 +219,13 @@ async def test_concurrency_limit_respected(setup_environment: Path, mock_client:
         for i in range(10)
     ]
 
-    with open(predictions_file, "w") as f:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump(large_predictions, f)
 
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.9}}
 
     judge = StructuredOutputJudge(
-        client=mock_client, predictions_dir=predictions_dir, max_concurrent_calls=3
+        client=mock_client, pred_loader=pred_loader, max_concurrent_calls=3
     )
 
     assert judge.max_concurrent_calls == 3
@@ -251,17 +238,16 @@ async def test_concurrency_limit_respected(setup_environment: Path, mock_client:
 
 @pytest.mark.asyncio
 async def test_zero_scores_fallback(
-    setup_environment: Path, valid_predictions_data: list[dict[str, str]], mock_client: AsyncMock
+    pred_loader: PredictionLoader,
+    valid_predictions_data: list[dict[str, str]],
+    mock_client: AsyncMock,
 ) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
-    with open(predictions_file, "w") as f:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump(valid_predictions_data, f)
 
     mock_client.ainvoke.side_effect = Exception("API error")
 
-    judge = StructuredOutputJudge(client=mock_client, predictions_dir=predictions_dir)
+    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
     results = await judge.evaluate()
 
     zero_scores = judge.get_zero_scores()
@@ -271,16 +257,15 @@ async def test_zero_scores_fallback(
 
 
 @pytest.mark.asyncio
-async def test_custom_max_concurrent_calls(setup_environment: Path, mock_client: AsyncMock) -> None:
-    predictions_dir = setup_environment
-    predictions_file = predictions_dir / "predictions.json"
-
-    with open(predictions_file, "w") as f:
+async def test_custom_max_concurrent_calls(
+    pred_loader: PredictionLoader, mock_client: AsyncMock
+) -> None:
+    with open(pred_loader.predictions_file, "w") as f:
         json.dump([], f)
 
     custom_limit = 10
     judge = StructuredOutputJudge(
-        client=mock_client, predictions_dir=predictions_dir, max_concurrent_calls=custom_limit
+        client=mock_client, pred_loader=pred_loader, max_concurrent_calls=custom_limit
     )
 
     assert judge.max_concurrent_calls == custom_limit

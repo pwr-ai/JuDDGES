@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from juddges.llm_as_judge.batched_judge import BatchedStructuredOutputJudge
+from juddges.llm_as_judge.data_model import PredictionLoader
 from juddges.utils.misc import save_json
 
 load_dotenv()
@@ -20,10 +21,12 @@ def main(
 ) -> None:
     """Evaluate predictions using LLM as judge."""
     client = OpenAI(api_key=API_KEY)
+    pred_loader = PredictionLoader(root_dir=predictions_dir, judge_name=judge_model)
+    pred_loader.setup_judge_dir()
     judge = BatchedStructuredOutputJudge(
         client=client,
+        pred_loader=pred_loader,
         judge_model=judge_model,
-        predictions_dir=predictions_dir,
     )
 
     results = None

@@ -1,12 +1,13 @@
 import asyncio
-from pathlib import Path
 from typing import Any
 
+import tiktoken
 from langchain_openai import ChatOpenAI
 from loguru import logger
 from tqdm.asyncio import tqdm_asyncio
 
 from juddges.llm_as_judge.base import EvalResults, ItemEvalResult, StructuredOutputJudgeBase
+from juddges.llm_as_judge.data_model import PredictionLoader
 
 
 class StructuredOutputJudge(StructuredOutputJudgeBase):
@@ -15,12 +16,12 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
     def __init__(
         self,
         client: ChatOpenAI,
-        predictions_dir: Path,
+        pred_loader: PredictionLoader,
         max_concurrent_calls: int = DEFAULT_MAX_CONCURRENT_CALLS,
         verbose: bool = False,
     ):
         """Initialize the LLM judge with a client and concurrency limit."""
-        super().__init__(predictions_dir, client.model_name)
+        super().__init__(pred_loader=pred_loader, judge_name=client.model_name)
         self.client = client
         self.client = self.client.with_structured_output(
             self.structured_response_schema_from_extraction_schema,
@@ -33,7 +34,7 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
 
     async def evaluate(self) -> EvalResults:
         """Evaluate a batch of examples concurrently."""
-        parsed_preds = self.load_predictions()
+        parsed_preds = self.pred_loader.load_predictions()
         dataset_messages = self.prepare_eval_messages(parsed_preds)
         tasks = [
             self.evaluate_single_item(
@@ -70,3 +71,34 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
                     **results_kwargs,
                 )
         return ItemEvalResult.from_success(scores_dict, **results_kwargs)
+
+    def estimate_token_count(self) -> float:
+        """Estimate the cost of evaluating a single item."""
+        logger.warning(
+            "Estimating token count ignores json_schema and computes number of tokens only for input messages"
+        )
+        if self.judge_name.startswith("gpt-4.1"):
+            enc = tiktoken.encoding_for_model("gpt-4o")
+            logger.warning(
+                "For gpt-4.1 defaults to gpt-4o encoding (gpt-4.1 not handled by tiktoken yet)."
+            )
+        else:
+            enc = tiktoken.encoding_for_model(self.judge_name)
+        parsed_preds = self.pred_loader.load_predictions()
+        dataset_messages = self.prepare_eval_messages(parsed_preds)
+        return sum(self.count_tokens(enc, messages) for messages in dataset_messages.values())
+
+    def count_tokens(self, enc: tiktoken.Encoding, messages: list[dict[str, str]]) -> int:
+        """Credit: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb"""
+        tokens_per_message = 3
+        tokens_per_name = 1
+
+        num_tokens = 0
+        for message in messages:
+            num_tokens += tokens_per_message
+            for key, value in message.items():
+                num_tokens += len(enc.encode(value))
+                if key == "name":
+                    num_tokens += tokens_per_name
+        num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+        return num_tokens

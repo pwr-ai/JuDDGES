@@ -1,26 +1,13 @@
 import itertools
-import json
 from functools import cached_property
-from json import JSONDecodeError
-from pathlib import Path
 from statistics import mean, stdev
 from typing import Any, Counter, Literal, defaultdict
 
-from langchain_core.utils.json import parse_json_markdown
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from juddges.llm_as_judge.data_model import ParsedPredictions, PredictionLoader
 from juddges.llm_as_judge.prompts import SYSTEM_PROMPT, USER_PROMPT
-from juddges.utils.config import load_and_resolve_config
-
-
-class ParsedPredictions(BaseModel):
-    predictions: dict[int, dict[str, Any]]
-    gold: dict[int, dict[str, Any]]
-    errors: dict[int, str]
-    missing_keys: dict[int, list[str]] = Field(default_factory=dict)
-    extra_keys: dict[int, list[str]] = Field(default_factory=dict)
-    num_items: int
 
 
 class ItemEvalResult(BaseModel):
@@ -97,43 +84,11 @@ class EvalResults(BaseModel):
 
 
 class StructuredOutputJudgeBase:
-    def __init__(self, predictions_dir: Path, judge_name: str) -> None:
-        self.predictions_dir = predictions_dir
-        self.judge_name = judge_name.replace("/", "__")
-        self.schema = load_and_resolve_config(self.config_file)["ie_schema"]
-        self.setup_judge_dir()
+    def __init__(self, pred_loader: PredictionLoader, judge_name: str) -> None:
+        self.pred_loader = pred_loader
+        self.judge_name = judge_name
 
-    @property
-    def predictions_file(self) -> Path:
-        return self.predictions_dir / "predictions.json"
-
-    @property
-    def config_file(self) -> Path:
-        return self.predictions_dir / "config.yaml"
-
-    @property
-    def judge_dir(self) -> Path:
-        return self.predictions_dir / f"judge_{self.judge_name}"
-
-    @property
-    def batch_api_requests_file(self) -> Path:
-        return self.judge_dir / "batch_api_requests.jsonl"
-
-    @property
-    def batch_api_metadata_file(self) -> Path:
-        return self.judge_dir / "batch_api_metadata.json"
-
-    @property
-    def batch_request_info_file(self) -> Path:
-        return self.judge_dir / "batch_request_info.json"
-
-    @property
-    def batch_api_results_file(self) -> Path:
-        return self.judge_dir / "batch_api_results.jsonl"
-
-    @property
-    def output_file(self) -> Path:
-        return self.judge_dir / f"scores_llm_as_judge_{self.judge_name}.json"
+        assert self.pred_loader.judge_dir.exists()
 
     @cached_property
     def structured_response_schema_from_extraction_schema(self) -> dict[str, Any]:
@@ -154,51 +109,12 @@ class StructuredOutputJudgeBase:
                         "required": ["score"],
                         "additionalProperties": False,
                     }
-                    for key in self.schema.keys()
+                    for key in self.pred_loader.schema.keys()
                 },
                 "additionalProperties": False,
-                "required": list(self.schema.keys()),
+                "required": list(self.pred_loader.schema.keys()),
             },
         }
-
-    def setup_judge_dir(self) -> None:
-        if self.judge_dir.exists():
-            logger.warning(f"Judge directory {self.judge_dir} already exists")
-        self.judge_dir.mkdir(parents=True, exist_ok=True)
-
-    def load_predictions(self) -> ParsedPredictions:
-        # todo: extract path management and pred loading to injected class
-        with open(self.predictions_file) as f:
-            preds = json.load(f)
-        if not all("answer" in pred_item and "gold" in pred_item for pred_item in preds):
-            raise ValueError("Predictions must contain 'answer' and 'gold' keys")
-
-        parsed_preds = {}
-        parsed_gold = {}
-        parsing_errors = {}
-        missing_keys = {}
-        extra_keys = {}
-        for idx, pred_item in enumerate(preds):
-            # we assume gold should always parse without errors
-            gold_pred = parse_json_markdown(pred_item["gold"])
-            try:
-                parsed_preds[idx] = parse_json_markdown(pred_item["answer"])
-                parsed_gold[idx] = gold_pred
-                missing_keys[idx] = list(set(self.schema.keys()) - set(parsed_preds[idx].keys()))
-                extra_keys[idx] = list(set(parsed_preds[idx].keys()) - set(self.schema.keys()))
-            except JSONDecodeError as e:
-                parsing_errors[idx] = str(e)
-                missing_keys[idx] = []
-                extra_keys[idx] = []
-
-        return ParsedPredictions(
-            predictions=parsed_preds,
-            gold=parsed_gold,
-            errors=parsing_errors,
-            missing_keys=missing_keys,
-            extra_keys=extra_keys,
-            num_items=len(preds),
-        )
 
     def prepare_eval_messages(
         self,
@@ -214,7 +130,7 @@ class StructuredOutputJudgeBase:
                 {
                     "role": "user",
                     "content": USER_PROMPT.format(
-                        schema=self.schema,
+                        schema=self.pred_loader.schema,
                         outputs=parsed_preds.predictions[idx],
                         reference_outputs=parsed_preds.gold[idx],
                     ),
@@ -224,7 +140,7 @@ class StructuredOutputJudgeBase:
         return dataset_messages
 
     def get_zero_scores(self) -> dict[str, Any]:
-        return dict.fromkeys(self.schema.keys(), 0.0)
+        return dict.fromkeys(self.pred_loader.schema.keys(), 0.0)
 
     # todo: move to child class
     def merge_judge_results_with_failed_items(
@@ -244,4 +160,4 @@ class StructuredOutputJudgeBase:
                 )
             results.append(res)
 
-        return EvalResults(results=results, ie_schema=self.schema)
+        return EvalResults(results=results, ie_schema=self.pred_loader.schema)

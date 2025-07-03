@@ -10,6 +10,7 @@ from langchain_community.cache import SQLiteCache
 from langchain_openai import ChatOpenAI
 from loguru import logger
 
+from juddges.llm_as_judge.data_model import PredictionLoader
 from juddges.llm_as_judge.judge import StructuredOutputJudge
 
 load_dotenv()
@@ -28,6 +29,7 @@ def main(
         MAX_CONCURRENT_CALLS, help="Maximum number of concurrent API calls"
     ),
     cache_db: Path = typer.Option(CACHE_DB, help="Path to SQLite cache database"),
+    estimate_tokens: bool = typer.Option(False, help="Estimate number of tokens"),
 ) -> None:
     """Evaluate predictions using LLM as judge."""
     llm = ChatOpenAI(
@@ -41,16 +43,22 @@ def main(
         logger.info(f"Using cache database: {cache_db}")
         set_llm_cache(SQLiteCache(str(cache_db)))
 
+    pred_loader = PredictionLoader(root_dir=predictions_dir, judge_name=judge_model)
+    pred_loader.setup_judge_dir()
     judge = StructuredOutputJudge(
         client=llm,
-        predictions_dir=predictions_dir,
+        pred_loader=pred_loader,
         max_concurrent_calls=max_concurrent_calls,
         verbose=True,
     )
-    results = asyncio.run(judge.evaluate())
 
-    with judge.output_file.open("w") as f:
-        json.dump(results.model_dump(), f, indent="\t", ensure_ascii=False)
+    if estimate_tokens:
+        token_count = judge.estimate_token_count()
+        logger.info(f"Estimated token count: {token_count:_}")
+    else:
+        results = asyncio.run(judge.evaluate())
+        with judge.output_file.open("w") as f:
+            json.dump(results.model_dump(), f, indent="\t", ensure_ascii=False)
 
 
 if __name__ == "__main__":

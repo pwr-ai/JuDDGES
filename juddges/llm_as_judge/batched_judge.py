@@ -10,9 +10,9 @@ from openai.types import Batch
 from juddges.llm_as_judge.base import (
     EvalResults,
     ItemEvalResult,
-    ParsedPredictions,
     StructuredOutputJudgeBase,
 )
+from juddges.llm_as_judge.data_model import ParsedPredictions, PredictionLoader
 from juddges.utils.misc import load_json, load_jsonl, save_json, save_jsonl
 
 
@@ -24,17 +24,12 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
         self,
         client: OpenAI,
         judge_model: str,
-        predictions_dir: Path,
+        pred_loader: PredictionLoader,
         temperature: float = TEMPERATURE,
     ) -> None:
-        super().__init__(predictions_dir=predictions_dir, judge_name=judge_model)
+        super().__init__(pred_loader=pred_loader, judge_name=judge_model)
         self.client = client
-        self.judge_model = judge_model
         self.temperature = temperature
-
-    @property
-    def batch_api_errors_file(self) -> Path:
-        return self.judge_dir / "batch_api_errors.jsonl"
 
     @cached_property
     def structured_response_schema_from_extraction_schema(self) -> dict[str, Any]:
@@ -59,17 +54,17 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
                             "required": ["score"],
                             "additionalProperties": False,
                         }
-                        for key in self.schema.keys()
+                        for key in self.pred_loader.schema.keys()
                     },
                     "additionalProperties": False,
-                    "required": list(self.schema.keys()),
+                    "required": list(self.pred_loader.schema.keys()),
                 },
             },
         }
 
     @cached_property
     def batch_id(self) -> str:
-        return load_json(self.batch_request_info_file)["id"]
+        return load_json(self.pred_loader.batch_request_info_file)["id"]
 
     def run_download_and_process_results_pipeline(self) -> EvalResults | None:
         try:
@@ -79,7 +74,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
 
         batch = self.client.batches.retrieve(batch_id)
         if batch.status == "completed":
-            save_json(batch.model_dump(), self.batch_request_info_file)
+            save_json(batch.model_dump(), self.pred_loader.batch_request_info_file)
             if batch.request_counts.completed == 0:
                 logger.error(f"Batch {batch_id} has no completed requests: {batch.request_counts}")
                 self.download_batch_api_errors()
@@ -101,7 +96,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
         elif batch.status in ["validating", "in_progress", "finalizing"]:
             raise ValueError(f"Batch {batch_id} is still processing. Please wait for completion.")
         else:
-            save_json(batch.model_dump(), self.batch_request_info_file)
+            save_json(batch.model_dump(), self.pred_loader.batch_request_info_file)
             raise ValueError(f"Batch {batch_id} has status {batch.status}.")
 
     def process_batch_api_results(
@@ -112,20 +107,20 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
     ) -> EvalResults | None:
         # todo: make it more efficient and consistent
         if batch is None:
-            batch = Batch(**load_json(self.batch_request_info_file))
+            batch = Batch(**load_json(self.pred_loader.batch_request_info_file))
 
         if batch.request_counts.completed > 0:
-            results = load_jsonl(self.batch_api_results_file)
+            results = load_jsonl(self.pred_loader.batch_api_results_file)
         else:
             logger.error(f"Batch {self.batch_id} has no completed requests: {batch.request_counts}")
             return None
 
         if batch.request_counts.failed > 0:
-            errors = load_jsonl(self.batch_api_errors_file)
+            errors = load_jsonl(self.pred_loader.batch_api_errors_file)
         else:
             errors = {}
 
-        parsed_preds = self.load_predictions()
+        parsed_preds = self.pred_loader.load_predictions()
 
         final_results = []
         for idx in range(parsed_preds.num_items):
@@ -153,14 +148,14 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
                         result=self.get_zero_scores(),
                     )
             final_results.append(res)
-        return EvalResults(results=final_results, ie_schema=self.schema)
+        return EvalResults(results=final_results, ie_schema=self.pred_loader.schema)
 
     def run_submit_batch_api_pipeline(self) -> Batch:
         """Prepares and submits batch API requests to OpenAI."""
-        parsed_preds = self.load_predictions()
+        parsed_preds = self.pred_loader.load_predictions()
         self.prepare_and_save_batch_api_requests(parsed_preds)
         batch_input_file = self.client.files.create(
-            file=self.batch_api_requests_file,
+            file=self.pred_loader.batch_api_requests_file,
             purpose="batch",
         )
         response = self.client.batches.create(
@@ -169,7 +164,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
             completion_window="24h",
             metadata={"description": "Evaluation of predictions using LLM as judge"},
         )
-        save_json(response.model_dump(), self.batch_request_info_file)
+        save_json(response.model_dump(), self.pred_loader.batch_request_info_file)
         logger.info(f"Submitted batch API requests to OpenAI. Batch ID: {response.id}")
         return response
 
@@ -194,16 +189,16 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
             }
             batch_requests.append(batch_request)
 
-        save_jsonl(batch_requests, self.batch_api_requests_file)
-        save_json(self.get_batch_api_metadata(), self.batch_api_metadata_file)
-        logger.info(f"Saved batch API requests to {self.batch_api_requests_file}")
-        return self.batch_api_requests_file
+        save_jsonl(batch_requests, self.pred_loader.batch_api_requests_file)
+        save_json(self.get_batch_api_metadata(), self.pred_loader.batch_api_metadata_file)
+        logger.info(f"Saved batch API requests to {self.pred_loader.batch_api_requests_file}")
+        return self.pred_loader.batch_api_requests_file
 
     def get_batch_api_metadata(self) -> dict[str, Any]:
         return {
             "model": self.judge_model,
             "temperature": self.temperature,
-            "predictions_dir": str(self.predictions_dir),
+            "predictions_dir": str(self.pred_loader.root_dir),
         }
 
     def download_batch_api_errors(self) -> dict[int, dict[str, Any]]:
@@ -211,7 +206,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
         error_file_id = batch.error_file_id
         error_file = self.client.files.content(file_id=error_file_id)
         errors = [json.loads(line) for line in error_file.text.splitlines()]
-        save_jsonl(errors, self.batch_api_errors_file)
+        save_jsonl(errors, self.pred_loader.batch_api_errors_file)
         return {int(err["custom_id"]): err for err in errors}
 
     def download_batch_api_results(self) -> dict[int, dict[str, Any]]:
@@ -219,5 +214,5 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
         result_file_id = batch.output_file_id
         result_file = self.client.files.content(file_id=result_file_id)
         results = [json.loads(line) for line in result_file.text.splitlines()]
-        save_jsonl(results, self.batch_api_results_file)
+        save_jsonl(results, self.pred_loader.batch_api_results_file)
         return {int(res["custom_id"]): res for res in results}
