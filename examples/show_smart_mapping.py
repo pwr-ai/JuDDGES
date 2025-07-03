@@ -93,7 +93,7 @@ def main():
         else:
             low_confidence.append((column, suggestion))
 
-    def create_mapping_table(mappings, title, style):
+    def create_mapping_table(mappings, title):
         if mappings:
             table = Table(title=title, box=box.ROUNDED, show_header=True)
             table.add_column("Source Column", style="cyan")
@@ -108,14 +108,12 @@ def main():
             console.print(table)
             console.print()
 
-    create_mapping_table(high_confidence, "HIGH CONFIDENCE (≥80%)", "green")
-    create_mapping_table(medium_confidence, "MEDIUM CONFIDENCE (50-79%)", "yellow")
-    create_mapping_table(low_confidence, "LOW CONFIDENCE (<50%)", "red")
+    create_mapping_table(high_confidence, "HIGH CONFIDENCE (≥80%)")
+    create_mapping_table(medium_confidence, "MEDIUM CONFIDENCE (50-79%)")
+    create_mapping_table(low_confidence, "LOW CONFIDENCE (<50%)")
 
     # Show field type analysis
-    print("=" * 60)
-    print("FIELD TYPE ANALYSIS")
-    print("=" * 60)
+    console.print(Panel.fit("FIELD TYPE ANALYSIS", style="bold green", border_style="green"))
 
     sample_data = {
         "judgment_id": "12345",
@@ -126,11 +124,15 @@ def main():
         "extracted_legal_bases": {"art_123": "Contract law", "art_456": "Liability"},
     }
 
+    field_type_table = Table(
+        title="Field Type Analysis (First 10 columns)", box=box.ROUNDED, show_header=True
+    )
+    field_type_table.add_column("Column Name", style="cyan")
+    field_type_table.add_column("Detected Types", style="yellow")
+
     for column in actual_columns[:10]:  # Show first 10 for brevity
         sample_value = sample_data.get(column, "Sample text content")
         field_suggestions = mapper.suggest_field_types(column, [sample_value])
-
-        print(f"{column:<25}:", end="")
 
         suggestions_list = []
         if field_suggestions.get("is_text_field"):
@@ -145,37 +147,44 @@ def main():
             suggestions_list.append("VECTORIZE")
 
         if suggestions_list:
-            print(" " + ", ".join(suggestions_list))
+            types_str = ", ".join(suggestions_list)
         else:
-            print(" STANDARD")
+            types_str = "STANDARD"
 
-    print("\n" + "=" * 60)
-    print("VALIDATION RESULTS")
-    print("=" * 60)
+        field_type_table.add_row(column, types_str)
+
+    console.print(field_type_table)
+    console.print()
+
+    console.print(Panel.fit("VALIDATION RESULTS", style="bold yellow", border_style="yellow"))
 
     # Create simple mapping for validation
     simple_mapping = {col: sugg.target_field for col, sugg in suggestions.items()}
     is_valid, missing = mapper.validate_mapping(simple_mapping, required_fields)
 
     if is_valid:
-        print("✅ All required fields are mapped successfully!")
+        console.print("✅ All required fields are mapped successfully!", style="bold green")
     else:
-        print("❌ Missing required field mappings:")
+        console.print("❌ Missing required field mappings:", style="bold red")
         for field in missing:
-            print(f"  • {field}")
+            console.print(f"  • {field}", style="red")
 
-    print(f"\nMapped {len(simple_mapping)} out of {len(actual_columns)} columns")
+    console.print(f"\nMapped {len(simple_mapping)} out of {len(actual_columns)} columns", style="bold")
 
-    print("\n" + "=" * 60)
-    print("WHAT THIS MEANS")
-    print("=" * 60)
-    print("✅ The system can automatically handle JuDDGES/pl-court-raw with:")
-    print("  • 95%+ accurate field mapping")
-    print("  • Proper data type detection")
-    print("  • Intelligent defaults for Polish legal documents")
-    print("  • Zero manual configuration required")
-    print()
-    print("🚀 Ready for immediate ingestion!")
+    console.print()
+    console.print(Panel.fit("WHAT THIS MEANS", style="bold cyan", border_style="cyan"))
+    
+    features_table = Table(box=box.SIMPLE, show_header=False)
+    features_table.add_column("Feature", style="green")
+    features_table.add_row("✅ The system can automatically handle JuDDGES/pl-court-raw with:")
+    features_table.add_row("  • 95%+ accurate field mapping")
+    features_table.add_row("  • Proper data type detection")
+    features_table.add_row("  • Intelligent defaults for Polish legal documents")
+    features_table.add_row("  • Zero manual configuration required")
+    
+    console.print(features_table)
+    console.print()
+    console.print("🚀 Ready for immediate ingestion!", style="bold green")
 
 
 if __name__ == "__main__":
