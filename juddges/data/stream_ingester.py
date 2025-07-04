@@ -613,7 +613,6 @@ class StreamingIngester:
                     wvc.Property(
                         name="metadata", data_type=wvc.DataType.TEXT, skip_vectorization=True
                     ),
-                    # Additional properties from dataset mappings
                     wvc.Property(
                         name="publication_date",
                         data_type=wvc.DataType.TEXT,
@@ -626,10 +625,12 @@ class StreamingIngester:
                         name="presiding_judge", data_type=wvc.DataType.TEXT, skip_vectorization=True
                     ),
                     wvc.Property(
-                        name="judges", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="judges", data_type=wvc.DataType.TEXT_ARRAY, skip_vectorization=True
                     ),
                     wvc.Property(
-                        name="legal_bases", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="legal_bases",
+                        data_type=wvc.DataType.TEXT_ARRAY,
+                        skip_vectorization=True,
                     ),
                     wvc.Property(
                         name="court_name", data_type=wvc.DataType.TEXT, skip_vectorization=True
@@ -639,11 +640,13 @@ class StreamingIngester:
                     ),
                     wvc.Property(
                         name="extracted_legal_bases",
-                        data_type=wvc.DataType.TEXT,
+                        data_type=wvc.DataType.OBJECT_ARRAY,
                         skip_vectorization=True,
                     ),
                     wvc.Property(
-                        name="references", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="references",
+                        data_type=wvc.DataType.TEXT_ARRAY,
+                        skip_vectorization=True,
                     ),
                     wvc.Property(name="x", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
                     wvc.Property(name="y", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
@@ -868,7 +871,7 @@ class StreamingIngester:
                 "full_text": mapped_data.get("full_text", ""),
                 "summary": mapped_data.get("summary", ""),
                 "thesis": mapped_data.get("thesis", ""),
-                "keywords": self._serialize_field_value(mapped_data.get("keywords", [])),
+                "keywords": mapped_data.get("keywords", []),
                 "issuing_body": self._serialize_field_value(mapped_data.get("issuing_body", "")),
                 "ingestion_date": convert_date_to_rfc3339(datetime.now()),
                 "last_updated": convert_date_to_rfc3339(datetime.now()),
@@ -884,14 +887,12 @@ class StreamingIngester:
                 ),
                 "raw_content": mapped_data.get("raw_content", ""),
                 "presiding_judge": mapped_data.get("presiding_judge", ""),
-                "judges": self._serialize_field_value(mapped_data.get("judges", [])),
-                "legal_bases": self._serialize_field_value(mapped_data.get("legal_bases", [])),
+                "judges": mapped_data.get("judges", []),
+                "legal_bases": mapped_data.get("legal_bases", []),
                 "court_name": mapped_data.get("court_name", ""),
                 "department_name": mapped_data.get("department_name", ""),
-                "extracted_legal_bases": self._serialize_field_value(
-                    mapped_data.get("extracted_legal_bases", [])
-                ),
-                "references": self._serialize_field_value(mapped_data.get("references", [])),
+                "extracted_legal_bases": mapped_data.get("extracted_legal_bases", []),
+                "references": mapped_data.get("references", []),
                 "metadata": json.dumps(
                     {
                         k: self._serialize_field_value(v)
