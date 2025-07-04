@@ -55,6 +55,13 @@ def main(cfg: DictConfig) -> None:
     # Check if dataset is registered
     dataset_config = registry.get_config(dataset_name)
 
+    # Command line override for chunks_path
+    if "chunks_path" in cfg and cfg.chunks_path:
+        chunks_path = str(cfg.chunks_path)
+        logger.info(f"Overriding chunks_path: {chunks_path}")
+        if dataset_config:
+            dataset_config.chunks_path = chunks_path
+
     if not dataset_config:
         logger.info(f"Dataset {dataset_name} not registered. Creating automatic configuration...")
         try:

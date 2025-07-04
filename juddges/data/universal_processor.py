@@ -400,6 +400,17 @@ class UniversalDatasetProcessor:
         """Create embeddings for the dataset or load pre-computed ones."""
         logger.info("Creating embeddings for dataset")
 
+        # Check if pre-computed chunk embeddings are available
+        if config.chunks_path:
+            chunks_path = Path(config.chunks_path)
+            if chunks_path.exists():
+                logger.info(f"Loading pre-computed chunk embeddings from {chunks_path}")
+                try:
+                    return self._load_chunk_embeddings(dataset, config, chunks_path)
+                except Exception as e:
+                    logger.error(f"Failed to load pre-computed chunk embeddings: {e}")
+                    logger.info("Falling back to document-level embeddings")
+
         # Check if pre-computed embeddings path is specified in config
         if config.embedding_path:
             embeddings_path = Path(config.embedding_path)
@@ -456,7 +467,7 @@ class UniversalDatasetProcessor:
                                 embeddings.append(doc_id_to_embedding[doc_id])
                             else:
                                 logger.warning(f"No embedding found for document_id: {doc_id}")
-                                embeddings.append([0.1] * 768)
+                                embeddings.append([0.1] * config.vector_size)
                         examples["embedding"] = embeddings
                         return examples
 
@@ -483,8 +494,8 @@ class UniversalDatasetProcessor:
 
         def add_mock_embeddings(batch):
             batch_size = len(batch["document_id"])
-            # Mock 768-dimensional embeddings
-            batch["embedding"] = [[0.1] * 768 for _ in range(batch_size)]
+            # Mock embeddings with configurable vector size
+            batch["embedding"] = [[0.1] * config.vector_size for _ in range(batch_size)]
             return batch
 
         return dataset.map(
@@ -493,6 +504,167 @@ class UniversalDatasetProcessor:
             batch_size=config.batch_size,
             num_proc=config.num_proc,
         )
+
+    def _load_chunk_embeddings(
+        self, dataset: Dataset, config: DatasetConfig, chunks_path: Path
+    ) -> Dataset:
+        """Load pre-computed chunk embeddings without aggregation."""
+        logger.info(f"Loading chunk embeddings from {chunks_path}")
+
+        # Load the chunk embeddings dataset from parquet files
+        chunks_dataset = load_dataset("parquet", data_dir=str(chunks_path), split="train")
+
+        # Determine the document ID column name in chunks
+        chunk_columns = chunks_dataset.column_names
+        doc_id_col = (
+            "document_id"
+            if "document_id" in chunk_columns
+            else "judgment_id"
+            if "judgment_id" in chunk_columns
+            else None
+        )
+
+        if doc_id_col is None:
+            raise ValueError("Chunk embeddings must contain 'document_id' or 'judgment_id' column")
+
+        # Rename the document ID column in chunks to match the main dataset if needed
+        if doc_id_col != "document_id":
+            chunks_dataset = chunks_dataset.rename_column(doc_id_col, "document_id")
+
+        # Validate required columns for chunk embeddings
+        required_chunk_columns = ["document_id", "chunk_id", "chunk_text", "embedding"]
+        missing_columns = [
+            col for col in required_chunk_columns if col not in chunks_dataset.column_names
+        ]
+        if missing_columns:
+            raise ValueError(f"Chunk embeddings missing required columns: {missing_columns}")
+
+        logger.info(
+            f"Dataset has {len(dataset)} documents, chunk embeddings have {len(chunks_dataset)} chunks"
+        )
+
+        # Filter chunks to only include those from documents in the current dataset
+        doc_ids_needed = set(dataset["document_id"])
+        logger.info(
+            f"Filtering chunks to only include documents in dataset ({len(doc_ids_needed)} documents)"
+        )
+
+        filtered_chunks = chunks_dataset.filter(
+            lambda x: x["document_id"] in doc_ids_needed,
+            desc="Filtering chunks by document_id",
+            num_proc=config.num_proc,
+        )
+
+        logger.info(f"Filtered chunks dataset to {len(filtered_chunks)} chunks")
+
+        # Pre-group chunks by document_id for efficient lookup and create document embeddings
+        logger.info("Pre-grouping chunks by document_id for efficient lookup")
+        chunks_by_doc_id = {}
+        for chunk in filtered_chunks:
+            doc_id = chunk["document_id"]
+            if doc_id not in chunks_by_doc_id:
+                chunks_by_doc_id[doc_id] = {
+                    "chunk_texts": [],
+                    "chunk_ids": [],
+                    "chunk_embeddings": []
+                }
+            chunks_by_doc_id[doc_id]["chunk_texts"].append(chunk["chunk_text"])
+            chunks_by_doc_id[doc_id]["chunk_ids"].append(chunk["chunk_id"])
+            chunks_by_doc_id[doc_id]["chunk_embeddings"].append(chunk["embedding"])
+
+        # Create document-level embeddings by aggregating chunk embeddings
+        logger.info("Creating document-level embeddings from chunk embeddings")
+        import numpy as np
+        
+        doc_embeddings = {}
+        for doc_id, doc_chunks in chunks_by_doc_id.items():
+            # Calculate mean embedding for this document
+            chunk_embs = doc_chunks["chunk_embeddings"]
+            if chunk_embs:
+                avg_embedding = np.mean(chunk_embs, axis=0).tolist()
+                doc_embeddings[doc_id] = avg_embedding
+            else:
+                # Fallback to zero embedding if no chunks
+                doc_embeddings[doc_id] = [0.1] * config.vector_size
+
+        def add_chunk_data_and_embeddings(examples):
+            chunk_texts = []
+            chunk_ids = []
+            chunk_embeddings = []
+            document_embeddings = []
+
+            for doc_id in examples["document_id"]:
+                # Get chunks for this document using efficient lookup
+                if doc_id in chunks_by_doc_id:
+                    chunk_texts.append(chunks_by_doc_id[doc_id]["chunk_texts"])
+                    chunk_ids.append(chunks_by_doc_id[doc_id]["chunk_ids"])
+                    chunk_embeddings.append(chunks_by_doc_id[doc_id]["chunk_embeddings"])
+                else:
+                    # No chunks for this document
+                    chunk_texts.append([])
+                    chunk_ids.append([])
+                    chunk_embeddings.append([])
+                
+                # Add document-level embedding
+                if doc_id in doc_embeddings:
+                    document_embeddings.append(doc_embeddings[doc_id])
+                else:
+                    logger.warning(f"No embedding found for document_id: {doc_id}")
+                    document_embeddings.append([0.1] * config.vector_size)
+
+            examples["chunk_text"] = chunk_texts
+            examples["chunk_id"] = chunk_ids
+            examples["chunk_embedding"] = chunk_embeddings
+            examples["embedding"] = document_embeddings
+            return examples
+
+        # Add chunk data and embeddings to the main dataset
+        result_dataset = dataset.map(
+            add_chunk_data_and_embeddings,
+            batched=True,
+            batch_size=config.batch_size,
+            num_proc=config.num_proc,
+        )
+
+        # Store chunk data as a separate dataset for ingestion
+        # Keep document_id for consistency across all collections
+        chunk_ingestion_data = filtered_chunks
+
+        # Add chunk dataset as an attribute of the main dataset for later use
+        if len(chunk_ingestion_data) > 0:
+            result_dataset._chunk_dataset = chunk_ingestion_data
+            logger.info(
+                f"Successfully loaded chunk embeddings for {len(result_dataset)} documents with {len(chunk_ingestion_data)} chunks"
+            )
+        else:
+            logger.warning("No chunk embeddings found for any documents in the dataset")
+
+        return result_dataset
+
+    def _create_document_embeddings_from_chunks(
+        self, chunks_dataset: Dataset
+    ) -> Dataset:
+        """Create document-level embeddings by aggregating chunk embeddings."""
+        logger.info("Creating document-level embeddings from chunks")
+
+        # Group chunks by document_id and aggregate embeddings
+        doc_embeddings = {}
+        for chunk in chunks_dataset:
+            doc_id = chunk["document_id"]
+            if doc_id not in doc_embeddings:
+                doc_embeddings[doc_id] = []
+            doc_embeddings[doc_id].append(chunk["embedding"])
+
+        # Calculate weighted average for each document
+        aggregated_embeddings = []
+        for doc_id, chunk_embs in doc_embeddings.items():
+            # Simple mean aggregation (could be weighted by chunk length/importance)
+            import numpy as np
+
+            avg_embedding = np.mean(chunk_embs, axis=0).tolist()
+            aggregated_embeddings.append({"document_id": doc_id, "embedding": avg_embedding})
+
+        return Dataset.from_list(aggregated_embeddings)
 
     def _ingest_to_weaviate(
         self,
@@ -531,15 +703,23 @@ class UniversalDatasetProcessor:
                 ingested_docs = doc_ingester.ingest(embeddings_dataset)
                 logger.info(f"Successfully ingested {ingested_docs} documents")
 
-                # Create and ingest chunks (if embeddings were created)
-                if "chunk_text" in embeddings_dataset.column_names:
-                    logger.info("Starting chunk ingestion")
+                # Create and ingest chunks (if chunk dataset is available)
+                if (
+                    hasattr(embeddings_dataset, "_chunk_dataset")
+                    and embeddings_dataset._chunk_dataset is not None
+                ):
+                    logger.info("Starting chunk ingestion from pre-computed chunks")
+                    chunk_ingester = ChunkIngester(db=db, config=ingest_config)
+                    ingested_chunks = chunk_ingester.ingest(embeddings_dataset._chunk_dataset)
+                    logger.info(f"Successfully ingested {ingested_chunks} chunks")
+                elif "chunk_text" in embeddings_dataset.column_names:
+                    logger.info("Starting chunk ingestion from dataset chunks")
                     chunk_ingester = ChunkIngester(db=db, config=ingest_config)
                     ingested_chunks = chunk_ingester.ingest(embeddings_dataset)
                     logger.info(f"Successfully ingested {ingested_chunks} chunks")
                 else:
                     ingested_chunks = 0
-                    logger.info("No chunk_text column found, skipping chunk ingestion")
+                    logger.info("No chunk data found, skipping chunk ingestion")
 
         except Exception as e:
             error_msg = f"Ingestion failed: {e}"

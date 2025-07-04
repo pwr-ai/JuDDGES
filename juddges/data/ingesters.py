@@ -241,7 +241,7 @@ class ChunkIngester(CollectionIngester):
             for batch_idx in range(0, num_rows, self.config.batch_size):
                 batch_end = min(batch_idx + self.config.batch_size, num_rows)
                 batch = dataset[batch_idx:batch_end]
-                for jid, cid in zip(batch["judgment_id"], batch["chunk_id"]):
+                for jid, cid in zip(batch["document_id"], batch["chunk_id"]):
                     yield generate_deterministic_uuid(jid, cid)
 
         # Filter out chunks that already exist in collection
@@ -251,7 +251,7 @@ class ChunkIngester(CollectionIngester):
 
         # Filter dataset to include only new chunks
         def filter_chunks(item):
-            return generate_deterministic_uuid(item["judgment_id"], item["chunk_id"]) not in uuids
+            return generate_deterministic_uuid(item["document_id"], item["chunk_id"]) not in uuids
 
         filtered_dataset = dataset.filter(
             filter_chunks,
@@ -294,7 +294,7 @@ class ChunkIngester(CollectionIngester):
             with collection.batch.fixed_size(batch_size=self.config.batch_size) as batch_op:
                 for idx, (jid, cid, text, emb) in enumerate(
                     zip(
-                        batch["judgment_id"],
+                        batch["document_id"],
                         batch["chunk_id"],
                         batch["chunk_text"],
                         batch["embedding"],
@@ -350,15 +350,15 @@ class ChunkIngester(CollectionIngester):
             True if batch is valid, False otherwise
         """
         try:
-            assert len(batch["judgment_id"]) > 0, "Batch is empty"
-            assert len(batch["judgment_id"]) == len(batch["chunk_id"]), (
-                "Mismatched lengths between judgment_id and chunk_id"
+            assert len(batch["document_id"]) > 0, "Batch is empty"
+            assert len(batch["document_id"]) == len(batch["chunk_id"]), (
+                "Mismatched lengths between document_id and chunk_id"
             )
-            assert len(batch["judgment_id"]) == len(batch["chunk_text"]), (
-                "Mismatched lengths between judgment_id and chunk_text"
+            assert len(batch["document_id"]) == len(batch["chunk_text"]), (
+                "Mismatched lengths between document_id and chunk_text"
             )
-            assert len(batch["judgment_id"]) == len(batch["embedding"]), (
-                "Mismatched lengths between judgment_id and embedding"
+            assert len(batch["document_id"]) == len(batch["embedding"]), (
+                "Mismatched lengths between document_id and embedding"
             )
 
             # Validate embedding dimensions
@@ -367,7 +367,7 @@ class ChunkIngester(CollectionIngester):
             assert len(embedding_shape) == 1, f"Invalid embedding shape: {embedding_shape}"
 
             # Check for null values
-            assert all(id_ is not None for id_ in batch["judgment_id"]), "Found null judgment_id"
+            assert all(id_ is not None for id_ in batch["document_id"]), "Found null document_id"
             assert all(chunk is not None for chunk in batch["chunk_text"]), "Found null chunk_text"
             assert all(emb is not None for emb in batch["embedding"]), "Found null embedding"
 
@@ -425,7 +425,7 @@ class DocumentIngester(CollectionIngester):
             for batch_idx in range(0, num_rows, self.config.batch_size):
                 batch_end = min(batch_idx + self.config.batch_size, num_rows)
                 batch = dataset[batch_idx:batch_end]
-                for jid in batch["judgment_id"]:
+                for jid in batch["document_id"]:
                     yield generate_deterministic_uuid(jid)
 
         # Filter out documents that already exist in collection
@@ -435,7 +435,7 @@ class DocumentIngester(CollectionIngester):
 
         # Filter dataset to include only new documents
         def filter_docs(item):
-            return generate_deterministic_uuid(item["judgment_id"]) not in uuids
+            return generate_deterministic_uuid(item["document_id"]) not in uuids
 
         filtered_dataset = dataset.filter(
             filter_docs,
@@ -473,7 +473,7 @@ class DocumentIngester(CollectionIngester):
 
             # Use simple fixed-size batch
             with collection.batch.fixed_size(batch_size=self.config.batch_size) as batch_op:
-                for i in range(len(batch["judgment_id"])):
+                for i in range(len(batch["document_id"])):
                     # Get deterministic UUID for this document
                     uuid = uuids_to_insert[i]
 
@@ -493,7 +493,7 @@ class DocumentIngester(CollectionIngester):
 
                     # Create a LegalDocument instance with the available properties
                     # doc = LegalDocument(
-                    #     document_id=batch["judgment_id"][i],
+                    #     document_id=batch["document_id"][i],
                     #     document_type=DocumentType.JUDGMENT,
                     #     # Add core fields
                     #     title=properties.get("title"),

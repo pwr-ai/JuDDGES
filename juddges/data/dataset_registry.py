@@ -30,6 +30,9 @@ class DatasetConfig:
     chunk_overlap: int = 200
     embedding_path: Optional[str] = None  # Path to pre-computed embeddings
     chunks_path: Optional[str] = None  # Path to chunk embeddings
+    embedding_model_name: str = "sdadas/mmlw-roberta-large"  # Default embedding model
+    max_seq_length: int = 512  # Maximum sequence length for embedding model
+    vector_size: int = 1024  # Embedding vector dimension size
     num_proc: Optional[int] = None  # Number of processes for parallel processing
     batch_size: int = 1000  # Batch size for dataset operations
 
