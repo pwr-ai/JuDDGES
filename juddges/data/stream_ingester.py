@@ -101,9 +101,19 @@ class ProcessedDocTracker:
                     document_id TEXT PRIMARY KEY,
                     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     chunks_count INTEGER,
-                    success BOOLEAN DEFAULT TRUE
+                    success BOOLEAN DEFAULT TRUE,
+                    error_message TEXT
                 )
             """)
+            # Add error_message column if it doesn't exist (for existing databases)
+            try:
+                conn.execute("""
+                    ALTER TABLE processed_documents 
+                    ADD COLUMN error_message TEXT
+                """)
+            except sqlite3.OperationalError:
+                # Column already exists, ignore
+                pass
             conn.commit()
 
     def is_processed(self, document_id: str) -> bool:
@@ -128,6 +138,39 @@ class ProcessedDocTracker:
             )
             conn.commit()
 
+    def mark_error(self, document_id: str, error_message: str):
+        """Mark document with error details without marking as processed."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO processed_documents 
+                (document_id, chunks_count, success, error_message) 
+                VALUES (?, 0, FALSE, ?)
+            """,
+                (document_id, error_message),
+            )
+            conn.commit()
+
+    def get_error_documents(self) -> List[Dict[str, Any]]:
+        """Get list of documents that failed with error details."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute(
+                """
+                SELECT document_id, processed_at, error_message 
+                FROM processed_documents 
+                WHERE success = FALSE AND error_message IS NOT NULL
+                ORDER BY processed_at DESC
+            """
+            )
+            return [
+                {
+                    "document_id": row[0],
+                    "processed_at": row[1],
+                    "error_message": row[2],
+                }
+                for row in cursor.fetchall()
+            ]
+
     def get_stats(self) -> Dict[str, int]:
         """Get processing statistics."""
         with sqlite3.connect(self.db_path) as conn:
@@ -145,9 +188,9 @@ class ProcessedDocTracker:
 class StreamingIngester:
     """Simplified streaming ingester for legal documents."""
 
-    # Use same collection names as documents_weaviate_db.py
-    LEGAL_DOCUMENTS_COLLECTION = "legal_documents"
-    DOCUMENT_CHUNKS_COLLECTION = "document_chunks"
+    # Use PascalCase collection names for consistency
+    LEGAL_DOCUMENTS_COLLECTION = "LegalDocuments"
+    DOCUMENT_CHUNKS_COLLECTION = "DocumentChunks"
 
     def __init__(
         self,
@@ -870,7 +913,10 @@ class StreamingIngester:
             return True
 
         except Exception as e:
+            # Log the error but don't mark as processed - let it retry next time
             logger.error(f"Failed to ingest document {doc_data.get('document_id', 'unknown')}: {e}")
+            # Save error details to database for analysis
+            self.tracker.mark_error(doc_data.get("document_id", "unknown"), str(e))
             return False
 
     def _ingest_chunks(
@@ -1063,6 +1109,40 @@ class StreamingIngester:
             self.console.print(f"Total in tracker: {tracker_stats['total']}")
             self.console.print(f"Successful: {tracker_stats['successful']}")
             self.console.print(f"Failed: {tracker_stats['failed']}")
+
+        # Show error documents if any
+        if tracker_stats["failed"] > 0:
+            self._print_error_documents()
+
+    def _print_error_documents(self):
+        """Print details about failed documents."""
+        try:
+            with sqlite3.connect(self.tracker.db_path) as conn:
+                cursor = conn.execute(
+                    """
+                    SELECT document_id, error_message 
+                    FROM processed_documents 
+                    WHERE success = FALSE AND error_message IS NOT NULL
+                    ORDER BY document_id
+                """
+                )
+                failed_docs = cursor.fetchall()
+
+            if failed_docs:
+                self.console.print("\n[bold red]Failed Documents:[/bold red]")
+                for doc_id, error_msg in failed_docs:
+                    # Truncate long error messages for display
+                    display_error = error_msg[:100] + "..." if len(error_msg) > 100 else error_msg
+                    self.console.print(f"  - {doc_id}: [red]{display_error}[/red]")
+
+                if len(failed_docs) > 10:
+                    self.console.print(
+                        f"  [dim]... and {len(failed_docs) - 10} more failed documents[/dim]"
+                    )
+
+        except Exception as e:
+            logger.error(f"Error retrieving failed documents: {e}")
+            self.console.print(f"[red]Error retrieving failed documents: {e}[/red]")
 
     def delete_all_collections(self):
         """Delete all legal document collections from Weaviate."""
