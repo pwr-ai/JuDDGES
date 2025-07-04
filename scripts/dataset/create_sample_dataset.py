@@ -1,15 +1,32 @@
 #!/usr/bin/env python3
 """
-Create a sample dataset from JuDDGES/pl-court-raw with 100 random examples.
-Upload it to Hugging Face with a -sample suffix.
+Create a sample dataset from any HuggingFace dataset with 100 random examples.
+Upload it to Hugging Face with a -sample suffix as a private dataset.
 """
 
 import random
+import sys
 from pathlib import Path
 
 from datasets import Dataset, load_dataset
+from huggingface_hub import HfApi, list_datasets
 from rich.console import Console
 from rich.panel import Panel
+
+
+def check_sample_exists(sample_name: str) -> bool:
+    """Check if the sample dataset already exists on Hugging Face."""
+    console = Console()
+
+    try:
+        api = HfApi()
+        # Check if dataset exists
+        api.dataset_info(sample_name)
+        console.print(f"⚠️ Sample dataset [bold yellow]{sample_name}[/bold yellow] already exists")
+        return True
+    except Exception:
+        # Dataset doesn't exist
+        return False
 
 
 def load_original_dataset(dataset_name: str) -> Dataset:
@@ -50,7 +67,7 @@ def sample_dataset(dataset: Dataset, sample_size: int = 100, seed: int = 42) -> 
 def upload_to_huggingface(
     dataset: Dataset, original_name: str, sample_suffix: str = "-sample"
 ) -> str:
-    """Upload the sampled dataset to Hugging Face."""
+    """Upload the sampled dataset to Hugging Face as a private dataset."""
     console = Console()
 
     # Create new dataset name
@@ -60,14 +77,14 @@ def upload_to_huggingface(
     else:
         new_name = f"{original_name}{sample_suffix}"
 
-    console.print(f"📤 Uploading to: [bold cyan]{new_name}[/bold cyan]")
+    console.print(f"📤 Uploading to: [bold cyan]{new_name}[/bold cyan] (private)")
 
     try:
-        # Upload dataset
+        # Upload dataset as private
         with console.status(f"[bold green]Uploading {new_name}...", spinner="dots"):
-            dataset.push_to_hub(new_name, private=False)
+            dataset.push_to_hub(new_name, private=True)
 
-        console.print(f"✅ Successfully uploaded to [bold green]{new_name}[/bold green]")
+        console.print(f"✅ Successfully uploaded to [bold green]{new_name}[/bold green] (private)")
         return new_name
 
     except Exception as e:
@@ -78,17 +95,9 @@ def upload_to_huggingface(
 def create_dataset_card(original_name: str, sample_name: str, sample_size: int) -> str:
     """Create a dataset card for the sample dataset."""
     card_content = f"""---
-language:
-- pl
-license: apache-2.0
-task_categories:
-- text-generation
-- question-answering
 tags:
-- legal
-- court-judgments
-- polish
 - sample
+- dataset
 size_categories:
 - n<1K
 ---
@@ -101,32 +110,19 @@ This is a sample dataset containing {sample_size} randomly selected examples fro
 
 - **Original Dataset**: {original_name}
 - **Sample Size**: {sample_size} examples
-- **Language**: Polish
-- **Domain**: Legal court judgments
-- **License**: Apache 2.0
+- **Type**: Sample dataset for testing and experimentation
 
 ## Purpose
 
 This sample dataset is intended for:
 - Quick testing and experimentation
-- Prototyping with legal document processing
+- Prototyping without downloading the full dataset
 - Educational purposes
-- Development without downloading the full dataset
+- Development and debugging
 
 ## Data Fields
 
-The dataset contains the same fields as the original dataset:
-- `document_id`: Unique identifier for each judgment
-- `full_text`: Full text of the court judgment
-- `document_number`: Docket number
-- `date_issued`: Date when the judgment was issued
-- `court_name`: Name of the court
-- `summary`: Summary/excerpt of the judgment
-- `thesis`: Legal thesis
-- `keywords`: Associated keywords
-- `legal_bases`: Legal bases referenced
-- `judges`: Judges involved
-- And other metadata fields
+The dataset contains the same fields as the original dataset. Please refer to the original dataset's documentation for detailed field descriptions.
 
 ## Usage
 
@@ -136,22 +132,14 @@ from datasets import load_dataset
 dataset = load_dataset("{sample_name}")
 ```
 
-## Citation
+## Original Dataset
 
-If you use this dataset, please cite the original JuDDGES paper:
-
-```bibtex
-@misc{{judges2024,
-  title={{JuDDGES: A Benchmark for Legal Document Processing}},
-  author={{Legal AI Team}},
-  year={{2024}},
-  url={{https://huggingface.co/datasets/{original_name}}}
-}}
-```
+This sample is derived from [{original_name}](https://huggingface.co/datasets/{original_name}). 
+Please refer to the original dataset for complete documentation, licensing information, and citation details.
 
 ## License
 
-This dataset is licensed under the Apache 2.0 License, same as the original dataset.
+This dataset follows the same license as the original dataset: {original_name}
 """
     return card_content
 
@@ -161,20 +149,45 @@ def main():
     console = Console()
 
     # Configuration
-    original_dataset_name = "JuDDGES/pl-court-raw"
     sample_size = 100
     sample_suffix = "-sample"
 
-    # Header
+    # Get dataset name from command line or use default
+    if len(sys.argv) > 1:
+        original_dataset_name = sys.argv[1]
+    else:
+        original_dataset_name = "AI-TAX/pl-eureka-raw"
+
     console.print(
         Panel.fit(
-            "🎯 Create Sample Dataset from JuDDGES/pl-court-raw",
+            "🎯 Create Sample Dataset from Any HuggingFace Dataset",
             style="bold blue",
             border_style="bright_blue",
         )
     )
 
+    console.print("\n📋 [bold blue]Configuration:[/bold blue]")
+    console.print(f"  Original Dataset: [cyan]{original_dataset_name}[/cyan]")
+    console.print(f"  Sample Size: [cyan]{sample_size}[/cyan]")
+    console.print(f"  Sample Suffix: [cyan]{sample_suffix}[/cyan]")
+    console.print("  Private Dataset: [cyan]Yes[/cyan]")
+
     try:
+        # Create sample dataset name
+        if "/" in original_dataset_name:
+            org, name = original_dataset_name.split("/", 1)
+            sample_dataset_name = f"{org}/{name}{sample_suffix}"
+        else:
+            sample_dataset_name = f"{original_dataset_name}{sample_suffix}"
+
+        # Step 0: Check if sample already exists
+        console.print("\n🔍 [bold green]Step 0: Checking if sample already exists...[/bold green]")
+        if check_sample_exists(sample_dataset_name):
+            console.print(
+                f"⚠️ Sample dataset [bold yellow]{sample_dataset_name}[/bold yellow] already exists. Skipping creation."
+            )
+            return
+
         # Step 1: Load original dataset
         console.print("\n📥 [bold green]Step 1: Loading original dataset...[/bold green]")
         original_dataset = load_original_dataset(original_dataset_name)
@@ -204,6 +217,7 @@ def main():
             f"🎉 Success!\n\n"
             f"✅ Created sample dataset: [bold green]{new_dataset_name}[/bold green]\n"
             f"📊 Sample size: {sample_size} examples\n"
+            f"🔒 Private dataset created\n"
             f"🔗 URL: https://huggingface.co/datasets/{new_dataset_name}",
             style="bold green",
             border_style="bright_green",
@@ -216,7 +230,8 @@ def main():
             "\n💡 [blue]Make sure you have:\n"
             "1. HuggingFace CLI configured (huggingface-cli login)\n"
             "2. Write access to upload datasets\n"
-            "3. Internet connection[/blue]"
+            "3. Internet connection\n"
+            "4. Valid dataset name[/blue]"
         )
 
 

@@ -29,7 +29,7 @@ class BaseWeaviateDB(ABC):
         if self.client is None:
             self.client = weaviate.connect_to_custom(
                 http_host=os.getenv("WEAVIATE_HOST", "localhost"),
-                http_port=int(os.getenv("WEAVIATE_PORT", "8080")),
+                http_port=int(os.getenv("WEAVIATE_PORT", "8084")),
                 http_secure=False,
                 grpc_host=os.getenv("WEAVIATE_HOST", "localhost"),
                 grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),
