@@ -43,6 +43,40 @@ class DatasetConfig(BaseModel):
     chunks_path: Optional[str] = Field(None, description="Path for chunk embeddings")
     num_proc: int = Field(default=1, gt=0, description="Number of processes for dataset operations")
     batch_size: int = Field(default=100, gt=0, description="Batch size for dataset operations")
+    embedding_models: Dict[str, str] = Field(
+        default_factory=lambda: {
+            "base": "sdadas/mmlw-roberta-large",
+            "dev": "sentence-transformers/all-MiniLM-L6-v2", 
+            "fast": "sentence-transformers/all-mpnet-base-v2"
+        },
+        description="Mapping of named vectors to embedding models"
+    )
+    
+    @field_validator("embedding_models")
+    @classmethod
+    def validate_embedding_models(cls, v):
+        """Validate that embedding models are properly configured."""
+        if not v:
+            raise ValueError("embedding_models cannot be empty - at least one model is required")
+        
+        # Check for required vector names
+        required_vectors = {"base", "dev", "fast"}
+        missing_vectors = required_vectors - set(v.keys())
+        if missing_vectors:
+            raise ValueError(f"Missing required vector names: {missing_vectors}")
+        
+        # Validate that we have actual model names
+        for vector_name, model_name in v.items():
+            if not model_name or not isinstance(model_name, str):
+                raise ValueError(f"Invalid model name for vector '{vector_name}': {model_name}")
+        
+        # Check for duplicates and warn if found
+        unique_models = set(v.values())
+        if len(unique_models) < len(v):
+            # Note: Using print instead of logger since this is in a validator
+            print("Warning: Some embedding models are duplicated - consider using different models for better performance")
+        
+        return v
 
 
 class IngestionConfig(BaseModel):
@@ -127,7 +161,7 @@ class IngestionConfig(BaseModel):
 
     def to_display_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for display purposes."""
-        return {
+        display_dict = {
             "dataset_name": self.dataset_config.name,
             "document_type": self.dataset_config.document_type,
             "weaviate_url": self.weaviate_url,
@@ -140,6 +174,13 @@ class IngestionConfig(BaseModel):
             "reset_tracker": self.reset_tracker,
             "log_level": self.log_level,
         }
+        
+        # Add embedding models if available
+        if hasattr(self.dataset_config, 'embedding_models') and self.dataset_config.embedding_models:
+            for vector_name, model in self.dataset_config.embedding_models.items():
+                display_dict[f"embedding_model_{vector_name}"] = model
+        
+        return display_dict
 
     model_config = ConfigDict(validate_assignment=True, extra="forbid")
 
@@ -402,7 +443,10 @@ def display_configuration(config: IngestionConfig) -> None:
         "dataset_name": "HuggingFace dataset name",
         "document_type": "Type of legal documents",
         "weaviate_url": "Weaviate instance URL",
-        "embedding_model": "Sentence transformer model",
+        "embedding_model": "Primary sentence transformer model",
+        "embedding_model_base": "Base vector embedding model",
+        "embedding_model_dev": "Dev vector embedding model", 
+        "embedding_model_fast": "Fast vector embedding model",
         "chunk_size": "Text chunk size (from dataset config)",
         "overlap": "Chunk overlap (from dataset config)",
         "embedding_batch_size": "Embedding generation batch size",
@@ -604,6 +648,14 @@ def main():
         # Initialize ingester with context manager
         console.print("\n[bold green]🚀 Initializing streaming ingester...[/bold green]")
 
+        # Get embedding models from dataset config - ensure we always have multiple models
+        embedding_models = config.dataset_config.embedding_models
+        console.print(f"[bold cyan]Using embedding models:[/bold cyan] {list(embedding_models.keys())}")
+        for vector_name, model_name in embedding_models.items():
+            console.print(f"  {vector_name}: {model_name}")
+        
+        console.print("\n[bold yellow]📋 Initializing with dataset configuration validation...[/bold yellow]")
+        
         with StreamingIngester(
             weaviate_url=config.weaviate_url,
             embedding_model=config.embedding_model,
@@ -612,6 +664,7 @@ def main():
             batch_size=config.embedding_batch_size,
             tracker_db=config.tracker_db,
             dataset_config=config.dataset_config,
+            embedding_models=embedding_models,
         ) as ingester:
             # Reset tracker if requested
             if config.reset_tracker:
