@@ -31,6 +31,7 @@ class DatasetConfig(BaseModel):
     document_type: str = Field(default="judgment", description="Type of legal document")
     chunk_overlap: int = Field(default=200, ge=0, description="Chunk overlap in characters")
     max_chunk_size: int = Field(default=1000, gt=0, description="Maximum chunk size in characters")
+    min_chunk_size: int = Field(default=100, gt=0, description="Minimum chunk size in characters")
     chunk_strategy: str = Field(default="recursive", description="Chunking strategy")
     column_mapping: Dict[str, str] = Field(default_factory=dict, description="Column name mapping")
     required_fields: List[str] = Field(default_factory=list, description="Required dataset fields")
@@ -126,6 +127,11 @@ class IngestionConfig(BaseModel):
         return self.dataset_config.chunk_overlap
 
     @property
+    def min_chunk_size(self) -> int:
+        """Get minimum chunk size from dataset config."""
+        return self.dataset_config.min_chunk_size
+
+    @property
     def batch_size(self) -> int:
         """Get batch size from embedding settings."""
         return self.embedding_batch_size
@@ -169,6 +175,7 @@ class IngestionConfig(BaseModel):
             "weaviate_url": self.weaviate_url,
             "embedding_model": self.embedding_model,
             "chunk_size": self.chunk_size,
+            "min_chunk_size": self.min_chunk_size,
             "overlap": self.overlap,
             "embedding_batch_size": self.embedding_batch_size,
             "tracker_db": self.tracker_db,
@@ -453,6 +460,7 @@ def display_configuration(config: IngestionConfig) -> None:
         "embedding_model_dev": "Dev vector embedding model",
         "embedding_model_fast": "Fast vector embedding model",
         "chunk_size": "Text chunk size (from dataset config)",
+        "min_chunk_size": "Minimum chunk size (from dataset config)",
         "overlap": "Chunk overlap (from dataset config)",
         "embedding_batch_size": "Embedding generation batch size",
         "tracker_db": "SQLite tracker database",
@@ -670,6 +678,7 @@ def main():
             embedding_model=config.embedding_model,
             chunk_size=config.chunk_size,
             overlap=config.overlap,
+            min_chunk_size=config.min_chunk_size,
             batch_size=config.embedding_batch_size,
             tracker_db=config.tracker_db,
             dataset_config=config.dataset_config,

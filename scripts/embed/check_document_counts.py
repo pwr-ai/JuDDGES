@@ -41,7 +41,7 @@ def list_all_collections() -> Dict[str, int]:
         weaviate_host = os.getenv("WEAVIATE_HOST", "127.0.0.1")
         weaviate_port = os.getenv("WEAVIATE_PORT", "8084")
         weaviate_url = f"http://{weaviate_host}:{weaviate_port}"
-        
+
         with StreamingIngester(weaviate_url=weaviate_url) as ingester:
             console.print("✅ [green]Connected to Weaviate database[/green]")
 
@@ -102,7 +102,7 @@ def check_document_counts() -> Dict[str, int]:
         weaviate_host = os.getenv("WEAVIATE_HOST", "127.0.0.1")
         weaviate_port = os.getenv("WEAVIATE_PORT", "8084")
         weaviate_url = f"http://{weaviate_host}:{weaviate_port}"
-        
+
         # Initialize StreamingIngester connection
         with StreamingIngester(weaviate_url=weaviate_url) as ingester:
             console.print("✅ [green]Connected to Weaviate database[/green]")
@@ -188,32 +188,40 @@ def check_document_counts() -> Dict[str, int]:
 def inspect_documents() -> None:
     """Inspect the actual documents in the collections to understand what's stored."""
     console = Console()
-    
+
     # Header
     console.print(
         Panel.fit("🔍 Document Inspection", style="bold magenta", border_style="bright_magenta")
     )
-    
+
     try:
         # Get Weaviate URL from environment variables
         weaviate_host = os.getenv("WEAVIATE_HOST", "127.0.0.1")
         weaviate_port = os.getenv("WEAVIATE_PORT", "8084")
         weaviate_url = f"http://{weaviate_host}:{weaviate_port}"
-        
+
         with StreamingIngester(weaviate_url=weaviate_url) as ingester:
             console.print("✅ [green]Connected to Weaviate database[/green]")
-            
+
             # Inspect legal documents
             console.print("\n[bold cyan]Legal Documents Sample:[/bold cyan]")
             try:
-                legal_collection = ingester.weaviate_client.collections.get(ingester.LEGAL_DOCUMENTS_COLLECTION)
-                
+                legal_collection = ingester.weaviate_client.collections.get(
+                    ingester.LEGAL_DOCUMENTS_COLLECTION
+                )
+
                 # Get first 10 documents with their properties
                 response = legal_collection.query.fetch_objects(
                     limit=10,
-                    return_properties=["document_id", "title", "document_type", "language", "date_issued"]
+                    return_properties=[
+                        "document_id",
+                        "title",
+                        "document_type",
+                        "language",
+                        "date_issued",
+                    ],
                 )
-                
+
                 if response.objects:
                     table = Table(show_header=True, header_style="bold cyan")
                     table.add_column("ID", style="yellow", width=15)
@@ -221,7 +229,7 @@ def inspect_documents() -> None:
                     table.add_column("Type", style="green", width=15)
                     table.add_column("Language", style="blue", width=8)
                     table.add_column("Date", style="magenta", width=12)
-                    
+
                     for obj in response.objects:
                         props = obj.properties
                         table.add_row(
@@ -229,27 +237,29 @@ def inspect_documents() -> None:
                             str(props.get("title", ""))[:30],
                             str(props.get("document_type", "")),
                             str(props.get("language", "")),
-                            str(props.get("date_issued", ""))[:12]
+                            str(props.get("date_issued", ""))[:12],
                         )
-                    
+
                     console.print(table)
                 else:
                     console.print("[red]No legal documents found[/red]")
-                    
+
             except Exception as e:
                 console.print(f"❌ [red]Error inspecting legal documents:[/red] {e}")
-            
+
             # Inspect document chunks - show sample and unique document IDs
             console.print("\n[bold cyan]Document Chunks Analysis:[/bold cyan]")
             try:
-                chunks_collection = ingester.weaviate_client.collections.get(ingester.DOCUMENT_CHUNKS_COLLECTION)
-                
+                chunks_collection = ingester.weaviate_client.collections.get(
+                    ingester.DOCUMENT_CHUNKS_COLLECTION
+                )
+
                 # Get unique document IDs from chunks
                 response = chunks_collection.query.fetch_objects(
                     limit=2349,  # Get all chunks
-                    return_properties=["document_id", "position", "chunk_text"]
+                    return_properties=["document_id", "position", "chunk_text"],
                 )
-                
+
                 if response.objects:
                     # Count unique document IDs
                     document_ids = set()
@@ -261,33 +271,39 @@ def inspect_documents() -> None:
                         chunk_text = obj.properties.get("chunk_text", "")
                         if isinstance(chunk_text, str):
                             chunk_lengths.append(len(chunk_text))
-                    
-                    console.print(f"📊 [yellow]Unique document IDs in chunks:[/yellow] {len(document_ids)}")
-                    console.print(f"📊 [yellow]Average chunk length:[/yellow] {sum(chunk_lengths)/len(chunk_lengths):.1f} characters")
-                    
+
+                    console.print(
+                        f"📊 [yellow]Unique document IDs in chunks:[/yellow] {len(document_ids)}"
+                    )
+                    console.print(
+                        f"📊 [yellow]Average chunk length:[/yellow] {sum(chunk_lengths) / len(chunk_lengths):.1f} characters"
+                    )
+
                     # Show sample document IDs
                     sample_ids = list(document_ids)[:10]
                     console.print(f"📄 [cyan]Sample document IDs:[/cyan] {', '.join(sample_ids)}")
-                    
+
                     # Show chunk distribution
                     doc_chunk_counts = {}
                     for obj in response.objects:
                         doc_id = obj.properties.get("document_id")
                         if doc_id:
                             doc_chunk_counts[doc_id] = doc_chunk_counts.get(doc_id, 0) + 1
-                    
+
                     if doc_chunk_counts:
                         max_chunks = max(doc_chunk_counts.values())
                         min_chunks = min(doc_chunk_counts.values())
                         avg_chunks = sum(doc_chunk_counts.values()) / len(doc_chunk_counts)
-                        console.print(f"📊 [yellow]Chunks per document - Min:[/yellow] {min_chunks}, [yellow]Max:[/yellow] {max_chunks}, [yellow]Avg:[/yellow] {avg_chunks:.1f}")
-                
+                        console.print(
+                            f"📊 [yellow]Chunks per document - Min:[/yellow] {min_chunks}, [yellow]Max:[/yellow] {max_chunks}, [yellow]Avg:[/yellow] {avg_chunks:.1f}"
+                        )
+
                 else:
                     console.print("[red]No document chunks found[/red]")
-                    
+
             except Exception as e:
                 console.print(f"❌ [red]Error inspecting document chunks:[/red] {e}")
-                
+
     except Exception as e:
         console.print(f"❌ [red]Database connection error:[/red] {e}")
 

@@ -197,6 +197,7 @@ class StreamingIngester:
         weaviate_url: str = "http://localhost:8080",
         embedding_model: str = "sdadas/mmlw-roberta-large",
         chunk_size: int = 512,
+        min_chunk_size: int = 256,
         overlap: int = 128,
         batch_size: int = 32,
         tracker_db: str = "processed_documents.db",
@@ -257,7 +258,7 @@ class StreamingIngester:
         # Keep the original embedding_model for backward compatibility
         self.embedding_model = self.transformers.get("base")
 
-        self.chunker = SimpleChunker(chunk_size, overlap)
+        self.chunker = SimpleChunker(chunk_size, overlap, min_chunk_size=min_chunk_size)
         self.batch_size = batch_size
         self.tracker = ProcessedDocTracker(tracker_db)
         self.stats = ProcessingStats()
@@ -640,7 +641,7 @@ class StreamingIngester:
                     ),
                     wvc.Property(
                         name="extracted_legal_bases",
-                        data_type=wvc.DataType.OBJECT_ARRAY,
+                        data_type=wvc.DataType.TEXT,
                         skip_vectorization=True,
                     ),
                     wvc.Property(
@@ -891,7 +892,9 @@ class StreamingIngester:
                 "legal_bases": mapped_data.get("legal_bases", []),
                 "court_name": mapped_data.get("court_name", ""),
                 "department_name": mapped_data.get("department_name", ""),
-                "extracted_legal_bases": mapped_data.get("extracted_legal_bases", []),
+                "extracted_legal_bases": self._serialize_field_value(
+                    mapped_data.get("extracted_legal_bases", [])
+                ),
                 "references": mapped_data.get("references", []),
                 "metadata": json.dumps(
                     {

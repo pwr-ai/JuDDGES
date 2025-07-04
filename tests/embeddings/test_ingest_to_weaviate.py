@@ -386,7 +386,7 @@ class TestDocumentIngester:
 
         ingester = DocumentIngester(db=mock_db, config=config, default_column_values=default_values)
 
-        assert ingester.collection_name == "legal_documents"  # Actual constant value
+        assert ingester.collection_name == "LegalDocuments"  # Actual constant value
         assert ingester.db == mock_db
         assert ingester.config.batch_size == 4
         assert ingester.default_column_values == default_values

@@ -15,8 +15,8 @@ from juddges.settings import VectorName
 class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
     """Database for legal documents including both judgments and tax interpretations."""
 
-    LEGAL_DOCUMENTS_COLLECTION: ClassVar[str] = "legal_documents"
-    DOCUMENT_CHUNKS_COLLECTION: ClassVar[str] = "document_chunks"
+    LEGAL_DOCUMENTS_COLLECTION: ClassVar[str] = "LegalDocuments"
+    DOCUMENT_CHUNKS_COLLECTION: ClassVar[str] = "DocumentChunks"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
