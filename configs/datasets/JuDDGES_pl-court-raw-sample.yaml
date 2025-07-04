@@ -6,7 +6,7 @@ array_fields:
 - references
 chunk_overlap: 200
 chunk_strategy: recursive
-column_mapping:
+column_mapping:  # Mapping of dataset fields to Weaviate properties
   country: country
   court_name: court_name
   docket_number: document_number
@@ -22,7 +22,7 @@ column_mapping:
   department_id: department_name
   court_id: court_name
   publication_date: publication_date
-  last_update: last_update
+  last_update: last_updated
 date_fields:
 - judgment_date
 - publication_date
@@ -42,7 +42,11 @@ text_fields:
 - xml_content
 - full_text
 - thesis
-embedding_path: data/embeddings/pl-court-raw-sample/agg_embeddings
-chunks_path: data/embeddings/pl-court-raw-sample/chunk_embeddings
 num_proc: 1  # Use all available CPU cores
 batch_size: 100  # Batch size for dataset operations
+
+# Embedding model mapping for different named vectors
+embedding_models:
+  base: "sdadas/mmlw-roberta-large"
+  dev: "sentence-transformers/all-mpnet-base-v2"
+  fast: "sentence-transformers/all-MiniLM-L6-v2"

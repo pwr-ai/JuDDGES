@@ -611,18 +611,21 @@ class StreamingIngester:
                         vectorize_collection_name=False,
                         source_properties=["full_text"],
                         vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                        inference_url="http://t2v-transformers-base:8080",
                     ),
                     wvc.Configure.NamedVectors.text2vec_transformers(
                         name=VectorName.DEV,
                         vectorize_collection_name=False,
                         source_properties=["full_text"],
                         vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                        inference_url="http://t2v-transformers-dev:8080",
                     ),
                     wvc.Configure.NamedVectors.text2vec_transformers(
                         name=VectorName.FAST,
                         vectorize_collection_name=False,
                         source_properties=["full_text"],
                         vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                        inference_url="http://t2v-transformers-fast:8080",
                     ),
                 ],
             )
@@ -641,7 +644,6 @@ class StreamingIngester:
         import weaviate.classes.config as wvc
 
         try:
-            # Use same schema as documents_weaviate_db.py
             self.weaviate_client.collections.create(
                 name=self.DOCUMENT_CHUNKS_COLLECTION,
                 properties=[
@@ -691,18 +693,21 @@ class StreamingIngester:
                         vectorize_collection_name=False,
                         source_properties=["chunk_text"],
                         vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                        inference_url="http://t2v-transformers-base:8080",
                     ),
                     wvc.Configure.NamedVectors.text2vec_transformers(
                         name=VectorName.DEV,
                         vectorize_collection_name=False,
                         source_properties=["chunk_text"],
                         vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                        inference_url="http://t2v-transformers-dev:8080",
                     ),
                     wvc.Configure.NamedVectors.text2vec_transformers(
                         name=VectorName.FAST,
                         vectorize_collection_name=False,
                         source_properties=["chunk_text"],
                         vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                        inference_url="http://t2v-transformers-fast:8080",
                     ),
                 ],
             )
