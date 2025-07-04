@@ -1,8 +1,6 @@
 array_fields:
-- judges
-- legal_bases
 - keywords
-- extracted_legal_bases
+- legal_bases
 - references
 chunk_overlap: 256
 chunk_strategy: recursive
@@ -30,10 +28,10 @@ date_fields:
 default_values:
   country: Poland
   language: pl
-document_type: judgment
+document_type: tax_interpretation
 json_fields: []
 max_chunk_size: 512
-name: JuDDGES/pl-court-raw-sample
+name: AI-TAX/pl-eureka-raw-sample
 required_fields:
 - document_id
 - full_text
