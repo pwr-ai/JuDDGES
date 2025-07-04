@@ -47,12 +47,15 @@ class CollectionIngester(ABC):
         self.config = config or IngestConfig()
         self.columns_to_ingest = columns_to_ingest
 
-    def ingest(self, dataset: Dataset) -> None:
+    def ingest(self, dataset: Dataset) -> int:
         """
         Ingest the dataset into Weaviate.
 
         Args:
             dataset: The dataset to ingest
+            
+        Returns:
+            Number of documents actually added to the collection
         """
         # Remap columns if mapping is available
         dataset_name = getattr(self.config, "dataset_name", None)
@@ -93,7 +96,7 @@ class CollectionIngester(ABC):
             # If after filtering, there's nothing to do
             if dataset.num_rows == 0:
                 logger.info("No new objects to insert, skipping.")
-                return
+                return 0
 
             total_batches = math.ceil(dataset.num_rows / self.config.batch_size)
             logger.info(f"Processing {total_batches} batches with size {self.config.batch_size}")
@@ -101,8 +104,11 @@ class CollectionIngester(ABC):
             self._process_batches(dataset, total_batches)
 
             final_count = self.db.get_collection_size(collection)
+            added_count = final_count - initial_count
             logger.info(f"Final number of objects in collection: {final_count}")
-            logger.info(f"Added {final_count - initial_count} new objects")
+            logger.info(f"Added {added_count} new objects")
+            
+            return added_count
 
         finally:
             if should_close_db:
@@ -345,15 +351,15 @@ class ChunkIngester(CollectionIngester):
         """
         try:
             assert len(batch["judgment_id"]) > 0, "Batch is empty"
-            assert len(batch["judgment_id"]) == len(
-                batch["chunk_id"]
-            ), "Mismatched lengths between judgment_id and chunk_id"
-            assert len(batch["judgment_id"]) == len(
-                batch["chunk_text"]
-            ), "Mismatched lengths between judgment_id and chunk_text"
-            assert len(batch["judgment_id"]) == len(
-                batch["embedding"]
-            ), "Mismatched lengths between judgment_id and embedding"
+            assert len(batch["judgment_id"]) == len(batch["chunk_id"]), (
+                "Mismatched lengths between judgment_id and chunk_id"
+            )
+            assert len(batch["judgment_id"]) == len(batch["chunk_text"]), (
+                "Mismatched lengths between judgment_id and chunk_text"
+            )
+            assert len(batch["judgment_id"]) == len(batch["embedding"]), (
+                "Mismatched lengths between judgment_id and embedding"
+            )
 
             # Validate embedding dimensions
             embedding_shape = np.array(batch["embedding"][0]).shape
@@ -486,31 +492,31 @@ class DocumentIngester(CollectionIngester):
                     properties = process_judgment_dates(properties)
 
                     # Create a LegalDocument instance with the available properties
-                    doc = LegalDocument(
-                        document_id=batch["judgment_id"][i],
-                        document_type=DocumentType.JUDGMENT,
-                        # Add core fields
-                        title=properties.get("title"),
-                        date_issued=properties.get("date_issued"),
-                        document_number=properties.get("document_number"),
-                        language=properties.get("language", "pl"),
-                        country=properties.get("country", "Poland"),
-                        full_text=properties.get("full_text"),
-                        summary=properties.get("summary"),
-                        # Add nested objects if available
-                        issuing_body=properties.get("issuing_body"),
-                        segmentation_info=properties.get("segmentation_info"),
-                        legal_references=properties.get("legal_references"),
-                        legal_concepts=properties.get("legal_concepts"),
-                        outcome=properties.get("outcome"),
-                        judgment_specific=properties.get("judgment_specific"),
-                        metadata=properties.get("metadata"),
-                    ).dict(exclude_none=True)
+                    # doc = LegalDocument(
+                    #     document_id=batch["judgment_id"][i],
+                    #     document_type=DocumentType.JUDGMENT,
+                    #     # Add core fields
+                    #     title=properties.get("title"),
+                    #     date_issued=properties.get("date_issued"),
+                    #     document_number=properties.get("document_number"),
+                    #     language=properties.get("language", "pl"),
+                    #     country=properties.get("country", "Poland"),
+                    #     full_text=properties.get("full_text"),
+                    #     summary=properties.get("summary"),
+                    #     # Add nested objects if available
+                    #     issuing_body=properties.get("issuing_body"),
+                    #     segmentation_info=properties.get("segmentation_info"),
+                    #     legal_references=properties.get("legal_references"),
+                    #     legal_concepts=properties.get("legal_concepts"),
+                    #     outcome=properties.get("outcome"),
+                    #     judgment_specific=properties.get("judgment_specific"),
+                    #     metadata=properties.get("metadata"),
+                    # ).dict(exclude_none=True)
 
                     # Add object to batch with vector and deterministic UUID
                     batch_op.add_object(
                         uuid=uuid,
-                        properties=doc,
+                        properties=properties,
                         vector={
                             "base": batch["embedding"][i],  # Primary embedding
                             "dev": batch["embedding"][i],  # Development embedding

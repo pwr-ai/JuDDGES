@@ -1,8 +1,9 @@
+import json
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 class DocumentType(str, Enum):
@@ -360,8 +361,16 @@ class DocumentChunk(BaseModel):
 
 
 class LegalDocument(BaseModel):
-    """Base schema for all legal documents."""
+    """Base schema for all legal documents.
+    
+    Schema version: 2.0.0
+    - v1.0.0: Initial schema with core fields
+    - v2.0.0: Added Weaviate-specific fields, datetime converters, and typed accessors
+    """
 
+    # Schema versioning
+    schema_version: str = Field(default="2.0.0", description="Schema version for compatibility tracking")
+    
     document_id: str = Field(description="Unique identifier")
     document_type: str = Field(description="Type of legal document")
     title: Optional[str] = Field(None, description="Document title/name")
@@ -424,35 +433,286 @@ class LegalDocument(BaseModel):
     metadata: Optional[str] = Field(
         None, description="JSON string: System metadata for the document"
     )
+    
+    # Additional fields from Weaviate schema
+    source_id: Optional[str] = Field(None, description="Court ID or source identifier")
+    judgment_type: Optional[str] = Field(None, description="Type of judgment")
+    raw_content: Optional[str] = Field(None, description="XML or raw content of the document")
+    presiding_judge: Optional[str] = Field(None, description="Presiding judge information")
+    judges: Optional[str] = Field(None, description="All judges involved in the case")
+    legal_bases: Optional[str] = Field(None, description="Legal bases for the judgment")
+    publisher: Optional[str] = Field(None, description="Publisher of the document")
+    recorder: Optional[str] = Field(None, description="Recorder of the document")
+    reviser: Optional[str] = Field(None, description="Reviser of the document")
+    num_pages: Optional[int] = Field(None, description="Number of pages in the document")
+    volume_number: Optional[str] = Field(None, description="Volume number")
+    volume_type: Optional[str] = Field(None, description="Volume type")
+    court_name: Optional[str] = Field(None, description="Name of the court")
+    department_name: Optional[str] = Field(None, description="Name of the department")
+    extracted_legal_bases: Optional[str] = Field(None, description="Extracted legal bases")
+    references: Optional[str] = Field(None, description="References in the document")
+    court_type: Optional[str] = Field(None, description="Type of court")
+
+    @validator('num_pages')
+    def validate_num_pages(cls, v):
+        """Validate that num_pages is positive if provided."""
+        if v is not None and v <= 0:
+            raise ValueError('num_pages must be positive')
+        return v
+
+    @validator('confidence_score')
+    def validate_confidence_score(cls, v):
+        """Validate that confidence_score is between 0 and 1 if provided."""
+        if v is not None and not (0 <= v <= 1):
+            raise ValueError('confidence_score must be between 0 and 1')
+        return v
+
+    @validator('language')
+    def validate_language(cls, v):
+        """Validate language code format."""
+        if v is not None and len(v) not in [2, 5]:  # ISO 639-1 (2 chars) or locale (5 chars like 'en-US')
+            raise ValueError('language must be a valid ISO 639-1 code or locale')
+        return v
+
+    @validator('court_type')
+    def validate_court_type(cls, v):
+        """Validate court type against known values."""
+        if v is not None:
+            valid_types = ['supreme', 'appellate', 'district', 'administrative', 'constitutional', 'tax', 'regional', 'local']
+            if v.lower() not in valid_types:
+                raise ValueError(f'court_type must be one of: {", ".join(valid_types)}')
+        return v
+
+    @validator('processing_status')
+    def validate_processing_status(cls, v):
+        """Validate processing status against known values."""
+        if v is not None:
+            valid_statuses = ['pending', 'processing', 'completed', 'error', 'skipped']
+            if v.lower() not in valid_statuses:
+                raise ValueError(f'processing_status must be one of: {", ".join(valid_statuses)}')
+        return v
+
+    @validator('document_type')
+    def validate_document_type(cls, v):
+        """Validate document type against DocumentType enum."""
+        if v not in [dt.value for dt in DocumentType]:
+            raise ValueError(f'document_type must be one of: {", ".join([dt.value for dt in DocumentType])}')
+        return v
 
     def to_weaviate_object(self) -> Dict:
         """Convert the document to a format suitable for Weaviate ingestion."""
-        # This is a simplified version - in practice, this would need to handle
-        # nested objects and custom transformations
-        return self.dict(exclude_none=True)
+        data = self.dict(exclude_none=True)
+        
+        # Convert datetime objects to ISO format strings for Weaviate
+        for field_name in ['date_issued', 'publication_date']:
+            if field_name in data and isinstance(data[field_name], datetime):
+                data[field_name] = data[field_name].isoformat()
+        
+        return data
+
+    @classmethod
+    def from_weaviate_object(cls, data: Dict) -> "LegalDocument":
+        """Create a LegalDocument from Weaviate data."""
+        # Convert ISO strings back to datetime objects
+        for field_name in ['date_issued', 'publication_date']:
+            if field_name in data and isinstance(data[field_name], str):
+                try:
+                    data[field_name] = datetime.fromisoformat(data[field_name])
+                except (ValueError, TypeError):
+                    # If conversion fails, keep as string or set to None
+                    data[field_name] = None
+        
+        return cls(**data)
+
+    # Typed accessors for JSON-serialized complex objects
+    def get_issuing_body(self) -> Optional[IssuingBody]:
+        """Get the issuing body as a typed object."""
+        if self.issuing_body:
+            try:
+                data = json.loads(self.issuing_body)
+                return IssuingBody(**data)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_issuing_body(self, issuing_body: IssuingBody) -> None:
+        """Set the issuing body from a typed object."""
+        self.issuing_body = json.dumps(issuing_body.dict())
+
+    def get_legal_references(self) -> Optional[List[LegalReference]]:
+        """Get legal references as a list of typed objects."""
+        if self.legal_references:
+            try:
+                data = json.loads(self.legal_references)
+                if isinstance(data, list):
+                    return [LegalReference(**ref) for ref in data]
+                return None
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_legal_references(self, references: List[LegalReference]) -> None:
+        """Set legal references from a list of typed objects."""
+        self.legal_references = json.dumps([ref.dict() for ref in references])
+
+    def get_legal_concepts(self) -> Optional[List[LegalConcept]]:
+        """Get legal concepts as a list of typed objects."""
+        if self.legal_concepts:
+            try:
+                data = json.loads(self.legal_concepts)
+                if isinstance(data, list):
+                    return [LegalConcept(**concept) for concept in data]
+                return None
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_legal_concepts(self, concepts: List[LegalConcept]) -> None:
+        """Set legal concepts from a list of typed objects."""
+        self.legal_concepts = json.dumps([concept.dict() for concept in concepts])
+
+    def get_parties(self) -> Optional[List[Party]]:
+        """Get parties as a list of typed objects."""
+        if self.parties:
+            try:
+                data = json.loads(self.parties)
+                if isinstance(data, list):
+                    return [Party(**party) for party in data]
+                return None
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_parties(self, parties: List[Party]) -> None:
+        """Set parties from a list of typed objects."""
+        self.parties = json.dumps([party.dict() for party in parties])
+
+    def get_outcome(self) -> Optional[Outcome]:
+        """Get outcome as a typed object."""
+        if self.outcome:
+            try:
+                data = json.loads(self.outcome)
+                return Outcome(**data)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_outcome(self, outcome: Outcome) -> None:
+        """Set outcome from a typed object."""
+        self.outcome = json.dumps(outcome.dict())
+
+    def get_judgment_specific(self) -> Optional[JudgmentSpecific]:
+        """Get judgment-specific fields as a typed object."""
+        if self.judgment_specific:
+            try:
+                data = json.loads(self.judgment_specific)
+                return JudgmentSpecific(**data)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_judgment_specific(self, judgment_specific: JudgmentSpecific) -> None:
+        """Set judgment-specific fields from a typed object."""
+        self.judgment_specific = json.dumps(judgment_specific.dict())
+
+    def get_tax_interpretation_specific(self) -> Optional[TaxInterpretationSpecific]:
+        """Get tax interpretation-specific fields as a typed object."""
+        if self.tax_interpretation_specific:
+            try:
+                data = json.loads(self.tax_interpretation_specific)
+                return TaxInterpretationSpecific(**data)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_tax_interpretation_specific(self, tax_specific: TaxInterpretationSpecific) -> None:
+        """Set tax interpretation-specific fields from a typed object."""
+        self.tax_interpretation_specific = json.dumps(tax_specific.dict())
+
+    def get_legal_act_specific(self) -> Optional[LegalActSpecific]:
+        """Get legal act-specific fields as a typed object."""
+        if self.legal_act_specific:
+            try:
+                data = json.loads(self.legal_act_specific)
+                return LegalActSpecific(**data)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_legal_act_specific(self, legal_act_specific: LegalActSpecific) -> None:
+        """Set legal act-specific fields from a typed object."""
+        self.legal_act_specific = json.dumps(legal_act_specific.dict())
+
+    def get_structured_content(self) -> Optional[DocumentStructure]:
+        """Get structured content as a typed object."""
+        if self.structured_content:
+            try:
+                data = json.loads(self.structured_content)
+                return DocumentStructure(**data)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_structured_content(self, structured_content: DocumentStructure) -> None:
+        """Set structured content from a typed object."""
+        self.structured_content = json.dumps(structured_content.dict())
+
+    def get_metadata(self) -> Optional[DocumentMetadata]:
+        """Get metadata as a typed object."""
+        if self.metadata:
+            try:
+                data = json.loads(self.metadata)
+                return DocumentMetadata(**data)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return None
+        return None
+
+    def set_metadata(self, metadata: DocumentMetadata) -> None:
+        """Set metadata from a typed object."""
+        self.metadata = json.dumps(metadata.dict())
+
+    @classmethod
+    def migrate_from_v1(cls, v1_data: Dict) -> "LegalDocument":
+        """Migrate from schema version 1.0.0 to 2.0.0."""
+        # Add default values for new fields
+        v2_data = v1_data.copy()
+        v2_data['schema_version'] = '2.0.0'
+        
+        # Map any renamed fields if necessary
+        # (In this case, no field renaming occurred, just additions)
+        
+        return cls(**v2_data)
+
+    def is_compatible_with_version(self, target_version: str) -> bool:
+        """Check if this document is compatible with a target schema version."""
+        current_major = int(self.schema_version.split('.')[0])
+        target_major = int(target_version.split('.')[0])
+        
+        # Major version compatibility: same major version
+        return current_major == target_major
 
     @classmethod
     def from_judgment(cls, judgment_data: Dict) -> "LegalDocument":
         """Convert a judgment document to a unified LegalDocument."""
         # Implementation would map from judgment-specific fields to the unified schema
-        doc = LegalDocument(
-            document_id=judgment_data.get("judgment_id", ""),
-            document_type=DocumentType.JUDGMENT,
-            document_number=judgment_data.get("docket_number"),
-            date_issued=judgment_data.get("judgment_date"),
+        doc_data = {
+            "document_id": judgment_data.get("judgment_id", ""),
+            "document_type": DocumentType.JUDGMENT,
+            "document_number": judgment_data.get("docket_number"),
+            "date_issued": judgment_data.get("judgment_date"),
             # Map other fields accordingly
-        )
-        return doc
+        }
+        return cls(**doc_data)
 
     @classmethod
     def from_tax_interpretation(cls, tax_data: Dict) -> "LegalDocument":
         """Convert a tax interpretation document to a unified LegalDocument."""
         # Implementation would map from tax interpretation fields to the unified schema
-        doc = LegalDocument(
-            document_id=tax_data.get("id", ""),
-            document_type=DocumentType.TAX_INTERPRETATION,
+        doc_data = {
+            "document_id": tax_data.get("id", ""),
+            "document_type": DocumentType.TAX_INTERPRETATION,
             # Example mapping for fields in the example tax interpretation
-            title=next(
+            "title": next(
                 (
                     field["value"]
                     for field in tax_data.get("dokument", {}).get("fields", [])
@@ -460,7 +720,7 @@ class LegalDocument(BaseModel):
                 ),
                 None,
             ),
-            date_issued=next(
+            "date_issued": next(
                 (
                     field["value"]
                     for field in tax_data.get("dokument", {}).get("fields", [])
@@ -468,7 +728,7 @@ class LegalDocument(BaseModel):
                 ),
                 None,
             ),
-            document_number=next(
+            "document_number": next(
                 (
                     field["value"]
                     for field in tax_data.get("dokument", {}).get("fields", [])
@@ -476,8 +736,7 @@ class LegalDocument(BaseModel):
                 ),
                 None,
             ),
-            # Map other fields accordingly
-        )
+        }
 
         # Extract full text from the "TRESC_INTERESARIUSZ" field
         full_text = next(
@@ -489,45 +748,52 @@ class LegalDocument(BaseModel):
             None,
         )
         if full_text:
-            doc.full_text = full_text
+            doc_data["full_text"] = full_text
 
-        return doc
+        return cls(**doc_data)
 
     @classmethod
     def from_legal_act(cls, act_data: Dict) -> "LegalDocument":
         """Convert a legal act to a unified LegalDocument."""
         # This is a simplified implementation
-        doc = LegalDocument(
-            document_id=act_data.get("id", ""),
-            document_type=DocumentType.LEGAL_ACT,
-            title=act_data.get("title"),
-            document_number=act_data.get("document_number"),
-            date_issued=act_data.get("enactment_date"),
-            legal_act_specific=LegalActSpecific(
-                act_type=act_data.get("act_type", ""),
-                enactment_date=act_data.get("enactment_date"),
-                legislative_body=act_data.get("legislative_body"),
-                jurisdiction_level=act_data.get("jurisdiction_level"),
-                current_status=act_data.get("current_status"),
-                effective_dates=EffectiveDates(
-                    start_date=act_data.get("effective_date"),
-                    end_date=act_data.get("expiration_date"),
-                )
-                if act_data.get("effective_date")
-                else None,
-                isap_id=act_data.get("isap_id"),
-            ),
-        )
+        doc_data = {
+            "document_id": act_data.get("id", ""),
+            "document_type": DocumentType.LEGAL_ACT,
+            "title": act_data.get("title"),
+            "document_number": act_data.get("document_number"),
+            "date_issued": act_data.get("enactment_date"),
+        }
+
+        # Create legal act specific data as JSON string
+        legal_act_specific_data = {
+            "act_type": act_data.get("act_type", ""),
+        }
+        
+        # Add optional fields if they exist
+        for field in ["enactment_date", "legislative_body", "jurisdiction_level", "current_status", "isap_id"]:
+            if act_data.get(field):
+                legal_act_specific_data[field] = act_data[field]
+        
+        # Add effective dates if available
+        if act_data.get("effective_date"):
+            legal_act_specific_data["effective_dates"] = EffectiveDates(
+                start_date=act_data.get("effective_date"),
+                end_date=act_data.get("expiration_date"),
+            ).dict()
+        
+        legal_act_specific = LegalActSpecific(**legal_act_specific_data)
+        doc_data["legal_act_specific"] = json.dumps(legal_act_specific.dict())
 
         # Add issuing body information if available
         if act_data.get("issuing_body"):
-            doc.issuing_body = IssuingBody(
-                name=act_data.get("issuing_body"),
+            issuing_body = IssuingBody(
+                name=act_data.get("issuing_body", ""),
                 type="legislative",
                 jurisdiction=act_data.get("jurisdiction"),
             )
+            doc_data["issuing_body"] = json.dumps(issuing_body.dict())
 
-        return doc
+        return cls(**doc_data)
 
 
 class DocumentQuery:
@@ -538,9 +804,10 @@ class DocumentQuery:
         document: LegalDocument, segment_type: SegmentType
     ) -> List[TextSegment]:
         """Return all segments of specified type from the document."""
-        if not document.structured_content or not document.structured_content.sections:
+        structured_content = document.get_structured_content()
+        if not structured_content or not structured_content.sections:
             return []
-        return [s for s in document.structured_content.sections if s.segment_type == segment_type]
+        return [s for s in structured_content.sections if s.segment_type == segment_type]
 
     @staticmethod
     def find_related_documents(
@@ -550,14 +817,23 @@ class DocumentQuery:
         if not document.relationships:
             return []
 
+        try:
+            relationships_data = json.loads(document.relationships)
+            if not isinstance(relationships_data, list):
+                return []
+            
+            relationships = [DocumentRelationship(**rel) for rel in relationships_data]
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return []
+
         if relationship_type:
             return [
                 rel.target_id
-                for rel in document.relationships
+                for rel in relationships
                 if rel.relationship_type == relationship_type
             ]
 
-        return [rel.target_id for rel in document.relationships]
+        return [rel.target_id for rel in relationships]
 
     @staticmethod
     def find_citing_legal_acts(document: LegalDocument) -> List[str]:

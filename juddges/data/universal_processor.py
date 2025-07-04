@@ -528,18 +528,17 @@ class UniversalDatasetProcessor:
                     f"Starting document ingestion for {embeddings_dataset.num_rows} documents"
                 )
                 doc_ingester = DocumentIngester(db=db, config=ingest_config)
-                doc_ingester.ingest(embeddings_dataset)
-                ingested_docs = embeddings_dataset.num_rows
+                ingested_docs = doc_ingester.ingest(embeddings_dataset)
                 logger.info(f"Successfully ingested {ingested_docs} documents")
 
                 # Create and ingest chunks (if embeddings were created)
                 if "chunk_text" in embeddings_dataset.column_names:
                     logger.info("Starting chunk ingestion")
                     chunk_ingester = ChunkIngester(db=db, config=ingest_config)
-                    chunk_ingester.ingest(embeddings_dataset)
-                    ingested_chunks = embeddings_dataset.num_rows
+                    ingested_chunks = chunk_ingester.ingest(embeddings_dataset)
                     logger.info(f"Successfully ingested {ingested_chunks} chunks")
                 else:
+                    ingested_chunks = 0
                     logger.info("No chunk_text column found, skipping chunk ingestion")
 
         except Exception as e:
