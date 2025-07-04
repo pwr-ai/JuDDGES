@@ -101,7 +101,7 @@ class ExtractionEvaluator:
             elif field_type in ["number", "integer"]:
                 field_results[key] = {"match": evaluate_number(pred_val, gold_val)}
             elif field_type == "string":
-                field_results[key] = {"rouge": evaluate_string_rouge(pred_val, gold_val)}
+                field_results[key] = evaluate_string_rouge(pred_val, gold_val)
             elif field_type == "enum":
                 field_results[key] = evaluate_enum(pred_val, gold_val, self.enum_choices[key])
             elif field_type == "list":
@@ -117,7 +117,7 @@ class ExtractionEvaluator:
         elif field_type in ["number", "integer"]:
             return {"match": 0}
         elif field_type == "string":
-            return {"rouge": 0}
+            return {"rouge1": 0, "rouge2": 0, "rougeL": 0}
         elif field_type == "enum":
             return {
                 "match": 0,
