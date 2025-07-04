@@ -52,12 +52,7 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Sample item content: {sample_item}")
 
     ds = ds.filter(lambda item: item[TEXT_COL] is not None, num_proc=NUM_PROC)
-
-    # Limit the number of documents if max_documents is set
-    if config.max_documents and config.max_documents > 0:
-        logger.info(f"Limiting to {config.max_documents} documents")
-        ds = ds.select(range(min(config.max_documents, ds.num_rows)))
-    logger.info(f"Number of documents after limiting: {ds.num_rows}")
+    logger.info(f"Number of documents: {ds.num_rows}")
 
     model = SentenceTransformer(
         config.embedding_model.name,

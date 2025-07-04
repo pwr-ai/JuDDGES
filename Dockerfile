@@ -47,4 +47,5 @@ COPY scripts/ ./scripts/
 COPY README.md .
 
 RUN pip install uv && \
-    uv pip install --system -e .
+    uv pip install --system -e . && \
+    pip install flash-attn --no-build-isolation

@@ -15,7 +15,6 @@ batch_size: 4096
 num_output_shards: 10
 ingest_batch_size: 32  # Batch size for ingestion
 upsert: false  # Whether to update existing documents
-max_documents: null  # Maximum number of documents to ingest (null for all)
 
 output_dir: null
 

@@ -245,9 +245,6 @@ def validate(
 @app.command()
 def ingest(
     dataset_name: str = typer.Argument(..., help="Dataset name to ingest"),
-    max_docs: Optional[int] = typer.Option(
-        None, "--max-docs", "-n", help="Maximum documents to ingest"
-    ),
     batch_size: int = typer.Option(32, "--batch-size", "-b", help="Batch size for ingestion"),
     skip_validation: bool = typer.Option(False, "--skip-validation", help="Skip validation step"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview only, don't actually ingest"),
@@ -284,7 +281,7 @@ def ingest(
                 raise typer.Exit(1)
 
     # Prepare ingestion config
-    ingest_config = IngestConfig(max_documents=max_docs, batch_size=batch_size)
+    ingest_config = IngestConfig(batch_size=batch_size)
 
     # Start ingestion
     with Progress(

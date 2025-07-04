@@ -151,7 +151,6 @@ class EmbeddingConfig(BaseModel, extra="forbid"):
     chunk_config: dict[str, Any] = None
     batch_size: int
     num_output_shards: int
-    max_documents: Optional[int] = None
     ingest_batch_size: int = 32
     upsert: bool = True
     default_column_values: Optional[dict[str, Any]] = None
