@@ -4,7 +4,7 @@ array_fields:
 - keywords
 - extracted_legal_bases
 - references
-chunk_overlap: 256
+chunk_overlap: 128
 chunk_strategy: recursive
 column_mapping:  # Mapping of dataset fields to Weaviate properties
   country: country
@@ -23,6 +23,7 @@ column_mapping:  # Mapping of dataset fields to Weaviate properties
   court_id: court_name
   publication_date: publication_date
   last_update: last_updated
+  source: source
 date_fields:
 - judgment_date
 - publication_date
@@ -32,6 +33,7 @@ default_values:
   language: pl
 document_type: judgment
 json_fields: []
+min_chunk_size: 256
 max_chunk_size: 512
 name: JuDDGES/pl-court-raw-sample
 required_fields:

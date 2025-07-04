@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from datasets import Dataset, load_dataset
-from huggingface_hub import HfApi, list_datasets
+from huggingface_hub import HfApi
 from rich.console import Console
 from rich.panel import Panel
 

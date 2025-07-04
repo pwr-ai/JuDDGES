@@ -89,8 +89,14 @@ class SimpleChunker:
 class ProcessedDocTracker:
     """Track processed documents using SQLite for resume capability."""
 
-    def __init__(self, db_path: str = "processed_documents.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = "processed_documents.db", dataset_name: Optional[str] = None):
+        if dataset_name:
+            # Create dataset-specific tracker file
+            base_path = Path(db_path).parent
+            safe_name = dataset_name.replace("/", "_").replace("\\", "_")
+            self.db_path = str(base_path / f"processed_documents_{safe_name}.db")
+        else:
+            self.db_path = db_path
         self._init_db()
 
     def _init_db(self):
@@ -184,6 +190,16 @@ class ProcessedDocTracker:
             row = cursor.fetchone()
             return {"total": row[0] or 0, "successful": row[1] or 0, "failed": row[2] or 0}
 
+    def reset_documents_by_pattern(self, pattern: str):
+        """Reset documents matching a specific pattern."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute(
+                "DELETE FROM processed_documents WHERE document_id LIKE ?", (f"%{pattern}%",)
+            )
+            deleted_count = cursor.rowcount
+            conn.commit()
+            return deleted_count
+
 
 class StreamingIngester:
     """Simplified streaming ingester for legal documents."""
@@ -260,7 +276,12 @@ class StreamingIngester:
 
         self.chunker = SimpleChunker(chunk_size, overlap, min_chunk_size=min_chunk_size)
         self.batch_size = batch_size
-        self.tracker = ProcessedDocTracker(tracker_db)
+
+        # Create dataset-specific tracker if dataset config is provided
+        dataset_name = (
+            dataset_config.name if dataset_config and hasattr(dataset_config, "name") else None
+        )
+        self.tracker = ProcessedDocTracker(tracker_db, dataset_name)
         self.stats = ProcessingStats()
         self.dataset_config = dataset_config
 
@@ -612,6 +633,9 @@ class StreamingIngester:
                         name="outcome", data_type=wvc.DataType.TEXT, skip_vectorization=True
                     ),
                     wvc.Property(
+                        name="source", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                    ),
+                    wvc.Property(
                         name="metadata", data_type=wvc.DataType.TEXT, skip_vectorization=True
                     ),
                     wvc.Property(
@@ -714,6 +738,9 @@ class StreamingIngester:
                     ),
                     wvc.Property(
                         name="position", data_type=wvc.DataType.NUMBER, skip_vectorization=True
+                    ),
+                    wvc.Property(
+                        name="source", data_type=wvc.DataType.TEXT, skip_vectorization=True
                     ),
                     wvc.Property(
                         name="confidence_score",
@@ -878,6 +905,7 @@ class StreamingIngester:
                 "last_updated": convert_date_to_rfc3339(datetime.now()),
                 "processing_status": "completed",
                 "source_url": mapped_data.get("source_url", ""),
+                "source": mapped_data.get("source", ""),
                 "legal_references": self._serialize_field_value(
                     mapped_data.get("legal_references", [])
                 ),
@@ -1224,8 +1252,22 @@ class StreamingIngester:
     def reset_tracker(self):
         """Reset the processed documents tracker."""
         Path(self.tracker.db_path).unlink(missing_ok=True)
-        self.tracker = ProcessedDocTracker(self.tracker.db_path)
-        self.console.print("[bold yellow]Tracker database reset[/bold yellow]")
+        dataset_name = (
+            self.dataset_config.name
+            if self.dataset_config and hasattr(self.dataset_config, "name")
+            else None
+        )
+        self.tracker = ProcessedDocTracker("processed_documents.db", dataset_name)
+        self.console.print(
+            f"[bold yellow]Tracker database reset: {self.tracker.db_path}[/bold yellow]"
+        )
+
+    def reset_tracker_for_dataset(self, pattern: str):
+        """Reset tracker for documents matching a specific pattern."""
+        deleted_count = self.tracker.reset_documents_by_pattern(pattern)
+        self.console.print(
+            f"[bold yellow]Reset {deleted_count} documents matching pattern '{pattern}'[/bold yellow]"
+        )
 
     def close(self):
         """Close Weaviate connection."""
@@ -1238,7 +1280,7 @@ class StreamingIngester:
         """Context manager entry."""
         return self
 
-    def __exit__(self, _exc_type, _exc_val, _exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.close()
         return False

@@ -1,40 +1,36 @@
 array_fields:
-- keywords
-- regulations
-- author
+- judges
 chunk_overlap: 128
 chunk_strategy: recursive
 column_mapping:  # Mapping of dataset fields to Weaviate properties
-  id: document_id
-  title: title
-  docker_number: document_number
+  judgment_id: document_id
+  docket_number: document_number
   publication_date: publication_date
-  keywords: keywords
-  regulations: legal_bases
-  html_content: raw_content
-  introduction: summary
-  justification: full_text
-  author: issuing_body
-  question: thesis
+  court_type: court_name
+  excerpt: summary
+  full_text: full_text
+  judges: judges
+  file_name: source_url
+  xml_uri: source_url
+  uri: source_url
+  source: source
+  country: country
 date_fields:
 - publication_date
 default_values:
-  country: Poland
-  language: pl
-  source: eureka
-document_type: tax_interpretation
+  country: England
+  language: en
+  document_type: judgment
 json_fields: []
 min_chunk_size: 256
 max_chunk_size: 512
-name: AI-TAX/pl-eureka-raw-sample
+name: JuDDGES/en-court-raw-sample
 required_fields:
 - document_id
 - full_text
 text_fields:
-- introduction
-- justification
-- question
-- html_content
+- excerpt
+- full_text
 num_proc: 1  # Use all available CPU cores
 batch_size: 100  # Batch size for dataset operations
 
