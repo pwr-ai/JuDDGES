@@ -9,6 +9,7 @@ from langchain_core.utils.json import parse_json_markdown
 from pydantic import BaseModel, Field
 from tqdm.auto import tqdm
 
+from juddges.config import PredictInfoExtractionConfig
 from juddges.utils.config import load_and_resolve_config
 
 
@@ -21,17 +22,25 @@ class ParsedPredictions(BaseModel):
     num_items: int
 
     def get_stats(self) -> dict[str, Any]:
+        num_missing_keys = [len(keys) for keys in self.missing_keys.values() if keys]
+        num_extra_keys = [len(keys) for keys in self.extra_keys.values() if keys]
+
+        if num_missing_keys:
+            avg_missing_keys_when_missing_any = round(mean(num_missing_keys), 3)
+        else:
+            avg_missing_keys_when_missing_any = 0
+        if num_extra_keys:
+            avg_extra_keys_when_missing_any = round(mean(num_extra_keys), 3)
+        else:
+            avg_extra_keys_when_missing_any = 0
+
         return {
             "num_items": self.num_items,
             "total_num_parsing_errors": len(self.errors),
-            "total_num_missing_keys": sum(len(keys) for keys in self.missing_keys.values()),
-            "total_num_extra_keys": sum(len(keys) for keys in self.extra_keys.values()),
-            "avg_missing_keys_when_missing_any": mean(
-                len(keys) for keys in self.missing_keys.values() if keys
-            ),
-            "avg_extra_keys_when_missing_any": mean(
-                len(keys) for keys in self.extra_keys.values() if keys
-            ),
+            "total_num_missing_keys": sum(num_missing_keys),
+            "total_num_extra_keys": sum(num_extra_keys),
+            "avg_missing_keys_when_missing_any": avg_missing_keys_when_missing_any,
+            "avg_extra_keys_when_missing_any": avg_extra_keys_when_missing_any,
         }
 
 
@@ -87,6 +96,10 @@ class PredictionLoader:
     @property
     def ngram_scores_file(self) -> Path:
         return self.root_dir / "scores_ngram.json"
+
+    @cached_property
+    def config(self) -> PredictInfoExtractionConfig:
+        return PredictInfoExtractionConfig(**load_and_resolve_config(self.config_file))
 
     def setup_judge_dir(self) -> None:
         if self.judge_name is None:
