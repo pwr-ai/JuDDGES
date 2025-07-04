@@ -29,6 +29,7 @@ class DatasetConfig:
     max_chunk_size: int = 1000
     chunk_overlap: int = 200
     embedding_path: Optional[str] = None  # Path to pre-computed embeddings
+    chunks_path: Optional[str] = None  # Path to chunk embeddings
     num_proc: Optional[int] = None  # Number of processes for parallel processing
     batch_size: int = 1000  # Batch size for dataset operations
 

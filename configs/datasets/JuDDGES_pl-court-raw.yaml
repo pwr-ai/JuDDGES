@@ -43,5 +43,6 @@ text_fields:
 - full_text
 - thesis
 embedding_path: data/embeddings/pl-court-raw/mmlw-roberta-large/agg_embeddings
+chunks_path: data/embeddings/pl-court-raw/mmlw-roberta-large/chunk_embeddings
 num_proc: 10  # Use all available CPU cores
 batch_size: 1000  # Batch size for dataset operations
