@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
 Simple streaming ingestion script for legal documents.
-Usage: python simple_ingest.py --dataset-path <path> [options]
+Usage: python simple_ingest.py [config_file.yaml]
 """
 
 import sys
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
+import yaml
 from dotenv import load_dotenv
 from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -22,27 +24,75 @@ from juddges.settings import ROOT_PATH
 load_dotenv(ROOT_PATH / ".env", override=True)
 
 
+class DatasetConfig(BaseModel):
+    """Configuration for dataset-specific settings loaded from YAML."""
+
+    name: str = Field(..., description="Dataset name/path")
+    document_type: str = Field(default="judgment", description="Type of legal document")
+    chunk_overlap: int = Field(default=200, ge=0, description="Chunk overlap in characters")
+    max_chunk_size: int = Field(default=1000, gt=0, description="Maximum chunk size in characters")
+    chunk_strategy: str = Field(default="recursive", description="Chunking strategy")
+    column_mapping: Dict[str, str] = Field(default_factory=dict, description="Column name mapping")
+    required_fields: List[str] = Field(default_factory=list, description="Required dataset fields")
+    text_fields: List[str] = Field(default_factory=list, description="Text fields to process")
+    date_fields: List[str] = Field(default_factory=list, description="Date fields")
+    array_fields: List[str] = Field(default_factory=list, description="Array fields")
+    json_fields: List[str] = Field(default_factory=list, description="JSON fields")
+    default_values: Dict[str, Any] = Field(default_factory=dict, description="Default field values")
+    embedding_path: Optional[str] = Field(None, description="Path for aggregate embeddings")
+    chunks_path: Optional[str] = Field(None, description="Path for chunk embeddings")
+    num_proc: int = Field(default=1, gt=0, description="Number of processes for dataset operations")
+    batch_size: int = Field(default=100, gt=0, description="Batch size for dataset operations")
+
+
 class IngestionConfig(BaseModel):
     """Configuration for the streaming ingestion process."""
 
-    dataset_path: str = Field(
-        ..., description="Path to HuggingFace dataset (e.g., 'JuDDGES/pl-court-raw-sample')"
-    )
+    # Dataset configuration
+    dataset_config: DatasetConfig = Field(..., description="Dataset-specific configuration")
+
+    # Weaviate settings
     weaviate_url: str = Field(default="http://localhost:8084", description="Weaviate instance URL")
+
+    # Embedding settings
     embedding_model: str = Field(
         default="sdadas/mmlw-roberta-large", description="Sentence transformer model name"
     )
-    chunk_size: int = Field(default=512, gt=0, description="Text chunk size in characters")
-    overlap: int = Field(default=128, ge=0, description="Chunk overlap in characters")
-    batch_size: int = Field(default=32, gt=0, description="Embedding batch size")
+    embedding_batch_size: int = Field(
+        default=32, gt=0, description="Embedding generation batch size"
+    )
+
+    # Processing settings
+    streaming: bool = Field(default=True, description="Use streaming mode for dataset loading")
     tracker_db: str = Field(
         default="processed_documents.db", description="SQLite tracker database path"
     )
-    streaming: bool = Field(default=True, description="Use streaming mode for dataset loading")
     reset_tracker: bool = Field(
         default=False, description="Reset tracker database before processing"
     )
+
+    # System settings
     log_level: str = Field(default="INFO", description="Logging verbosity level")
+
+    @property
+    def dataset_path(self) -> str:
+        """Get dataset path from dataset config."""
+        return self.dataset_config.name
+
+    @property
+    def chunk_size(self) -> int:
+        """Get chunk size from dataset config."""
+        return self.dataset_config.max_chunk_size
+
+    @property
+    def overlap(self) -> int:
+        """Get overlap from dataset config."""
+        return self.dataset_config.chunk_overlap
+
+    @property
+    def batch_size(self) -> int:
+        """Get batch size from embedding settings."""
+        return self.embedding_batch_size
 
     @field_validator("log_level")
     @classmethod
@@ -53,12 +103,12 @@ class IngestionConfig(BaseModel):
             raise ValueError(f"Log level must be one of {valid_levels}")
         return v.upper()
 
-    @field_validator("overlap")
+    @field_validator("dataset_config")
     @classmethod
-    def validate_overlap(cls, v, info):
-        """Validate overlap is less than chunk size."""
-        if info.data and "chunk_size" in info.data and v >= info.data["chunk_size"]:
-            raise ValueError("Overlap must be less than chunk size")
+    def validate_dataset_config(cls, v):
+        """Validate dataset configuration."""
+        if v.chunk_overlap >= v.max_chunk_size:
+            raise ValueError("Chunk overlap must be less than max chunk size")
         return v
 
     @field_validator("embedding_model")
@@ -78,12 +128,13 @@ class IngestionConfig(BaseModel):
     def to_display_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for display purposes."""
         return {
-            "dataset_path": self.dataset_path,
+            "dataset_name": self.dataset_config.name,
+            "document_type": self.dataset_config.document_type,
             "weaviate_url": self.weaviate_url,
             "embedding_model": self.embedding_model,
             "chunk_size": self.chunk_size,
             "overlap": self.overlap,
-            "batch_size": self.batch_size,
+            "embedding_batch_size": self.embedding_batch_size,
             "tracker_db": self.tracker_db,
             "streaming": self.streaming,
             "reset_tracker": self.reset_tracker,
@@ -97,21 +148,14 @@ def create_help_panel() -> Panel:
     """Create a help panel with examples."""
     help_text = """[bold blue]Examples:[/bold blue]
 
-[dim]# Basic usage[/dim]
-[green]python simple_ingest.py --dataset-path JuDDGES/pl-court-raw-sample[/green]
+[dim]# Interactive mode (no arguments)[/dim]
+[green]python simple_ingest.py[/green]
 
-[dim]# With custom settings[/dim]
-[green]python simple_ingest.py --dataset-path JuDDGES/pl-court-raw-sample \\
-    --weaviate-url http://localhost:8084 \\
-    --embedding-model sdadas/mmlw-roberta-large \\
-    --chunk-size 512 \\
-    --batch-size 32[/green]
+[dim]# With specific config file[/dim]
+[green]python simple_ingest.py configs/datasets/JuDDGES_pl-court-raw-sample.yaml[/green]
 
-[dim]# Reset tracker and start fresh[/dim]
-[green]python simple_ingest.py --dataset-path JuDDGES/pl-court-raw-sample --reset-tracker[/green]
-
-[dim]# Non-streaming mode (load full dataset)[/dim]
-[green]python simple_ingest.py --dataset-path JuDDGES/pl-court-raw-sample --no-streaming[/green]
+[dim]# Using relative path[/dim]
+[green]python simple_ingest.py JuDDGES_pl-court-raw-sample.yaml[/green]
 
 [bold yellow]Environment Variables:[/bold yellow]
 [dim]# Set Weaviate API key (if authentication is required)[/dim]
@@ -125,13 +169,66 @@ def create_help_panel() -> Panel:
 [dim]# 2. Set API key (check your Weaviate .env file)[/dim]
 [green]export WEAVIATE_API_KEY=$(grep AUTHENTICATION_APIKEY_ALLOWED_KEYS weaviate/.env | cut -d= -f2)[/green]
 [dim]# 3. Run ingestion[/dim]
-[green]python simple_ingest.py --dataset-path JuDDGES/pl-court-raw-sample-sample[/green]"""
+[green]python simple_ingest.py[/green]
+
+[bold magenta]Config File Structure:[/bold magenta]
+[dim]Dataset configs are YAML files in configs/datasets/ with dataset-specific settings like:[/dim]
+[green]- Dataset name and type[/green]
+[green]- Column mappings[/green] 
+[green]- Chunk size and overlap[/green]
+[green]- Required and text fields[/green]"""
 
     return Panel(help_text, title="Usage Examples", border_style="blue")
 
 
-def get_configuration() -> IngestionConfig:
-    """Get configuration through Rich prompts."""
+def load_dataset_config(config_path: Path) -> DatasetConfig:
+    """Load dataset configuration from YAML file."""
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config_data = yaml.safe_load(f)
+        return DatasetConfig(**config_data)
+    except Exception as e:
+        raise ValueError(f"Failed to load dataset config from {config_path}: {e}")
+
+
+def find_available_configs() -> List[Path]:
+    """Find all available dataset config files."""
+    configs_dir = ROOT_PATH / "configs" / "datasets"
+    if not configs_dir.exists():
+        return []
+
+    return sorted(configs_dir.glob("*.yaml"))
+
+
+def select_dataset_config(console: Console) -> Optional[DatasetConfig]:
+    """Let user select a dataset configuration."""
+    available_configs = find_available_configs()
+
+    if not available_configs:
+        console.print("[bold red]No dataset configs found in configs/datasets/[/bold red]")
+        return None
+
+    console.print("\n[bold cyan]Available Dataset Configurations:[/bold cyan]")
+    for i, config_path in enumerate(available_configs, 1):
+        # Extract readable name from filename
+        name = config_path.stem.replace("_", "/").replace("-", "-")
+        console.print(f"  {i}. {name} ({config_path.name})")
+
+    while True:
+        try:
+            choice = Prompt.ask(
+                "[bold cyan]Select dataset config[/bold cyan]",
+                choices=[str(i) for i in range(1, len(available_configs) + 1)],
+                default="1",
+            )
+            selected_config = available_configs[int(choice) - 1]
+            return load_dataset_config(selected_config)
+        except (ValueError, IndexError) as e:
+            console.print(f"[red]Invalid selection: {e}[/red]")
+
+
+def get_configuration(config_file: Optional[Path] = None) -> IngestionConfig:
+    """Get configuration through Rich prompts or config file."""
     console = Console()
 
     console.print(
@@ -144,20 +241,39 @@ def get_configuration() -> IngestionConfig:
         )
     )
 
-    config_dict: Dict[str, Any] = {}
+    # Load dataset configuration
+    if config_file:
+        console.print(f"[bold green]Loading config from: {config_file}[/bold green]")
+        try:
+            dataset_config = load_dataset_config(config_file)
+            console.print(f"[green]✓ Loaded dataset config for: {dataset_config.name}[/green]")
+        except Exception as e:
+            console.print(f"[bold red]Failed to load config: {e}[/bold red]")
+            raise
+    else:
+        # Interactive dataset selection
+        dataset_config = select_dataset_config(console)
+        if not dataset_config:
+            raise ValueError("No dataset configuration selected")
 
-    # Dataset path (required)
-    config_dict["dataset_path"] = Prompt.ask(
-        "[bold cyan]Dataset path[/bold cyan]", default="JuDDGES/pl-court-raw-sample"
-    )
+    config_dict: Dict[str, Any] = {"dataset_config": dataset_config}
 
-    # Weaviate URL
-    config_dict["weaviate_url"] = Prompt.ask(
-        "[bold cyan]Weaviate URL[/bold cyan]", default="http://localhost:8084"
-    )
+    # Weaviate settings (only prompt if interactive mode)
+    if not config_file:
+        config_dict["weaviate_url"] = Prompt.ask(
+            "[bold cyan]Weaviate URL[/bold cyan]", default="http://localhost:8084"
+        )
 
-    # Test Weaviate connection
-    if Confirm.ask("[bold cyan]Test Weaviate connection now?[/bold cyan]", default=False):
+        # Test Weaviate connection
+        test_connection = Confirm.ask(
+            "[bold cyan]Test Weaviate connection now?[/bold cyan]", default=False
+        )
+    else:
+        # Use defaults when loading from file
+        config_dict["weaviate_url"] = "http://localhost:8084"
+        test_connection = False
+
+    if test_connection:
         console.print("[dim]Testing connection...[/dim]")
         try:
             import os
@@ -195,68 +311,76 @@ def get_configuration() -> IngestionConfig:
                 console.print("[bold red]Cancelled by user[/bold red]")
                 raise KeyboardInterrupt("User cancelled configuration")
 
-    # Embedding model
-    models = [
-        "sdadas/mmlw-roberta-large",
-        "sentence-transformers/all-MiniLM-L6-v2",
-        "sentence-transformers/all-mpnet-base-v2",
-    ]
+    # Embedding model selection
+    if not config_file:
+        models = [
+            "sdadas/mmlw-roberta-large",
+            "sentence-transformers/all-MiniLM-L6-v2",
+            "sentence-transformers/all-mpnet-base-v2",
+        ]
 
-    console.print("\n[bold cyan]Available embedding models:[/bold cyan]")
-    for i, model in enumerate(models, 1):
-        console.print(f"  {i}. {model}")
+        console.print("\n[bold cyan]Available embedding models:[/bold cyan]")
+        for i, model in enumerate(models, 1):
+            console.print(f"  {i}. {model}")
 
-    model_choice = Prompt.ask(
-        "[bold cyan]Select embedding model[/bold cyan]", choices=["1", "2", "3"], default="1"
-    )
-    config_dict["embedding_model"] = models[int(model_choice) - 1]
-
-    # Advanced settings
-    show_advanced = Confirm.ask("[bold cyan]Show advanced settings?[/bold cyan]", default=False)
-
-    if show_advanced:
-        config_dict["chunk_size"] = int(
-            Prompt.ask("[bold cyan]Chunk size (characters)[/bold cyan]", default="512")
+        model_choice = Prompt.ask(
+            "[bold cyan]Select embedding model[/bold cyan]", choices=["1", "2", "3"], default="1"
         )
-
-        config_dict["overlap"] = int(
-            Prompt.ask("[bold cyan]Chunk overlap (characters)[/bold cyan]", default="128")
-        )
-
-        config_dict["batch_size"] = int(
-            Prompt.ask("[bold cyan]Batch size (embeddings)[/bold cyan]", default="32")
-        )
-
-        config_dict["tracker_db"] = Prompt.ask(
-            "[bold cyan]Tracker database path[/bold cyan]", default="processed_documents.db"
-        )
-
-        config_dict["streaming"] = Confirm.ask(
-            "[bold cyan]Use streaming mode?[/bold cyan]", default=True
-        )
+        config_dict["embedding_model"] = models[int(model_choice) - 1]
     else:
-        # Use defaults
+        # Use default embedding model when loading from file
+        config_dict["embedding_model"] = "sdadas/mmlw-roberta-large"
+
+    # Advanced settings (only prompt if interactive mode)
+    if not config_file:
+        show_advanced = Confirm.ask("[bold cyan]Show advanced settings?[/bold cyan]", default=False)
+
+        if show_advanced:
+            config_dict["embedding_batch_size"] = int(
+                Prompt.ask("[bold cyan]Embedding batch size[/bold cyan]", default="32")
+            )
+
+            config_dict["tracker_db"] = Prompt.ask(
+                "[bold cyan]Tracker database path[/bold cyan]", default="processed_documents.db"
+            )
+
+            config_dict["streaming"] = Confirm.ask(
+                "[bold cyan]Use streaming mode?[/bold cyan]", default=True
+            )
+        else:
+            # Use defaults in interactive mode
+            config_dict.update(
+                {
+                    "embedding_batch_size": 32,
+                    "tracker_db": "processed_documents.db",
+                    "streaming": True,
+                }
+            )
+    else:
+        # Use defaults when loading from file
         config_dict.update(
             {
-                "chunk_size": 512,
-                "overlap": 128,
-                "batch_size": 32,
+                "embedding_batch_size": 32,
                 "tracker_db": "processed_documents.db",
                 "streaming": True,
             }
         )
 
-    # Reset tracker
-    config_dict["reset_tracker"] = Confirm.ask(
-        "[bold cyan]Reset tracker database?[/bold cyan]", default=False
-    )
+    # Reset tracker and log level (only prompt if interactive mode)
+    if not config_file:
+        config_dict["reset_tracker"] = Confirm.ask(
+            "[bold cyan]Reset tracker database?[/bold cyan]", default=False
+        )
 
-    # Log level
-    config_dict["log_level"] = Prompt.ask(
-        "[bold cyan]Log level[/bold cyan]",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        default="INFO",
-    )
+        config_dict["log_level"] = Prompt.ask(
+            "[bold cyan]Log level[/bold cyan]",
+            choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+            default="INFO",
+        )
+    else:
+        # Use defaults when loading from file
+        config_dict["reset_tracker"] = False
+        config_dict["log_level"] = "INFO"
 
     try:
         return IngestionConfig(**config_dict)
@@ -275,12 +399,13 @@ def display_configuration(config: IngestionConfig) -> None:
     table.add_column("Description", style="dim")
 
     descriptions = {
-        "dataset_path": "HuggingFace dataset path",
+        "dataset_name": "HuggingFace dataset name",
+        "document_type": "Type of legal documents",
         "weaviate_url": "Weaviate instance URL",
         "embedding_model": "Sentence transformer model",
-        "chunk_size": "Text chunk size in characters",
-        "overlap": "Chunk overlap in characters",
-        "batch_size": "Embedding batch size",
+        "chunk_size": "Text chunk size (from dataset config)",
+        "overlap": "Chunk overlap (from dataset config)",
+        "embedding_batch_size": "Embedding generation batch size",
         "tracker_db": "SQLite tracker database",
         "streaming": "Use streaming mode",
         "reset_tracker": "Reset tracker on start",
@@ -397,6 +522,29 @@ def check_environment() -> None:
         console.print(f"[green]✓[/green] Found API key: {api_key[:8]}{'*' * (len(api_key) - 8)}")
 
 
+def resolve_config_path(config_arg: str) -> Path:
+    """Resolve config file path from command line argument."""
+    config_path = Path(config_arg)
+
+    # If absolute path or relative path that exists, use as-is
+    if config_path.is_absolute() or config_path.exists():
+        return config_path
+
+    # Try configs/datasets/ directory
+    configs_dir = ROOT_PATH / "configs" / "datasets"
+    full_path = configs_dir / config_arg
+    if full_path.exists():
+        return full_path
+
+    # Try with .yaml extension
+    if not config_arg.endswith(".yaml"):
+        yaml_path = configs_dir / f"{config_arg}.yaml"
+        if yaml_path.exists():
+            return yaml_path
+
+    raise FileNotFoundError(f"Config file not found: {config_arg}")
+
+
 def main():
     """Main CLI interface using Rich."""
     console = Console()
@@ -404,125 +552,45 @@ def main():
     # Check environment first
     check_environment()
 
-    # Check if running in interactive mode (no arguments)
-    if len(sys.argv) == 1:
-        # Interactive mode with Rich prompts
-        try:
-            config = get_configuration()
-        except KeyboardInterrupt:
-            console.print("[bold red]Cancelled by user[/bold red]")
-            return
+    # Handle command line arguments
+    config_file = None
 
-        # Display configuration
-        console.print("\n")
-        display_configuration(config)
-
-        # Confirm before starting
-        if not Confirm.ask("\n[bold cyan]Start processing with these settings?[/bold cyan]"):
-            console.print("[bold red]Cancelled by user[/bold red]")
-            return
-
-    else:
-        # Command line mode - parse arguments
-        import argparse
-
-        parser = argparse.ArgumentParser(
-            description="Simple streaming ingestion for legal documents",
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-        )
-
-        # Required arguments
-        parser.add_argument(
-            "--dataset-path",
-            required=True,
-            help="Path to HuggingFace dataset (e.g., 'JuDDGES/pl-court-raw-sample')",
-        )
-
-        # Optional arguments
-        parser.add_argument(
-            "--weaviate-url",
-            default="http://localhost:8084",
-            help="Weaviate instance URL (default: http://localhost:8084)",
-        )
-
-        parser.add_argument(
-            "--embedding-model",
-            default="sdadas/mmlw-roberta-large",
-            help="Embedding model name (default: sdadas/mmlw-roberta-large)",
-        )
-
-        parser.add_argument(
-            "--chunk-size",
-            type=int,
-            default=512,
-            help="Text chunk size in characters (default: 512)",
-        )
-
-        parser.add_argument(
-            "--overlap", type=int, default=128, help="Chunk overlap in characters (default: 128)"
-        )
-
-        parser.add_argument(
-            "--batch-size",
-            type=int,
-            default=32,
-            help="Batch size for embedding generation (default: 32)",
-        )
-
-        parser.add_argument(
-            "--tracker-db",
-            default="processed_documents.db",
-            help="SQLite database for tracking processed documents",
-        )
-
-        parser.add_argument(
-            "--reset-tracker",
-            action="store_true",
-            help="Reset the processed documents tracker before starting",
-        )
-
-        parser.add_argument(
-            "--no-streaming",
-            action="store_true",
-            help="Disable streaming mode (load full dataset into memory)",
-        )
-
-        parser.add_argument(
-            "--log-level",
-            choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-            default="INFO",
-            help="Log level (default: INFO)",
-        )
-
-        parser.add_argument("--help-examples", action="store_true", help="Show usage examples")
-
-        # Check for help-examples before full parsing
-        if "--help-examples" in sys.argv:
+    if len(sys.argv) > 1:
+        # Check for help first
+        if sys.argv[1] in ["--help", "-h", "--help-examples"]:
             console.print(create_help_panel())
             return
 
-        args = parser.parse_args()
-
-        # Convert args to config
+        # Assume first argument is config file
         try:
-            config = IngestionConfig(
-                dataset_path=args.dataset_path,
-                weaviate_url=args.weaviate_url,
-                embedding_model=args.embedding_model,
-                chunk_size=args.chunk_size,
-                overlap=args.overlap,
-                batch_size=args.batch_size,
-                tracker_db=args.tracker_db,
-                reset_tracker=args.reset_tracker,
-                streaming=not args.no_streaming,
-                log_level=args.log_level,
-            )
-        except Exception as e:
-            console.print(f"[bold red]Configuration error: {e}[/bold red]")
+            config_file = resolve_config_path(sys.argv[1])
+            console.print(f"[bold green]Using config file: {config_file}[/bold green]")
+        except FileNotFoundError as e:
+            console.print(f"[bold red]Error: {e}[/bold red]")
+            console.print("[yellow]Available configs:[/yellow]")
+            for config in find_available_configs():
+                console.print(f"  - {config.name}")
             sys.exit(1)
 
-        # Display configuration
-        display_configuration(config)
+    # Get configuration (interactive or from file)
+    try:
+        config = get_configuration(config_file)
+    except KeyboardInterrupt:
+        console.print("[bold red]Cancelled by user[/bold red]")
+        return
+    except Exception as e:
+        console.print(f"[bold red]Configuration error: {e}[/bold red]")
+        sys.exit(1)
+
+    # Display configuration
+    console.print("\n")
+    display_configuration(config)
+
+    # Confirm before starting (only in interactive mode)
+    if not config_file:
+        if not Confirm.ask("\n[bold cyan]Start processing with these settings?[/bold cyan]"):
+            console.print("[bold red]Cancelled by user[/bold red]")
+            return
 
     # Configure logging
     logger.remove()
@@ -541,8 +609,9 @@ def main():
             embedding_model=config.embedding_model,
             chunk_size=config.chunk_size,
             overlap=config.overlap,
-            batch_size=config.batch_size,
+            batch_size=config.embedding_batch_size,
             tracker_db=config.tracker_db,
+            dataset_config=config.dataset_config,
         ) as ingester:
             # Reset tracker if requested
             if config.reset_tracker:

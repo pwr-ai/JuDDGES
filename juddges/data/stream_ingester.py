@@ -3,7 +3,6 @@ Simplified streaming ingester for legal documents.
 Processes documents one by one, generates embeddings, and ingests immediately to Weaviate.
 """
 
-import hashlib
 import json
 import os
 import sqlite3
@@ -20,6 +19,7 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn
 from sentence_transformers import SentenceTransformer
 
 import weaviate
+from juddges.settings import VectorName
 from juddges.utils.date_utils import convert_date_to_rfc3339
 
 
@@ -145,6 +145,10 @@ class ProcessedDocTracker:
 class StreamingIngester:
     """Simplified streaming ingester for legal documents."""
 
+    # Use same collection names as documents_weaviate_db.py
+    LEGAL_DOCUMENTS_COLLECTION = "legal_documents"
+    DOCUMENT_CHUNKS_COLLECTION = "document_chunks"
+
     def __init__(
         self,
         weaviate_url: str = "http://localhost:8080",
@@ -153,6 +157,7 @@ class StreamingIngester:
         overlap: int = 128,
         batch_size: int = 32,
         tracker_db: str = "processed_documents.db",
+        dataset_config=None,
     ):
         self.console = Console()
 
@@ -181,6 +186,7 @@ class StreamingIngester:
         self.batch_size = batch_size
         self.tracker = ProcessedDocTracker(tracker_db)
         self.stats = ProcessingStats()
+        self.dataset_config = dataset_config
 
         # Verify Weaviate connection
         self._verify_weaviate_connection()
@@ -199,9 +205,9 @@ class StreamingIngester:
             else:
                 collection_names = [collection.name for collection in collections]
 
-            if "LegalDocument" not in collection_names:
+            if self.LEGAL_DOCUMENTS_COLLECTION not in collection_names:
                 self._create_legal_document_class()
-            if "DocumentChunk" not in collection_names:
+            if self.DOCUMENT_CHUNKS_COLLECTION not in collection_names:
                 self._create_document_chunk_class()
 
             logger.info("Weaviate connection verified and schema ready")
@@ -213,41 +219,170 @@ class StreamingIngester:
         """Create LegalDocument class in Weaviate."""
         import weaviate.classes.config as wvc
 
+        # Use same schema as documents_weaviate_db.py but simplified for streaming
         self.weaviate_client.collections.create(
-            name="LegalDocument",
+            name=self.LEGAL_DOCUMENTS_COLLECTION,
             properties=[
-                wvc.Property(name="document_id", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="title", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="full_text", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="language", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="country", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="document_type", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="date_issued", data_type=wvc.DataType.DATE),
-                wvc.Property(name="issuing_body", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="metadata", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="chunks_count", data_type=wvc.DataType.INT),
-                wvc.Property(name="processed_at", data_type=wvc.DataType.DATE),
+                wvc.Property(
+                    name="document_id", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="document_type", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                ),
+                wvc.Property(name="title", data_type=wvc.DataType.TEXT, skip_vectorization=False),
+                wvc.Property(
+                    name="date_issued", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="document_number", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(name="language", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                wvc.Property(name="country", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                wvc.Property(
+                    name="full_text", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                ),
+                wvc.Property(name="summary", data_type=wvc.DataType.TEXT, skip_vectorization=False),
+                wvc.Property(name="thesis", data_type=wvc.DataType.TEXT, skip_vectorization=False),
+                wvc.Property(
+                    name="keywords", data_type=wvc.DataType.TEXT_ARRAY, skip_vectorization=False
+                ),
+                wvc.Property(
+                    name="issuing_body", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="ingestion_date", data_type=wvc.DataType.DATE, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="last_updated", data_type=wvc.DataType.DATE, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="processing_status", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="source_url", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="legal_references", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(name="parties", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                wvc.Property(name="outcome", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                wvc.Property(name="metadata", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                # Additional properties from dataset mappings
+                wvc.Property(
+                    name="publication_date", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="raw_content", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="presiding_judge", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(name="judges", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                wvc.Property(
+                    name="legal_bases", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="court_name", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="department_name", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="extracted_legal_bases",
+                    data_type=wvc.DataType.TEXT,
+                    skip_vectorization=True,
+                ),
+                wvc.Property(
+                    name="references", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(name="x", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
+                wvc.Property(name="y", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
             ],
-            vectorizer_config=wvc.Configure.Vectorizer.none(),
+            vectorizer_config=[
+                wvc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.BASE,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                ),
+                wvc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.DEV,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                ),
+                wvc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.FAST,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                ),
+            ],
         )
-        logger.info("Created LegalDocument collection")
+        logger.info(f"Created {self.LEGAL_DOCUMENTS_COLLECTION} collection")
 
     def _create_document_chunk_class(self):
         """Create DocumentChunk class in Weaviate."""
         import weaviate.classes.config as wvc
 
+        # Use same schema as documents_weaviate_db.py
         self.weaviate_client.collections.create(
-            name="DocumentChunk",
+            name=self.DOCUMENT_CHUNKS_COLLECTION,
             properties=[
-                wvc.Property(name="document_id", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="chunk_id", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="chunk_text", data_type=wvc.DataType.TEXT),
-                wvc.Property(name="position", data_type=wvc.DataType.INT),
-                wvc.Property(name="processed_at", data_type=wvc.DataType.DATE),
+                wvc.Property(
+                    name="document_id", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="document_type", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(name="language", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                wvc.Property(
+                    name="chunk_id", data_type=wvc.DataType.NUMBER, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="chunk_text", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                ),
+                wvc.Property(
+                    name="segment_type", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                ),
+                wvc.Property(
+                    name="position", data_type=wvc.DataType.NUMBER, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="confidence_score", data_type=wvc.DataType.NUMBER, skip_vectorization=True
+                ),
+                wvc.Property(
+                    name="cited_references", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(name="tags", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                wvc.Property(
+                    name="parent_segment_id", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                ),
+                wvc.Property(name="x", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
+                wvc.Property(name="y", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
             ],
-            vectorizer_config=wvc.Configure.Vectorizer.none(),
+            vectorizer_config=[
+                wvc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.BASE,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                ),
+                wvc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.DEV,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                ),
+                wvc.Configure.NamedVectors.text2vec_transformers(
+                    name=VectorName.FAST,
+                    vectorize_collection_name=False,
+                    source_properties=["full_text"],
+                    vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                ),
+            ],
         )
-        logger.info("Created DocumentChunk collection")
+        logger.info(f"Created {self.DOCUMENT_CHUNKS_COLLECTION} collection")
 
     def _generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for batch of texts."""
@@ -268,46 +403,104 @@ class StreamingIngester:
 
         return np.mean(embeddings, axis=0).tolist()
 
+    def _apply_column_mapping(self, doc_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Apply column mapping from dataset config to document data."""
+        if not self.dataset_config or not self.dataset_config.column_mapping:
+            return doc_data
+
+        mapped_data = {}
+
+        # Apply column mappings
+        for source_field, target_field in self.dataset_config.column_mapping.items():
+            if source_field in doc_data:
+                mapped_data[target_field] = doc_data[source_field]
+
+        # Copy unmapped fields that exist in target schema
+        for field in doc_data:
+            if field not in mapped_data:
+                mapped_data[field] = doc_data[field]
+
+        # Apply default values
+        if self.dataset_config.default_values:
+            for field, default_value in self.dataset_config.default_values.items():
+                if field not in mapped_data or not mapped_data[field]:
+                    mapped_data[field] = default_value
+
+        return mapped_data
+
+    def _serialize_field_value(self, value: Any) -> str:
+        """Serialize complex field values to JSON strings."""
+        if isinstance(value, (list, dict)):
+            return json.dumps(value, default=str, ensure_ascii=False)
+        elif isinstance(value, datetime):
+            return convert_date_to_rfc3339(value)
+        else:
+            return str(value) if value is not None else ""
+
     def _ingest_document(self, doc_data: Dict[str, Any], embedding: List[float]) -> bool:
         """Ingest single document to Weaviate."""
         try:
+            # Apply column mapping
+            mapped_data = self._apply_column_mapping(doc_data)
+
             # Generate deterministic UUID
-            doc_id = doc_data["document_id"]
+            doc_id = mapped_data["document_id"]
             uuid = self._generate_uuid(doc_id)
 
-            # Helper function to convert datetime objects to strings
-            def serialize_datetime(obj):
-                if isinstance(obj, datetime):
-                    return obj.isoformat()
-                return obj
-
-            # Prepare document object
+            # Prepare document object with proper field mapping
             doc_obj = {
                 "document_id": doc_id,
-                "title": doc_data.get("title", ""),
-                "full_text": doc_data.get("full_text", ""),
-                "language": doc_data.get("language", ""),
-                "country": doc_data.get("country", ""),
-                "document_type": doc_data.get("document_type", ""),
-                "date_issued": serialize_datetime(doc_data.get("date_issued")),
-                "issuing_body": doc_data.get("issuing_body", ""),
+                "document_type": self.dataset_config.document_type
+                if self.dataset_config
+                else mapped_data.get("document_type", ""),
+                "title": mapped_data.get("title", ""),
+                "date_issued": self._serialize_field_value(mapped_data.get("date_issued")),
+                "document_number": mapped_data.get("document_number", ""),
+                "language": mapped_data.get("language", ""),
+                "country": mapped_data.get("country", ""),
+                "full_text": mapped_data.get("full_text", ""),
+                "summary": mapped_data.get("summary", ""),
+                "thesis": mapped_data.get("thesis", ""),
+                "keywords": self._serialize_field_value(mapped_data.get("keywords", [])),
+                "issuing_body": self._serialize_field_value(mapped_data.get("issuing_body", "")),
+                "ingestion_date": convert_date_to_rfc3339(datetime.now()),
+                "last_updated": convert_date_to_rfc3339(datetime.now()),
+                "processing_status": "completed",
+                "source_url": mapped_data.get("source_url", ""),
+                "legal_references": self._serialize_field_value(
+                    mapped_data.get("legal_references", [])
+                ),
+                "parties": self._serialize_field_value(mapped_data.get("parties", [])),
+                "outcome": self._serialize_field_value(mapped_data.get("outcome", "")),
+                "publication_date": self._serialize_field_value(
+                    mapped_data.get("publication_date")
+                ),
+                "raw_content": mapped_data.get("raw_content", ""),
+                "presiding_judge": mapped_data.get("presiding_judge", ""),
+                "judges": self._serialize_field_value(mapped_data.get("judges", [])),
+                "legal_bases": self._serialize_field_value(mapped_data.get("legal_bases", [])),
+                "court_name": mapped_data.get("court_name", ""),
+                "department_name": mapped_data.get("department_name", ""),
+                "extracted_legal_bases": self._serialize_field_value(
+                    mapped_data.get("extracted_legal_bases", [])
+                ),
+                "references": self._serialize_field_value(mapped_data.get("references", [])),
                 "metadata": json.dumps(
                     {
-                        k: serialize_datetime(v)
-                        for k, v in doc_data.items()
-                        if k not in ["document_id", "title", "full_text"]
+                        k: self._serialize_field_value(v)
+                        for k, v in mapped_data.items()
+                        if k not in ["document_id", "title", "full_text", "summary", "thesis"]
                     },
                     default=str,
+                    ensure_ascii=False,
                 ),
-                "chunks_count": doc_data.get("chunks_count", 0),
-                "processed_at": convert_date_to_rfc3339(datetime.now()),
             }
 
-            # Clean None values
-            doc_obj = {k: v for k, v in doc_obj.items() if v is not None}
+            # Clean None and empty values
+            doc_obj = {k: v for k, v in doc_obj.items() if v is not None and v != ""}
 
             # Get collection and insert
-            collection = self.weaviate_client.collections.get("LegalDocument")
+            collection = self.weaviate_client.collections.get(self.LEGAL_DOCUMENTS_COLLECTION)
             collection.data.insert(properties=doc_obj, uuid=uuid, vector=embedding)
 
             return True
@@ -316,10 +509,13 @@ class StreamingIngester:
             logger.error(f"Failed to ingest document {doc_data.get('document_id', 'unknown')}: {e}")
             return False
 
-    def _ingest_chunks(self, chunks: List[TextChunk], embeddings: List[List[float]]) -> bool:
+    def _ingest_chunks(
+        self, chunks: List[TextChunk], embeddings: List[List[float]], doc_data: Dict[str, Any]
+    ) -> bool:
         """Ingest document chunks to Weaviate."""
         try:
-            collection = self.weaviate_client.collections.get("DocumentChunk")
+            collection = self.weaviate_client.collections.get(self.DOCUMENT_CHUNKS_COLLECTION)
+            mapped_data = self._apply_column_mapping(doc_data)
 
             # Prepare objects for batch insert
             objects = []
@@ -328,10 +524,18 @@ class StreamingIngester:
 
                 chunk_obj = {
                     "document_id": chunk.document_id,
-                    "chunk_id": chunk.chunk_id,
+                    "document_type": self.dataset_config.document_type
+                    if self.dataset_config
+                    else mapped_data.get("document_type", ""),
+                    "language": mapped_data.get("language", ""),
+                    "chunk_id": chunk.position,  # Use position as numeric chunk_id
                     "chunk_text": chunk.text,
+                    "segment_type": "content",  # Default segment type
                     "position": chunk.position,
-                    "processed_at": convert_date_to_rfc3339(datetime.now()),
+                    "confidence_score": 1.0,  # Default confidence
+                    "cited_references": "",  # Empty for now
+                    "tags": "",  # Empty for now
+                    "parent_segment_id": chunk.document_id,
                 }
 
                 objects.append({"properties": chunk_obj, "uuid": uuid, "vector": embedding})
@@ -351,9 +555,7 @@ class StreamingIngester:
 
     def _generate_uuid(self, identifier: str) -> str:
         """Generate deterministic UUID from identifier."""
-        hash_obj = hashlib.sha256(identifier.encode("utf-8"))
-        hex_digest = hash_obj.hexdigest()
-        return f"{hex_digest[:8]}-{hex_digest[8:12]}-{hex_digest[12:16]}-{hex_digest[16:20]}-{hex_digest[20:32]}"
+        return weaviate.util.generate_uuid5(identifier)
 
     def _process_document(self, doc: Dict[str, Any]) -> bool:
         """Process a single document: chunk, embed, and ingest."""
@@ -399,7 +601,7 @@ class StreamingIngester:
             doc_success = self._ingest_document(doc_data, doc_embedding)
 
             # Ingest chunks
-            chunks_success = self._ingest_chunks(chunks, chunk_embeddings)
+            chunks_success = self._ingest_chunks(chunks, chunk_embeddings, doc_data)
 
             success = doc_success and chunks_success
 
@@ -482,7 +684,7 @@ class StreamingIngester:
         self.console.print(f"Processing time: {self.stats.processing_time:.2f} seconds")
 
         if tracker_stats["total"] > 0:
-            self.console.print(f"\n[bold yellow]Tracker Statistics:[/bold yellow]")
+            self.console.print("\n[bold yellow]Tracker Statistics:[/bold yellow]")
             self.console.print(f"Total in tracker: {tracker_stats['total']}")
             self.console.print(f"Successful: {tracker_stats['successful']}")
             self.console.print(f"Failed: {tracker_stats['failed']}")
