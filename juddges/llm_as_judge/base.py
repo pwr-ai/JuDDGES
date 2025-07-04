@@ -132,25 +132,40 @@ class StructuredOutputJudgeBase:
     def prepare_eval_messages(
         self,
         parsed_preds: ParsedPredictions,
+        user_prompt: str = USER_PROMPT,
+        system_prompt: str | None = SYSTEM_PROMPT,
     ) -> dict[int, list[dict[str, str]]]:
         dataset_messages = {}
         for idx in parsed_preds.predictions.keys():
-            messages = [
-                {
-                    "role": "system",
-                    "content": SYSTEM_PROMPT,
-                },
-                {
-                    "role": "user",
-                    "content": USER_PROMPT.format(
-                        schema=self.pred_loader.schema,
-                        outputs=parsed_preds.predictions[idx],
-                        reference_outputs=parsed_preds.gold[idx],
-                    ),
-                },
-            ]
+            messages = self.prepare_single_item_messages(
+                pred=parsed_preds.predictions[idx],
+                gold=parsed_preds.gold[idx],
+                user_prompt=user_prompt,
+                system_prompt=system_prompt,
+            )
             dataset_messages[idx] = messages
         return dataset_messages
+
+    def prepare_single_item_messages(
+        self,
+        pred: dict[str, Any],
+        gold: dict[str, Any],
+        user_prompt: str = USER_PROMPT,
+        system_prompt: str | None = SYSTEM_PROMPT,
+    ) -> list[dict[str, str]]:
+        messages = [
+            {
+                "role": "user",
+                "content": user_prompt.format(
+                    schema=self.pred_loader.schema,
+                    outputs=pred,
+                    reference_outputs=gold,
+                ),
+            },
+        ]
+        if system_prompt:
+            messages.insert(0, {"role": "system", "content": system_prompt})
+        return messages
 
     def get_zero_scores(self) -> dict[str, Any]:
         return {key: {"score": 0.0} for key in self.pred_loader.schema.keys()}
