@@ -202,13 +202,26 @@ class StreamingIngester:
             # Handle different return types from list_all()
             if isinstance(collections, dict):
                 collection_names = list(collections.keys())
-            else:
+            elif hasattr(collections, "__iter__"):
                 collection_names = [collection.name for collection in collections]
+            else:
+                collection_names = []
 
-            if self.LEGAL_DOCUMENTS_COLLECTION not in collection_names:
+            logger.info(f"Existing collections: {collection_names}")
+            
+            # Check for collections with different casing or naming patterns
+            legal_docs_exists = any(name.lower() in [self.LEGAL_DOCUMENTS_COLLECTION.lower(), 'legaldocuments', 'legal_documents'] for name in collection_names)
+            chunks_exists = any(name.lower() in [self.DOCUMENT_CHUNKS_COLLECTION.lower(), 'documentchunks', 'document_chunks'] for name in collection_names)
+
+            if not legal_docs_exists:
                 self._create_legal_document_class()
-            if self.DOCUMENT_CHUNKS_COLLECTION not in collection_names:
+            else:
+                logger.info(f"Legal documents collection already exists (found variation in: {collection_names})")
+                
+            if not chunks_exists:
                 self._create_document_chunk_class()
+            else:
+                logger.info(f"Document chunks collection already exists (found variation in: {collection_names})")
 
             logger.info("Weaviate connection verified and schema ready")
         except Exception as e:
@@ -219,8 +232,9 @@ class StreamingIngester:
         """Create LegalDocument class in Weaviate."""
         import weaviate.classes.config as wvc
 
-        # Use same schema as documents_weaviate_db.py but simplified for streaming
-        self.weaviate_client.collections.create(
+        try:
+            # Use same schema as documents_weaviate_db.py but simplified for streaming
+            self.weaviate_client.collections.create(
             name=self.LEGAL_DOCUMENTS_COLLECTION,
             properties=[
                 wvc.Property(
@@ -318,15 +332,22 @@ class StreamingIngester:
                     vector_index_config=wvc.Configure.VectorIndex.hnsw(),
                 ),
             ],
-        )
-        logger.info(f"Created {self.LEGAL_DOCUMENTS_COLLECTION} collection")
+            )
+            logger.info(f"Created {self.LEGAL_DOCUMENTS_COLLECTION} collection")
+        except Exception as e:
+            if "already exists" in str(e).lower():
+                logger.info(f"Collection {self.LEGAL_DOCUMENTS_COLLECTION} already exists, skipping creation")
+            else:
+                logger.error(f"Failed to create {self.LEGAL_DOCUMENTS_COLLECTION} collection: {e}")
+                raise
 
     def _create_document_chunk_class(self):
         """Create DocumentChunk class in Weaviate."""
         import weaviate.classes.config as wvc
 
-        # Use same schema as documents_weaviate_db.py
-        self.weaviate_client.collections.create(
+        try:
+            # Use same schema as documents_weaviate_db.py
+            self.weaviate_client.collections.create(
             name=self.DOCUMENT_CHUNKS_COLLECTION,
             properties=[
                 wvc.Property(
@@ -365,24 +386,30 @@ class StreamingIngester:
                 wvc.Configure.NamedVectors.text2vec_transformers(
                     name=VectorName.BASE,
                     vectorize_collection_name=False,
-                    source_properties=["full_text"],
+                    source_properties=["chunk_text"],
                     vector_index_config=wvc.Configure.VectorIndex.hnsw(),
                 ),
                 wvc.Configure.NamedVectors.text2vec_transformers(
                     name=VectorName.DEV,
                     vectorize_collection_name=False,
-                    source_properties=["full_text"],
+                    source_properties=["chunk_text"],
                     vector_index_config=wvc.Configure.VectorIndex.hnsw(),
                 ),
                 wvc.Configure.NamedVectors.text2vec_transformers(
                     name=VectorName.FAST,
                     vectorize_collection_name=False,
-                    source_properties=["full_text"],
+                    source_properties=["chunk_text"],
                     vector_index_config=wvc.Configure.VectorIndex.hnsw(),
                 ),
             ],
-        )
-        logger.info(f"Created {self.DOCUMENT_CHUNKS_COLLECTION} collection")
+            )
+            logger.info(f"Created {self.DOCUMENT_CHUNKS_COLLECTION} collection")
+        except Exception as e:
+            if "already exists" in str(e).lower():
+                logger.info(f"Collection {self.DOCUMENT_CHUNKS_COLLECTION} already exists, skipping creation")
+            else:
+                logger.error(f"Failed to create {self.DOCUMENT_CHUNKS_COLLECTION} collection: {e}")
+                raise
 
     def _generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for batch of texts."""
@@ -555,7 +582,10 @@ class StreamingIngester:
 
     def _generate_uuid(self, identifier: str) -> str:
         """Generate deterministic UUID from identifier."""
-        return weaviate.util.generate_uuid5(identifier)
+        uuid = weaviate.util.generate_uuid5(identifier)
+        if uuid is None:
+            raise ValueError(f"Failed to generate UUID for identifier: {identifier}")
+        return uuid
 
     def _process_document(self, doc: Dict[str, Any]) -> bool:
         """Process a single document: chunk, embed, and ingest."""
@@ -637,7 +667,7 @@ class StreamingIngester:
                 total_docs = None
             else:
                 dataset = load_dataset(dataset_path, split="train")
-                total_docs = len(dataset)
+                total_docs = len(dataset) if hasattr(dataset, '__len__') else None
 
             self.console.print(f"Dataset loaded. Streaming: {streaming}")
 
@@ -657,7 +687,7 @@ class StreamingIngester:
 
             for doc in dataset:
                 self.stats.total_documents += 1
-                self._process_document(doc)
+                self._process_document(dict(doc))
                 progress.update(task, advance=1)
 
                 # Progress logging every 100 documents
@@ -689,6 +719,79 @@ class StreamingIngester:
             self.console.print(f"Successful: {tracker_stats['successful']}")
             self.console.print(f"Failed: {tracker_stats['failed']}")
 
+    def delete_all_collections(self):
+        """Delete all legal document collections from Weaviate."""
+        try:
+            collections_to_delete = [
+                self.LEGAL_DOCUMENTS_COLLECTION,
+                self.DOCUMENT_CHUNKS_COLLECTION,
+            ]
+
+            deleted_count = 0
+            for collection_name in collections_to_delete:
+                try:
+                    self.weaviate_client.collections.delete(collection_name)
+                    self.console.print(f"[green]✓ Deleted collection: {collection_name}[/green]")
+                    deleted_count += 1
+                except Exception as e:
+                    if "not found" in str(e).lower() or "does not exist" in str(e).lower():
+                        self.console.print(
+                            f"[dim]Collection {collection_name} does not exist, skipping[/dim]"
+                        )
+                    else:
+                        self.console.print(f"[red]✗ Failed to delete {collection_name}: {e}[/red]")
+                        logger.error(f"Error deleting collection {collection_name}: {e}")
+
+            if deleted_count > 0:
+                self.console.print(
+                    f"[bold green]Successfully deleted {deleted_count} collection(s)[/bold green]"
+                )
+            else:
+                self.console.print("[yellow]No collections were deleted[/yellow]")
+
+        except Exception as e:
+            self.console.print(f"[bold red]Error during collection deletion: {e}[/bold red]")
+            logger.error(f"Failed to delete collections: {e}")
+            raise
+
+    def list_collections(self):
+        """List all collections in Weaviate."""
+        try:
+            collections = self.weaviate_client.collections.list_all()
+
+            try:
+                if isinstance(collections, dict):
+                    collection_names = list(collections.keys())
+                else:
+                    # Try to iterate and get names, handle different collection types
+                    collection_names = []
+                    for collection in collections:
+                        if hasattr(collection, 'name'):
+                            collection_names.append(collection.name)
+                        else:
+                            collection_names.append(str(collection))
+            except (TypeError, AttributeError):
+                collection_names = []
+
+            if collection_names:
+                self.console.print("[bold cyan]Existing collections:[/bold cyan]")
+                for name in sorted(collection_names):
+                    # Get collection size if possible
+                    try:
+                        collection = self.weaviate_client.collections.get(name)
+                        response = collection.aggregate.over_all(total_count=True)
+                        count = response.total_count
+                        self.console.print(f"  - {name} ({count:,} objects)")
+                    except Exception:
+                        self.console.print(f"  - {name}")
+            else:
+                self.console.print("[dim]No collections found[/dim]")
+
+        except Exception as e:
+            self.console.print(f"[bold red]Error listing collections: {e}[/bold red]")
+            logger.error(f"Failed to list collections: {e}")
+            raise
+
     def reset_tracker(self):
         """Reset the processed documents tracker."""
         Path(self.tracker.db_path).unlink(missing_ok=True)
@@ -706,6 +809,7 @@ class StreamingIngester:
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
         """Context manager exit."""
         self.close()
+        return False
