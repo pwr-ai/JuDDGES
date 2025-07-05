@@ -1032,7 +1032,8 @@ class StreamingIngester:
 
         try:
             # Extract text
-            text = doc.get("full_text", "")
+            #  TODO: html contnet temporary for tax interpretations
+            text = doc.get("full_text", "") or doc.get("html_content", "")
             if not text:
                 logger.warning(f"Document {doc_id} has no text content")
                 self.tracker.mark_processed(doc_id, 0, False)
