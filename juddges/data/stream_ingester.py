@@ -886,6 +886,13 @@ class StreamingIngester:
             uuid = self._generate_uuid(doc_id)
 
             # Prepare document object with proper field mapping
+            # Ensure legal_bases is a list of strings
+            legal_bases = mapped_data.get("legal_bases", [])
+            if not isinstance(legal_bases, list):
+                legal_bases = [str(legal_bases)] if legal_bases else []
+            else:
+                legal_bases = [str(item) for item in legal_bases]
+
             doc_obj = {
                 "document_id": doc_id,
                 "document_type": self.dataset_config.document_type
@@ -917,7 +924,7 @@ class StreamingIngester:
                 "raw_content": mapped_data.get("raw_content", ""),
                 "presiding_judge": mapped_data.get("presiding_judge", ""),
                 "judges": mapped_data.get("judges", []),
-                "legal_bases": mapped_data.get("legal_bases", []),
+                "legal_bases": legal_bases,
                 "court_name": mapped_data.get("court_name", ""),
                 "department_name": mapped_data.get("department_name", ""),
                 "extracted_legal_bases": self._serialize_field_value(
