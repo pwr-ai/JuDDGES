@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import numpy as np
 import pytest
 
 from juddges.data.stream_ingester import (
@@ -56,7 +57,7 @@ class TestProcessedDocTracker:
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
 
-        tracker = ProcessedDocTracker(db_path)
+        ProcessedDocTracker(db_path)
 
         # Check that database is created
         assert Path(db_path).exists()
@@ -106,14 +107,14 @@ class TestProcessedDocTracker:
 class TestStreamingIngester:
     """Test the StreamingIngester class."""
 
-    @patch("juddges.data.stream_ingester.weaviate.Client")
+    @patch("juddges.data.stream_ingester.weaviate.connect_to_local")
     @patch("juddges.data.stream_ingester.SentenceTransformer")
-    def test_ingester_initialization(self, mock_transformer, mock_client):
+    def test_ingester_initialization(self, mock_transformer, mock_weaviate):
         """Test ingester initialization."""
         # Mock the Weaviate client
         mock_client_instance = Mock()
-        mock_client.return_value = mock_client_instance
-        mock_client_instance.schema.get.return_value = {"classes": []}
+        mock_client_instance.collections.list_all.return_value = {}
+        mock_weaviate.return_value = mock_client_instance
 
         # Mock the sentence transformer
         mock_transformer_instance = Mock()
@@ -127,28 +128,28 @@ class TestStreamingIngester:
         )
 
         assert ingester.weaviate_client == mock_client_instance
-        assert ingester.embedding_model == mock_transformer_instance
+        assert ingester.transformers["base"] == mock_transformer_instance
         assert isinstance(ingester.chunker, SimpleChunker)
         assert isinstance(ingester.tracker, ProcessedDocTracker)
 
         # Cleanup
         Path(db_path).unlink()
 
-    @patch("juddges.data.stream_ingester.weaviate.Client")
+    @patch("juddges.data.stream_ingester.weaviate.connect_to_local")
     @patch("juddges.data.stream_ingester.SentenceTransformer")
-    def test_generate_embeddings(self, mock_transformer, mock_client):
+    def test_generate_embeddings(self, mock_transformer, mock_weaviate):
         """Test embedding generation."""
         # Mock the Weaviate client
         mock_client_instance = Mock()
-        mock_client.return_value = mock_client_instance
-        mock_client_instance.schema.get.return_value = {"classes": []}
+        mock_client_instance.collections.list_all.return_value = {}
+        mock_weaviate.return_value = mock_client_instance
 
         # Mock the sentence transformer
         mock_transformer_instance = Mock()
         mock_transformer.return_value = mock_transformer_instance
 
         # Mock embedding generation
-        mock_embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
+        mock_embeddings = np.array([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]])
         mock_transformer_instance.encode.return_value = mock_embeddings
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
@@ -161,23 +162,26 @@ class TestStreamingIngester:
         texts = ["text1", "text2"]
         embeddings = ingester._generate_embeddings(texts)
 
-        assert embeddings == mock_embeddings
-        mock_transformer_instance.encode.assert_called_once()
+        # Should return embeddings for each vector model
+        assert "base" in embeddings
+        assert embeddings["base"] == mock_embeddings.tolist()
+        mock_transformer_instance.encode.assert_called()
 
         # Cleanup
         Path(db_path).unlink()
 
-    @patch("juddges.data.stream_ingester.weaviate.Client")
+    @patch("juddges.data.stream_ingester.weaviate.connect_to_local")
     @patch("juddges.data.stream_ingester.SentenceTransformer")
-    def test_aggregate_embeddings(self, mock_transformer, mock_client):
+    def test_aggregate_embeddings(self, mock_transformer, mock_weaviate):
         """Test embedding aggregation."""
         # Mock the Weaviate client
         mock_client_instance = Mock()
-        mock_client.return_value = mock_client_instance
-        mock_client_instance.schema.get.return_value = {"classes": []}
+        mock_client_instance.collections.list_all.return_value = {}
+        mock_weaviate.return_value = mock_client_instance
 
         # Mock the sentence transformer
         mock_transformer_instance = Mock()
+        mock_transformer_instance.get_sentence_embedding_dimension.return_value = 768
         mock_transformer.return_value = mock_transformer_instance
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
@@ -187,16 +191,16 @@ class TestStreamingIngester:
             weaviate_url="http://localhost:8080", embedding_model="test-model", tracker_db=db_path
         )
 
-        embeddings = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
-        aggregated = ingester._aggregate_embeddings(embeddings)
+        embeddings_dict = {"base": [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]}
+        aggregated = ingester._aggregate_embeddings(embeddings_dict)
 
-        # Should be mean of embeddings
-        expected = [2.5, 3.5, 4.5]
+        # Should be mean of embeddings for base vector
+        expected = {"base": [2.5, 3.5, 4.5]}
         assert aggregated == expected
 
         # Test empty embeddings
-        empty_aggregated = ingester._aggregate_embeddings([])
-        assert len(empty_aggregated) == 768  # Default size
+        empty_aggregated = ingester._aggregate_embeddings({"base": []})
+        assert len(empty_aggregated["base"]) == 768  # Default size
 
         # Cleanup
         Path(db_path).unlink()
@@ -208,15 +212,20 @@ class TestStreamingIngester:
             db_path = f.name
 
         with (
-            patch("juddges.data.stream_ingester.weaviate.Client"),
+            patch("juddges.data.stream_ingester.weaviate.connect_to_local") as mock_weaviate,
             patch("juddges.data.stream_ingester.SentenceTransformer"),
         ):
+            # Mock the weaviate client
+            mock_client = Mock()
+            mock_client.collections.list_all.return_value = {}
+            mock_weaviate.return_value = mock_client
+
             ingester = StreamingIngester(tracker_db=db_path)
 
             # Test deterministic UUID generation
-            uuid1 = ingester._generate_uuid("test_id")
-            uuid2 = ingester._generate_uuid("test_id")
-            uuid3 = ingester._generate_uuid("different_id")
+            uuid1 = ingester._generate_uuid("test_id", "test_text")
+            uuid2 = ingester._generate_uuid("test_id", "test_text")
+            uuid3 = ingester._generate_uuid("different_id", "different_text")
 
             # Same input should produce same UUID
             assert uuid1 == uuid2
