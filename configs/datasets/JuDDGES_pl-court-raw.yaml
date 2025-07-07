@@ -33,7 +33,7 @@ default_values:
   language: pl
 document_type: judgment
 json_fields: []
-min_chunk_size: 256
+min_chunk_size: 512
 max_chunk_size: 512
 name: JuDDGES/pl-court-raw
 required_fields:
