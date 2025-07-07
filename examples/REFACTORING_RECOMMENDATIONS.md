@@ -157,7 +157,7 @@ def _process_document(self, doc):
     doc_id = doc.get('document_id') or doc.get('judgment_id') or doc.get('id')
     # ... hardcoded mappings
 
-# Proposed  
+# Proposed
 def _process_document(self, doc):
     return self.document_processor.process_document(doc, self.config)
 ```
@@ -169,11 +169,11 @@ def _process_document(self, doc):
 def create_ingester(dataset_name: str, **kwargs):
     config_manager = ConfigurationManager()
     config = config_manager.get_config(dataset_name)
-    
+
     transformation_engine = TransformationEngine()
     if "polish" in dataset_name:
         setup_polish_transformations(transformation_engine)
-    
+
     return StreamingIngester(config=config, transformation_engine=transformation_engine, **kwargs)
 ```
 
@@ -189,7 +189,7 @@ class StreamingIngester:
         if config is None:
             # Legacy mode - use defaults
             config = self._create_legacy_config(**kwargs)
-        
+
         self.config = config
         # ... rest of initialization
 ```
@@ -236,7 +236,7 @@ Current SQLite tracker is compatible - no changes needed.
 - **Compatibility**: Maintain backward compatibility during transition
 - **Performance**: Benchmark before/after refactoring
 
-### Adoption Risks  
+### Adoption Risks
 
 - **Migration Burden**: Provide migration tools and documentation
 - **Learning Curve**: Keep API simple and well-documented

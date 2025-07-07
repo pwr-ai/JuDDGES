@@ -227,7 +227,7 @@ def create_help_panel() -> Panel:
 [bold magenta]Config File Structure:[/bold magenta]
 [dim]Dataset configs are YAML files in configs/datasets/ with dataset-specific settings like:[/dim]
 [green]- Dataset name and type[/green]
-[green]- Column mappings[/green] 
+[green]- Column mappings[/green]
 [green]- Chunk size and overlap[/green]
 [green]- Required and text fields[/green]"""
 
@@ -330,6 +330,7 @@ def get_configuration(config_file: Optional[Path] = None) -> IngestionConfig:
         console.print("[dim]Testing connection...[/dim]")
         try:
             import os
+
             import weaviate
 
             url_parts = config_dict["weaviate_url"].split("://")[-1].split(":")

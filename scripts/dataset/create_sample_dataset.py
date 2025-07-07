@@ -134,7 +134,7 @@ dataset = load_dataset("{sample_name}")
 
 ## Original Dataset
 
-This sample is derived from [{original_name}](https://huggingface.co/datasets/{original_name}). 
+This sample is derived from [{original_name}](https://huggingface.co/datasets/{original_name}).
 Please refer to the original dataset for complete documentation, licensing information, and citation details.
 
 ## License

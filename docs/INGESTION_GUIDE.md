@@ -33,7 +33,7 @@ python scripts/embed/simple_ingest.py \
 ```python
 {
     'judgment_id': str,           # Unique case identifier
-    'docket_number': str,         # Court docket number  
+    'docket_number': str,         # Court docket number
     'judgment_date': datetime,    # Date of judgment
     'court_name': str,           # Name of the court
     'department_name': str,      # Court department
@@ -228,7 +228,7 @@ import os
 api_key = os.getenv('WEAVIATE_API_KEY')
 if api_key:
     client = weaviate.connect_to_local(
-        host='localhost', 
+        host='localhost',
         port=8084,
         auth_credentials=wv_auth.AuthApiKey(api_key)
     )
@@ -295,10 +295,10 @@ class CustomIngester(StreamingIngester):
         # Custom field mapping logic
         if 'custom_id_field' in doc:
             doc['document_id'] = doc['custom_id_field']
-        
+
         if 'custom_text_field' in doc:
             doc['full_text'] = doc['custom_text_field']
-            
+
         return super()._process_document(doc)
 
 # Use custom ingester
@@ -317,7 +317,7 @@ python scripts/embed/simple_ingest.py \
     --batch-size 64 \
     --chunk-size 256
 
-# Small datasets (<1K docs)  
+# Small datasets (<1K docs)
 python scripts/embed/simple_ingest.py \
     --dataset-path "$DATASET" \
     --batch-size 16 \
@@ -462,12 +462,12 @@ with StreamingIngester(
     weaviate_url="http://localhost:8084",
     embedding_model="sdadas/mmlw-roberta-large"
 ) as ingester:
-    
+
     stats = ingester.process_dataset(
         dataset_path="JuDDGES/pl-court-raw-sample",
         streaming=True
     )
-    
+
     print(f"Processed {stats.processed_documents} documents")
 ```
 

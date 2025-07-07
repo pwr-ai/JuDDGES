@@ -20,7 +20,7 @@ services:
     volumes:
       - legal_ai_weaviate_prod:/var/lib/weaviate
     env_file: .env
-    restart: on-failure
+    restart: always
     deploy:
       restart_policy:
         condition: on-failure
@@ -48,7 +48,7 @@ services:
     environment:
       ENABLE_CUDA: ${ENABLE_CUDA}
       MODEL_NAME: 'sdadas/mmlw-roberta-large'
-    restart: on-failure
+    restart: always
     deploy:
       restart_policy:
         condition: on-failure
@@ -81,7 +81,7 @@ services:
     environment:
       ENABLE_CUDA: ${ENABLE_CUDA}
       MODEL_NAME: 'sentence-transformers/all-mpnet-base-v2'
-    restart: on-failure
+    restart: always
     deploy:
       restart_policy:
         condition: on-failure
@@ -114,7 +114,7 @@ services:
     environment:
       ENABLE_CUDA: ${ENABLE_CUDA}
       MODEL_NAME: 'sentence-transformers/all-MiniLM-L6-v2'
-    restart: on-failure
+    restart: always
     deploy:
       restart_policy:
         condition: on-failure

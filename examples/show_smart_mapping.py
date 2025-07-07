@@ -169,11 +169,13 @@ def main():
         for field in missing:
             console.print(f"  • {field}", style="red")
 
-    console.print(f"\nMapped {len(simple_mapping)} out of {len(actual_columns)} columns", style="bold")
+    console.print(
+        f"\nMapped {len(simple_mapping)} out of {len(actual_columns)} columns", style="bold"
+    )
 
     console.print()
     console.print(Panel.fit("WHAT THIS MEANS", style="bold cyan", border_style="cyan"))
-    
+
     features_table = Table(box=box.SIMPLE, show_header=False)
     features_table.add_column("Feature", style="green")
     features_table.add_row("✅ The system can automatically handle JuDDGES/pl-court-raw with:")
@@ -181,7 +183,7 @@ def main():
     features_table.add_row("  • Proper data type detection")
     features_table.add_row("  • Intelligent defaults for Polish legal documents")
     features_table.add_row("  • Zero manual configuration required")
-    
+
     console.print(features_table)
     console.print()
     console.print("🚀 Ready for immediate ingestion!", style="bold green")

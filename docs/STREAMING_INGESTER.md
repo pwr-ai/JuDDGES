@@ -23,15 +23,15 @@ flowchart TD
     D --> E[Embedding Generation]
     E --> F[Document Aggregation]
     F --> G[Weaviate Ingestion]
-    
+
     G --> H[Post-Processing Pipeline]
     H --> I[UMAP Calculation]
     I --> J[Coordinate Generation]
     J --> K[Document Updates]
-    
+
     L[SQLite Tracker] --> B
     B --> L
-    
+
     style A fill:#e1f5fe
     style G fill:#c8e6c9
     style H fill:#fff3e0
@@ -49,30 +49,30 @@ sequenceDiagram
     participant WV as Weaviate
     participant TR as SQLiteTracker
     participant UP as UMAPProcessor
-    
+
     DS->>SI: Stream document
     SI->>TR: Check if processed
     TR-->>SI: Not processed
-    
+
     SI->>CH: Chunk text
     CH-->>SI: Text chunks [1..n]
-    
+
     SI->>EM: Generate embeddings (batch)
     EM-->>SI: Chunk embeddings
-    
+
     SI->>SI: Aggregate to doc embedding
-    
+
     SI->>WV: Ingest document + chunks
     WV-->>SI: Success + UUID
-    
+
     SI->>TR: Mark as processed
-    
+
     Note over UP: Post-ingestion processing
     UP->>WV: Query document embeddings
     WV-->>UP: Embedding vectors
     UP->>UP: Calculate UMAP (x,y)
     UP->>WV: Update doc with coordinates
-    
+
     Note over SI,UP: Deterministic UUIDs enable updates
 ```
 
@@ -125,9 +125,9 @@ flowchart LR
     B --> C[UMAP Dimensionality Reduction]
     C --> D[Generate X,Y Coordinates]
     D --> E[Update Weaviate Documents]
-    
+
     F[Deterministic UUIDs] --> E
-    
+
     style C fill:#ffeb3b
     style E fill:#4caf50
 ```
@@ -155,13 +155,13 @@ def extract_embeddings(weaviate_client):
         include_vector=True,
         limit=10000
     )
-    
+
     embeddings = []
     doc_ids = []
     for obj in response.objects:
         embeddings.append(obj.vector["default"])
         doc_ids.append(obj.properties["document_id"])
-    
+
     return np.array(embeddings), doc_ids
 
 # 2. Calculate UMAP coordinates
@@ -178,11 +178,11 @@ def calculate_umap_coordinates(embeddings):
 # 3. Update documents with coordinates
 def update_documents_with_coordinates(weaviate_client, doc_ids, coordinates):
     collection = weaviate_client.collections.get("LegalDocument")
-    
+
     for doc_id, (x, y) in zip(doc_ids, coordinates):
         # Generate same deterministic UUID
         uuid = StreamingIngester._generate_uuid(None, doc_id)
-        
+
         # Update document with new fields
         collection.data.update(
             uuid=uuid,
@@ -199,7 +199,7 @@ def update_documents_with_coordinates(weaviate_client, doc_ids, coordinates):
 The deterministic UUID system enables various post-processing workflows:
 
 - **Topic Modeling**: Add topic labels and probabilities
-- **Clustering**: Add cluster assignments and centroids  
+- **Clustering**: Add cluster assignments and centroids
 - **Similarity Networks**: Add nearest neighbor relationships
 - **Content Analysis**: Add extracted entities, keywords, sentiment
 - **Quality Metrics**: Add readability scores, complexity metrics

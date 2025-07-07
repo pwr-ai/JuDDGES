@@ -119,12 +119,12 @@ def recreate_collections():
                 else:
                     new_collection_names = []
 
-                console.print(f"\n[bold cyan]Created collections:[/bold cyan]")
+                console.print("\n[bold cyan]Created collections:[/bold cyan]")
                 for name in new_collection_names:
                     console.print(f"  ✓ {name}")
 
                 # Show vector configuration
-                console.print(f"\n[bold cyan]Vector Configuration:[/bold cyan]")
+                console.print("\n[bold cyan]Vector Configuration:[/bold cyan]")
                 console.print("Each collection now supports named vectors:")
                 console.print("  • [bold]base[/bold]: sdadas/mmlw-roberta-large (high accuracy)")
                 console.print(

@@ -4,23 +4,22 @@ Enhanced streaming ingester interface designed for standalone packaging.
 Shows how the current ingester should be refactored for external use.
 """
 
-from typing import Dict, Any, List, Optional, Iterator, Callable
-from dataclasses import dataclass, asdict
-from pathlib import Path
 import time
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-import numpy as np
-import weaviate
-from datasets import load_dataset, Dataset
-from sentence_transformers import SentenceTransformer
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-
+from datasets import load_dataset
 
 # Import our configuration and transformation systems
-from ingestion_config_example import DatasetConfig, FieldMapping, ConfigurationManager
+from ingestion_config_example import ConfigurationManager, DatasetConfig
+from rich.console import Console
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from sentence_transformers import SentenceTransformer
 from transformation_system_example import TransformationEngine, setup_polish_legal_transformations
+
+import weaviate
 
 
 @dataclass
@@ -225,14 +224,14 @@ class ConfigurableStreamingIngester:
     def _connect_to_weaviate(self, weaviate_url: str) -> weaviate.Client:
         """Connect to Weaviate with proper authentication."""
         import os
-        
+
         url_parts = weaviate_url.split("://")[-1].split(":")
         host = url_parts[0]
         port = int(url_parts[1]) if len(url_parts) > 1 else 8080
 
         # Get API key from environment variables
-        api_key = os.getenv('WEAVIATE_API_KEY') or os.getenv('WV_API_KEY')
-        
+        api_key = os.getenv("WEAVIATE_API_KEY") or os.getenv("WV_API_KEY")
+
         if api_key:
             import weaviate.auth as wv_auth
 
@@ -371,8 +370,8 @@ class ConfigurableStreamingIngester:
 
     def _display_results(self, result: IngestionResult):
         """Display ingestion results using Rich."""
-        from rich.table import Table
         from rich.panel import Panel
+        from rich.table import Table
 
         table = Table(title="📊 Ingestion Results")
         table.add_column("Metric", style="cyan")
@@ -432,11 +431,10 @@ if __name__ == "__main__":
     try:
         # Create ingester for Polish courts (set API key first)
         import os
-        os.environ['WEAVIATE_API_KEY'] = 'your-api-key'
-        
-        ingester = create_ingester_for_dataset(
-            "pl-court-raw", weaviate_url="http://localhost:8084"
-        )
+
+        os.environ["WEAVIATE_API_KEY"] = "your-api-key"
+
+        ingester = create_ingester_for_dataset("pl-court-raw", weaviate_url="http://localhost:8084")
 
         # Ingest dataset
         result = ingester.ingest_dataset(streaming=True, max_documents=100, resume=True)

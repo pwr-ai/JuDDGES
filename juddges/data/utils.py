@@ -6,7 +6,9 @@ import hashlib
 from typing import Optional
 
 
-def generate_deterministic_uuid(document_id: str, chunk_id: Optional[str] = None) -> str:
+def generate_deterministic_uuid(
+    document_id: str, chunk_id: Optional[str] = None, full_text: str = ""
+) -> str:
     """
     Generate a deterministic UUID for a document or chunk.
 
@@ -16,6 +18,7 @@ def generate_deterministic_uuid(document_id: str, chunk_id: Optional[str] = None
     Args:
         document_id: The document ID (judgment_id)
         chunk_id: The chunk ID (if generating UUID for a chunk)
+        full_text: The full text content (for additional uniqueness)
 
     Returns:
         A deterministic UUID as string

@@ -155,7 +155,6 @@ def test_collection_creation():
         import weaviate
         import weaviate.auth as wv_auth
         import weaviate.classes.config as wvc
-        from juddges.settings import VectorName
 
         # Get API key
         api_key = os.getenv("WEAVIATE_API_KEY") or os.getenv("WV_API_KEY")
@@ -236,7 +235,7 @@ def test_collection_creation():
 
         # Clean up
         client.collections.delete(test_collection)
-        console.print(f"🗑️  Cleaned up test collection")
+        console.print("🗑️  Cleaned up test collection")
 
         client.close()
         return True
