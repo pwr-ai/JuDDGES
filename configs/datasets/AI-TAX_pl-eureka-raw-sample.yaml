@@ -24,7 +24,7 @@ default_values:
   source: eureka
 document_type: tax_interpretation
 json_fields: []
-min_chunk_size: 256
+min_chunk_size: 512
 max_chunk_size: 512
 name: AI-TAX/pl-eureka-raw-sample
 required_fields:
