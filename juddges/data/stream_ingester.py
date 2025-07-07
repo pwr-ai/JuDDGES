@@ -20,6 +20,7 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn
 from sentence_transformers import SentenceTransformer
 
 import weaviate
+from juddges.preprocessing.text_chunker import TextChunker
 from juddges.settings import VectorName
 from juddges.utils.date_utils import convert_date_to_rfc3339
 from weaviate.classes.query import Metrics
@@ -49,45 +50,6 @@ class ProcessingStats:
     processing_time: float = 0.0
 
 
-class SimpleChunker:
-    """Simple text chunker with configurable parameters."""
-
-    def __init__(self, chunk_size: int = 512, overlap: int = 128, min_chunk_size: int = 50):
-        self.chunk_size = chunk_size
-        self.overlap = overlap
-        self.min_chunk_size = min_chunk_size
-
-    def chunk_text(self, text: str, document_id: str) -> List[TextChunk]:
-        """Split text into overlapping chunks."""
-        if not text or len(text) < self.min_chunk_size:
-            return []
-
-        chunks = []
-        start = 0
-        position = 0
-
-        while start < len(text):
-            end = min(start + self.chunk_size, len(text))
-            chunk_text = text[start:end].strip()
-
-            if len(chunk_text) >= self.min_chunk_size:
-                chunk_id = f"{document_id}_chunk_{position}"
-                chunks.append(
-                    TextChunk(
-                        document_id=document_id,
-                        chunk_id=chunk_id,
-                        text=chunk_text,
-                        position=position,
-                    )
-                )
-                position += 1
-
-            if end >= len(text):
-                break
-
-            start = end - self.overlap
-
-        return chunks
 
 
 class ProcessedDocTracker:
@@ -269,16 +231,40 @@ class StreamingIngester:
 
         logger.info(f"Using embedding models: {self.embedding_models}")
 
-        # Initialize SentenceTransformer models for each named vector
+        # Initialize SentenceTransformer models and tokenizers for each named vector
         self.transformers = {}
+        self.tokenizers = {}
         for vector_name, model_name in self.embedding_models.items():
-            self.transformers[vector_name] = SentenceTransformer(model_name)
+            transformer = SentenceTransformer(model_name)
+            self.transformers[vector_name] = transformer
+            # Get the tokenizer from the first module in the transformer
+            if hasattr(transformer[0], 'tokenizer'):
+                self.tokenizers[vector_name] = transformer[0].tokenizer
+            elif hasattr(transformer, 'tokenizer'):
+                self.tokenizers[vector_name] = transformer.tokenizer
+            else:
+                logger.warning(f"Could not extract tokenizer for {model_name}, will use character-based chunking")
+                self.tokenizers[vector_name] = None
             logger.info(f"Initialized {vector_name} vector with model: {model_name}")
 
         # Keep the original embedding_model for backward compatibility
         self.embedding_model = self.transformers.get("base")
 
-        self.chunker = SimpleChunker(chunk_size, overlap, min_chunk_size=min_chunk_size)
+        # Use the primary tokenizer (from base model) for chunking
+        primary_tokenizer = self.tokenizers.get("base")
+        if primary_tokenizer:
+            logger.info(f"Using tokenizer-aware chunking with {self.embedding_models['base']} tokenizer")
+        else:
+            logger.warning("No tokenizer available, falling back to character-based chunking")
+        
+        self.chunker = TextChunker(
+            id_col="document_id",
+            text_col="text", 
+            chunk_size=chunk_size,
+            chunk_overlap=overlap,
+            min_split_chars=min_chunk_size,
+            tokenizer=primary_tokenizer
+        )
         self.batch_size = batch_size
 
         # Create dataset-specific tracker if dataset config is provided
@@ -1043,8 +1029,19 @@ class StreamingIngester:
                 self.tracker.mark_processed(doc_id, 0, False)
                 return False
 
-            # Create chunks
-            chunks = self.chunker.chunk_text(text, doc_id)
+            # Create chunks using TextChunker
+            chunk_data = self.chunker({"document_id": [doc_id], "text": [text]})
+            
+            # Convert to TextChunk objects for compatibility
+            chunks = []
+            for i, (chunk_id, chunk_text) in enumerate(zip(chunk_data["chunk_id"], chunk_data["chunk_text"])):
+                chunks.append(TextChunk(
+                    document_id=doc_id,
+                    chunk_id=f"{doc_id}_chunk_{chunk_id}",
+                    text=chunk_text,
+                    position=chunk_id
+                ))
+                
             if not chunks:
                 logger.warning(f"Document {doc_id} produced no chunks")
                 self.tracker.mark_processed(doc_id, 0, False)
