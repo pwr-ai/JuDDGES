@@ -141,6 +141,7 @@ stages:
       size: 2958948
   embed@mmlw-roberta-large:
     cmd: PYTHONPATH=. python scripts/embed/embed_text.py embedding_model=mmlw-roberta-large
+      dataset_name=JuDDGES/pl-court-raw output_dir=data/embeddings/pl-court-raw/mmlw-roberta-large
     deps:
     - hash: md5
       md5: 9a163f8656c6efa150fd7f939bb32e49

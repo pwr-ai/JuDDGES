@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.2.0-cuda11.8-cudnn8-devel
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
 
 WORKDIR /tmp
 
@@ -26,9 +26,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists \
     && rm -rf /tmp
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH=$PYTHONPATH:/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 RUN chmod 1777 /tmp \
     && sh -c "$(wget --progress=dot:giga -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)" -- \
@@ -41,6 +41,11 @@ RUN chmod 1777 /tmp \
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY pyproject.toml .
+COPY juddges/ ./juddges/
+COPY scripts/ ./scripts/
+COPY README.md .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install uv && \
+    uv pip install --system -e . && \
+    pip install flash-attn --no-build-isolation

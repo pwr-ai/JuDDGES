@@ -1,0 +1,45 @@
+array_fields:
+- keywords
+- regulations
+- author
+chunk_overlap: 128
+chunk_strategy: recursive
+column_mapping:  # Mapping of dataset fields to Weaviate properties
+  id: document_id
+  title: title
+  docker_number: document_number
+  publication_date: publication_date
+  keywords: keywords
+  regulations: legal_bases
+  html_content: raw_content
+  introduction: summary
+  html_content: full_text
+  author: issuing_body
+  question: thesis
+date_fields:
+- publication_date
+default_values:
+  country: Poland
+  language: pl
+  source: eureka
+document_type: tax_interpretation
+json_fields: []
+min_chunk_size: 256
+max_chunk_size: 512
+name: AI-TAX/pl-eureka-raw-sample
+required_fields:
+- document_id
+- full_text
+text_fields:
+- introduction
+- justification
+- question
+- html_content
+num_proc: 1  # Use all available CPU cores
+batch_size: 100  # Batch size for dataset operations
+
+# Embedding model mapping for different named vectors
+embedding_models:
+  base: "sdadas/mmlw-roberta-large"
+  dev: "sentence-transformers/all-mpnet-base-v2"
+  fast: "sentence-transformers/all-MiniLM-L6-v2"

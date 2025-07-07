@@ -1,7 +1,7 @@
 import json
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -139,3 +139,26 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
 
     def get_max_input_length_accounting_for_output(self, max_position_embeddings: int) -> int:
         return max_position_embeddings - self.dataset.max_output_tokens
+
+
+class EmbeddingConfig(BaseModel, extra="forbid"):
+    CHUNK_EMBEDDINGS_DIR: str = "chunk_embeddings"
+    AGG_EMBEDDINGS_DIR: str = "agg_embeddings"
+
+    output_dir: Path
+    dataset_name: str
+    embedding_model: EmbeddingModelConfig
+    chunk_config: dict[str, Any] = None
+    batch_size: int
+    num_output_shards: int
+    ingest_batch_size: int = 32
+    upsert: bool = True
+    default_column_values: Optional[dict[str, Any]] = None
+
+    @property
+    def chunk_embeddings_dir(self) -> Path:
+        return self.output_dir / self.CHUNK_EMBEDDINGS_DIR
+
+    @property
+    def agg_embeddings_dir(self) -> Path:
+        return self.output_dir / self.AGG_EMBEDDINGS_DIR
