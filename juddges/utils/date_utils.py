@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from dateutil.parser import ParserError
 from dateutil.parser import parse as dt_parse
 from dateutil.tz import gettz
@@ -5,7 +7,7 @@ from dateutil.tz import gettz
 TZ_MAP = {"CET": gettz("Europe/Warsaw"), "CEST": gettz("Europe/Warsaw")}
 
 
-def convert_date_to_rfc3339(date_str: str | None) -> str | None:
+def convert_date_to_rfc3339(date: str | datetime | None) -> str | None:
     """
     Convert date strings like '2012-11-27 14:45:14.0 CET' to RFC3339 format.
 
@@ -19,17 +21,21 @@ def convert_date_to_rfc3339(date_str: str | None) -> str | None:
         >>> convert_date_to_rfc3339('2012-11-27 14:45:14.0 CET')
         '2012-11-27T14:45:14+01:00'
     """
-    if not date_str:
+    if not date:
         return None
 
-    try:
-        date = dt_parse(date_str, tzinfos=TZ_MAP)
-        if not date.tzinfo:
-            date = date.replace(tzinfo=TZ_MAP["CET"])
+    if isinstance(date, str):
+        try:
+            date = dt_parse(date, tzinfos=TZ_MAP)
+        except (ParserError, OverflowError, TypeError) as e:
+            raise ValueError(f"Failed to convert date '{date}' to RFC3339 format: {str(e)}")
+    elif not isinstance(date, datetime):
+        raise TypeError(f"Invalid date type: {type(date)}")
 
-        return date.isoformat()
-    except (ParserError, OverflowError) as e:
-        raise ValueError(f"Failed to convert date '{date_str}' to RFC3339 format: {str(e)}")
+    if not date.tzinfo:
+        date = date.replace(tzinfo=TZ_MAP["CET"])
+
+    return date.isoformat()
 
 
 def process_judgment_dates(judgment: dict) -> dict:

@@ -24,6 +24,7 @@ with weaviate.connect_to_local(
     coll = client.collections.get("judgment_chunks")
     response = coll.query.hybrid(
         query=QUERY_PROMPT.format(query="drug dealer"),
+        target_vector="base",
         limit=2,
         return_metadata=MetadataQuery(distance=True),
     )
