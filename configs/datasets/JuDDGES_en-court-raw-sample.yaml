@@ -1,0 +1,41 @@
+array_fields:
+- judges
+chunk_overlap: 128
+chunk_strategy: recursive
+column_mapping:  # Mapping of dataset fields to Weaviate properties
+  judgment_id: document_id
+  docket_number: document_number
+  publication_date: publication_date
+  court_type: court_name
+  excerpt: summary
+  full_text: full_text
+  judges: judges
+  file_name: source_url
+  xml_uri: source_url
+  uri: source_url
+  source: source
+  country: country
+date_fields:
+- publication_date
+default_values:
+  country: England
+  language: en
+  document_type: judgment
+json_fields: []
+min_chunk_size: 512
+max_chunk_size: 512
+name: JuDDGES/en-court-raw-sample
+required_fields:
+- document_id
+- full_text
+text_fields:
+- excerpt
+- full_text
+num_proc: 1  # Use all available CPU cores
+batch_size: 100  # Batch size for dataset operations
+
+# Embedding model mapping for different named vectors
+embedding_models:
+  base: "sdadas/mmlw-roberta-large"
+  dev: "sentence-transformers/all-mpnet-base-v2"
+  fast: "sentence-transformers/all-MiniLM-L6-v2"

@@ -74,6 +74,8 @@ def main(cfg: DictConfig) -> None:
         config=config,
         llm=llm,
     )
+    assert config.generate_kwargs.pop("do_sample")
+    assert not config.generate_kwargs
 
     outputs = llm.chat(
         messages=ds[ConversationFormatter.MESSAGES_FIELD],

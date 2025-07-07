@@ -1,0 +1,63 @@
+array_fields:
+- judges
+- keywords
+- case_type_description
+- related_docket_numbers
+- decision
+- extracted_legal_bases
+chunk_overlap: 128
+chunk_strategy: recursive
+column_mapping:  # Mapping of dataset fields to Weaviate properties
+  judgment_id: document_id
+  docket_number: document_number
+  judgment_date: date_issued
+  submission_date: publication_date
+  court_name: court_name
+  judges: judges
+  presiding_judge: presiding_judge
+  judge_rapporteur: judge_rapporteur
+  keywords: keywords
+  thesis: thesis
+  sentence: summary
+  raw_content: raw_content
+  full_text: full_text
+  source: source
+  country: country
+  court_type: court_type
+  judgment_type: document_type
+  finality: processing_status
+  case_type_description: case_type
+  challenged_authority: parties
+  decision: outcome
+  extracted_legal_bases: legal_bases
+  dissenting_opinion: dissenting_opinion
+date_fields:
+- judgment_date
+- submission_date
+default_values:
+  country: Poland
+  language: pl
+  document_type: judgment
+json_fields:
+- related_docket_numbers
+- extracted_legal_bases
+min_chunk_size: 512
+max_chunk_size: 512
+name: JuDDGES/pl-nsa-sample
+required_fields:
+- document_id
+- full_text
+text_fields:
+- sentence
+- reasons_for_judgment
+- full_text
+- thesis
+- dissenting_opinion
+num_proc: 1  # Use all available CPU cores
+batch_size: 100  # Batch size for dataset operations
+
+# Embedding model mapping for different named vectors
+embedding_models:
+  base: "sdadas/mmlw-roberta-large"
+  dev: "sentence-transformers/all-mpnet-base-v2"
+  fast: "sentence-transformers/all-MiniLM-L6-v2"

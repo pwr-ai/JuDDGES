@@ -80,6 +80,12 @@ class DatasetInfoExtractionConfig(BaseModel, extra="forbid"):
         deprecated=True,
         desc="Legacy, prompt now is defined outside",
     )
+    language: Literal["pl", "en"]
+    prompt_field: str | None = Field(
+        default=None,
+        deprecated=True,
+        desc="Legacy, prompt now is defined outside",
+    )
     context_field: str
     output_field: str
     max_output_tokens: int
@@ -94,6 +100,10 @@ class RawDatasetConfig(BaseModel, extra="forbid"):
 
 
 class FineTuningConfig(BaseModel, extra="forbid"):
+    llm: LLMConfig
+    dataset: DatasetInfoExtractionConfig
+    prompt: PromptInfoExtractionConfig
+    ie_schema: dict[str, dict[str, Any]]
     llm: LLMConfig
     dataset: DatasetInfoExtractionConfig
     prompt: PromptInfoExtractionConfig
@@ -149,3 +159,26 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
             max_position_embeddings = self.max_model_len
 
         return max_position_embeddings - self.dataset.max_output_tokens
+
+
+class EmbeddingConfig(BaseModel, extra="forbid"):
+    CHUNK_EMBEDDINGS_DIR: str = "chunk_embeddings"
+    AGG_EMBEDDINGS_DIR: str = "agg_embeddings"
+
+    output_dir: Path
+    dataset_name: str
+    embedding_model: EmbeddingModelConfig
+    chunk_config: dict[str, Any] = None
+    batch_size: int
+    num_output_shards: int
+    ingest_batch_size: int = 32
+    upsert: bool = True
+    default_column_values: dict[str, Any] | None = None
+
+    @property
+    def chunk_embeddings_dir(self) -> Path:
+        return self.output_dir / self.CHUNK_EMBEDDINGS_DIR
+
+    @property
+    def agg_embeddings_dir(self) -> Path:
+        return self.output_dir / self.AGG_EMBEDDINGS_DIR

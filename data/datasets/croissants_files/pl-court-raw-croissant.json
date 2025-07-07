@@ -1,0 +1,292 @@
+{
+  "@context": {
+    "@language": "pl",
+    "examples": {
+      "@id": "cr:examples",
+      "@type": "@json"
+    },
+    "rai": "http://mlcommons.org/croissant/RAI/",
+    "@vocab": "https://schema.org/",
+    "arrayShape": "cr:arrayShape",
+    "citeAs": "cr:citeAs",
+    "column": "cr:column",
+    "conformsTo": "dct:conformsTo",
+    "cr": "http://mlcommons.org/croissant/",
+    "data": {
+      "@id": "cr:data",
+      "@type": "@json"
+    },
+    "dataBiases": "cr:dataBiases",
+    "dataCollection": "cr:dataCollection",
+    "dataType": {
+      "@id": "cr:dataType",
+      "@type": "@vocab"
+    },
+    "dct": "http://purl.org/dc/terms/",
+    "extract": "cr:extract",
+    "field": "cr:field",
+    "fileProperty": "cr:fileProperty",
+    "fileObject": "cr:fileObject",
+    "fileSet": "cr:fileSet",
+    "format": "cr:format",
+    "includes": "cr:includes",
+    "isArray": "cr:isArray",
+    "isLiveDataset": "cr:isLiveDataset",
+    "jsonPath": "cr:jsonPath",
+    "key": "cr:key",
+    "md5": "cr:md5",
+    "parentField": "cr:parentField",
+    "path": "cr:path",
+    "personalSensitiveInformation": "cr:personalSensitiveInformation",
+    "recordSet": "cr:recordSet",
+    "references": "cr:references",
+    "regex": "cr:regex",
+    "repeated": "cr:repeated",
+    "replace": "cr:replace",
+    "sc": "https://schema.org/",
+    "separator": "cr:separator",
+    "source": "cr:source",
+    "subField": "cr:subField",
+    "transform": "cr:transform"
+  },
+  "@type": "sc:Dataset",
+  "@id": "https://huggingface.co/datasets/JuDDGES/pl-court-raw",
+  "name": "JuDDGES_Polish_Court_Judgments_Raw_Dataset",
+  "description": "A comprehensive collection of Polish court judgments in raw format, containing XML content and extracted metadata.",
+  "url": "https://huggingface.co/datasets/JuDDGES/pl-court-raw",
+  "version": "1.0.0",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "citeAs": {
+    "@type": "ScholarlyArticle",
+    "author": "JuDDGES Project Team",
+    "name": "JuDDGES: Polish Court Judgments Dataset",
+    "url": "https://huggingface.co/datasets/JuDDGES/pl-court-raw"
+  },
+  "creator": {
+    "@type": "Organization",
+    "name": "JuDDGES Project",
+    "url": "https://github.com/legal-ai/JuDDGES"
+  },
+  "recordSet": [
+    {
+      "@id": "default",
+      "@type": "RecordSet",
+      "name": "default",
+      "description": "Polish court judgments collection",
+      "field": [
+        {
+          "@id": "field/judgment_id",
+          "@type": "Field",
+          "name": "judgment_id",
+          "description": "The judgment id of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/docket_number",
+          "@type": "Field",
+          "name": "docket_number",
+          "description": "The docket number of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/judgment_date",
+          "@type": "Field",
+          "name": "judgment_date",
+          "description": "The judgment date of the court judgment",
+          "dataType": "Date"
+        },
+        {
+          "@id": "field/publication_date",
+          "@type": "Field",
+          "name": "publication_date",
+          "description": "The publication date of the court judgment",
+          "dataType": "Date"
+        },
+        {
+          "@id": "field/last_update",
+          "@type": "Field",
+          "name": "last_update",
+          "description": "The last update of the court judgment",
+          "dataType": "Date"
+        },
+        {
+          "@id": "field/court_id",
+          "@type": "Field",
+          "name": "court_id",
+          "description": "The court id of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/department_id",
+          "@type": "Field",
+          "name": "department_id",
+          "description": "The department id of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/judgment_type",
+          "@type": "Field",
+          "name": "judgment_type",
+          "description": "The judgment type of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/excerpt",
+          "@type": "Field",
+          "name": "excerpt",
+          "description": "The excerpt of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/xml_content",
+          "@type": "Field",
+          "name": "xml_content",
+          "description": "The xml content of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/presiding_judge",
+          "@type": "Field",
+          "name": "presiding_judge",
+          "description": "The presiding judge of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/decision",
+          "@type": "Field",
+          "name": "decision",
+          "description": "The decision of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/judges",
+          "@type": "Field",
+          "name": "judges",
+          "description": "The judges of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/legal_bases",
+          "@type": "Field",
+          "name": "legal_bases",
+          "description": "The legal bases of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/publisher",
+          "@type": "Field",
+          "name": "publisher",
+          "description": "The publisher of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/recorder",
+          "@type": "Field",
+          "name": "recorder",
+          "description": "The recorder of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/reviser",
+          "@type": "Field",
+          "name": "reviser",
+          "description": "The reviser of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/keywords",
+          "@type": "Field",
+          "name": "keywords",
+          "description": "The keywords of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/num_pages",
+          "@type": "Field",
+          "name": "num_pages",
+          "description": "The num pages of the court judgment",
+          "dataType": "Integer"
+        },
+        {
+          "@id": "field/full_text",
+          "@type": "Field",
+          "name": "full_text",
+          "description": "The full text of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/volume_number",
+          "@type": "Field",
+          "name": "volume_number",
+          "description": "The volume number of the court judgment",
+          "dataType": "Integer"
+        },
+        {
+          "@id": "field/volume_type",
+          "@type": "Field",
+          "name": "volume_type",
+          "description": "The volume type of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/court_name",
+          "@type": "Field",
+          "name": "court_name",
+          "description": "The court name of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/department_name",
+          "@type": "Field",
+          "name": "department_name",
+          "description": "The department name of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/extracted_legal_bases",
+          "@type": "Field",
+          "name": "extracted_legal_bases",
+          "description": "The extracted legal bases of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/references",
+          "@type": "Field",
+          "name": "references",
+          "description": "The references of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/thesis",
+          "@type": "Field",
+          "name": "thesis",
+          "description": "The thesis of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/country",
+          "@type": "Field",
+          "name": "country",
+          "description": "The country of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/court_type",
+          "@type": "Field",
+          "name": "court_type",
+          "description": "The court type of the court judgment",
+          "dataType": "Text"
+        },
+        {
+          "@id": "field/source",
+          "@type": "Field",
+          "name": "source",
+          "description": "The source of the court judgment",
+          "dataType": "Text"
+        }
+      ]
+    }
+  ],
+  "citation": "JuDDGES Project Team. JuDDGES: Polish Court Judgments Dataset. https://huggingface.co/datasets/JuDDGES/pl-court-raw",
+  "datePublished": "2025-04-01"
+}

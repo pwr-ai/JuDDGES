@@ -1,21 +1,29 @@
 defaults:
-  - embedding_model: ???
+  - embedding_model: mmlw-roberta-large
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
 dataset_name: ???
-length_adjust_mode: chunk
 chunk_config:
   chunk_size: ${embedding_model.max_seq_length}
   min_split_chars: 50
   take_n_first_chunks: 16
   chunk_overlap: 128
-batch_size: 1024
 
-output_dir: data/embeddings/${dataset_name}/${hydra:runtime.choices.embedding_model}/all_embeddings
+batch_size: 4096
+num_output_shards: 10
+ingest_batch_size: 32  # Batch size for ingestion
+upsert: false  # Whether to update existing documents
+
+output_dir: null
 
 hydra:
   output_subdir: null
   run:
     dir: .
+
+default_column_values:
+  country: "Poland"
+  language: "pl"
+  document_type: "judgment"
