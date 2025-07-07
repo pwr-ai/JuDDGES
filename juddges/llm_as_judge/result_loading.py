@@ -62,12 +62,24 @@ def ngram_avg_scores(
 def get_metric_values(field_res: dict[str, Any]) -> dict[str, Any]:
     match field_res:
         case {"f1": dict(f1_score)}:
-            return {"ngram_metric": "f1", "ngram_metric_value": f1_score["mean_score"]}
-        case {"rouge": dict(rouge_score)}:
-            return {"ngram_metric": "rouge", "ngram_metric_value": rouge_score["mean_score"]}
+            return {
+                "ngram_metric": "f1",
+                "ngram_metric_mean": f1_score["mean_score"],
+                "ngram_metric_se": f1_score["standard_error"],
+            }
+        case {"rougeL": dict(rouge_score)}:
+            return {
+                "ngram_metric": "rougeL",
+                "ngram_metric_mean": rouge_score["mean_score"],
+                "ngram_metric_se": rouge_score["standard_error"],
+            }
         case {"match": dict(match_score)}:
-            return {"ngram_metric": "exact_match", "ngram_metric_value": match_score["mean_score"]}
+            return {
+                "ngram_metric": "exact_match",
+                "ngram_metric_mean": match_score["mean_score"],
+                "ngram_metric_se": match_score["standard_error"],
+            }
         case {}:
-            return {"ngram_metric": "<unknown>", "ngram_metric_value": 0}
+            return {"ngram_metric": "<unknown>", "ngram_metric_mean": 0, "ngram_metric_se": 0}
         case _:
             raise ValueError(f"Unknown field type: {field_res}")
