@@ -152,8 +152,12 @@ def prepare_and_save_dataset_for_prediction(
 
 def _log_truncation_stats(dataset: Dataset) -> None:
     num_truncated_docs = sum(bool(x) for x in dataset["num_truncated_tokens"])
-    avg_num_truncated_tokens = sum(dataset["num_truncated_tokens"]) / num_truncated_docs
-    avg_truncated_ratio = sum(dataset["truncated_ratio"]) / num_truncated_docs
+    if num_truncated_docs > 0:
+        avg_num_truncated_tokens = sum(dataset["num_truncated_tokens"]) / num_truncated_docs
+        avg_truncated_ratio = sum(dataset["truncated_ratio"]) / num_truncated_docs
+    else:
+        avg_num_truncated_tokens = 0
+        avg_truncated_ratio = 0
 
     logger.info(f"Number of truncated docs: {num_truncated_docs}/{len(dataset)}")
     logger.info(f"Average number of truncated tokens: {avg_num_truncated_tokens:0.3f}")
