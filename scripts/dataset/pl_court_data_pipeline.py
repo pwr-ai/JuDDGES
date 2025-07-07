@@ -16,7 +16,7 @@ from juddges.data.pl_court_repo import (
     prepare_hf_repo_commit_operations,
 )
 from juddges.preprocessing.pl_court_parser import SimplePlJudgementsParser
-from juddges.settings import PL_JUDGEMENTS_PATH, PL_JUDGEMENTS_PATH_RAW
+from juddges.settings import PL_JUDGMENTS_PATH, PL_JUDGMENTS_PATH_RAW
 from juddges.utils.pipeline import RetryOnException, get_recent_successful_flow_date
 from prefect import flow, runtime, task, unmapped
 from prefect.task_runners import ThreadPoolTaskRunner
@@ -34,8 +34,8 @@ MONGO_COLLECTION_NAME = "pl-court"
 SHARD_SIZE = 50_000
 REPO_ID = "JuDDGES/pl-court-raw"
 DATASET_CARD_TEMPLATE = Path("nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb")
-DATASET_CARD_PATH = PL_JUDGEMENTS_PATH / "pl-court-raw" / "README.md"
-DATASET_CARD_ASSETS = PL_JUDGEMENTS_PATH / "pl-court-raw" / "README_files"
+DATASET_CARD_PATH = PL_JUDGMENTS_PATH / "pl-court-raw" / "README.md"
+DATASET_CARD_ASSETS = PL_JUDGMENTS_PATH / "pl-court-raw" / "README_files"
 
 
 @flow(task_runner=ThreadPoolTaskRunner(max_workers=MAX_CONCURRENT_WORKERS), log_prints=True)
@@ -74,7 +74,7 @@ def update_pl_court_data(
         save_or_update_judgments_in_db(judgements=processed_judgements)
 
     dump_dataset(
-        file_name=PL_JUDGEMENTS_PATH_RAW / "pl_court_data.parquet",
+        file_name=PL_JUDGMENTS_PATH_RAW / "pl_court_data.parquet",
         shard_size=SHARD_SIZE,
     )
 
@@ -251,7 +251,7 @@ def push_dataset_to_hub() -> None:
     commit_message = f"Dataset update {runtime.flow_run.scheduled_start_time.to_date_string()}"
     operations = prepare_hf_repo_commit_operations(
         repo_id=REPO_ID,
-        data_files_dir=PL_JUDGEMENTS_PATH_RAW,
+        data_files_dir=PL_JUDGMENTS_PATH_RAW,
         dataset_card_template=DATASET_CARD_TEMPLATE,
         dataset_card_path=DATASET_CARD_PATH,
         dataset_card_assets=DATASET_CARD_ASSETS,
