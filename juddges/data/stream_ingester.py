@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 from datasets import load_dataset
+from dotenv import load_dotenv
 from loguru import logger
 from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
@@ -21,6 +22,9 @@ from sentence_transformers import SentenceTransformer
 import weaviate
 from juddges.settings import VectorName
 from juddges.utils.date_utils import convert_date_to_rfc3339
+from weaviate.classes.query import Metrics
+
+load_dotenv(".env", override=True)
 
 
 @dataclass
@@ -210,7 +214,7 @@ class StreamingIngester:
 
     def __init__(
         self,
-        weaviate_url: str = "http://localhost:8080",
+        weaviate_url: str = "http://localhost:8084",
         embedding_model: str = "sdadas/mmlw-roberta-large",
         chunk_size: int = 512,
         min_chunk_size: int = 256,
@@ -225,7 +229,7 @@ class StreamingIngester:
         # Parse URL to get host and port
         url_parts = weaviate_url.split("://")[-1].split(":")
         host = url_parts[0]
-        port = int(url_parts[1]) if len(url_parts) > 1 else 8080
+        port = int(url_parts[1]) if len(url_parts) > 1 else 8084
 
         # Get API key from environment variables
         api_key = os.getenv("WEAVIATE_API_KEY") or os.getenv("WV_API_KEY")
@@ -1287,6 +1291,45 @@ class StreamingIngester:
     def __enter__(self):
         """Context manager entry."""
         return self
+
+    def get_document_type_stats(self) -> Dict[str, int]:
+        """Get statistics about processed document types using Weaviate Metrics."""
+
+        try:
+            collection = self.weaviate_client.collections.get(self.LEGAL_DOCUMENTS_COLLECTION)
+            response = collection.aggregate.over_all(
+                return_metrics=Metrics("document_type").text(
+                    top_occurrences_count=True, top_occurrences_value=True, min_occurrences=1
+                )
+            )
+            stats = {}
+            top_occurrences = response.properties.get("document_type", {}).top_occurrences
+            if top_occurrences:
+                for occ in top_occurrences:
+                    stats[occ.value] = occ.count
+            return stats
+        except Exception as e:
+            logger.error(f"Failed to get document type statistics: {e}")
+            return {}
+
+    def get_country_stats(self) -> Dict[str, int]:
+        """Get statistics about processed documents by country using Weaviate Metrics."""
+        try:
+            collection = self.weaviate_client.collections.get(self.LEGAL_DOCUMENTS_COLLECTION)
+            response = collection.aggregate.over_all(
+                return_metrics=Metrics("country").text(
+                    top_occurrences_count=True, top_occurrences_value=True, min_occurrences=1
+                )
+            )
+            stats = {}
+            top_occurrences = response.properties.get("country", {}).top_occurrences
+            if top_occurrences:
+                for occ in top_occurrences:
+                    stats[occ.value] = occ.count
+            return stats
+        except Exception as e:
+            logger.error(f"Failed to get country statistics: {e}")
+            return {}
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
