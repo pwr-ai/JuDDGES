@@ -1,6 +1,5 @@
 name: legal_ai
 
-
 services:
   weaviate:
     command:
@@ -10,35 +9,112 @@ services:
       - '8080'
       - --scheme
       - http
-    image: cr.weaviate.io/semitechnologies/weaviate:1.29.0
+    image: cr.weaviate.io/semitechnologies/weaviate:1.30.2
     depends_on:
-      - t2v-transformers
+      - t2v-transformers-base
+      - t2v-transformers-dev
+      - t2v-transformers-fast
     ports:
       - 8084:8080
       - 50051:50051
     volumes:
-      - legal_ai_weaviate_data:/var/lib/weaviate
+      - legal_ai_weaviate_prod:/var/lib/weaviate
     env_file: .env
-    restart: on-failure
+    restart: always
     deploy:
       restart_policy:
         condition: on-failure
         max_attempts: 3
       resources:
         limits:
-          cpus: '10'
-          memory: '60G'
+          cpus: '32'
+          memory: '128G'
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
-  t2v-transformers:
-    image: t2v-transformers:latest
+  # Base model transformer service (mmlw-roberta-large)
+  t2v-transformers-base:
+    build:
+      context: .
+      dockerfile: hf_transformers.dockerfile
+      args:
+        MODEL_NAME: 'sdadas/mmlw-roberta-large'
+        ENABLE_CUDA: ${ENABLE_CUDA}
+    ports:
+      - "8080:8080"
     environment:
-      ENABLE_CUDA: 0 # Set to 1 to enable
-    restart: on-failure
+      ENABLE_CUDA: ${ENABLE_CUDA}
+      MODEL_NAME: 'sdadas/mmlw-roberta-large'
+    restart: always
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '8'
+          memory: '16G'
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Dev model transformer service (all-mpnet-base-v2)
+  t2v-transformers-dev:
+    build:
+      context: .
+      dockerfile: hf_transformers.dockerfile
+      args:
+        MODEL_NAME: 'sentence-transformers/all-mpnet-base-v2'
+        ENABLE_CUDA: ${ENABLE_CUDA}
+    ports:
+      - "8081:8080"
+    environment:
+      ENABLE_CUDA: ${ENABLE_CUDA}
+      MODEL_NAME: 'sentence-transformers/all-mpnet-base-v2'
+    restart: always
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '8'
+          memory: '16G'
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Fast model transformer service (all-MiniLM-L6-v2)
+  t2v-transformers-fast:
+    build:
+      context: .
+      dockerfile: hf_transformers.dockerfile
+      args:
+        MODEL_NAME: 'sentence-transformers/all-MiniLM-L6-v2'
+        ENABLE_CUDA: ${ENABLE_CUDA}
+    ports:
+      - "8082:8080"
+    environment:
+      ENABLE_CUDA: ${ENABLE_CUDA}
+      MODEL_NAME: 'sentence-transformers/all-MiniLM-L6-v2'
+    restart: always
     deploy:
       restart_policy:
         condition: on-failure
@@ -47,6 +123,11 @@ services:
         limits:
           cpus: '4'
           memory: '8G'
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
     logging:
       driver: "json-file"
       options:
@@ -54,5 +135,5 @@ services:
         max-file: "3"
 
 volumes:
-  legal_ai_weaviate_data:
-    driver: local
+  legal_ai_weaviate_prod:
+    external: true

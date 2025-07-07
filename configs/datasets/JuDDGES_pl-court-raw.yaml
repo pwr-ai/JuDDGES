@@ -1,0 +1,54 @@
+array_fields:
+- judges
+- legal_bases
+- keywords
+- extracted_legal_bases
+- references
+chunk_overlap: 128
+chunk_strategy: recursive
+column_mapping:  # Mapping of dataset fields to Weaviate properties
+  country: country
+  court_name: court_name
+  docket_number: document_number
+  excerpt: summary
+  full_text: full_text
+  judgment_date: date_issued
+  judgment_id: document_id
+  keywords: keywords
+  legal_bases: legal_bases
+  presiding_judge: presiding_judge
+  thesis: thesis
+  xml_content: raw_content
+  department_id: department_name
+  court_id: court_name
+  publication_date: publication_date
+  last_update: last_updated
+  source: source
+date_fields:
+- judgment_date
+- publication_date
+- last_update
+default_values:
+  country: Poland
+  language: pl
+document_type: judgment
+json_fields: []
+min_chunk_size: 256
+max_chunk_size: 512
+name: JuDDGES/pl-court-raw
+required_fields:
+- document_id
+- full_text
+text_fields:
+- summary
+- xml_content
+- full_text
+- thesis
+num_proc: 1  # Use all available CPU cores
+batch_size: 100  # Batch size for dataset operations
+
+# Embedding model mapping for different named vectors
+embedding_models:
+  base: "sdadas/mmlw-roberta-large"
+  dev: "sentence-transformers/all-mpnet-base-v2"
+  fast: "sentence-transformers/all-MiniLM-L6-v2"
