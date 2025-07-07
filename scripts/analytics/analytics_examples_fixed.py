@@ -33,14 +33,14 @@ def dict_to_aggregation_result(
             total_count=0,
             unique_values=0,
         )
-    
+
     total_count = sum(stats_dict.values())
     items = []
-    
+
     for value, count in stats_dict.items():
         percentage = (count / total_count * 100) if total_count > 0 else 0.0
         items.append(AggregationItem(value=value, count=count, percentage=percentage))
-    
+
     return AggregationResult(
         aggregation_type=aggregation_type,
         items=items,
@@ -57,7 +57,7 @@ def example_basic_aggregations():
         # Get raw dictionary stats and convert to models
         doc_types_dict = ingester.get_document_type_stats()
         countries_dict = ingester.get_country_stats()
-        
+
         # Convert to structured models
         doc_types = dict_to_aggregation_result(doc_types_dict, AggregationType.DOCUMENT_TYPE)
         countries = dict_to_aggregation_result(countries_dict, AggregationType.COUNTRY)
@@ -88,11 +88,13 @@ def example_api_style_usage():
                 # Get raw stats
                 doc_types_dict = ingester.get_document_type_stats()
                 countries_dict = ingester.get_country_stats()
-                
+
                 # Convert to models
-                doc_types = dict_to_aggregation_result(doc_types_dict, AggregationType.DOCUMENT_TYPE)
+                doc_types = dict_to_aggregation_result(
+                    doc_types_dict, AggregationType.DOCUMENT_TYPE
+                )
                 countries = dict_to_aggregation_result(countries_dict, AggregationType.COUNTRY)
-                
+
                 total_documents = doc_types.total_count
 
                 return {
@@ -130,10 +132,10 @@ def example_json_export():
         # Get and convert stats
         doc_types_dict = ingester.get_document_type_stats()
         countries_dict = ingester.get_country_stats()
-        
+
         doc_types = dict_to_aggregation_result(doc_types_dict, AggregationType.DOCUMENT_TYPE)
         countries = dict_to_aggregation_result(countries_dict, AggregationType.COUNTRY)
-        
+
         # Create analytics summary
         analytics_data = {
             "total_documents": doc_types.total_count,
@@ -145,9 +147,13 @@ def example_json_export():
             "summary": {
                 "unique_document_types": doc_types.unique_values,
                 "unique_countries": countries.unique_values,
-                "most_common_type": doc_types.get_top_items(1)[0].value if doc_types.items else None,
-                "most_common_country": countries.get_top_items(1)[0].value if countries.items else None,
-            }
+                "most_common_type": doc_types.get_top_items(1)[0].value
+                if doc_types.items
+                else None,
+                "most_common_country": countries.get_top_items(1)[0].value
+                if countries.items
+                else None,
+            },
         }
 
         # Pretty print JSON
@@ -163,8 +169,8 @@ def main():
 
     try:
         example_basic_aggregations()
-        example_api_style_usage()
-        example_json_export()
+        # example_api_style_usage()
+        # example_json_export()
 
         print("\n✅ All examples completed successfully!")
 

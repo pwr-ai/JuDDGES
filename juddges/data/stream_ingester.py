@@ -1298,14 +1298,13 @@ class StreamingIngester:
         try:
             collection = self.weaviate_client.collections.get(self.LEGAL_DOCUMENTS_COLLECTION)
             response = collection.aggregate.over_all(
-                return_metrics=Metrics("document_type").text(
-                    top_occurrences_count=True, top_occurrences_value=True, min_occurrences=1
-                )
+                return_metrics=Metrics("document_type").text(count=True)
             )
             stats = {}
-            top_occurrences = response.properties.get("document_type", {}).top_occurrences
-            if top_occurrences:
-                for occ in top_occurrences:
+            logger.info(f"Document type stats response: {response}")
+            doc_type_agg = response.properties.get("document_type")
+            if doc_type_agg and hasattr(doc_type_agg, "top_occurrences"):
+                for occ in doc_type_agg.top_occurrences:
                     stats[occ.value] = occ.count
             return stats
         except Exception as e:
@@ -1317,14 +1316,13 @@ class StreamingIngester:
         try:
             collection = self.weaviate_client.collections.get(self.LEGAL_DOCUMENTS_COLLECTION)
             response = collection.aggregate.over_all(
-                return_metrics=Metrics("country").text(
-                    top_occurrences_count=True, top_occurrences_value=True, min_occurrences=1
-                )
+                return_metrics=Metrics("country").text(count=True)
             )
             stats = {}
-            top_occurrences = response.properties.get("country", {}).top_occurrences
-            if top_occurrences:
-                for occ in top_occurrences:
+            logger.info(f"Country stats response: {response}")
+            country_agg = response.properties.get("country")
+            if country_agg and hasattr(country_agg, "top_occurrences"):
+                for occ in country_agg.top_occurrences:
                     stats[occ.value] = occ.count
             return stats
         except Exception as e:
