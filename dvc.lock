@@ -5756,39 +5756,39 @@ stages:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_8b/info_extraction_annotated_json_refined/personal_rights/seed_42
       hash: md5
-      md5: 1c6983a1acfb5153452332d083cddc5e.dir
-      size: 92769364
+      md5: ca56586bf32e552dcec584f883ba5c7b.dir
+      size: 96115989
       nfiles: 10
     - path: scripts/evaluation/ngram_based_eval.py
       hash: md5
-      md5: 620a4ac94157992ec573ad1465588479
-      size: 834
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
     outs:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_8b/info_extraction_annotated_json_refined/personal_rights/seed_42/scores_ngram.json
       hash: md5
-      md5: 919f18d530ae5d7cdd9704b3b3a81321
-      size: 1727692
+      md5: 108054fddc98edc9e593bce1cd673b2c
+      size: 5074317
   evaluate_ngram_based@llm_dataset11-42:
     cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
-      data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_32b/info_extraction_annotated_json_refined/personal_rights/seed_42
+      data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_8b/info_extraction_json/personal_rights/seed_42
     deps:
     - path: 
-        data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_32b/info_extraction_annotated_json_refined/personal_rights/seed_42
+        data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_8b/info_extraction_json/personal_rights/seed_42
       hash: md5
-      md5: c3c2792bd29f75393fba3b6d1e502b5b.dir
-      size: 96481989
-      nfiles: 10
+      md5: c28fc15971f288ec86e96be6abedf574.dir
+      size: 74088449
+      nfiles: 5
     - path: scripts/evaluation/ngram_based_eval.py
       hash: md5
-      md5: 620a4ac94157992ec573ad1465588479
-      size: 834
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
     outs:
     - path: 
-        data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_32b/info_extraction_annotated_json_refined/personal_rights/seed_42/scores_ngram.json
+        data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_8b/info_extraction_json/personal_rights/seed_42/scores_ngram.json
       hash: md5
-      md5: 7f5718e137c57d8b18acf9ea90c5af71
-      size: 4977702
+      md5: f13acd79844736c0e8ccdaab2e948772
+      size: 4997614
   evaluate_llm_as_judge@llm_dataset10-42-gpt-4.1-mini-2025-04-14:
     cmd: PYTHONPATH=. python scripts/evaluation/llm_as_judge.py 
       data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_8b/info_extraction_annotated_json_refined/personal_rights/seed_42
@@ -5966,19 +5966,19 @@ stages:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42
       hash: md5
-      md5: 14f7dc3b2f0c5ddda1b86d5831dac4bd.dir
-      size: 80608708
+      md5: 71af6d522d5db8785306342f8487e1a3.dir
+      size: 81222571
       nfiles: 10
     - path: scripts/evaluation/ngram_based_eval.py
       hash: md5
-      md5: 620a4ac94157992ec573ad1465588479
-      size: 834
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
     outs:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42/scores_ngram.json
       hash: md5
-      md5: 4d1d3175629ec019faa80c341655be9a
-      size: 3872352
+      md5: ddf607c5bbc0433c1b664e8506dd8ada
+      size: 4486215
   evaluate_ngram_based@llm_dataset6-42:
     cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
       data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/qwen_3_8b/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42
@@ -5986,19 +5986,19 @@ stages:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/qwen_3_8b/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42
       hash: md5
-      md5: 9c272012f09a993f940099e5bd544f6d.dir
-      size: 84059451
+      md5: 78d70514686bf1ee154e9f3102330a62.dir
+      size: 85863374
       nfiles: 10
     - path: scripts/evaluation/ngram_based_eval.py
       hash: md5
-      md5: 620a4ac94157992ec573ad1465588479
-      size: 834
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
     outs:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/qwen_3_8b/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42/scores_ngram.json
       hash: md5
-      md5: 419bf1aaeb9dc928924e7c07baec40b8
-      size: 2809869
+      md5: d65033f2025287f895072e54b2102a9a
+      size: 4613792
   evaluate_ngram_based@llm_dataset7-42:
     cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
       data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/qwen_3_32b/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42
@@ -6006,19 +6006,19 @@ stages:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/qwen_3_32b/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42
       hash: md5
-      md5: aa8c8af21e5e2ac53a9a7fe0683a337d.dir
-      size: 83835721
+      md5: f88b4546e572e477b7a75714acc53dfd.dir
+      size: 85915169
       nfiles: 10
     - path: scripts/evaluation/ngram_based_eval.py
       hash: md5
-      md5: 620a4ac94157992ec573ad1465588479
-      size: 834
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
     outs:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/qwen_3_32b/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42/scores_ngram.json
       hash: md5
-      md5: bb1bce5961fe8618d05fcdda3883badb
-      size: 2531973
+      md5: 6235de718f69bd0ab5ced393d59354bd
+      size: 4611421
   evaluate_llm_as_judge@llm_dataset5-42-gpt-4.1-mini-2025-04-14:
     cmd: PYTHONPATH=. python scripts/evaluation/llm_as_judge.py 
       data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json_refined/swiss_franc_loans_refined/seed_42
@@ -6218,19 +6218,19 @@ stages:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_32b/info_extraction_annotated_json_refined/personal_rights/seed_42
       hash: md5
-      md5: c3c2792bd29f75393fba3b6d1e502b5b.dir
-      size: 96481989
+      md5: db08c8ed07dd9ebc71a0aa3271a51746.dir
+      size: 96491302
       nfiles: 10
     - path: scripts/evaluation/ngram_based_eval.py
       hash: md5
-      md5: 620a4ac94157992ec573ad1465588479
-      size: 834
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
     outs:
     - path: 
         data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_32b/info_extraction_annotated_json_refined/personal_rights/seed_42/scores_ngram.json
       hash: md5
-      md5: 7f5718e137c57d8b18acf9ea90c5af71
-      size: 4977702
+      md5: f80ec2c1c1a00c04ff983fcdb2d7077d
+      size: 4987015
   evaluate_llm_as_judge@llm_dataset12-42-gpt-4.1-mini-2025-04-14:
     cmd: PYTHONPATH=. python scripts/evaluation/llm_as_judge.py 
       data/experiments/predict/raw_vllm/pl_court_personal_rights/train/qwen_3_32b/info_extraction_annotated_json_refined/personal_rights/seed_42
@@ -6253,3 +6253,323 @@ stages:
       md5: 4117b09b7412f2a49adc0082dc33022b.dir
       size: 22122227
       nfiles: 5
+  evaluate_ngram_based@llm_dataset0-42:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42
+      hash: md5
+      md5: 46be9080fca73f66ec3bda997a96e57e.dir
+      size: 62962979
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42/scores_ngram.json
+      hash: md5
+      md5: a2728c2c23b97bf24634e206b6391c30
+      size: 4464664
+  evaluate_ngram_based@llm_dataset0-7312:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_7312
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_7312
+      hash: md5
+      md5: e8b65bb6b1793fcc2945ef69066cba9a.dir
+      size: 62961085
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_7312/scores_ngram.json
+      hash: md5
+      md5: 647340371ae2eb8a4da18b42b0184a26
+      size: 4465975
+  evaluate_ngram_based@llm_dataset0-997:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997
+      hash: md5
+      md5: 68abf4d8453890ad0d63319a08107e1d.dir
+      size: 62970820
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.1_8b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997/scores_ngram.json
+      hash: md5
+      md5: 3a2ea1745ee4e5a136c4808e87c0d385
+      size: 4466142
+  evaluate_ngram_based@llm_dataset1-42:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42
+      hash: md5
+      md5: badac01f720732c286ba783d4000268e.dir
+      size: 63471442
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42/scores_ngram.json
+      hash: md5
+      md5: 26f4d780b6d8ade6caa115a8860b6ba1
+      size: 4539219
+  evaluate_ngram_based@llm_dataset1-7312:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_7312
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_7312
+      hash: md5
+      md5: dadfe5a6e548eaece9b6e03444ad9890.dir
+      size: 63472690
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_7312/scores_ngram.json
+      hash: md5
+      md5: 2749f4cf956746627a8b82f3f965b7b2
+      size: 4534005
+  evaluate_ngram_based@llm_dataset1-997:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997
+      hash: md5
+      md5: 9feeae5a9d8335277cdbb8615e172027.dir
+      size: 63469104
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/llama_3.2_3b_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997/scores_ngram.json
+      hash: md5
+      md5: 62329ee688b00186912b3a6ebd21723d
+      size: 4525773
+  evaluate_ngram_based@llm_dataset2-42:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/mistral_nemo_instruct_2407/info_extraction_annotated_json/swiss_franc_loans/seed_42
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/mistral_nemo_instruct_2407/info_extraction_annotated_json/swiss_franc_loans/seed_42
+      hash: md5
+      md5: bec2e5967a8daf13cf982efca2a57ae3.dir
+      size: 63513546
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/mistral_nemo_instruct_2407/info_extraction_annotated_json/swiss_franc_loans/seed_42/scores_ngram.json
+      hash: md5
+      md5: 0fc5af55c382fcb0b6bbb2f228a6c1b7
+      size: 4718935
+  evaluate_ngram_based@llm_dataset2-7312:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/mistral_nemo_instruct_2407/info_extraction_annotated_json/swiss_franc_loans/seed_7312
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/mistral_nemo_instruct_2407/info_extraction_annotated_json/swiss_franc_loans/seed_7312
+      hash: md5
+      md5: 8d807c8d81921f81c3a44aaf56139211.dir
+      size: 63520858
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/mistral_nemo_instruct_2407/info_extraction_annotated_json/swiss_franc_loans/seed_7312/scores_ngram.json
+      hash: md5
+      md5: ea694bb8d36913ecf4d19ee093ce0be6
+      size: 4726457
+  evaluate_ngram_based@llm_dataset4-42:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/bielik_11b_v23_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/bielik_11b_v23_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42
+      hash: md5
+      md5: 5a0521dbcbba5616aca5451a58369f7a.dir
+      size: 52993309
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/bielik_11b_v23_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_42/scores_ngram.json
+      hash: md5
+      md5: 72ca725e6f48acefa73cb23e50578ef3
+      size: 4431168
+  evaluate_ngram_based@llm_dataset4-997:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/bielik_11b_v23_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/bielik_11b_v23_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997
+      hash: md5
+      md5: 3a517788d7c7e49b075334dfa040b5b7.dir
+      size: 52992641
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/pl_court_swiss_franc_loans/annotated/bielik_11b_v23_instruct/info_extraction_annotated_json/swiss_franc_loans/seed_997/scores_ngram.json
+      hash: md5
+      md5: 58c613be6354bb8525920a06dfc2b817
+      size: 4431060
+  evaluate_ngram_based@llm_dataset13-42:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_42
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_42
+      hash: md5
+      md5: fd3ae577bc38a2a8e11cf290f147e992.dir
+      size: 35928032
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_42/scores_ngram.json
+      hash: md5
+      md5: 14225b4ace0158a1b55a9bdafc14bad7
+      size: 7079341
+  evaluate_ngram_based@llm_dataset13-7312:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_7312
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_7312
+      hash: md5
+      md5: 99bbbb151ef4bf38d15439347ddea5ce.dir
+      size: 35925538
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_7312/scores_ngram.json
+      hash: md5
+      md5: 7457666671ccf5535ab15dcb7cd40108
+      size: 7077548
+  evaluate_ngram_based@llm_dataset13-997:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_997
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_997
+      hash: md5
+      md5: dc9de0abee9146dff60b34a0d9bde31b.dir
+      size: 35933628
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.1_8b_instruct/info_extraction_json/en_appealcourt/seed_997/scores_ngram.json
+      hash: md5
+      md5: 8d6ac2f89e6ea53cd9ecb2a8c8f5d10b
+      size: 7080012
+  evaluate_ngram_based@llm_dataset14-42:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_42
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_42
+      hash: md5
+      md5: 5a62e839c57baba3df8343fc64e6226b.dir
+      size: 36282191
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_42/scores_ngram.json
+      hash: md5
+      md5: 437cf1698cbf02adf21e24ee38e5ae8f
+      size: 7207723
+  evaluate_ngram_based@llm_dataset14-7312:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_7312
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_7312
+      hash: md5
+      md5: 3e05d4ed09289efb21695e3d8af4249f.dir
+      size: 36282110
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_7312/scores_ngram.json
+      hash: md5
+      md5: 3f8e2920eb64a750adafdea566b0c130
+      size: 7207868
+  evaluate_ngram_based@llm_dataset14-997:
+    cmd: PYTHONPATH=. python scripts/evaluation/ngram_based_eval.py 
+      data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_997
+    deps:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_997
+      hash: md5
+      md5: 93e416251c1d292afa1170cd7f3df8fb.dir
+      size: 732553
+      nfiles: 6
+    - path: scripts/evaluation/ngram_based_eval.py
+      hash: md5
+      md5: 022e0d2e319d67409420e1f6df5bdf8c
+      size: 844
+    outs:
+    - path: 
+        data/experiments/predict/raw_vllm/en_appealcourt_coded/annotated/llama_3.2_3b_instruct/info_extraction_json/en_appealcourt/seed_997/scores_ngram.json
+      hash: md5
+      md5: 564bc71942b9382f3be1c208c6ee3ba7
+      size: 160471

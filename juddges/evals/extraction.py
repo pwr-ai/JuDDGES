@@ -92,14 +92,15 @@ class ExtractionEvaluator:
             try:
                 pred_val = pred_item[key]
             except KeyError:
-                return self.get_zero_score(field_type)
+                field_results[key] = self.get_zero_score(field_type)
+                continue
 
             gold_val = gold_item[key]
 
             if field_type == "date":
-                field_results[key] = {"match": evaluate_date(pred_val, gold_val)}
+                field_results[key] = evaluate_date(pred_val, gold_val)
             elif field_type in ["number", "integer"]:
-                field_results[key] = {"match": evaluate_number(pred_val, gold_val)}
+                field_results[key] = evaluate_number(pred_val, gold_val)
             elif field_type == "string":
                 field_results[key] = evaluate_string_rouge(pred_val, gold_val)
             elif field_type == "enum":
@@ -117,7 +118,7 @@ class ExtractionEvaluator:
         elif field_type in ["number", "integer"]:
             return {"match": 0}
         elif field_type == "string":
-            return {"rouge1": 0, "rouge2": 0, "rougeL": 0}
+            return {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0}
         elif field_type == "enum":
             return {
                 "match": 0,

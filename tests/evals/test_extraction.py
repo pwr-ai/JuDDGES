@@ -1,12 +1,14 @@
 import pytest
 
 from juddges.evals.extraction import ExtractionEvaluator
+from juddges.llm_as_judge.base import ItemEvalResult
+from juddges.llm_as_judge.data_model import PredictionLoader
 
 
 @pytest.fixture
 def sample_schema():
     return {
-        "date_field": {"type": "string"},
+        "date_field": {"type": "date"},
         "enum_field": {"type": "enum", "choices": ["A", "B", "C"], "required": False},
         "list_field": {"type": "list", "items": {"type": "string"}},
         "string_field": {"type": "string"},
@@ -39,13 +41,23 @@ def test_evaluate_record_perfect_match(evaluator):
         "string_field": "hello world",
     }
     result = evaluator.evaluate_record(predicted, gold)
-    assert not result["missing_keys"]
-    assert not result["extra_keys"]
-    assert result["field_results"]["date_field"]["match"] is True
-    assert result["field_results"]["enum_field"]["match"] is True
-    assert result["field_results"]["enum_field"]["hallucinated"] is False
-    assert result["field_results"]["list_field"]["metrics"]["f1"] == 1.0
-    assert result["field_results"]["string_field"]["rouge"]["rougeL"] == 1.0
+    assert result == {
+        "date_field": {"match": 1},
+        "enum_field": {"match": 1, "predicted_in_choices": 1},
+        "list_field": {
+            "true_positives": 2,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+        },
+        "string_field": {
+            "rouge1": 1.0,
+            "rouge2": 1.0,
+            "rougeL": 1.0,
+        },
+    }
 
 
 def test_evaluate_record_mismatch(evaluator):
@@ -62,27 +74,46 @@ def test_evaluate_record_mismatch(evaluator):
         "string_field": "hello world",
     }
     result = evaluator.evaluate_record(predicted, gold)
-    assert result["field_results"]["date_field"]["match"] is False
-    assert result["field_results"]["enum_field"]["match"] is False
-    # todo: fix the test to assert concrete f1 and rougeL value
-    assert result["field_results"]["list_field"]["metrics"]["f1"] < 1.0
-    assert result["field_results"]["string_field"]["rouge"]["rougeL"] < 1.0
-
-
-def test_key_mismatches(evaluator):
-    predicted = {"date_field": "2024-01-01", "extra": 1}
-    gold = {"date_field": "2024-01-01", "missing": 2}
-    result = evaluator.evaluate_record(predicted, gold)
-    assert result["missing_keys"] == ["missing"]
-    assert result["extra_keys"] == ["extra"]
+    assert result == {
+        "date_field": {"match": 0},
+        "enum_field": {"match": 0, "predicted_in_choices": 1},
+        "list_field": {
+            "true_positives": 1,
+            "false_positives": 1,
+            "false_negatives": 1,
+            "precision": 0.5,
+            "recall": 0.5,
+            "f1": 0.5,
+        },
+        "string_field": {
+            "rouge1": 0.5,
+            "rouge2": 0.0,
+            "rougeL": 0.5,
+        },
+    }
 
 
 def test_enum_hallucination(evaluator):
     predicted = {"enum_field": "D"}
     gold = {"enum_field": "A"}
     result = evaluator.evaluate_record(predicted, gold)
-    assert result["field_results"]["enum_field"]["match"] is False
-    assert result["field_results"]["enum_field"]["hallucinated"] is True
+    assert result == {
+        "date_field": {"match": 0},
+        "enum_field": {"match": 0, "predicted_in_choices": 0},
+        "list_field": {
+            "true_positives": 0,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+        },
+        "string_field": {
+            "rouge1": 0.0,
+            "rouge2": 0.0,
+            "rougeL": 0.0,
+        },
+    }
 
 
 def test_run_and_aggregate(evaluator):
@@ -102,22 +133,88 @@ def test_run_and_aggregate(evaluator):
         {"answer": "invalid json", "gold": "{}", "finish_reason": "stop", "original_index": 2},
         {"answer": "{}", "gold": "{}", "finish_reason": "length", "original_index": 3},
     ]
+    parsed_preds = PredictionLoader.load_predictions(
+        schema=evaluator.schema,
+        preds=predictions,
+        verbose=False,
+    )
 
-    results = evaluator.run(predictions)
-
-    assert results["summary_metrics"]["total_records"] == 4
-    assert results["summary_metrics"]["filtered_records (finish_reason=='stop')"] == 3
-    assert results["summary_metrics"]["parsing_errors"] == 1
-    assert results["summary_metrics"]["evaluated_records"] == 2
-
-    field_metrics = results["summary_metrics"]["field_metrics"]
-    assert field_metrics["date_field"]["accuracy"] == 0.5
-    assert field_metrics["enum_field"]["accuracy"] == 0.5
-    assert field_metrics["enum_field"]["hallucinations"] == 1
-    assert field_metrics["enum_field"]["hallucination_rate"] == 0.5
-
-    assert len(results["per_record_results"]) == 3
-    assert results["per_record_results"][0]["index"] == 0
-    assert results["per_record_results"][1]["index"] == 1
-    assert results["per_record_results"][2]["index"] == 2
-    assert "error" in results["per_record_results"][2]
+    eval_results = evaluator.run(parsed_preds)
+    assert eval_results.results == [
+        ItemEvalResult(
+            status="success",
+            error=None,
+            result={
+                "date_field": {"match": 1},
+                "enum_field": {"match": 1, "predicted_in_choices": 1},
+                "list_field": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "false_negatives": 0,
+                    "precision": 0,
+                    "recall": 0,
+                    "f1": 0,
+                },
+                "string_field": {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0},
+            },
+            missing_keys=["list_field", "string_field"],
+            extra_keys=[],
+        ),
+        ItemEvalResult(
+            status="success",
+            error=None,
+            result={
+                "date_field": {"match": 0},
+                "enum_field": {"match": 0, "predicted_in_choices": 0},
+                "list_field": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "false_negatives": 0,
+                    "precision": 0,
+                    "recall": 0,
+                    "f1": 0,
+                },
+                "string_field": {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0},
+            },
+            missing_keys=["list_field", "string_field"],
+            extra_keys=[],
+        ),
+        ItemEvalResult(
+            status="parsing_error",
+            error="Expecting value: line 1 column 1 (char 0)",
+            result={
+                "date_field": {"match": 0},
+                "enum_field": {"match": 0, "predicted_in_choices": 0},
+                "list_field": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "false_negatives": 0,
+                    "precision": 0,
+                    "recall": 0,
+                    "f1": 0,
+                },
+                "string_field": {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0},
+            },
+            missing_keys=[],
+            extra_keys=[],
+        ),
+        ItemEvalResult(
+            status="success",
+            error=None,
+            result={
+                "date_field": {"match": 0},
+                "enum_field": {"match": 0, "predicted_in_choices": 0},
+                "list_field": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "false_negatives": 0,
+                    "precision": 0,
+                    "recall": 0,
+                    "f1": 0,
+                },
+                "string_field": {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0},
+            },
+            missing_keys=["date_field", "enum_field", "list_field", "string_field"],
+            extra_keys=[],
+        ),
+    ]

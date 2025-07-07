@@ -120,7 +120,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
         else:
             errors = {}
 
-        parsed_preds = self.pred_loader.load_predictions()
+        parsed_preds = self.pred_loader.load_predictions_from_file()
 
         results_indexed = {int(res["custom_id"]): res for res in results}
 
@@ -155,7 +155,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
     def run_submit_batch_api_pipeline(self) -> Batch:
         """Prepares and submits batch API requests to OpenAI."""
         logger.info("Loading predictions...")
-        parsed_preds = self.pred_loader.load_predictions()
+        parsed_preds = self.pred_loader.load_predictions_from_file()
         logger.info("Preparing batch API requests...")
         self.prepare_and_save_batch_api_requests(parsed_preds)
         logger.info("Submitting batch API requests...")

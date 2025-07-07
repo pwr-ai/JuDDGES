@@ -8,7 +8,7 @@ from torchmetrics.text import ROUGEScore
 def evaluate_date(
     predicted: str | None,
     gold: str | None,
-) -> int:
+) -> dict[str, int]:
     """
     Parses dates and checks for an exact match.
 
@@ -20,20 +20,21 @@ def evaluate_date(
         True if dates match, False otherwise.
     """
     if predicted == gold:
-        return 1
+        return {"match": 1}
 
     try:
         predicted_date = date_parser.parse(predicted)
         gold_date = date_parser.parse(gold)
-        return int(predicted_date == gold_date)
+        return {"match": int(predicted_date == gold_date)}
     except (ValueError, TypeError):
-        return 0
+        return {"match": 0}
 
 
 def evaluate_number(
     predicted: Any,
     gold: Any,
-) -> int:
+    atol: float = 1e-6,
+) -> dict[str, int]:
     """
     Compares two numbers for an exact match.
 
@@ -44,13 +45,21 @@ def evaluate_number(
     Returns:
         True if numbers are equal, False otherwise.
     """
-    return int(predicted == gold)
+    if predicted == gold:
+        return {"match": 1}
+    else:
+        try:
+            predicted_num = float(predicted)
+            gold_num = float(gold)
+            return {"match": int(abs(predicted_num - gold_num) <= atol)}
+        except (ValueError, TypeError):
+            return {"match": 0}
 
 
 def evaluate_string_rouge(
     predicted: str | None,
     gold: str | None,
-) -> dict[str, float] | None:
+) -> dict[str, float]:
     """
     Calculates ROUGE scores for two strings using TorchMetrics.
 
@@ -62,17 +71,17 @@ def evaluate_string_rouge(
         A dictionary with ROUGE scores, or None if inputs are invalid.
     """
     if predicted == gold:
-        return {"rouge1": 1, "rouge2": 1, "rougeL": 1}
+        return {"rouge1": 1.0, "rouge2": 1.0, "rougeL": 1.0}
     elif predicted is None or gold is None:
-        return {"rouge1": 0, "rouge2": 0, "rougeL": 0}
+        return {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0}
 
     rouge = ROUGEScore()
     scores = rouge([predicted], [gold])
 
     return {
-        "rouge1": scores["rouge1_fmeasure"].item(),
-        "rouge2": scores["rouge2_fmeasure"].item(),
-        "rougeL": scores["rougeL_fmeasure"].item(),
+        "rouge1": float(scores["rouge1_fmeasure"].item()),
+        "rouge2": float(scores["rouge2_fmeasure"].item()),
+        "rougeL": float(scores["rougeL_fmeasure"].item()),
     }
 
 
@@ -80,7 +89,7 @@ def evaluate_enum(
     predicted: str | None,
     gold: str | None,
     choices: list[str],
-) -> dict[str, Any]:
+) -> dict[str, int]:
     """
     Evaluates enum classification with hallucination detection.
 
@@ -98,7 +107,7 @@ def evaluate_enum(
     }
 
 
-def evaluate_list_greedy(predicted: list | None, gold: list | None) -> dict[str, Any]:
+def evaluate_list_greedy(predicted: list | None, gold: list | None) -> dict[str, int | float]:
     """
     Evaluates list matching using a greedy approach.
 

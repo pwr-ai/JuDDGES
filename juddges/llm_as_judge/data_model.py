@@ -108,13 +108,20 @@ class PredictionLoader:
             logger.warning(f"Judge directory {self.judge_dir} already exists")
         self.judge_dir.mkdir(parents=True, exist_ok=True)
 
-    def load_predictions(self, verbose: bool = False) -> ParsedPredictions:
+    def load_predictions_from_file(self, verbose: bool = False) -> ParsedPredictions:
         # todo: extract path management and pred loading to injected class
         with open(self.predictions_file) as f:
             preds = json.load(f)
         if not all("answer" in pred_item and "gold" in pred_item for pred_item in preds):
             raise ValueError("Predictions must contain 'answer' and 'gold' keys")
+        return self.load_predictions(self.schema, preds, verbose)
 
+    @staticmethod
+    def load_predictions(
+        schema: dict[str, Any],
+        preds: list[dict[str, Any]],
+        verbose: bool = False,
+    ) -> ParsedPredictions:
         parsed_preds = {}
         parsed_gold = {}
         parsing_errors = {}
@@ -128,8 +135,8 @@ class PredictionLoader:
             try:
                 parsed_preds[idx] = parse_json_markdown(pred_item["answer"])
                 parsed_gold[idx] = gold_pred
-                missing_keys[idx] = list(set(self.schema.keys()) - set(parsed_preds[idx].keys()))
-                extra_keys[idx] = list(set(parsed_preds[idx].keys()) - set(self.schema.keys()))
+                missing_keys[idx] = sorted(list(set(schema.keys()) - set(parsed_preds[idx].keys())))
+                extra_keys[idx] = sorted(list(set(parsed_preds[idx].keys()) - set(schema.keys())))
             except json.JSONDecodeError as e:
                 parsing_errors[idx] = str(e)
                 missing_keys[idx] = []

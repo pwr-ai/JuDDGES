@@ -15,7 +15,7 @@ def main(
     Evaluates the quality of extracted information from LLM predictions.
     """
     pred_loader = PredictionLoader(root_dir=predictions_dir, judge_name=None)
-    parsed_preds = pred_loader.load_predictions(verbose=True)
+    parsed_preds = pred_loader.load_predictions_from_file(verbose=True)
 
     evaluator = ExtractionEvaluator(pred_loader.schema)
     results = evaluator.run(parsed_preds)

@@ -87,11 +87,11 @@ class EvalResults(BaseModel):
             "extra_keys": dict(
                 Counter(itertools.chain.from_iterable(res.extra_keys for res in self.results))
             ),
-            "avg_missing_keys_when_success": mean(
-                len(res.missing_keys) for res in self.results if res.status == "success"
+            "avg_missing_keys_when_success": float(
+                mean(len(res.missing_keys) for res in self.results if res.status == "success")
             ),
-            "avg_extra_keys_when_success": mean(
-                len(res.extra_keys) for res in self.results if res.status == "success"
+            "avg_extra_keys_when_success": float(
+                mean(len(res.extra_keys) for res in self.results if res.status == "success")
             ),
         }
 

@@ -34,7 +34,7 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
 
     async def evaluate(self) -> EvalResults:
         """Evaluate a batch of examples concurrently."""
-        parsed_preds = self.pred_loader.load_predictions()
+        parsed_preds = self.pred_loader.load_predictions_from_file()
         dataset_messages = self.prepare_eval_messages(parsed_preds)
         tasks = [
             self.evaluate_single_item(
@@ -84,7 +84,7 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
             )
         else:
             enc = tiktoken.encoding_for_model(self.judge_name)
-        parsed_preds = self.pred_loader.load_predictions()
+        parsed_preds = self.pred_loader.load_predictions_from_file()
         dataset_messages = self.prepare_eval_messages(parsed_preds)
         return sum(self.count_tokens(enc, messages) for messages in dataset_messages.values())
 
