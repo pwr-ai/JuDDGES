@@ -42,6 +42,8 @@ class LLMConfig(BaseModel, extra="forbid"):
 
     @cached_property
     def adapter_path_or_first_ckpt_path(self) -> Path:
+        assert self.should_load_adapter, "Adapter path is not set"
+
         if (self.adapter_path / "adapter_model.safetensors").exists():
             return self.adapter_path
 
