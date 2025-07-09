@@ -1,0 +1,6 @@
+name: data/datasets/pl/personal_rights
+language: pl
+context_field: context
+output_field: output
+
+max_output_tokens: 800

@@ -50,8 +50,6 @@ class ProcessingStats:
     processing_time: float = 0.0
 
 
-
-
 class ProcessedDocTracker:
     """Track processed documents using SQLite for resume capability."""
 
@@ -238,12 +236,14 @@ class StreamingIngester:
             transformer = SentenceTransformer(model_name)
             self.transformers[vector_name] = transformer
             # Get the tokenizer from the first module in the transformer
-            if hasattr(transformer[0], 'tokenizer'):
+            if hasattr(transformer[0], "tokenizer"):
                 self.tokenizers[vector_name] = transformer[0].tokenizer
-            elif hasattr(transformer, 'tokenizer'):
+            elif hasattr(transformer, "tokenizer"):
                 self.tokenizers[vector_name] = transformer.tokenizer
             else:
-                logger.warning(f"Could not extract tokenizer for {model_name}, will use character-based chunking")
+                logger.warning(
+                    f"Could not extract tokenizer for {model_name}, will use character-based chunking"
+                )
                 self.tokenizers[vector_name] = None
             logger.info(f"Initialized {vector_name} vector with model: {model_name}")
 
@@ -253,17 +253,19 @@ class StreamingIngester:
         # Use the primary tokenizer (from base model) for chunking
         primary_tokenizer = self.tokenizers.get("base")
         if primary_tokenizer:
-            logger.info(f"Using tokenizer-aware chunking with {self.embedding_models['base']} tokenizer")
+            logger.info(
+                f"Using tokenizer-aware chunking with {self.embedding_models['base']} tokenizer"
+            )
         else:
             logger.warning("No tokenizer available, falling back to character-based chunking")
-        
+
         self.chunker = TextChunker(
             id_col="document_id",
-            text_col="text", 
+            text_col="text",
             chunk_size=chunk_size,
             chunk_overlap=overlap,
             min_split_chars=min_chunk_size,
-            tokenizer=primary_tokenizer
+            tokenizer=primary_tokenizer,
         )
         self.batch_size = batch_size
 
@@ -1031,17 +1033,21 @@ class StreamingIngester:
 
             # Create chunks using TextChunker
             chunk_data = self.chunker({"document_id": [doc_id], "text": [text]})
-            
+
             # Convert to TextChunk objects for compatibility
             chunks = []
-            for i, (chunk_id, chunk_text) in enumerate(zip(chunk_data["chunk_id"], chunk_data["chunk_text"])):
-                chunks.append(TextChunk(
-                    document_id=doc_id,
-                    chunk_id=f"{doc_id}_chunk_{chunk_id}",
-                    text=chunk_text,
-                    position=chunk_id
-                ))
-                
+            for i, (chunk_id, chunk_text) in enumerate(
+                zip(chunk_data["chunk_id"], chunk_data["chunk_text"])
+            ):
+                chunks.append(
+                    TextChunk(
+                        document_id=doc_id,
+                        chunk_id=f"{doc_id}_chunk_{chunk_id}",
+                        text=chunk_text,
+                        position=chunk_id,
+                    )
+                )
+
             if not chunks:
                 logger.warning(f"Document {doc_id} produced no chunks")
                 self.tracker.mark_processed(doc_id, 0, False)
