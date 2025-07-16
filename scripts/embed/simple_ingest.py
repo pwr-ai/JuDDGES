@@ -4,6 +4,7 @@ Simple streaming ingestion script for legal documents.
 Usage: python simple_ingest.py [config_file.yaml]
 """
 
+import signal
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -22,6 +23,28 @@ from juddges.data.stream_ingester import StreamingIngester
 from juddges.settings import ROOT_PATH
 
 load_dotenv(ROOT_PATH / ".env", override=True)
+
+# Global variable to track active ingester for signal handling
+_active_ingester = None
+
+
+def signal_handler(signum, frame):
+    """Handle interrupt signals to ensure proper cleanup."""
+    _ = signum, frame  # Suppress unused parameter warnings
+    global _active_ingester
+    console = Console()
+    
+    console.print("\n[bold red]⚠️ Process interrupted by user[/bold red]")
+    
+    if _active_ingester:
+        try:
+            console.print("[yellow]Closing Weaviate connection...[/yellow]")
+            _active_ingester.close()
+            console.print("[green]✓ Weaviate connection closed properly[/green]")
+        except Exception as e:
+            console.print(f"[red]Error closing connection: {e}[/red]")
+    
+    sys.exit(1)
 
 
 class DatasetConfig(BaseModel):
@@ -605,7 +628,12 @@ def resolve_config_path(config_arg: str) -> Path:
 
 def main():
     """Main CLI interface using Rich."""
+    global _active_ingester
     console = Console()
+
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     # Check environment first
     check_environment()
@@ -685,6 +713,8 @@ def main():
             dataset_config=config.dataset_config,
             embedding_models=embedding_models,
         ) as ingester:
+            # Track the active ingester for signal handling
+            _active_ingester = ingester
             # Reset tracker if requested
             if config.reset_tracker:
                 console.print("[bold yellow]🔄 Resetting tracker database...[/bold yellow]")
@@ -702,6 +732,9 @@ def main():
             # Display final statistics
             console.print("\n")
             display_final_stats(stats, tracker_stats)
+            
+            # Clear the active ingester reference
+            _active_ingester = None
 
     except KeyboardInterrupt:
         console.print("\n[bold red]⚠️ Process interrupted by user[/bold red]")

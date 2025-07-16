@@ -27,6 +27,68 @@ from weaviate.classes.query import Metrics
 
 load_dotenv(".env", override=True)
 
+POLISH_STOP_WORDS = [
+    # Polish stop words
+    "a",
+    "aby",
+    "ale",
+    "albo",
+    "am",
+    "ani",
+    "oraz",
+    "oraz",
+    "będzie",
+    "będą",
+    "być",
+    "ci",
+    "co",
+    "czy",
+    "da",
+    "dla",
+    "do",
+    "i",
+    "ich",
+    "ja",
+    "jak",
+    "jako",
+    "je",
+    "jego",
+    "jej",
+    "jestem",
+    "jest",
+    "już",
+    "lub",
+    "ma",
+    "może",
+    "na",
+    "nad",
+    "nie",
+    "nią",
+    "nim",
+    "niż",
+    "o",
+    "od",
+    "po",
+    "pod",
+    "są",
+    "się",
+    "ta",
+    "tak",
+    "także",
+    "te",
+    "tej",
+    "tem",
+    "ten",
+    "to",
+    "ty",
+    "w",
+    "we",
+    "więc",
+    "za",
+    "że",
+    "z",
+]
+
 
 @dataclass
 class TextChunk:
@@ -48,8 +110,6 @@ class ProcessingStats:
     failed_documents: int = 0
     total_chunks: int = 0
     processing_time: float = 0.0
-
-
 
 
 class ProcessedDocTracker:
@@ -238,12 +298,14 @@ class StreamingIngester:
             transformer = SentenceTransformer(model_name)
             self.transformers[vector_name] = transformer
             # Get the tokenizer from the first module in the transformer
-            if hasattr(transformer[0], 'tokenizer'):
+            if hasattr(transformer[0], "tokenizer"):
                 self.tokenizers[vector_name] = transformer[0].tokenizer
-            elif hasattr(transformer, 'tokenizer'):
+            elif hasattr(transformer, "tokenizer"):
                 self.tokenizers[vector_name] = transformer.tokenizer
             else:
-                logger.warning(f"Could not extract tokenizer for {model_name}, will use character-based chunking")
+                logger.warning(
+                    f"Could not extract tokenizer for {model_name}, will use character-based chunking"
+                )
                 self.tokenizers[vector_name] = None
             logger.info(f"Initialized {vector_name} vector with model: {model_name}")
 
@@ -253,17 +315,19 @@ class StreamingIngester:
         # Use the primary tokenizer (from base model) for chunking
         primary_tokenizer = self.tokenizers.get("base")
         if primary_tokenizer:
-            logger.info(f"Using tokenizer-aware chunking with {self.embedding_models['base']} tokenizer")
+            logger.info(
+                f"Using tokenizer-aware chunking with {self.embedding_models['base']} tokenizer"
+            )
         else:
             logger.warning("No tokenizer available, falling back to character-based chunking")
-        
+
         self.chunker = TextChunker(
             id_col="document_id",
-            text_col="text", 
+            text_col="text",
             chunk_size=chunk_size,
             chunk_overlap=overlap,
             min_split_chars=min_chunk_size,
-            tokenizer=primary_tokenizer
+            tokenizer=primary_tokenizer,
         )
         self.batch_size = batch_size
 
@@ -562,109 +626,259 @@ class StreamingIngester:
                 name=self.LEGAL_DOCUMENTS_COLLECTION,
                 properties=[
                     wvc.Property(
-                        name="document_id", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="document_id",
+                        data_type=wvc.DataType.TEXT,
+                        description="Unique identifier for the document",
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="document_type", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                        name="document_type",
+                        data_type=wvc.DataType.TEXT,
+                        description="Type of the document, like judgment, tax_interpretation, etc.",
+                        skip_vectorization=False,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="title", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                        name="title",
+                        data_type=wvc.DataType.TEXT,
+                        description="Title of the document",
+                        skip_vectorization=False,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="date_issued", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="date_issued",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Date when the document was issued",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="document_number", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="document_number",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Unique document number or identifier",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="language", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="language",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Language of the document",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="country", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="country",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Country of the document",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="full_text", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                        name="full_text",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=False,
+                        description="Full text content of the document",
+                        index_filterable=False,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="summary", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                        name="summary",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=False,
+                        description="Summary of the document",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="thesis", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                        name="thesis",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=False,
+                        description="Thesis statement of the document",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="keywords", data_type=wvc.DataType.TEXT_ARRAY, skip_vectorization=False
+                        name="keywords",
+                        data_type=wvc.DataType.TEXT_ARRAY,
+                        skip_vectorization=False,
+                        description="Keywords associated with the document",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="issuing_body", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="issuing_body",
+                        description="Issuing body or authority of the document",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="ingestion_date", data_type=wvc.DataType.DATE, skip_vectorization=True
+                        name="ingestion_date",
+                        data_type=wvc.DataType.DATE,
+                        skip_vectorization=True,
+                        description="Date when the document was ingested into the system",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="last_updated", data_type=wvc.DataType.DATE, skip_vectorization=True
+                        name="last_updated",
+                        data_type=wvc.DataType.DATE,
+                        skip_vectorization=True,
+                        description="Date when the document was last updated",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
                         name="processing_status",
+                        description="Current processing status of the document",
                         data_type=wvc.DataType.TEXT,
                         skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="source_url", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="source_url",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Source URL of the document",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
                         name="legal_references",
+                        description="Legal references or citations in the document",
                         data_type=wvc.DataType.TEXT,
                         skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="parties", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="parties",
+                        description="Parties involved in the document",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="outcome", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="outcome",
+                        description="Outcome of the document",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="source", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="source",
+                        description="Source of the document",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="metadata", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="metadata",
+                        description="Metadata associated with the document",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
                         name="publication_date",
+                        description="Publication date of the document",
                         data_type=wvc.DataType.TEXT,
                         skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="raw_content", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="raw_content",
+                        description="Raw content of the document",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=False,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="presiding_judge", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="presiding_judge",
+                        description="Presiding judge of the document",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="judges", data_type=wvc.DataType.TEXT_ARRAY, skip_vectorization=True
+                        name="judges",
+                        data_type=wvc.DataType.TEXT_ARRAY,
+                        skip_vectorization=True,
+                        description="List of judges involved in the document",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
                         name="legal_bases",
                         data_type=wvc.DataType.TEXT_ARRAY,
                         skip_vectorization=True,
+                        description="List of legal bases referenced in the document",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="court_name", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="court_name",
+                        description="Name of the court",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="department_name", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="department_name",
+                        description="Name of the department",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
                         name="extracted_legal_bases",
                         data_type=wvc.DataType.TEXT,
                         skip_vectorization=True,
+                        description="Extracted legal bases from the document",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
                         name="references",
                         data_type=wvc.DataType.TEXT_ARRAY,
                         skip_vectorization=True,
+                        description="References cited in the document",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
-                    wvc.Property(name="x", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
-                    wvc.Property(name="y", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
+                    wvc.Property(
+                        name="x",
+                        data_type=wvc.DataType.NUMBER,
+                        skip_vectorization=True,
+                        index_filterable=False,
+                        index_searchable=False,
+                    ),
+                    wvc.Property(
+                        name="y",
+                        data_type=wvc.DataType.NUMBER,
+                        skip_vectorization=True,
+                        index_filterable=False,
+                        index_searchable=False,
+                    ),
                 ],
                 vectorizer_config=[
                     wvc.Configure.NamedVectors.text2vec_transformers(
@@ -689,6 +903,10 @@ class StreamingIngester:
                         inference_url="http://t2v-transformers-fast:8080",
                     ),
                 ],
+                inverted_index_config=wvc.Configure.inverted_index(
+                    stopwords_preset=wvc.StopwordsPreset.EN,
+                    stopwords_additions=POLISH_STOP_WORDS,
+                ),
             )
             logger.info(f"Created {self.LEGAL_DOCUMENTS_COLLECTION} collection")
         except Exception as e:
@@ -709,47 +927,117 @@ class StreamingIngester:
                 name=self.DOCUMENT_CHUNKS_COLLECTION,
                 properties=[
                     wvc.Property(
-                        name="document_id", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="document_id",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Unique identifier for the document",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="document_type", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="document_type",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Type of the document, like judgment, tax_interpretation, etc.",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="language", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="language",
+                        description="Language of the document",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="chunk_id", data_type=wvc.DataType.NUMBER, skip_vectorization=True
+                        name="chunk_id",
+                        data_type=wvc.DataType.NUMBER,
+                        skip_vectorization=True,
+                        description="Unique identifier for the chunk",
+                        index_filterable=False,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="chunk_text", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                        name="chunk_text",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=False,
+                        description="Text content of the chunk",
+                        index_filterable=False,
+                        index_searchable=True,
                     ),
                     wvc.Property(
-                        name="segment_type", data_type=wvc.DataType.TEXT, skip_vectorization=False
+                        name="segment_type",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=False,
+                        description="Type of the segment (e.g., paragraph, sentence, etc.)",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="position", data_type=wvc.DataType.NUMBER, skip_vectorization=True
+                        name="position",
+                        data_type=wvc.DataType.NUMBER,
+                        skip_vectorization=True,
+                        description="Position of the chunk within the document",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
-                        name="source", data_type=wvc.DataType.TEXT, skip_vectorization=True
+                        name="source",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Source of the chunk",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
                         name="confidence_score",
                         data_type=wvc.DataType.NUMBER,
                         skip_vectorization=True,
+                        description="Confidence score for the chunk's content",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
                     wvc.Property(
                         name="cited_references",
                         data_type=wvc.DataType.TEXT,
                         skip_vectorization=True,
+                        description="References cited within the chunk",
+                        index_filterable=True,
+                        index_searchable=True,
                     ),
-                    wvc.Property(name="tags", data_type=wvc.DataType.TEXT, skip_vectorization=True),
+                    wvc.Property(
+                        name="tags",
+                        data_type=wvc.DataType.TEXT,
+                        skip_vectorization=True,
+                        description="Tags associated with the chunk",
+                        index_filterable=True,
+                        index_searchable=True,
+                    ),
                     wvc.Property(
                         name="parent_segment_id",
                         data_type=wvc.DataType.TEXT,
                         skip_vectorization=True,
+                        description="ID of the parent segment if this chunk is part of a larger segment",
+                        index_filterable=True,
+                        index_searchable=False,
                     ),
-                    wvc.Property(name="x", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
-                    wvc.Property(name="y", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
+                    wvc.Property(
+                        name="x",
+                        data_type=wvc.DataType.NUMBER,
+                        skip_vectorization=True,
+                        description="X coordinate of the chunk",
+                        index_filterable=False,
+                        index_searchable=False,
+                    ),
+                    wvc.Property(
+                        name="y",
+                        data_type=wvc.DataType.NUMBER,
+                        skip_vectorization=True,
+                        description="Y coordinate of the chunk",
+                        index_filterable=False,
+                        index_searchable=False,
+                    ),
                 ],
                 vectorizer_config=[
                     wvc.Configure.NamedVectors.text2vec_transformers(
@@ -774,6 +1062,10 @@ class StreamingIngester:
                         inference_url="http://t2v-transformers-fast:8080",
                     ),
                 ],
+                inverted_index_config=wvc.Configure.inverted_index(
+                    stopwords_preset=wvc.StopwordsPreset.EN,
+                    stopwords_additions=POLISH_STOP_WORDS,
+                ),
             )
             logger.info(f"Created {self.DOCUMENT_CHUNKS_COLLECTION} collection")
         except Exception as e:
@@ -1031,17 +1323,21 @@ class StreamingIngester:
 
             # Create chunks using TextChunker
             chunk_data = self.chunker({"document_id": [doc_id], "text": [text]})
-            
+
             # Convert to TextChunk objects for compatibility
             chunks = []
-            for i, (chunk_id, chunk_text) in enumerate(zip(chunk_data["chunk_id"], chunk_data["chunk_text"])):
-                chunks.append(TextChunk(
-                    document_id=doc_id,
-                    chunk_id=f"{doc_id}_chunk_{chunk_id}",
-                    text=chunk_text,
-                    position=chunk_id
-                ))
-                
+            for i, (chunk_id, chunk_text) in enumerate(
+                zip(chunk_data["chunk_id"], chunk_data["chunk_text"])
+            ):
+                chunks.append(
+                    TextChunk(
+                        document_id=doc_id,
+                        chunk_id=f"{doc_id}_chunk_{chunk_id}",
+                        text=chunk_text,
+                        position=chunk_id,
+                    )
+                )
+
             if not chunks:
                 logger.warning(f"Document {doc_id} produced no chunks")
                 self.tracker.mark_processed(doc_id, 0, False)
@@ -1282,6 +1578,7 @@ class StreamingIngester:
         """Close Weaviate connection."""
         try:
             self.weaviate_client.close()
+            logger.info("Weaviate connection closed successfully")
         except Exception as e:
             logger.warning(f"Error closing Weaviate client: {e}")
 
@@ -1328,5 +1625,7 @@ class StreamingIngester:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
+        if exc_type is not None:
+            logger.info(f"Exiting context manager due to exception: {exc_type.__name__}")
         self.close()
         return False
