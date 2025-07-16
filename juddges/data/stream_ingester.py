@@ -268,55 +268,39 @@ class StreamingIngester:
             self.weaviate_client = weaviate.connect_to_local(host=host, port=port)
             logger.info("Connected to Weaviate without authentication")
 
-        # Set up embedding models - require multiple different models
+        # Set up embedding models - use only base model
         if not embedding_models:
-            # Use default mapping with different models
+            # Use default mapping with only base model
             self.embedding_models = {
                 "base": "sdadas/mmlw-roberta-large",
-                "dev": "sentence-transformers/all-mpnet-base-v2",
-                "fast": "sentence-transformers/all-MiniLM-L6-v2",
             }
-            logger.warning(
-                "No embedding_models provided, using default multiple model configuration"
-            )
+            logger.info("No embedding_models provided, using default base model configuration")
         else:
-            self.embedding_models = embedding_models
+            # Filter to only use base model
+            self.embedding_models = {
+                "base": embedding_models.get("base", "sdadas/mmlw-roberta-large")
+            }
 
-        # Validate that we have different models for different vectors
-        unique_models = set(self.embedding_models.values())
-        if len(unique_models) < len(self.embedding_models):
-            logger.warning(
-                "Some embedding models are duplicated across vectors - this reduces the benefit of multiple embeddings"
-            )
+        # Log the single base model being used
+        logger.info(f"Using single base embedding model: {self.embedding_models['base']}")
 
         logger.info(f"Using embedding models: {self.embedding_models}")
 
-        # Initialize SentenceTransformer models and tokenizers for each named vector
+        # Initialize SentenceTransformer models for each named vector
         self.transformers = {}
-        self.tokenizers = {}
         for vector_name, model_name in self.embedding_models.items():
             transformer = SentenceTransformer(model_name)
             self.transformers[vector_name] = transformer
-            # Get the tokenizer from the first module in the transformer
-            if hasattr(transformer[0], "tokenizer"):
-                self.tokenizers[vector_name] = transformer[0].tokenizer
-            elif hasattr(transformer, "tokenizer"):
-                self.tokenizers[vector_name] = transformer.tokenizer
-            else:
-                logger.warning(
-                    f"Could not extract tokenizer for {model_name}, will use character-based chunking"
-                )
-                self.tokenizers[vector_name] = None
             logger.info(f"Initialized {vector_name} vector with model: {model_name}")
 
         # Keep the original embedding_model for backward compatibility
         self.embedding_model = self.transformers.get("base")
 
-        # Use the primary tokenizer (from base model) for chunking
-        primary_tokenizer = self.tokenizers.get("base")
-        if primary_tokenizer:
+        # Use the primary tokenizer model name for chunking
+        primary_tokenizer_name = self.embedding_models.get("base")
+        if primary_tokenizer_name:
             logger.info(
-                f"Using tokenizer-aware chunking with {self.embedding_models['base']} tokenizer"
+                f"Using tokenizer-aware chunking with {primary_tokenizer_name} tokenizer"
             )
         else:
             logger.warning("No tokenizer available, falling back to character-based chunking")
@@ -327,7 +311,7 @@ class StreamingIngester:
             chunk_size=chunk_size,
             chunk_overlap=overlap,
             min_split_chars=min_chunk_size,
-            tokenizer=primary_tokenizer,
+            tokenizer=primary_tokenizer_name,
         )
         self.batch_size = batch_size
 
@@ -888,20 +872,20 @@ class StreamingIngester:
                         vector_index_config=wvc.Configure.VectorIndex.hnsw(),
                         inference_url="http://t2v-transformers-base:8080",
                     ),
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.DEV,
-                        vectorize_collection_name=False,
-                        source_properties=["full_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-dev:8080",
-                    ),
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.FAST,
-                        vectorize_collection_name=False,
-                        source_properties=["full_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-fast:8080",
-                    ),
+                    # wvc.Configure.NamedVectors.text2vec_transformers(
+                    #     name=VectorName.DEV,
+                    #     vectorize_collection_name=False,
+                    #     source_properties=["full_text"],
+                    #     vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                    #     inference_url="http://t2v-transformers-dev:8080",
+                    # ),
+                    # wvc.Configure.NamedVectors.text2vec_transformers(
+                    #     name=VectorName.FAST,
+                    #     vectorize_collection_name=False,
+                    #     source_properties=["full_text"],
+                    #     vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                    #     inference_url="http://t2v-transformers-fast:8080",
+                    # ),
                 ],
                 inverted_index_config=wvc.Configure.inverted_index(
                     stopwords_preset=wvc.StopwordsPreset.EN,
@@ -1047,20 +1031,20 @@ class StreamingIngester:
                         vector_index_config=wvc.Configure.VectorIndex.hnsw(),
                         inference_url="http://t2v-transformers-base:8080",
                     ),
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.DEV,
-                        vectorize_collection_name=False,
-                        source_properties=["chunk_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-dev:8080",
-                    ),
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.FAST,
-                        vectorize_collection_name=False,
-                        source_properties=["chunk_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-fast:8080",
-                    ),
+                    # wvc.Configure.NamedVectors.text2vec_transformers(
+                    #     name=VectorName.DEV,
+                    #     vectorize_collection_name=False,
+                    #     source_properties=["chunk_text"],
+                    #     vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                    #     inference_url="http://t2v-transformers-dev:8080",
+                    # ),
+                    # wvc.Configure.NamedVectors.text2vec_transformers(
+                    #     name=VectorName.FAST,
+                    #     vectorize_collection_name=False,
+                    #     source_properties=["chunk_text"],
+                    #     vector_index_config=wvc.Configure.VectorIndex.hnsw(),
+                    #     inference_url="http://t2v-transformers-fast:8080",
+                    # ),
                 ],
                 inverted_index_config=wvc.Configure.inverted_index(
                     stopwords_preset=wvc.StopwordsPreset.EN,
