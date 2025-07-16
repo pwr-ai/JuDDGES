@@ -13,7 +13,7 @@ column_mapping:  # Mapping of dataset fields to Weaviate properties
   regulations: legal_bases
   html_content: raw_content
   introduction: summary
-  html_content: full_text
+  full_text: full_text
   author: issuing_body
   question: thesis
 date_fields:
@@ -34,7 +34,7 @@ text_fields:
 - introduction
 - justification
 - question
-- html_content
+- full_text
 num_proc: 1  # Use all available CPU cores
 batch_size: 100  # Batch size for dataset operations
 
