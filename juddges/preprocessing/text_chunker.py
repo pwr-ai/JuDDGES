@@ -1,7 +1,6 @@
 from typing import Any
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from transformers import PreTrainedTokenizer
+from langchain_text_splitters import SentenceTransformersTokenTextSplitter
 
 
 class TextChunker:
@@ -14,22 +13,22 @@ class TextChunker:
         id_col: str,
         text_col: str,
         chunk_size: int,
-        chunk_overlap: int | None = None,
+        chunk_overlap: int,
         min_split_chars: int | None = None,
         take_n_first_chunks: int | None = None,
-        tokenizer: PreTrainedTokenizer | None = None,
+        tokenizer: str | None = None,
     ) -> None:
         self.id_col = id_col
         self.text_col = text_col
         if tokenizer:
-            self.splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
-                tokenizer,
-                chunk_size=chunk_size,
+            self.splitter = SentenceTransformersTokenTextSplitter(
+                model_name=tokenizer,
+                tokens_per_chunk=chunk_size,
                 chunk_overlap=chunk_overlap,
             )
         else:
-            self.splitter = RecursiveCharacterTextSplitter(
-                chunk_size=chunk_size,
+            self.splitter = SentenceTransformersTokenTextSplitter(
+                tokens_per_chunk=chunk_size,
                 chunk_overlap=chunk_overlap,
             )
 

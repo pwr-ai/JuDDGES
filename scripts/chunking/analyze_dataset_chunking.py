@@ -108,16 +108,9 @@ def analyze_chunking_statistics(dataset_name, num_examples=100, output_prefix="d
     console.print(f"  Output prefix: {output_prefix}")
     console.print()
     
-    # Load the embedding model and get its tokenizer
-    console.print(f"[bold blue]Loading {model_name} model...[/bold blue]")
-    model = SentenceTransformer(model_name)
-    
-    tokenizer = extract_tokenizer_from_model(model)
-    if tokenizer is None:
-        console.print("[red]Could not extract tokenizer from model![/red]")
-        return
-    
-    console.print(f"[green]✓ Model loaded with tokenizer: {tokenizer.__class__.__name__}[/green]")
+    # Use the model name for tokenizer loading in TextChunker
+    console.print(f"[bold blue]Using {model_name} model for tokenizer...[/bold blue]")
+    console.print(f"[green]✓ Model name configured: {model_name}[/green]")
     
     # Load dataset
     console.print(f"\n[bold blue]Loading dataset (first {num_examples} examples)...[/bold blue]")
@@ -136,7 +129,7 @@ def analyze_chunking_statistics(dataset_name, num_examples=100, output_prefix="d
         chunk_size=chunk_size,
         chunk_overlap=overlap,
         min_split_chars=50,
-        tokenizer=tokenizer
+        tokenizer=model_name
     )
     
     # Statistics collection

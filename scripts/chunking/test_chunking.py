@@ -104,18 +104,9 @@ def main():
     console.print(f"  Overlap: {args.overlap} tokens")
     console.print(f"  Output prefix: {args.output_prefix}")
     console.print()
-    # Load the embedding model and get its tokenizer
-    console.print(f"[bold blue]Loading {args.model} model...[/bold blue]")
-    model = SentenceTransformer(args.model)
-    
-    # Extract tokenizer from the model
-    tokenizer = extract_tokenizer_from_model(model)
-    if tokenizer is None:
-        console.print("[red]Could not extract tokenizer from model![/red]")
-        return
-    
-    console.print(f"[green]✓ Model loaded with tokenizer: {tokenizer.__class__.__name__}[/green]")
-    console.print(f"[dim]Max token length: {getattr(tokenizer, 'model_max_length', 512)}[/dim]")
+    # Use the model name for tokenizer loading in TextChunker
+    console.print(f"[bold blue]Using {args.model} model for tokenizer...[/bold blue]")
+    console.print(f"[green]✓ Model name configured: {args.model}[/green]")
     
     # Load example judgment text
     console.print("\n[bold blue]Loading example judgment data...[/bold blue]")
@@ -150,7 +141,7 @@ def main():
         chunk_size=args.chunk_size,
         chunk_overlap=args.overlap,
         min_split_chars=args.min_chars,
-        tokenizer=tokenizer
+        tokenizer=args.model
     )
     
     # Apply chunking

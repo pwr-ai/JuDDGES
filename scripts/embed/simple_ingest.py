@@ -70,8 +70,6 @@ class DatasetConfig(BaseModel):
     embedding_models: Dict[str, str] = Field(
         default_factory=lambda: {
             "base": "sdadas/mmlw-roberta-large",
-            "dev": "sentence-transformers/all-MiniLM-L6-v2",
-            "fast": "sentence-transformers/all-mpnet-base-v2",
         },
         description="Mapping of named vectors to embedding models",
     )
@@ -84,7 +82,7 @@ class DatasetConfig(BaseModel):
             raise ValueError("embedding_models cannot be empty - at least one model is required")
 
         # Check for required vector names
-        required_vectors = {"base", "dev", "fast"}
+        required_vectors = {"base"}
         missing_vectors = required_vectors - set(v.keys())
         if missing_vectors:
             raise ValueError(f"Missing required vector names: {missing_vectors}")

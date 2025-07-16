@@ -22,8 +22,8 @@ default_values:
   language: en
   document_type: judgment
 json_fields: []
-min_chunk_size: 512
-max_chunk_size: 512
+min_chunk_size: 256
+max_chunk_size: 400
 name: JuDDGES/en-court-raw-sample
 required_fields:
 - document_id
@@ -37,5 +37,5 @@ batch_size: 100  # Batch size for dataset operations
 # Embedding model mapping for different named vectors
 embedding_models:
   base: "sdadas/mmlw-roberta-large"
-  dev: "sentence-transformers/all-mpnet-base-v2"
-  fast: "sentence-transformers/all-MiniLM-L6-v2"
+  # dev: "sentence-transformers/all-mpnet-base-v2"
+  # fast: "sentence-transformers/all-MiniLM-L6-v2"

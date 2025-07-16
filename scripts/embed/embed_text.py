@@ -10,7 +10,6 @@ from datasets import Dataset, load_dataset
 from loguru import logger
 from omegaconf import DictConfig
 from sentence_transformers import SentenceTransformer
-from transformers import PreTrainedTokenizer
 from transformers.utils import is_flash_attn_2_available
 
 from juddges.config import EmbeddingConfig
@@ -62,7 +61,7 @@ def main(cfg: DictConfig) -> None:
     model.compile()
 
     logger.info("Chunking dataset")
-    chunk_ds = chunk_dataset(dataset=ds, config=config, tokenizer=model.tokenizer)
+    chunk_ds = chunk_dataset(dataset=ds, config=config, tokenizer=config.embedding_model.name)
     logger.info(f"Number of chunks after chunking: {chunk_ds.num_rows}")
 
     embedder = Embedder(model=model, column_to_embed=TextChunker.CHUNK_TEXT_COL)
@@ -90,7 +89,7 @@ def main(cfg: DictConfig) -> None:
 def chunk_dataset(
     dataset: Dataset,
     config: EmbeddingConfig,
-    tokenizer: PreTrainedTokenizer | None = None,
+    tokenizer: str | None = None,
 ) -> Dataset:
     assert config.chunk_config is not None
     split_worker = TextChunker(
