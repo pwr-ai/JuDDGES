@@ -39,7 +39,7 @@ schema_generator_prompt: |
   ```json
   {{
     "justification": [],
-    "error": "The provided description is not sufficient to generate a valREFINER_PROMPTid legal information extraction schema.",
+    "error": "The provided description is not sufficient to generate a valid legal information extraction schema.",
     "is_generated": false,
     "schema": null
   }}

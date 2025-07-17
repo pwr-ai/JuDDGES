@@ -9,6 +9,7 @@ problem_definer_prompt: |
   1. It must contain following sections:
       - `Problem Statement`: A short description of the legal research problem that the user want to study.
       - `Legal Domain`: The legal domain that the problem is related to.
+      - `Relevant Cases`: Define the cases that are relevant to the problem.
       - `Legal terms`: Define the legal terms that are related to the problem.
       - `Study Questions`: Define the general questions in natural language that the user might want to answer.
 
@@ -23,7 +24,7 @@ problem_definer_prompt: |
 
   Crime law
 
-  ## In what cases are we interested in?
+  ## Relevant Cases
   
   We are interested in all crime cases. No specific conditions.
 

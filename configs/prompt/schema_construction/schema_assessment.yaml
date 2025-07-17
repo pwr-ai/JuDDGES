@@ -25,7 +25,7 @@ schema_assessment_prompt: |
   2. Provide specific justification for each score.
   3. Identify concrete improvement suggestions.
   4. Consider the schema's intended use case and target legal documents.
-  5. Do not suggest new fields, focus on improving the existing schema.
+  5. You can suggest any modifications to the schema, including adding new fields, modifying existing fields, or removing fields if necessary.
   6. Check for redundant or unnecessary fields.
   7. Set `needs_refinement` to `true` if the schema has significant issues that require further refinement, `false` if it's good enough to use.
 
