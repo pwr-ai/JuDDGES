@@ -6,7 +6,7 @@ schema_assessment_prompt: |
   **Keep in mind that problem definition is in natural language, and schema is structured and convenient for analysis.**
   Schema should cover all questions, but you can expand the schema to cover more questions if you think it's necessary.
   It is preferable to use simple types, so single questions can be split into multiple fields if necessary.
-  Be very critical and objective, do not be afraid to say that the schema is not good enough. 
+  Be very critical and objective, do not be afraid to say that the schema is not good enough.
   Tend to give low scores to the schema, if you suggest improvements. And high scores if you don't suggest improvements.
   If you suggest improvements, you should assigne True to `needs_refinement` field.
 

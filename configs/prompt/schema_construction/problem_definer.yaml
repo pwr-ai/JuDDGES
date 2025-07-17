@@ -25,7 +25,7 @@ problem_definer_prompt: |
   Crime law
 
   ## Relevant Cases
-  
+
   We are interested in all crime cases. No specific conditions.
 
   ## Legal Terms
@@ -50,4 +50,3 @@ problem_definer_prompt: |
 
   ## User Feedback
   {user_feedback}
-

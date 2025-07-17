@@ -86,4 +86,3 @@ schema_refiner_prompt: |
 
   ### Assessment Result
   {assessment_result}
-
