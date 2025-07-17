@@ -34,4 +34,4 @@ problem_definer_helper_prompt: |
   ```
 
   ### User Input
-  {input}
+  {user_input}
