@@ -23,7 +23,7 @@ default_values:
 json_fields: []
 min_chunk_size: 256
 max_chunk_size: 400
-name: JuDDGES/en-court-raw-sample
+name: JuDDGES/en-court-raw
 required_fields:
 - document_id
 - full_text
