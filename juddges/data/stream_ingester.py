@@ -299,9 +299,7 @@ class StreamingIngester:
         # Use the primary tokenizer model name for chunking
         primary_tokenizer_name = self.embedding_models.get("base")
         if primary_tokenizer_name:
-            logger.info(
-                f"Using tokenizer-aware chunking with {primary_tokenizer_name} tokenizer"
-            )
+            logger.info(f"Using tokenizer-aware chunking with {primary_tokenizer_name} tokenizer")
         else:
             logger.warning("No tokenizer available, falling back to character-based chunking")
 
