@@ -26,9 +26,16 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
         client: OpenAI,
         judge_model: str,
         pred_loader: PredictionLoader,
+        system_prompt: str,
+        user_prompt: str,
         temperature: float = TEMPERATURE,
     ) -> None:
-        super().__init__(pred_loader=pred_loader, judge_name=judge_model)
+        super().__init__(
+            pred_loader=pred_loader,
+            judge_name=judge_model,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
         self.client = client
         self.temperature = temperature
 

@@ -8,7 +8,6 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from juddges.llm_as_judge.data_model import ParsedPredictions, PredictionLoader
-from juddges.llm_as_judge.prompts import SYSTEM_PROMPT, USER_PROMPT
 
 
 class ItemEvalResult(BaseModel):
@@ -97,9 +96,17 @@ class EvalResults(BaseModel):
 
 
 class StructuredOutputJudgeBase:
-    def __init__(self, pred_loader: PredictionLoader, judge_name: str) -> None:
+    def __init__(
+        self,
+        pred_loader: PredictionLoader,
+        judge_name: str,
+        system_prompt: str,
+        user_prompt: str,
+    ) -> None:
         self.pred_loader = pred_loader
         self.judge_name = judge_name
+        self.system_prompt = system_prompt
+        self.user_prompt = user_prompt
 
         assert self.pred_loader.judge_dir.exists()
 
@@ -132,16 +139,14 @@ class StructuredOutputJudgeBase:
     def prepare_eval_messages(
         self,
         parsed_preds: ParsedPredictions,
-        user_prompt: str = USER_PROMPT,
-        system_prompt: str | None = SYSTEM_PROMPT,
     ) -> dict[int, list[dict[str, str]]]:
         dataset_messages = {}
         for idx in parsed_preds.predictions.keys():
             messages = self.prepare_single_item_messages(
                 pred=parsed_preds.predictions[idx],
                 gold=parsed_preds.gold[idx],
-                user_prompt=user_prompt,
-                system_prompt=system_prompt,
+                user_prompt=self.user_prompt,
+                system_prompt=self.system_prompt,
             )
             dataset_messages[idx] = messages
         return dataset_messages
@@ -150,21 +155,19 @@ class StructuredOutputJudgeBase:
         self,
         pred: dict[str, Any],
         gold: dict[str, Any],
-        user_prompt: str = USER_PROMPT,
-        system_prompt: str | None = SYSTEM_PROMPT,
     ) -> list[dict[str, str]]:
         messages = [
             {
                 "role": "user",
-                "content": user_prompt.format(
+                "content": self.user_prompt.format(
                     schema=self.pred_loader.schema,
                     outputs=pred,
                     reference_outputs=gold,
                 ),
             },
         ]
-        if system_prompt:
-            messages.insert(0, {"role": "system", "content": system_prompt})
+        if self.system_prompt:
+            messages.insert(0, {"role": "system", "content": self.system_prompt})
         return messages
 
     def get_zero_scores(self) -> dict[str, Any]:

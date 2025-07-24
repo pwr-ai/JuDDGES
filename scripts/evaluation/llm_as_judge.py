@@ -12,6 +12,7 @@ from loguru import logger
 
 from juddges.llm_as_judge.data_model import PredictionLoader
 from juddges.llm_as_judge.judge import StructuredOutputJudge
+from juddges.utils.config import load_and_resolve_config
 
 load_dotenv()
 
@@ -30,8 +31,10 @@ def main(
     ),
     cache_db: Path = typer.Option(CACHE_DB, help="Path to SQLite cache database"),
     estimate_tokens: bool = typer.Option(False, help="Estimate number of tokens"),
+    prompt: Path = typer.Option(..., help="Path to prompt config"),
 ) -> None:
     """Evaluate predictions using LLM as judge."""
+    prompt = load_and_resolve_config(prompt)
     llm = ChatOpenAI(
         api_key=API_KEY,
         base_url=API_BASE_URL,
@@ -48,6 +51,8 @@ def main(
     judge = StructuredOutputJudge(
         client=llm,
         pred_loader=pred_loader,
+        system_prompt=prompt["system_prompt"],
+        user_prompt=prompt["user_prompt"],
         max_concurrent_calls=max_concurrent_calls,
         verbose=True,
     )

@@ -17,11 +17,18 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
         self,
         client: ChatOpenAI,
         pred_loader: PredictionLoader,
+        system_prompt: str,
+        user_prompt: str,
         max_concurrent_calls: int = DEFAULT_MAX_CONCURRENT_CALLS,
         verbose: bool = False,
     ):
         """Initialize the LLM judge with a client and concurrency limit."""
-        super().__init__(pred_loader=pred_loader, judge_name=client.model_name)
+        super().__init__(
+            pred_loader=pred_loader,
+            judge_name=client.model_name,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
         self.client = client
         self.client = self.client.with_structured_output(
             self.structured_response_schema_from_extraction_schema,
