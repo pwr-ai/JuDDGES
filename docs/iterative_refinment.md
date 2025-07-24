@@ -66,7 +66,7 @@ For maximal efficiency, use the `scripts/sft/predict_vllm.py` script, which is o
 - Always check the printed config at the start of the run to confirm all settings.
 - If you encounter out-of-memory errors, reduce `llm.batch_size` or `max_model_len`.
 - For new models or datasets, copy and adapt existing config files as templates. For example, if you want to add a new LLM, you can copy the config file from `configs/llm/` and modify it to your needs.
-- Hydra allows config values to be overridden from multiple sources (e.g., command line, environment variables, defaults in config files). Sometimes, config values may be unexpectedly changed due to these overrides. **Always carefully review the full config printed at the start of the script to ensure all parameters are set as intended.** If results are surprising, double-check for any hidden or implicit overrides.
+- Hydra allows config values to be overridden from multiple sources (e.g., command line, environment variables, defaults in config files). **Always carefully review the full config printed at the start of the script to ensure all parameters are set as intended.** If results are surprising, double-check for any hydra overrides.
 
 ## 3. Result Analysis
 
