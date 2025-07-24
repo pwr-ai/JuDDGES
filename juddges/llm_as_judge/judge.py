@@ -7,7 +7,7 @@ from loguru import logger
 from tqdm.asyncio import tqdm_asyncio
 
 from juddges.llm_as_judge.base import EvalResults, ItemEvalResult, StructuredOutputJudgeBase
-from juddges.llm_as_judge.data_model import PredictionLoader
+from juddges.llm_as_judge.data_model import ParsedPredictions, PredictionLoader
 
 
 class StructuredOutputJudge(StructuredOutputJudgeBase):
@@ -102,3 +102,22 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
                     num_tokens += tokens_per_name
         num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
         return num_tokens
+
+    def merge_judge_results_with_failed_items(
+        self,
+        parsed_preds: ParsedPredictions,
+        eval_results: dict[int, ItemEvalResult],
+    ) -> EvalResults:
+        results = []
+        for idx in range(parsed_preds.num_items):
+            try:
+                res = eval_results[idx]
+            except KeyError:
+                res = ItemEvalResult(
+                    status="parsing_error",
+                    error=parsed_preds.errors[idx],
+                    result=self.get_zero_scores(),
+                )
+            results.append(res)
+
+        return EvalResults(results=results, ie_schema=self.pred_loader.schema)

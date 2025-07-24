@@ -6,6 +6,7 @@ from typing import Any
 from loguru import logger
 from openai import OpenAI
 from openai.types import Batch
+from openai.types.chat import ChatCompletion
 
 from juddges.llm_as_judge.base import (
     EvalResults,
@@ -64,61 +65,51 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
 
     @cached_property
     def batch_id(self) -> str:
-        return load_json(self.pred_loader.batch_request_info_file)["id"]
-
-    def run_download_and_process_results_pipeline(self) -> EvalResults | None:
         try:
-            batch_id = self.batch_id
+            return load_json(self.pred_loader.batch_request_info_file)["id"]
         except FileNotFoundError:
             raise ValueError("Batch ID not found. Please run the submit pipeline first.")
 
+    def run_download_and_process_results_pipeline(self) -> EvalResults | None:
+        batch_id = self.batch_id
         batch = self.client.batches.retrieve(batch_id)
         if batch.status == "completed":
             save_json(batch.model_dump(), self.pred_loader.batch_request_info_file)
-            if batch.request_counts.completed == 0:
-                logger.error(f"Batch {batch_id} has no completed requests: {batch.request_counts}")
-                self.download_batch_api_errors()
-                return None
-            else:
-                if batch.request_counts.failed > 0:
-                    errors = self.download_batch_api_errors()
-                else:
-                    errors = {}
-
-                results = self.download_batch_api_results()
-
-                return self.process_batch_api_results(
-                    batch=batch,
-                    errors=errors,
-                    results=results,
-                )
-
+            results = self.download_and_parse_file_from_oai(
+                file_id=batch.output_file_id,
+                save_file=self.pred_loader.batch_api_results_file,
+            )
+            errors = self.download_and_parse_file_from_oai(
+                file_id=batch.error_file_id,
+                save_file=self.pred_loader.batch_api_errors_file,
+            )
+            return self.process_batch_api_results(
+                batch=batch,
+                results=results,
+                errors=errors,
+            )
         elif batch.status in ["validating", "in_progress", "finalizing"]:
-            raise ValueError(f"Batch {batch_id} is still processing. Please wait for completion.")
+            raise ValueError(
+                f"Batch {batch_id} is still processing (status: {batch.status}). Please wait for completion."
+            )
         else:
             save_json(batch.model_dump(), self.pred_loader.batch_request_info_file)
-            raise ValueError(f"Batch {batch_id} has status {batch.status}.")
+            raise ValueError(f"Batch {batch_id} has unexpected status {batch.status}.")
 
     def process_batch_api_results(
         self,
         batch: Batch | None,
-        errors: dict[int, dict[str, Any]] | None,
-        results: dict[int, dict[str, Any]] | None,
+        results: dict[int, dict[str, Any]],
+        errors: dict[int, dict[str, Any]],
     ) -> EvalResults | None:
-        # todo: make it more efficient and consistent
         if batch is None:
             batch = Batch(**load_json(self.pred_loader.batch_request_info_file))
 
-        if batch.request_counts.completed > 0:
-            results = load_jsonl(self.pred_loader.batch_api_results_file)
-        else:
-            logger.error(f"Batch {self.batch_id} has no completed requests: {batch.request_counts}")
+        try:
+            results, errors = self.load_batch_api_results(batch)
+        except ValueError as err:
+            logger.error(err)
             return None
-
-        if batch.request_counts.failed > 0:
-            errors = load_jsonl(self.pred_loader.batch_api_errors_file)
-        else:
-            errors = {}
 
         parsed_preds = self.pred_loader.load_predictions_from_file()
 
@@ -127,15 +118,7 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
         final_results = []
         for idx in range(parsed_preds.num_items):
             try:
-                # todo: make add validation for the response
-                raw_res = json.loads(
-                    results_indexed[idx]["response"]["body"]["choices"][0]["message"]["content"]
-                )
-                res = ItemEvalResult.from_success(
-                    result=raw_res,
-                    missing_keys=parsed_preds.missing_keys[idx],
-                    extra_keys=parsed_preds.extra_keys[idx],
-                )
+                batch_response = results_indexed[idx]
             except KeyError:
                 try:
                     res = ItemEvalResult(
@@ -149,6 +132,16 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
                         error=parsed_preds.errors[idx],
                         result=self.get_zero_scores(),
                     )
+            else:
+                response = batch_response["response"]
+                assert response["status_code"] == 200
+                completion = ChatCompletion(**response["body"])
+                raw_res = json.loads(completion.choices[0].message.content)
+                res = ItemEvalResult.from_success(
+                    result=raw_res,
+                    missing_keys=parsed_preds.missing_keys[idx],
+                    extra_keys=parsed_preds.extra_keys[idx],
+                )
             final_results.append(res)
         return EvalResults(results=final_results, ie_schema=self.pred_loader.schema)
 
@@ -206,18 +199,33 @@ class BatchedStructuredOutputJudge(StructuredOutputJudgeBase):
             "predictions_dir": str(self.pred_loader.root_dir),
         }
 
-    def download_batch_api_errors(self) -> dict[int, dict[str, Any]]:
-        batch = self.client.batches.retrieve(batch_id=self.batch_id)
-        error_file_id = batch.error_file_id
-        error_file = self.client.files.content(file_id=error_file_id)
-        errors = [json.loads(line) for line in error_file.text.splitlines()]
-        save_jsonl(errors, self.pred_loader.batch_api_errors_file)
-        return {int(err["custom_id"]): err for err in errors}
+    def download_and_parse_file_from_oai(
+        self,
+        file_id: str | None,
+        save_file: Path,
+    ) -> dict[int, dict[str, Any]]:
+        if file_id is None:
+            return {}
+        else:
+            file = self.client.files.content(file_id=file_id)
+            results = [json.loads(line) for line in file.text.splitlines()]
+            save_jsonl(results, save_file)
+            return {int(res["custom_id"]): res for res in results}
 
-    def download_batch_api_results(self) -> dict[int, dict[str, Any]]:
-        batch = self.client.batches.retrieve(batch_id=self.batch_id)
-        result_file_id = batch.output_file_id
-        result_file = self.client.files.content(file_id=result_file_id)
-        results = [json.loads(line) for line in result_file.text.splitlines()]
-        save_jsonl(results, self.pred_loader.batch_api_results_file)
-        return {int(res["custom_id"]): res for res in results}
+    def load_batch_api_results(
+        self,
+        batch: Batch,
+    ) -> tuple[dict[int, dict[str, Any]], dict[int, dict[str, Any]]]:
+        if batch.request_counts.completed > 0:
+            results = load_jsonl(self.pred_loader.batch_api_results_file)
+        else:
+            raise ValueError(
+                f"Batch {self.batch_id} has no completed requests: {batch.request_counts}"
+            )
+
+        if batch.request_counts.failed > 0:
+            errors = load_jsonl(self.pred_loader.batch_api_errors_file)
+        else:
+            errors = {}
+
+        return results, errors
