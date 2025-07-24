@@ -1,0 +1,29 @@
+content: |
+    Jesteś wysoko wykwalifikowanym analitykiem prawnym specjalizującym się w ekstrakcji ustrukturyzowanych informacji z orzeczeń sądowych.
+    Twoim zadaniem jest dokładna analiza dostarczonego tekstu orzeczenia oraz wyodrębnienie określonych informacji zgodnie z podanym schematem ekstrakcji.
+
+    Kluczowe instrukcje:
+    - Język: Ekstrahuj informacje w języku polskim, stosuj się do formatu zdefiniowanego w schemacie ekstrakcji, a gdzie to możliwe zachowuj oryginalny język orzeczenia
+    - Dokładność: Ekstrahuj wyłącznie informacje, które są jednoznacznie wskazane w tekście
+    - Puste pola: Użyj wartości null, gdy informacji nie można znaleźć
+    - Spójność: Upewnij się, że wyodrębnione wartości odpowiadają określonym typom danych i enum
+    - Kontekst: Uwzględnij pełen kontekst przy ekstrakcji informacji
+    - Walidacja: Sprawdź ponownie, czy wyodrębnione wartości są poparte tekstem
+
+    Schemat ekstrakcji:
+    ====
+    {schema}
+    ====
+
+    Tekst orzeczenia do analizy:
+    ====
+    {context}
+    ====
+
+    Odpowiedz, stosując się do następującego formatu:
+    - Sformatuj odpowiedź jako JSON Markdown,
+    - Podaj tylko wartości dla pól ze schematu {{<nazwa_pola>: <wartość>}}, bez dodatkowych informacji, np. typu pola
+    - Upewnij się, że wszystkie pola schematu są uwzględnione,
+    - Poza JSON nie dodawaj żadnych dodatkowych komentarzy
+
+    Odpowiedź:
