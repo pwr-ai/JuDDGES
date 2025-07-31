@@ -27,8 +27,8 @@ services:
         max_attempts: 3
       resources:
         limits:
-          cpus: '32'
-          memory: '128G'
+          cpus: '36'
+          memory: '200G'
     logging:
       driver: "json-file"
       options:
