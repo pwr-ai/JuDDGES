@@ -1,0 +1,25 @@
+user_input: Generate schema to extract information from judgments about drug abuse, focus on the defendant's age and the amount of the fine.
+problem_help: |
+  Here's my response:
+
+  1. Just to confirm, you'd like to create a schema to extract data from court judgments specifically related to drug abuse cases, focusing on two key pieces of information: the defendant's age and the amount of the fine imposed. Is that correct?
+
+  2. What type of drug abuse cases are you most interested in? For example, are you looking at possession, trafficking, manufacturing, or all types of drug-related offenses?
+
+  3. Idea: Would you also like to consider extracting information about the type of sentence given (e.g., imprisonment, probation, community service), in addition to the fine amount?
+
+  4. Are there any specific age ranges you're interested in examining (e.g., minors, young adults, seniors)?
+
+  5. Would you like to explore how other factors, such as prior convictions or the presence of aggravating/mitigating circumstances, influence the fine amount and/or sentence length?
+
+  6. Are you interested in analyzing trends over time, comparing different courts or jurisdictions, or identifying patterns in sentencing decisions based on demographic characteristics of the defendants? 
+
+  Please provide more details so I can better assist you!
+user_feedback: |
+  1. yes 
+  2. possession only 
+  3. yes 
+  4. all ages. 
+  5. yes, good idea. 
+  6. no, I'm not interested in that.  
+  Additional comments: categorize defendant's age into 5 categories. I define drug as any substance that is listed in the Controlled Substances Act.

@@ -1,0 +1,27 @@
+user_input: Generate schema to extract information from contracts, focus on contract value and parties involved.
+problem_help: |
+  Here's my response:
+
+  1. I think you're looking to create a structured way to retrieve data from contracts. Can you confirm that?
+
+  2. What type of contracts are you primarily dealing with (e.g., employment contracts, business agreements, lease agreements)?
+
+  3. When you say "contract value", do you mean the total monetary amount agreed upon in the contract, or other financial details such as payment schedules, interest rates, or penalties?
+
+  4. Regarding the parties involved, would you like to extract information about the individuals signing the contract, companies, or both?
+
+  5. Idea: would you also like to extract dates associated with the contract, such as the effective date, termination date, or renewal dates?
+
+  6. Are there any specific clauses or sections within the contracts that you'd like to prioritize extracting information from (e.g., confidentiality agreements, warranties, dispute resolution processes)?
+
+  7. How do you envision using the extracted information? For example, will it be used for analytics, reporting, compliance, or something else? 
+
+  Please let me know so I can better understand your requirements!
+user_feedback: |
+  1. yes 
+  2. employment contracts, business agreements, lease agreements 
+  3. total monetary amount agreed upon in the contract 
+  4. individuals signing the contract, companies 
+  5. yes, effective date, termination date, or renewal dates, dates of signing the contract 
+  6. confidentiality agreements, warranties, dispute resolution processes and other clauses that are important for contract analysis 
+  7. analytics only
