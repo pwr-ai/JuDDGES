@@ -24,6 +24,7 @@ generate_kwargs:
 
 split: ???
 random_seed: ???
+max_context_size: null # inferred from model config when using hf-transformers, otherwise must be set
 
 hydra:
   output_subdir: null
