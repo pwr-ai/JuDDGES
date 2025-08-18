@@ -173,7 +173,7 @@ def test_collection_creation():
         try:
             client.collections.delete(test_collection)
             console.print(f"🗑️  Deleted existing {test_collection} collection")
-        except:
+        except Exception:
             pass
 
         # Create test collection
