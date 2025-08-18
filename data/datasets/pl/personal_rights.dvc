@@ -1,0 +1,6 @@
+outs:
+- md5: 40f1a060a21513fcbca34ac5c1630566.dir
+  size: 55546022
+  nfiles: 1
+  hash: md5
+  path: personal_rights

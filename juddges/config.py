@@ -1,7 +1,7 @@
 import json
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -34,6 +34,7 @@ class LLMConfig(BaseModel, extra="forbid"):
     batch_size: int
     use_4bit: bool
     use_unsloth: bool = False
+    chat_template_kwargs: dict[str, Any] = Field(default_factory=dict)
 
     @property
     def should_load_adapter(self) -> bool:
@@ -41,6 +42,8 @@ class LLMConfig(BaseModel, extra="forbid"):
 
     @cached_property
     def adapter_path_or_first_ckpt_path(self) -> Path:
+        assert self.should_load_adapter, "Adapter path is not set"
+
         if (self.adapter_path / "adapter_model.safetensors").exists():
             return self.adapter_path
 
@@ -79,6 +82,12 @@ class DatasetInfoExtractionConfig(BaseModel, extra="forbid"):
         deprecated=True,
         desc="Legacy, prompt now is defined outside",
     )
+    language: Literal["pl", "en"]
+    prompt_field: str | None = Field(
+        default=None,
+        deprecated=True,
+        desc="Legacy, prompt now is defined outside",
+    )
     context_field: str
     output_field: str
     max_output_tokens: int
@@ -93,6 +102,10 @@ class RawDatasetConfig(BaseModel, extra="forbid"):
 
 
 class FineTuningConfig(BaseModel, extra="forbid"):
+    llm: LLMConfig
+    dataset: DatasetInfoExtractionConfig
+    prompt: PromptInfoExtractionConfig
+    ie_schema: dict[str, dict[str, Any]]
     llm: LLMConfig
     dataset: DatasetInfoExtractionConfig
     prompt: PromptInfoExtractionConfig
@@ -119,9 +132,11 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     ie_schema: dict[str, dict[str, Any]]
     device_map: str
     output_dir: Path
+    max_model_len: int | None = None
     truncate_context: bool
     generate_kwargs: dict[str, Any] = Field(default_factory=dict)
     random_seed: int
+    parallel: Literal["tensor", "pipeline"] | None = None
 
     @property
     def predictions_file(self) -> Path:
@@ -137,7 +152,14 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
         """Path to the file with config."""
         return self.output_dir / "config.yaml"
 
-    def get_max_input_length_accounting_for_output(self, max_position_embeddings: int) -> int:
+    def get_max_input_length_accounting_for_output(
+        self,
+        max_position_embeddings: int | None,
+    ) -> int:
+        if max_position_embeddings is None:
+            assert self.max_model_len is not None
+            max_position_embeddings = self.max_model_len
+
         return max_position_embeddings - self.dataset.max_output_tokens
 
 
@@ -153,7 +175,7 @@ class EmbeddingConfig(BaseModel, extra="forbid"):
     num_output_shards: int
     ingest_batch_size: int = 32
     upsert: bool = True
-    default_column_values: Optional[dict[str, Any]] = None
+    default_column_values: dict[str, Any] | None = None
 
     @property
     def chunk_embeddings_dir(self) -> Path:

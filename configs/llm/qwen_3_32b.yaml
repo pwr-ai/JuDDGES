@@ -1,0 +1,8 @@
+name: Qwen/Qwen3-32B
+tokenizer_name: ${.name}
+adapter_path: null
+batch_size: 1
+padding: longest
+use_4bit: false
+use_unsloth: false
+chat_template_kwargs: {"enable_thinking": false}

@@ -92,7 +92,7 @@ def test_load_config_peft_fine_tuning(llm: str, dataset: str, prompt: str, ie_sc
 def test_load_config_predict(llm: str, dataset: str, prompt: str, ie_schema: str):
     with initialize(version_base=None, config_path="../configs", job_name="test"):
         raw_cfg = compose(
-            config_name="predict",
+            config_name="predict_vllm",
             overrides=[
                 f"llm={llm}",
                 f"dataset={dataset}",
