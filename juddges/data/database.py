@@ -67,9 +67,9 @@ class MongoInterface:
         upsert: bool = True,
     ) -> BulkWriteResult:
         assert self.collection is not None, "Collection not initialized"
-
         update_batch = [
-            UpdateOne({"_id": doc["_id"]}, {"$set": doc}, upsert=upsert) for doc in documents
+            UpdateOne({"_id": doc["judgment_id"]}, {"$set": doc}, upsert=upsert)
+            for doc in documents
         ]
 
         try:

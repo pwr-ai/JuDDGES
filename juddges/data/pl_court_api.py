@@ -71,18 +71,15 @@ class PolishCourtAPI:
         }
 
     @property
-    def universal_schema(self) -> list[str]:
-        return list(set(self.api_schema_to_universal_schema.values()))
-
-    @property
     def source(self) -> str:
         return "pl-court"
 
     def map_doc_to_universal_schema(self, doc: dict[str, Any]) -> dict[str, Any]:
+        source_schema_keys = self.api_schema_to_universal_schema.keys()
         mapped_doc = {
             self.api_schema_to_universal_schema[k]: v
             for k, v in doc.items()
-            if k in self.universal_schema
+            if k in source_schema_keys
         }
         mapped_doc["source"] = self.source
         return mapped_doc

@@ -174,7 +174,7 @@ def fetch_judgment_metadata(offset: int, batch_size: int, date_from: str) -> lis
         "limit": batch_size,
         "offset": offset,
     }
-    return api.get_judgements(params=params)
+    return api.get_judgments(params=params)
 
 
 @task(
