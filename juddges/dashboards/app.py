@@ -3,6 +3,7 @@ import streamlit as st
 st.set_page_config(page_title="JuDDGES", page_icon="⚖️", layout="wide")
 
 project_info_page = st.Page("project_info.py", title="Project Info", icon="💡")
+agent_selection_page = st.Page("agent_selection.py", title="AI Agents", icon="🤖")
 search_judgments_page = st.Page("search_judgments.py", title="Search Judgments", icon="🔍")
 extract_information_from_judgments_page = st.Page(
     "extract_information_from_judgments.py", title="Extract Information", icon="📄"
@@ -14,6 +15,7 @@ linie_orzecznicze_page = st.Page("linie_orzecznicze.py", title="Linie Orzecznicz
 
 sections = {
     "Project Info": [project_info_page],
+    "AI Agents": [agent_selection_page],
     "Search Judgments": [search_judgments_page],
     "Extract Information": [extract_information_from_judgments_page],
     "Analyse Information": [linie_orzecznicze_page, analyse_extracted_information_page],

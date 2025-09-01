@@ -33,9 +33,9 @@ def signal_handler(signum, frame):
     _ = signum, frame  # Suppress unused parameter warnings
     global _active_ingester
     console = Console()
-    
+
     console.print("\n[bold red]⚠️ Process interrupted by user[/bold red]")
-    
+
     if _active_ingester:
         try:
             console.print("[yellow]Closing Weaviate connection...[/yellow]")
@@ -43,7 +43,7 @@ def signal_handler(signum, frame):
             console.print("[green]✓ Weaviate connection closed properly[/green]")
         except Exception as e:
             console.print(f"[red]Error closing connection: {e}[/red]")
-    
+
     sys.exit(1)
 
 
@@ -730,7 +730,7 @@ def main():
             # Display final statistics
             console.print("\n")
             display_final_stats(stats, tracker_stats)
-            
+
             # Clear the active ingester reference
             _active_ingester = None
 
