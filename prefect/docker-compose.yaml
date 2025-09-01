@@ -1,0 +1,16 @@
+# Run with: UID=$(id -u) GID=$(id -g) docker compose up -d
+services:
+  prefect-deployment:
+    container_name: prefect-deployment
+    build:
+      context: ..
+      dockerfile: prefect/update_pl_court.dockerfile
+      args:
+        USER_UID: "${UID:-1000}"
+        USER_GID: "${GID:-1000}"
+    image: prefect-update-pl-court
+    user: "${UID}:${GID}"
+    env_file:
+      - ../.env
+    volumes:
+      - ../data:/juddges/data
