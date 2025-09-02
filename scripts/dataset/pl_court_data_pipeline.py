@@ -215,6 +215,11 @@ def fetch_judgment_details(judgment_id: str) -> dict[str, Any]:
 def save_or_update_judgments_in_db(judgements: list[dict[str, Any]]) -> None:
     api = PolishCourtAPI()
     judgements = [api.map_doc_to_universal_schema(doc=doc) for doc in judgements]
+    # add _id to each document for mongodb compatibility
+
+    for judgement in judgements:
+        judgement["_id"] = judgement["judgment_id"]
+
     with MongoInterface(
         uri=MONGO_URI,
         db_name=MONGO_DB_NAME,

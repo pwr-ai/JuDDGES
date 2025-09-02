@@ -69,7 +69,7 @@ class MongoInterface:
         assert self.collection is not None, "Collection not initialized"
         update_batch = [
             UpdateOne(
-                filter={"_id": doc["judgment_id"]},
+                filter={"_id": doc["_id"]},
                 update={"$set": doc},
                 upsert=upsert,
             )
