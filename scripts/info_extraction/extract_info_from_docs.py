@@ -20,7 +20,8 @@ from openai import (
     LengthFinishReasonError,
     RateLimitError,
 )
-from pydantic import BaseModel, model_validator
+from openai.types.chat.chat_completion import ChatCompletion
+from pydantic import BaseModel, Field, model_validator
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -37,7 +38,7 @@ load_dotenv()
 app = typer.Typer()
 
 MONGO_URI = os.environ["MONGO_URI"]
-
+MODEL_KWARGS = {"extra_body": {"thinking": {"budget_tokens": 0}}}
 DEFAULT_MAX_CONCURRENT_CALLS = 25
 DEFAULT_BATCH_SIZE = 50
 DEFAULT_FILTER_QUERY = {
@@ -76,27 +77,17 @@ def main(
     else:
         parsed_filter_query = DEFAULT_FILTER_QUERY
 
-    schema = load_yaml(schema_path)
-    prompt = load_yaml(prompt_path)["content"]
-
-    client = ChatOpenAI(
-        api_key=OPENAI_API_KEY,
-        base_url=LLM_BASE_URL,
-        model=model,
+    llm_config = LLMConfig(llm_name=model)
+    prompt_config = PromptConfig(
+        prompt_id=prompt_path.stem,
+        schema_id=schema_path.stem,
+        prompt=load_yaml(prompt_path)["content"],
+        ie_schema=load_yaml(schema_path),
     )
 
-    metadata = {
-        "schema_id": schema_path.stem,
-        "schema_hash": InfoExtractionResults.get_schema_hash(schema),
-        "prompt_id": prompt_path.stem,
-        "prompt_hash": InfoExtractionResults.get_prompt_hash(prompt),
-    }
-
     extractor = InformationExtractor(
-        client=client,
-        schema=schema,
-        prompt_template=prompt,
-        metadata=metadata,
+        llm_config=llm_config,
+        prompt_config=prompt_config,
         max_concurrent_calls=max_concurrent_calls,
     )
 
@@ -127,34 +118,101 @@ def main(
             logger.info("Exiting...")
 
 
-class ApiRequestInfo(BaseModel):
-    model: str
+class LLMConfig(BaseModel):
+    id: str | None = None
+    llm_name: str
+    kwargs: dict[str, Any] = Field(default_factory=lambda: MODEL_KWARGS)
+
+    @model_validator(mode="after")
+    def set_id(self) -> "LLMConfig":
+        id_ = _compute_md5_hash(
+            self.llm_name,
+            self.kwargs,
+        )
+
+        if self.id is not None:
+            assert self.id == id_
+
+        self.id = id_
+        return self
+
+
+class PromptConfig(BaseModel):
+    id: str | None = None
+    prompt_id: str
+    schema_id: str
+    prompt: str | None = Field(None, exclude=True)
+    ie_schema: dict[str, Any] | None = Field(None, exclude=True)
+
+    @model_validator(mode="after")
+    def set_id(self) -> "PromptConfig":
+        id_ = _compute_md5_hash(
+            self.prompt_id,
+            self.schema_id,
+        )
+
+        if self.id is not None:
+            assert self.prompt is not None
+            assert self.ie_schema is not None
+            assert self.id == id_
+
+        self.id = id_
+        return self
+
+
+class CompletionMetadata(BaseModel):
     prompt_tokens: int
     completion_tokens: int
-    reasoning_tokens: int
+    reasoning_tokens: int | None
     finish_reason: str | None
 
+    @classmethod
+    def from_oai_response_metadata(cls, response_metadata: dict[str, Any]) -> "CompletionMetadata":
+        token_usage = response_metadata["token_usage"]
+        completion_tokens_details = token_usage.get("completion_tokens_details") or {}
+        return cls(
+            prompt_tokens=token_usage["prompt_tokens"],
+            completion_tokens=token_usage["completion_tokens"],
+            reasoning_tokens=completion_tokens_details.get("reasoning_tokens"),
+            finish_reason=response_metadata["finish_reason"],
+        )
 
-class InfoExtractionResults(BaseModel):
+    @classmethod
+    def from_chat_completion(
+        cls,
+        chat_completion: ChatCompletion,
+        finish_reason: str,
+    ) -> "CompletionMetadata":
+        completion_tokens_details = chat_completion.usage.completion_tokens_details
+        if completion_tokens_details is None:
+            reasoning_tokens = None
+        else:
+            reasoning_tokens = completion_tokens_details.reasoning_tokens
+        return cls(
+            prompt_tokens=chat_completion.usage.prompt_tokens,
+            completion_tokens=chat_completion.usage.completion_tokens,
+            reasoning_tokens=reasoning_tokens,
+            finish_reason=finish_reason,
+        )
+
+
+class ExtractionResults(BaseModel):
     id: str | None = None
     document_id: str
-    prompt_id: str
-    prompt_hash: str
-    schema_id: str
-    schema_hash: str
-    api_request_info: ApiRequestInfo
+    llm_config: LLMConfig
+    prompt_config: PromptConfig
+    completion_metadata: CompletionMetadata | None
     created_at: datetime
     status: Literal["success", "error"]
     error: str | None = None
-    extraction_result: dict[str, Any] | None = None
+    extracted: dict[str, Any] | None = None
 
     @model_validator(mode="after")
-    def set_id(self) -> "InfoExtractionResults":
-        id_ = self.get_id(
-            self.prompt_hash,
-            self.schema_hash,
+    def set_id(self) -> "ExtractionResults":
+        id_ = self.compute_id(
+            self.llm_config,
+            self.prompt_config,
             self.document_id,
-            self.api_request_info.model,
         )
 
         if self.id is not None:
@@ -164,49 +222,52 @@ class InfoExtractionResults(BaseModel):
         return self
 
     @staticmethod
-    def get_prompt_hash(prompt_template: str) -> str:
-        return hashlib.md5(prompt_template.encode("utf-8")).hexdigest()
-
-    @staticmethod
-    def get_schema_hash(schema: dict[str, Any]) -> str:
-        return hashlib.md5(json.dumps(schema, sort_keys=True).encode("utf-8")).hexdigest()
-
-    @staticmethod
-    def get_id(prompt_hash: str, schema_hash: str, document_id: str, model: str) -> str:
-        concat_str = f"{prompt_hash}-{schema_hash}-{document_id}-{model}"
-        return hashlib.md5(concat_str.encode("utf-8")).hexdigest()
+    def compute_id(
+        model_config: LLMConfig,
+        prompt_config: PromptConfig,
+        document_id: str,
+    ) -> str:
+        # defined for consistency
+        return _compute_md5_hash(
+            model_config.id,
+            prompt_config.id,
+            document_id,
+        )
 
 
 class InformationExtractor:
     def __init__(
         self,
-        client: ChatOpenAI,
-        schema: dict[str, Any],
-        prompt_template: str,
-        metadata: dict[str, Any],
+        llm_config: LLMConfig,
+        prompt_config: PromptConfig,
         max_concurrent_calls: int,
     ):
-        self.prompt_template = PromptTemplate.from_template(
-            prompt_template,
-            template_format="f-string",
-        )
+        self.llm_config = llm_config
+        self.prompt_config = prompt_config
 
-        self.client = client.with_structured_output(
-            self.raw_schema_to_structured_output(schema),
+        client = ChatOpenAI(
+            api_key=OPENAI_API_KEY,
+            base_url=LLM_BASE_URL,
+            model=self.llm_config.llm_name,
+            **self.llm_config.kwargs,
+        )
+        client = client.with_structured_output(
+            self.raw_schema_to_structured_output(self.prompt_config.ie_schema),
             method="json_schema",
             strict=True,
             include_raw=True,
         )
-        self.chain = self.prompt_template | self.client
+        prompt_template = PromptTemplate.from_template(
+            self.prompt_config.prompt,
+            template_format="f-string",
+        )
+        self.chain = prompt_template | client
         self.semaphore = asyncio.Semaphore(max_concurrent_calls)
-
-        self.model_name = client.model_name
-        self.metadata = metadata
 
     async def __call__(
         self,
         documents: list[dict[str, Any]],
-    ) -> list[InfoExtractionResults]:
+    ) -> list[ExtractionResults]:
         return await asyncio.gather(
             *[self.extract_information(doc) for doc in documents],
         )
@@ -218,7 +279,7 @@ class InformationExtractor:
         stop=stop_after_attempt(5),
         wait=wait_random_exponential(multiplier=1, min=1, max=60),
     )
-    async def extract_information(self, document: dict[str, Any]) -> InfoExtractionResults:
+    async def extract_information(self, document: dict[str, Any]) -> ExtractionResults:
         assert (field in document for field in ["_id", "full_text"])
 
         async with self.semaphore:
@@ -228,59 +289,46 @@ class InformationExtractor:
                         "context": document["full_text"],
                     }
                 )
-                token_usage = result["raw"].response_metadata["token_usage"]
 
-                return InfoExtractionResults(
-                    **self.metadata,
+                return ExtractionResults(
                     document_id=document["_id"],
-                    api_request_info=ApiRequestInfo(
-                        model=self.model_name,
-                        prompt_tokens=token_usage["prompt_tokens"],
-                        completion_tokens=token_usage["completion_tokens"],
-                        reasoning_tokens=(
-                            token_usage.get("completion_tokens_details", {}).get("reasoning_tokens")
-                        ),
-                        finish_reason=result["raw"].response_metadata["finish_reason"],
+                    llm_config=self.llm_config,
+                    prompt_config=self.prompt_config,
+                    completion_metadata=CompletionMetadata.from_oai_response_metadata(
+                        result["raw"].response_metadata
                     ),
                     created_at=datetime.now(),
                     status="success",
-                    extraction_result=result["parsed"],
+                    extracted=result["parsed"],
                 )
 
             except (BadRequestError, ContentFilterFinishReasonError) as err:
                 logger.error(f"Error processing document {document['_id']}: {err}")
-                return InfoExtractionResults(
-                    **self.metadata,
+                return ExtractionResults(
                     document_id=document["_id"],
-                    api_request_info=ApiRequestInfo(
-                        model=self.model_name,
-                        prompt_tokens=0,
-                        completion_tokens=0,
-                        reasoning_tokens=0,
-                        finish_reason=None,
-                    ),
+                    llm_config=self.llm_config,
+                    prompt_config=self.prompt_config,
+                    completion_metadata=None,
                     created_at=datetime.now(),
                     status="error",
                     error=str(err),
-                    extraction_result=None,
+                    extracted=None,
                 )
 
             except LengthFinishReasonError as err:
                 logger.error(f"Error processing document {document['_id']}: {err}")
-                return InfoExtractionResults(
-                    **self.metadata,
+                return ExtractionResults(
                     document_id=document["_id"],
-                    api_request_info=ApiRequestInfo(
-                        model=self.model_name,
-                        prompt_tokens=err.completion.usage.prompt_tokens,
-                        completion_tokens=err.completion.usage.completion_tokens,
-                        reasoning_tokens=err.completion.usage.completion_tokens_details.reasoning_tokens,
-                        finish_reason="length_finish_reason_error",
+                    llm_config=self.llm_config,
+                    prompt_config=self.prompt_config,
+                    completion_metadata=CompletionMetadata.from_chat_completion(
+                        err.completion,
+                        "length_finish_reason_error",
                     ),
                     created_at=datetime.now(),
                     status="error",
                     error=str(err),
-                    extraction_result=None,
+                    extracted=None,
                 )
 
     @staticmethod
@@ -371,11 +419,10 @@ class CollectionProcessor:
         batch: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         ids = [
-            InfoExtractionResults.get_id(
-                info_extractor.metadata["prompt_hash"],
-                info_extractor.metadata["schema_hash"],
+            ExtractionResults.compute_id(
+                info_extractor.llm_config,
+                info_extractor.prompt_config,
                 doc["_id"],
-                info_extractor.model_name,
             )
             for doc in batch
         ]
@@ -391,7 +438,7 @@ class CollectionProcessor:
 
     async def store_results(
         self,
-        results: list[InfoExtractionResults],
+        results: list[ExtractionResults],
     ) -> None:
         docs_to_save = []
         for res in results:
@@ -401,6 +448,19 @@ class CollectionProcessor:
 
         if docs_to_save:
             self.output_db.update_or_insert_documents(docs_to_save)
+
+
+def _compute_md5_hash(*values) -> str:
+    processed_values = []
+    for value in values:
+        if isinstance(value, dict | list):
+            processed_values.append(json.dumps(value, sort_keys=True))
+        elif isinstance(value, int | float | str):
+            processed_values.append(str(value))
+        else:
+            raise ValueError(f"Unsupported type for md5 hash: {type(value)}")
+
+    return hashlib.md5(f"{'-'.join(processed_values)}".encode("utf-8")).hexdigest()
 
 
 if __name__ == "__main__":
