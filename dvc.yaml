@@ -303,7 +303,7 @@ stages:
       data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
     deps:
       - scripts/evaluation/ngram_based_eval.py
-      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
     outs:
       - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/scores_ngram.json
 
@@ -319,7 +319,7 @@ stages:
       --judge-model=${item.judge_llm}
     deps:
       - scripts/evaluation/llm_as_judge.py
-      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}
+      - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/predictions.json
     outs:
       - data/experiments/predict/raw_vllm/${item.llm_dataset.dataset}/${item.llm_dataset.split}/${item.llm_dataset.llm}/${item.llm_dataset.prompt}/${item.llm_dataset.ie_schema}/seed_${item.seed}/judge_${item.judge_llm}
 
