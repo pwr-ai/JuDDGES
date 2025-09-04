@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import hashlib
 import json
@@ -7,13 +8,25 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
+import httpx
 import typer
 from dotenv import load_dotenv
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from loguru import logger
-from openai import BadRequestError
+from openai import (
+    BadRequestError,
+    ContentFilterFinishReasonError,
+    LengthFinishReasonError,
+    RateLimitError,
+)
 from pydantic import BaseModel, model_validator
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 from tqdm import tqdm
 
 from juddges.data.database import BatchedDatabaseCursor, MongoInterface
@@ -25,9 +38,13 @@ app = typer.Typer()
 
 MONGO_URI = os.environ["MONGO_URI"]
 
-DEFAULT_MAX_CONCURRENT_CALLS = 20
+DEFAULT_MAX_CONCURRENT_CALLS = 25
 DEFAULT_BATCH_SIZE = 50
-DEFAULT_FILTER_QUERY = {"full_text": {"$ne": None}}
+DEFAULT_FILTER_QUERY = {
+    "full_text": {"$ne": None},
+    "last_update": {"$gte": datetime(2025, 8, 1)},
+    "judgment_type": {"$regex": "REASON", "$options": "i"},
+}
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 LLM_BASE_URL = os.environ["LLM_BASE_URL"]
@@ -50,7 +67,15 @@ def main(
         DEFAULT_BATCH_SIZE, help="Number of documents to process in each batch"
     ),
     model: str = typer.Option(..., help="LLM model to use"),
+    filter_query: str = typer.Option(
+        None, help='MongoDB filter query as string (e.g., \'{"field": "value"}\')'
+    ),
 ) -> None:
+    if filter_query:
+        parsed_filter_query = ast.literal_eval(filter_query)
+    else:
+        parsed_filter_query = DEFAULT_FILTER_QUERY
+
     schema = load_yaml(schema_path)
     prompt = load_yaml(prompt_path)["content"]
 
@@ -91,11 +116,15 @@ def main(
     )
 
     with collection_processor:
-        collection_processor.process_collection(
-            info_extractor=extractor,
-            batch_size=batch_size,
-            filter_query=DEFAULT_FILTER_QUERY,
-        )
+        total_docs_to_process = collection_processor.get_total_docs_to_process(parsed_filter_query)
+        if typer.confirm(f"Total documents to process: {total_docs_to_process}. Continue?"):
+            collection_processor.process_collection(
+                info_extractor=extractor,
+                batch_size=batch_size,
+                filter_query=parsed_filter_query,
+            )
+        else:
+            logger.info("Exiting...")
 
 
 class ApiRequestInfo(BaseModel):
@@ -182,6 +211,13 @@ class InformationExtractor:
             *[self.extract_information(doc) for doc in documents],
         )
 
+    @retry(
+        retry=retry_if_exception_type(
+            (RateLimitError, httpx.ConnectError, httpx.TimeoutException, ConnectionError)
+        ),
+        stop=stop_after_attempt(5),
+        wait=wait_random_exponential(multiplier=1, min=1, max=60),
+    )
     async def extract_information(self, document: dict[str, Any]) -> InfoExtractionResults:
         assert (field in document for field in ["_id", "full_text"])
 
@@ -211,7 +247,7 @@ class InformationExtractor:
                     extraction_result=result["parsed"],
                 )
 
-            except BadRequestError as err:
+            except (BadRequestError, ContentFilterFinishReasonError) as err:
                 logger.error(f"Error processing document {document['_id']}: {err}")
                 return InfoExtractionResults(
                     **self.metadata,
@@ -222,6 +258,24 @@ class InformationExtractor:
                         completion_tokens=0,
                         reasoning_tokens=0,
                         finish_reason=None,
+                    ),
+                    created_at=datetime.now(),
+                    status="error",
+                    error=str(err),
+                    extraction_result=None,
+                )
+
+            except LengthFinishReasonError as err:
+                logger.error(f"Error processing document {document['_id']}: {err}")
+                return InfoExtractionResults(
+                    **self.metadata,
+                    document_id=document["_id"],
+                    api_request_info=ApiRequestInfo(
+                        model=self.model_name,
+                        prompt_tokens=err.completion.usage.prompt_tokens,
+                        completion_tokens=err.completion.usage.completion_tokens,
+                        reasoning_tokens=err.completion.usage.completion_tokens_details.reasoning_tokens,
+                        finish_reason="length_finish_reason_error",
                     ),
                     created_at=datetime.now(),
                     status="error",
@@ -275,6 +329,9 @@ class CollectionProcessor:
     ) -> None:
         asyncio.run(self.process_collection_async(info_extractor, batch_size, filter_query))
 
+    def get_total_docs_to_process(self, filter_query: dict[str, Any]) -> int:
+        return self.input_db.collection.count_documents(filter_query)
+
     async def process_collection_async(
         self,
         info_extractor: InformationExtractor,
@@ -282,13 +339,12 @@ class CollectionProcessor:
         filter_query: dict[str, Any],
     ) -> None:
         with self.input_db, self.output_db:
-            total_docs_to_process = 500
-
+            total_docs_to_process = self.get_total_docs_to_process(filter_query)
             cursor = self.input_db.collection.find(
                 filter_query,
                 {"_id": 1, "full_text": 1},
                 batch_size=batch_size,
-            ).limit(total_docs_to_process)
+            )
 
             batched_cursor = BatchedDatabaseCursor(cursor, batch_size, prefetch=False)
 
