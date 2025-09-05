@@ -6,6 +6,8 @@ import xmltodict
 from loguru import logger
 from requests import HTTPError
 
+from juddges.utils.date_utils import process_judgment_dates
+
 
 class PolishCourtAPI:
     def __init__(self) -> None:
@@ -103,7 +105,7 @@ class PolishCourtAPI:
         res = requests.get(endpoint, params=params)
         res.raise_for_status()
         judgements = xmltodict.parse(res.content.decode("utf-8"))["judgements"]["judgement"]
-
+        judgements = [process_judgment_dates(judgment) for judgment in judgements]
         assert isinstance(judgements, list)
 
         return judgements
