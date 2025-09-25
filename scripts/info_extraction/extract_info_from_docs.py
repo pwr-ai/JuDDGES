@@ -35,15 +35,19 @@ from juddges.utils.misc import load_yaml
 
 load_dotenv()
 
-app = typer.Typer()
+_GEMINI_DISABLE_THINKING_KWARGS = {"extra_body": {"thinking": {"budget_tokens": 0}}}
+_GEMINI_MINIMAL_THINKING_KWARGS = {"extra_body": {"thinking": {"budget_tokens": 128}}}
+MODEL_KWARGS = {
+    "gemini-2.5-flash": _GEMINI_DISABLE_THINKING_KWARGS,
+    "gemini-2.5-pro": _GEMINI_MINIMAL_THINKING_KWARGS,
+}
+
 
 MONGO_URI = os.environ["MONGO_URI"]
-MODEL_KWARGS = {"extra_body": {"thinking": {"budget_tokens": 0}}}
-DEFAULT_MAX_CONCURRENT_CALLS = 25
+DEFAULT_MAX_CONCURRENT_CALLS = 10
 DEFAULT_BATCH_SIZE = 50
 DEFAULT_FILTER_QUERY = {
     "full_text": {"$ne": None},
-    "last_update": {"$gte": datetime(2025, 8, 1)},
     "judgment_type": {"$regex": "REASON", "$options": "i"},
 }
 
@@ -51,10 +55,9 @@ OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 LLM_BASE_URL = os.environ["LLM_BASE_URL"]
 
 
-@app.command()
 def main(
     schema_path: Path = typer.Option(..., help="Path to JSON schema file"),
-    prompt_path: Path = typer.Option(..., help="Path to prompt JSON file"),
+    prompt_path: Path = typer.Option(..., help="Path to prompt file"),
     input_mongo_uri: str = typer.Option(MONGO_URI, help="Input MongoDB connection URI"),
     input_db_name: str = typer.Option(..., help="Input MongoDB database name"),
     input_collection_name: str = typer.Option(..., help="Input MongoDB collection name"),
@@ -68,14 +71,23 @@ def main(
         DEFAULT_BATCH_SIZE, help="Number of documents to process in each batch"
     ),
     model: str = typer.Option(..., help="LLM model to use"),
-    filter_query: str = typer.Option(
+    document_filter_query: str = typer.Option(
         None, help='MongoDB filter query as string (e.g., \'{"field": "value"}\')'
     ),
+    input_ids_file: Path = typer.Option(None, help="Path to file with input IDs"),
 ) -> None:
-    if filter_query:
-        parsed_filter_query = ast.literal_eval(filter_query)
+    if document_filter_query:
+        filter_query = ast.literal_eval(document_filter_query)
     else:
-        parsed_filter_query = DEFAULT_FILTER_QUERY
+        filter_query = DEFAULT_FILTER_QUERY
+
+    if input_ids_file:
+        with open(input_ids_file, "r") as f:
+            input_ids = f.read().splitlines()
+        assert (
+            "_id" not in filter_query
+        ), "'_id' cannot be in the filter query if input IDs are provided"
+        filter_query["_id"] = {"$in": input_ids}
 
     llm_config = LLMConfig(llm_name=model)
     prompt_config = PromptConfig(
@@ -107,12 +119,12 @@ def main(
     )
 
     with collection_processor:
-        total_docs_to_process = collection_processor.get_total_docs_to_process(parsed_filter_query)
+        total_docs_to_process = collection_processor.get_total_docs_to_process(filter_query)
         if typer.confirm(f"Total documents to process: {total_docs_to_process}. Continue?"):
             collection_processor.process_collection(
                 info_extractor=extractor,
                 batch_size=batch_size,
-                filter_query=parsed_filter_query,
+                filter_query=filter_query,
             )
         else:
             logger.info("Exiting...")
@@ -121,7 +133,7 @@ def main(
 class LLMConfig(BaseModel):
     id: str | None = None
     llm_name: str
-    kwargs: dict[str, Any] = Field(default_factory=lambda: MODEL_KWARGS)
+    kwargs: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def set_id(self) -> "LLMConfig":
@@ -134,6 +146,12 @@ class LLMConfig(BaseModel):
             assert self.id == id_
 
         self.id = id_
+
+        if self.llm_name not in MODEL_KWARGS:
+            kwargs = MODEL_KWARGS[self.llm_name]
+            self.kwargs |= kwargs
+            logger.info(f"Adding default kwargs for {self.llm_name}: {kwargs}")
+
         return self
 
 
@@ -356,6 +374,8 @@ class InformationExtractor:
 
 
 class CollectionProcessor:
+    """Processes a collection of documents from one database and stores results in another."""
+
     def __init__(self, input_db: MongoInterface, output_db: MongoInterface):
         self.input_db = input_db
         self.output_db = output_db
@@ -464,4 +484,4 @@ def _compute_md5_hash(*values) -> str:
 
 
 if __name__ == "__main__":
-    app()
+    typer.run(main)
