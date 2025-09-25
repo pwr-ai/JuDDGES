@@ -174,7 +174,7 @@ def fetch_judgment_metadata(offset: int, batch_size: int, date_from: str) -> lis
         "limit": batch_size,
         "offset": offset,
     }
-    return api.get_judgements(params=params)
+    return api.get_judgments(params=params)
 
 
 @task(
@@ -221,7 +221,7 @@ def save_or_update_judgments_in_db(judgements: list[dict[str, Any]]) -> None:
         collection_name=MONGO_COLLECTION_NAME,
         batch_size=BATCH_SIZE,
     ) as db:
-        db.update_documents(judgements)
+        db.update_or_insert_documents(judgements, upsert=True)
 
 
 @task(
