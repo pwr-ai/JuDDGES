@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import os
 from copy import deepcopy
@@ -31,8 +32,9 @@ from tenacity import (
     wait_random_exponential,
 )
 from tqdm import tqdm
+from tqdm.asyncio import tqdm as tqdm_async
 
-from juddges.utils.misc import load_yaml
+from juddges.utils.misc import load_yaml, save_yaml
 
 load_dotenv()
 
@@ -47,7 +49,7 @@ LANGCHAIN_CACHE = ".langchain_cache.db"
 DEFAULT_MAX_CONCURRENT_CALLS = 5
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-LLM_BASE_URL = os.environ["LLM_BASE_URL"]
+OPENAI_API_BASE_URL = os.environ["OPENAI_API_BASE_URL"]
 
 
 def main(
@@ -65,14 +67,15 @@ def main(
     skip_cost_estimation: bool = typer.Option(False, help="Skip cost estimation"),
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = (
-        output_dir
-        / f"{dataset_name.replace('/', '_')}__split_{dataset_split}__model_{model.replace('/', '_')}"
-        f"__prompt_{prompt_path.stem}__schema_{schema_path.stem}.json"
-    )
+    preds_with_metadata_output_file = output_dir / "predictions_with_metadata.json"
+    preds_output_file = output_dir / "predictions.json"
+
     assert (
-        not output_file.exists()
-    ), f"Output file {output_file} already exists, remove stale outputs first"
+        not preds_with_metadata_output_file.exists()
+    ), f"Output fil {preds_with_metadata_output_file} already exists, remove stale outputs first"
+    assert (
+        not preds_output_file.exists()
+    ), f"Output fil {preds_output_file} already exists, remove stale outputs first"
 
     logger.info(f"Preparing dataset {dataset_name} (split: {dataset_split})...")
     dataset = prepare_dataset(
@@ -82,17 +85,18 @@ def main(
         id_column,
     )
 
-    llm_config = LLMConfig(llm_name=model)
-    prompt_config = PromptConfig(
+    schema = load_yaml(schema_path)
+    prompt = load_yaml(prompt_path)
+    config = Config(
+        llm_name=model,
         prompt_file=prompt_path,
         schema_file=schema_path,
-        prompt=load_yaml(prompt_path)["content"],
-        ie_schema=load_yaml(schema_path),
+        prompt=prompt["content"],
+        ie_schema=schema,
     )
 
     extractor = InformationExtractor(
-        llm_config=llm_config,
-        prompt_config=prompt_config,
+        config=config,
         max_concurrent_calls=max_concurrent_calls,
     )
 
@@ -103,7 +107,7 @@ def main(
         logger.info("Skipping cost estimation")
         cost = "<skipped>"
 
-    if typer.confirm(f"Estimated prefill cost: {cost}. Continue?"):
+    if typer.confirm(f"Estimated prefill cost: {cost}. Continue?", default=True):
         logger.info(f"Starting processing {len(dataset)} documents...")
         all_results = asyncio.run(
             extractor.extract_from_dataset(
@@ -111,8 +115,22 @@ def main(
             )
         )
 
-        logger.info(f"Saving results to {output_file}...")
-        save_results(all_results, output_file)
+        logger.info(f"Saving results to {preds_with_metadata_output_file}...")
+        save_results(all_results, preds_with_metadata_output_file)
+
+        logger.info(f"Saving formatted predictions to {preds_output_file}...")
+        all_results_indexed = {res.document_id: res for res in all_results}
+        eval_compatible_preds = []
+        for doc in dataset:
+            eval_compatible_preds.append(
+                {
+                    "answer": json.dumps(all_results_indexed[doc["id"]].extracted),
+                    "gold": doc["output"],
+                }
+            )
+        with open(preds_output_file, "w") as f:
+            json.dump(eval_compatible_preds, f, indent=2, ensure_ascii=False)
+        save_yaml(config.model_dump(), output_dir / "config.yaml")
 
 
 def prepare_dataset(
@@ -137,29 +155,27 @@ def prepare_dataset(
     else:
         assert "id" in dataset.column_names
 
-    dataset = dataset.remove_columns(set(dataset.column_names) - {"context", "id"})
-
     return dataset
 
 
-class LLMConfig(BaseModel):
-    llm_name: str
-    kwargs: dict[str, Any] = Field(default_factory=dict)
-
-    @model_validator(mode="after")
-    def set_llm_kwargs(self) -> "LLMConfig":
-        if self.llm_name in MODEL_KWARGS:
-            kwargs = MODEL_KWARGS[self.llm_name]
-            self.kwargs |= kwargs
-
-        return self
-
-
-class PromptConfig(BaseModel):
+class Config(BaseModel):
+    hash: str | None = Field(None)
     prompt_file: Path
     schema_file: Path
-    prompt: str | None = Field(None, exclude=True)
-    ie_schema: dict[str, Any] | None = Field(None, exclude=True)
+    prompt: str
+    ie_schema: dict[str, Any]
+    llm_name: str
+    llm_kwargs: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def set_llm_kwargs(self) -> "Config":
+        if self.llm_name in MODEL_KWARGS:
+            kwargs = MODEL_KWARGS[self.llm_name]
+            self.llm_kwargs |= kwargs
+
+        self.hash = hashlib.sha256(self.model_dump_json(exclude={"hash"}).encode()).hexdigest()
+
+        return self
 
     @property
     def template_format(self) -> Literal["f-string", "jinja2"]:
@@ -209,8 +225,7 @@ class CompletionMetadata(BaseModel):
 
 class ExtractionResults(BaseModel):
     document_id: int | str
-    llm_config: LLMConfig
-    prompt_config: PromptConfig
+    config_hash: str
     completion_metadata: CompletionMetadata | None
     created_at: datetime
     status: Literal["success", "error"]
@@ -221,29 +236,27 @@ class ExtractionResults(BaseModel):
 class InformationExtractor:
     def __init__(
         self,
-        llm_config: LLMConfig,
-        prompt_config: PromptConfig,
+        config: Config,
         max_concurrent_calls: int,
     ):
-        self.llm_config = llm_config
-        self.prompt_config = prompt_config
+        self.config = config
 
         client = ChatOpenAI(
             openai_api_key=OPENAI_API_KEY,
-            openai_api_base=LLM_BASE_URL,
-            model_name=self.llm_config.llm_name,
-            **self.llm_config.kwargs,
+            openai_api_base=OPENAI_API_BASE_URL,
+            model_name=self.config.llm_name,
+            **self.config.llm_kwargs,
         )
         set_llm_cache(SQLiteCache(str(LANGCHAIN_CACHE)))
         client = client.with_structured_output(
-            self.raw_schema_to_structured_output(self.prompt_config.ie_schema),
+            self.raw_schema_to_structured_output(self.config.ie_schema),
             method="json_schema",
             strict=True,
             include_raw=True,
         )
         self.prompt_template = PromptTemplate.from_template(
-            self.prompt_config.prompt,
-            template_format=self.prompt_config.template_format,
+            self.config.prompt,
+            template_format=self.config.template_format,
         )
         assert set(self.prompt_template.input_variables) == {"context"}
         self.chain = self.prompt_template | client
@@ -253,7 +266,7 @@ class InformationExtractor:
         self,
         dataset: Dataset | list[dict[str, Any]],
     ) -> list[ExtractionResults]:
-        return await asyncio.gather(
+        return await tqdm_async.gather(
             *[self.extract_from_single_document(doc) for doc in dataset],
         )
 
@@ -277,8 +290,7 @@ class InformationExtractor:
 
                 return ExtractionResults(
                     document_id=document["id"],
-                    llm_config=self.llm_config,
-                    prompt_config=self.prompt_config,
+                    config_hash=self.config.hash,
                     completion_metadata=CompletionMetadata.from_oai_response_metadata(
                         result["raw"].response_metadata
                     ),
@@ -291,8 +303,7 @@ class InformationExtractor:
                 logger.error(f"Error processing document {document['id']}: {err}")
                 return ExtractionResults(
                     document_id=document["id"],
-                    llm_config=self.llm_config,
-                    prompt_config=self.prompt_config,
+                    config_hash=self.config.hash,
                     completion_metadata=None,
                     created_at=datetime.now(),
                     status="error",
@@ -304,8 +315,7 @@ class InformationExtractor:
                 logger.error(f"Error processing document {document['id']}: {err}")
                 return ExtractionResults(
                     document_id=document["id"],
-                    llm_config=self.llm_config,
-                    prompt_config=self.prompt_config,
+                    config_hash=self.config.hash,
                     completion_metadata=CompletionMetadata.from_chat_completion(
                         err.completion,
                         "length_finish_reason_error",
@@ -319,7 +329,7 @@ class InformationExtractor:
     def estimate_prefill_cost(self, dataset: Dataset | list[dict[str, Any]]) -> float:
         total_cost = sum(
             litellm.completion_cost(
-                model=self.llm_config.llm_name,
+                model=self.config.llm_name,
                 prompt=self.prompt_template.invoke({"context": doc["context"]}).text,
             )
             for doc in tqdm(dataset, desc="Estimating prefill cost")
