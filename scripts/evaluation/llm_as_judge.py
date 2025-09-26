@@ -30,7 +30,7 @@ def main(
         MAX_CONCURRENT_CALLS, help="Maximum number of concurrent API calls"
     ),
     cache_db: Path = typer.Option(CACHE_DB, help="Path to SQLite cache database"),
-    estimate_tokens: bool = typer.Option(False, help="Estimate number of tokens"),
+    estimate_cost: bool = typer.Option(False, help="Estimate cost"),
     prompt: Path = typer.Option(..., help="Path to prompt config"),
 ) -> None:
     """Evaluate predictions using LLM as judge."""
@@ -48,6 +48,7 @@ def main(
 
     pred_loader = PredictionLoader(root_dir=predictions_dir, judge_name=judge_model)
     pred_loader.setup_judge_dir()
+
     judge = StructuredOutputJudge(
         client=llm,
         pred_loader=pred_loader,
@@ -57,12 +58,12 @@ def main(
         verbose=True,
     )
 
-    if estimate_tokens:
-        token_count = judge.estimate_token_count()
-        logger.info(f"Estimated token count: {token_count:_}")
+    if estimate_cost:
+        cost = judge.estimate_prefill_cost()
+        logger.info(f"Estimated cost: ${cost:.2f}")
     else:
         results = asyncio.run(judge.evaluate())
-        with judge.output_file.open("w") as f:
+        with pred_loader.llm_judge_scores_file.open("w") as f:
             json.dump(results.model_dump(), f, indent="\t", ensure_ascii=False)
 
 

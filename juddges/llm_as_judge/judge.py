@@ -1,10 +1,11 @@
 import asyncio
 from typing import Any
 
-import tiktoken
+import litellm
 from langchain_openai import ChatOpenAI
 from loguru import logger
 from tqdm.asyncio import tqdm_asyncio
+from tqdm.auto import tqdm
 
 from juddges.llm_as_judge.base import EvalResults, ItemEvalResult, StructuredOutputJudgeBase
 from juddges.llm_as_judge.data_model import ParsedPredictions, PredictionLoader
@@ -30,7 +31,7 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
             user_prompt=user_prompt,
         )
         self.client = client
-        self.client = self.client.with_structured_output(
+        self.chain = client.with_structured_output(
             self.structured_response_schema_from_extraction_schema,
             method="json_schema",
             strict=True,
@@ -68,7 +69,7 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
         """Evaluate a single example using the LLM judge."""
         async with self.semaphore:
             try:
-                scores_dict = await self.client.ainvoke(messages)
+                scores_dict = await self.chain.ainvoke(messages)
             except Exception as e:
                 logger.error(f"Error evaluating item: {e}")
                 return ItemEvalResult(
@@ -79,36 +80,17 @@ class StructuredOutputJudge(StructuredOutputJudgeBase):
                 )
         return ItemEvalResult.from_success(scores_dict, **results_kwargs)
 
-    def estimate_token_count(self) -> float:
+    def estimate_prefill_cost(self) -> float:
         """Estimate the cost of evaluating a single item."""
-        logger.warning(
-            "Estimating token count ignores json_schema and computes number of tokens only for input messages"
-        )
-        if self.judge_name.startswith("gpt-4.1"):
-            enc = tiktoken.encoding_for_model("gpt-4o")
-            logger.warning(
-                "For gpt-4.1 defaults to gpt-4o encoding (gpt-4.1 not handled by tiktoken yet)."
-            )
-        else:
-            enc = tiktoken.encoding_for_model(self.judge_name)
         parsed_preds = self.pred_loader.load_predictions_from_file()
         dataset_messages = self.prepare_eval_messages(parsed_preds)
-        return sum(self.count_tokens(enc, messages) for messages in dataset_messages.values())
-
-    def count_tokens(self, enc: tiktoken.Encoding, messages: list[dict[str, str]]) -> int:
-        """Credit: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb"""
-        tokens_per_message = 3
-        tokens_per_name = 1
-
-        num_tokens = 0
-        for message in messages:
-            num_tokens += tokens_per_message
-            for key, value in message.items():
-                num_tokens += len(enc.encode(value))
-                if key == "name":
-                    num_tokens += tokens_per_name
-        num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
-        return num_tokens
+        return sum(
+            litellm.completion_cost(
+                model=self.client.model_name,
+                messages=messages,
+            )
+            for messages in tqdm(dataset_messages.values(), desc="Estimating prefill cost")
+        )
 
     def merge_judge_results_with_failed_items(
         self,
