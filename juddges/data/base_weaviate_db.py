@@ -37,6 +37,7 @@ class BaseWeaviateDB(ABC):
                 auth_credentials=weaviate.auth.AuthApiKey(
                     api_key=os.getenv("WEAVIATE_API_KEY", "")
                 ),
+                skip_init_checks=True,
             )
         return self
 

@@ -165,3 +165,4 @@ data/datasets/pl/
 data/experiments/
 .claude/settings.local.json
 CLAUDE.md
+data/embeddings_samples
