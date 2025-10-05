@@ -1,5 +1,22 @@
 #!/usr/bin/env python3
-"""Query documents with non-null x and y coordinates."""
+"""
+Query and count documents with non-null x and y coordinates in Weaviate.
+
+This script provides utilities to:
+1. Count documents that have both x and y coordinates set
+2. Query and display sample documents with coordinates
+
+Usage:
+    # Run interactively to see samples from both collections
+    docker compose run --rm web python scripts/embed/query_coords.py
+
+    # Use as a module
+    from scripts.embed.query_coords import count_documents_with_coordinates
+
+    with WeaviateLegalDocumentsDatabase() as db:
+        count = count_documents_with_coordinates(db, "LegalDocuments")
+        print(f"Documents with coords: {count}")
+"""
 
 from typing import List, Dict
 from weaviate.classes.query import Filter
@@ -7,6 +24,48 @@ from rich.console import Console
 from rich.table import Table
 
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
+
+
+def count_documents_with_coordinates(
+    db: WeaviateLegalDocumentsDatabase,
+    collection_name: str,
+    console: Console = None,
+) -> int:
+    """Count documents that have non-null x and y coordinates.
+
+    Args:
+        db: Weaviate database instance
+        collection_name: Name of collection (LegalDocuments or DocumentChunks)
+        console: Rich console for progress output
+
+    Returns:
+        Count of documents with both x and y coordinates set
+    """
+    collection = db.get_collection(collection_name)
+    count = 0
+    scanned = 0
+
+    # Iterate and count documents with non-null x and y
+    for obj in collection.iterator(return_properties=["x", "y"]):
+        x = obj.properties.get("x")
+        y = obj.properties.get("y")
+
+        # Count if both x and y are not None
+        if x is not None and y is not None:
+            count += 1
+
+        scanned += 1
+
+        # Show progress every 1000 documents
+        if console and scanned % 1000 == 0:
+            console.print(
+                f"[dim]Scanned {scanned:,} docs, found {count:,} with coords...[/dim]", end="\r"
+            )
+
+    if console:
+        console.print("")  # New line after progress
+
+    return count
 
 
 def get_documents_with_coordinates(
@@ -101,9 +160,10 @@ def main():
 
             console.print(table)
 
-            # Get total count
-            all_docs = get_documents_with_coordinates(db, collection_name)
-            console.print(f"[green]Total documents with coordinates: {len(all_docs)}[/green]")
+            # Get total count (efficient - only fetches x,y properties)
+            console.print("[dim]Counting total documents with coordinates...[/dim]")
+            total_count = count_documents_with_coordinates(db, collection_name, console)
+            console.print(f"[green]✓ Total documents with coordinates: {total_count:,}[/green]")
 
 
 if __name__ == "__main__":
