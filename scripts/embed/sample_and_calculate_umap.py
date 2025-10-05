@@ -5,7 +5,7 @@ Sample documents from Weaviate, calculate UMAP coordinates, and update the datab
 This script:
 1. Samples up to 25k documents per unique value for 'country' and 'source_url' from Weaviate
 2. Saves sampled documents with vectors to parquet files
-3. Fits UMAP on the sampled data and saves the UMAP model
+3. Fits UMAP on the sampled data and saves the UMAP model to models/umap/
 4. Calculates 2D coordinates for sampled documents
 5. Updates Weaviate with the calculated coordinates
 6. Applies UMAP model to remaining documents (optional)
@@ -19,7 +19,7 @@ Usage:
 
     # Apply saved UMAP model to all remaining documents
     docker compose run --rm web python scripts/embed/sample_and_calculate_umap.py \
-        --apply-saved-model data/embeddings_samples/umap_model.pkl \
+        --apply-saved-model models/umap/umap_model_LegalDocuments.pkl \
         --collection LegalDocuments
 """
 
@@ -47,7 +47,7 @@ from sklearn.preprocessing import normalize
 from umap import UMAP
 
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
-from juddges.settings import VectorName
+from juddges.settings import UMAP_MODELS_PATH, VectorName
 
 
 def sample_documents_by_strata(
@@ -72,9 +72,7 @@ def sample_documents_by_strata(
     Returns:
         Dictionary with strata as keys and list of documents as values
     """
-    console.print(
-        f"[bold cyan]Sampling documents from {collection_name}...[/bold cyan]"
-    )
+    console.print(f"[bold cyan]Sampling documents from {collection_name}...[/bold cyan]")
 
     collection = db.get_collection(collection_name)
 
@@ -88,13 +86,9 @@ def sample_documents_by_strata(
         strata_fields = ["country", "source_url"]
         console.print("[dim]Fetching unique strata (country, source_url)...[/dim]")
 
-    # Get all documents with strata fields
-    # We'll fetch in batches to avoid memory issues
+    # Get all documents with strata fields using iterator (more efficient than offset pagination)
     strata_counts = defaultdict(int)
     strata_docs = defaultdict(list)
-
-    batch_size = 100  # Weaviate pagination limit
-    offset = 0
 
     with Progress(
         SpinnerColumn(),
@@ -106,50 +100,40 @@ def sample_documents_by_strata(
     ) as progress:
         task = progress.add_task("Scanning documents...", total=None)
 
-        while True:
-            # Fetch batch of documents
-            response = collection.query.fetch_objects(
-                limit=batch_size,
-                offset=offset,
-                include_vector=True,
-                return_properties=strata_fields,
-            )
+        # Use iterator for efficient streaming (avoids timeout issues)
+        for obj in collection.iterator(
+            include_vector=True,
+            return_properties=strata_fields,
+        ):
+            # Extract strata values based on collection type
+            if is_chunks:
+                field1 = obj.properties.get("language", "unknown")
+                field2 = obj.properties.get("document_type", "unknown")
+            else:
+                field1 = obj.properties.get("country", "unknown")
+                field2 = obj.properties.get("source_url", "unknown")
 
-            if not response.objects:
-                break
+            stratum = f"{field1}|{field2}"
 
-            for obj in response.objects:
-                # Extract strata values based on collection type
-                if is_chunks:
-                    field1 = obj.properties.get("language", "unknown")
-                    field2 = obj.properties.get("document_type", "unknown")
-                else:
-                    field1 = obj.properties.get("country", "unknown")
-                    field2 = obj.properties.get("source_url", "unknown")
+            # Only add if we haven't reached sample_size for this stratum
+            if strata_counts[stratum] < sample_size:
+                # Get the vector
+                vector = obj.vector.get(vector_name) if obj.vector else None
 
-                stratum = f"{field1}|{field2}"
+                if vector is not None:
+                    doc_data = {
+                        "uuid": str(obj.uuid),
+                        strata_fields[0]: field1,
+                        strata_fields[1]: field2,
+                        "vector": vector,
+                    }
+                    strata_docs[stratum].append(doc_data)
+                    strata_counts[stratum] += 1
 
-                # Only add if we haven't reached sample_size for this stratum
-                if strata_counts[stratum] < sample_size:
-                    # Get the vector
-                    vector = obj.vector.get(vector_name) if obj.vector else None
+            progress.update(task, advance=1)
 
-                    if vector is not None:
-                        doc_data = {
-                            "uuid": str(obj.uuid),
-                            strata_fields[0]: field1,
-                            strata_fields[1]: field2,
-                            "vector": vector,
-                        }
-                        strata_docs[stratum].append(doc_data)
-                        strata_counts[stratum] += 1
-
-                progress.update(task, advance=1)
-
-            offset += batch_size
-
-            # Stop if all strata are full
-            if all(count >= sample_size for count in strata_counts.values()):
+            # Stop if all strata are full (optimization to avoid scanning entire collection)
+            if strata_counts and all(count >= sample_size for count in strata_counts.values()):
                 console.print("[green]All strata reached sample size, stopping early[/green]")
                 break
 
@@ -249,8 +233,7 @@ def fit_umap_and_calculate_coords(
 
     console.print("[bold cyan]Fitting UMAP model...[/bold cyan]")
     console.print(
-        f"[dim]Parameters: n_neighbors={n_neighbors}, "
-        f"min_dist={min_dist}, metric=cosine[/dim]"
+        f"[dim]Parameters: n_neighbors={n_neighbors}, min_dist={min_dist}, metric=cosine[/dim]"
     )
 
     umap_model = UMAP(
@@ -275,20 +258,21 @@ def fit_umap_and_calculate_coords(
 
 def save_umap_model(
     umap_model: UMAP,
-    output_dir: Path,
+    model_name: str,
     console: Console,
 ) -> Path:
     """Save UMAP model to pickle file.
 
     Args:
         umap_model: Fitted UMAP model
-        output_dir: Directory to save the model
+        model_name: Name for the model file (without extension)
         console: Rich console for output
 
     Returns:
         Path to saved model file
     """
-    model_path = output_dir / "umap_model.pkl"
+    UMAP_MODELS_PATH.mkdir(parents=True, exist_ok=True)
+    model_path = UMAP_MODELS_PATH / f"{model_name}.pkl"
 
     console.print(f"[bold cyan]Saving UMAP model to {model_path}...[/bold cyan]")
 
@@ -397,14 +381,11 @@ def apply_saved_umap_to_all(
 
     collection = db.get_collection(collection_name)
 
-    # Fetch all documents with vectors
+    # Fetch all documents with vectors using iterator (more efficient, avoids timeout)
     console.print("[bold cyan]Fetching all documents with vectors...[/bold cyan]")
 
     all_uuids = []
     all_vectors = []
-
-    fetch_batch_size = 100  # Weaviate pagination limit
-    offset = 0
 
     with Progress(
         SpinnerColumn(),
@@ -416,25 +397,14 @@ def apply_saved_umap_to_all(
     ) as progress:
         task = progress.add_task("Fetching documents...", total=None)
 
-        while True:
-            response = collection.query.fetch_objects(
-                limit=fetch_batch_size,
-                offset=offset,
-                include_vector=True,
-            )
+        # Use iterator for efficient streaming
+        for obj in collection.iterator(include_vector=True):
+            vector = obj.vector.get(vector_name) if obj.vector else None
+            if vector is not None:
+                all_uuids.append(str(obj.uuid))
+                all_vectors.append(vector)
 
-            if not response.objects:
-                break
-
-            for obj in response.objects:
-                vector = obj.vector.get(vector_name) if obj.vector else None
-                if vector is not None:
-                    all_uuids.append(str(obj.uuid))
-                    all_vectors.append(vector)
-
-                progress.update(task, advance=1)
-
-            offset += fetch_batch_size
+            progress.update(task, advance=1)
 
     console.print(f"[green]✓[/green] Fetched {len(all_uuids)} documents with vectors")
 
@@ -604,7 +574,9 @@ def main():
 
                     # Save UMAP model (only once, for the first collection)
                     if collection_name == collections[0]:
-                        model_path = save_umap_model(umap_model, output_dir, console)
+                        model_path = save_umap_model(
+                            umap_model, f"umap_model_{collection_name}", console
+                        )
 
                     # Update Weaviate
                     successful, failed = update_weaviate_batch(
