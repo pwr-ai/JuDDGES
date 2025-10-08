@@ -157,7 +157,7 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                 wvcc.Property(
                     name="full_text",
                     data_type=wvcc.DataType.TEXT,
-                    description="Raw full text of the document",
+                    description="Processed full text of the document (used for vectorization)",
                     skip_vectorization=False,
                 ),
                 wvcc.Property(
@@ -321,7 +321,7 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                 wvcc.Property(
                     name="raw_content",
                     data_type=wvcc.DataType.TEXT,
-                    description="XML content of the document",
+                    description="Raw unprocessed content (XML for court judgments, raw text for tax interpretations)",
                     skip_vectorization=True,
                 ),
                 wvcc.Property(
@@ -669,3 +669,134 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
         except Exception as e:
             logger.error(f"Error deleting document {document_id}: {str(e)}")
             raise
+
+    def filter_by_raw_content_presence(
+        self, has_raw_content: bool = True, limit: int = 100
+    ) -> List[Dict]:
+        """Filter documents by raw_content field presence.
+
+        Args:
+            has_raw_content: If True, return docs with raw_content. If False, return docs without.
+            limit: Maximum number of results to return
+
+        Returns:
+            List of document properties
+        """
+        collection = self.legal_documents_collection
+
+        if has_raw_content:
+            # Documents where raw_content is not null/empty
+            filters = weaviate.classes.query.Filter.by_property("raw_content").is_none(False)
+        else:
+            # Documents where raw_content is null/empty
+            filters = weaviate.classes.query.Filter.by_property("raw_content").is_none(True)
+
+        response = collection.query.fetch_objects(filters=filters, limit=limit)
+        return [obj.properties for obj in response.objects]
+
+    def get_raw_content_statistics(self) -> Dict[str, int]:
+        """Get statistics about raw_content field coverage.
+
+        Returns:
+            Dict with counts of documents with/without raw_content
+        """
+        collection = self.legal_documents_collection
+
+        # Total documents
+        total_response = collection.aggregate.over_all(total_count=True)
+        total = total_response.total_count
+
+        # Documents with raw_content
+        with_raw_content_response = collection.aggregate.over_all(
+            total_count=True,
+            filters=weaviate.classes.query.Filter.by_property("raw_content").is_none(False),
+        )
+        with_raw_content = with_raw_content_response.total_count
+
+        # Documents without raw_content
+        without_raw_content = total - with_raw_content
+
+        return {
+            "total_documents": total,
+            "with_raw_content": with_raw_content,
+            "without_raw_content": without_raw_content,
+            "coverage_percentage": round((with_raw_content / total * 100) if total > 0 else 0, 2),
+        }
+
+    def filter_by_document_type_and_raw_content(
+        self, document_type: str, has_raw_content: bool = True, limit: int = 100
+    ) -> List[Dict]:
+        """Filter documents by type and raw_content presence.
+
+        Args:
+            document_type: Type of document (e.g., "judgment", "tax_interpretation")
+            has_raw_content: If True, return docs with raw_content. If False, return docs without.
+            limit: Maximum number of results to return
+
+        Returns:
+            List of document properties
+        """
+        collection = self.legal_documents_collection
+
+        # Combine filters
+        type_filter = weaviate.classes.query.Filter.by_property("document_type").equal(
+            document_type
+        )
+
+        if has_raw_content:
+            raw_content_filter = weaviate.classes.query.Filter.by_property("raw_content").is_none(False)
+        else:
+            raw_content_filter = weaviate.classes.query.Filter.by_property("raw_content").is_none(True)
+
+        combined_filter = type_filter & raw_content_filter
+
+        response = collection.query.fetch_objects(filters=combined_filter, limit=limit)
+        return [obj.properties for obj in response.objects]
+
+    def compare_content_fields(self, document_id: str) -> Optional[Dict[str, Any]]:
+        """Compare full_text and raw_content for a document.
+
+        Args:
+            document_id: Document ID to analyze
+
+        Returns:
+            Dict with comparison statistics or None if document not found
+        """
+        doc = self.get_weaviate_document(document_id=document_id)
+        if not doc:
+            return None
+
+        full_text = doc.get("full_text", "")
+        raw_content = doc.get("raw_content", "")
+
+        return {
+            "document_id": document_id,
+            "has_full_text": bool(full_text),
+            "has_raw_content": bool(raw_content),
+            "full_text_length": len(full_text) if full_text else 0,
+            "raw_content_length": len(raw_content) if raw_content else 0,
+            "length_difference": abs(len(full_text or "") - len(raw_content or "")),
+            "length_ratio": (
+                round(len(full_text) / len(raw_content), 3)
+                if full_text and raw_content and len(raw_content) > 0
+                else None
+            ),
+        }
+
+    def get_weaviate_document(self, document_id: str) -> Optional[Dict[str, Any]]:
+        """Get a Weaviate document by document_id.
+
+        Args:
+            document_id: Document ID to retrieve
+
+        Returns:
+            Document properties or None if not found
+        """
+        collection = self.legal_documents_collection
+        filters = weaviate.classes.query.Filter.by_property("document_id").equal(document_id)
+
+        response = collection.query.fetch_objects(filters=filters, limit=1)
+
+        if response.objects:
+            return response.objects[0].properties
+        return None
