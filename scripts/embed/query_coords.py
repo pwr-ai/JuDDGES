@@ -127,6 +127,11 @@ def main():
         for collection_name in ["LegalDocuments", "DocumentChunks"]:
             console.print(f"\n[bold cyan]Collection: {collection_name}[/bold cyan]")
 
+            # Get total count first
+            collection = db.get_collection(collection_name)
+            total_docs = db.get_collection_size(collection)
+            console.print(f"[dim]Total documents in collection: {total_docs:,}[/dim]")
+
             # Get top 5 documents with coordinates
             docs = get_documents_with_coordinates(db, collection_name, limit=5)
 
@@ -162,8 +167,38 @@ def main():
 
             # Get total count (efficient - only fetches x,y properties)
             console.print("[dim]Counting total documents with coordinates...[/dim]")
-            total_count = count_documents_with_coordinates(db, collection_name, console)
-            console.print(f"[green]✓ Total documents with coordinates: {total_count:,}[/green]")
+            with_coords_count = count_documents_with_coordinates(db, collection_name, console)
+            without_coords_count = total_docs - with_coords_count
+            coverage_pct = (with_coords_count / total_docs * 100) if total_docs > 0 else 0
+
+            # Summary table
+            summary = Table(title=f"Coordinates Coverage Summary - {collection_name}")
+            summary.add_column("Metric", style="cyan")
+            summary.add_column("Count", style="magenta", justify="right")
+            summary.add_column("Percentage", style="green", justify="right")
+
+            summary.add_row("Total Documents", f"{total_docs:,}", "100.00%")
+            summary.add_row(
+                "With Coordinates",
+                f"{with_coords_count:,}",
+                f"{coverage_pct:.2f}%",
+                style="green" if coverage_pct == 100 else "yellow",
+            )
+            summary.add_row(
+                "Without Coordinates",
+                f"{without_coords_count:,}",
+                f"{(100 - coverage_pct):.2f}%",
+                style="green" if without_coords_count == 0 else "red",
+            )
+
+            console.print(summary)
+
+            if without_coords_count == 0:
+                console.print(f"[green]✓ All documents in {collection_name} have coordinates![/green]")
+            else:
+                console.print(
+                    f"[yellow]⚠ {without_coords_count:,} documents in {collection_name} are missing coordinates[/yellow]"
+                )
 
 
 if __name__ == "__main__":
