@@ -6,7 +6,7 @@ services:
       - --host
       - 0.0.0.0
       - --port
-      - '8080'
+      - '8084'
       - --scheme
       - http
     image: cr.weaviate.io/semitechnologies/weaviate:1.30.2
@@ -15,12 +15,20 @@ services:
       # - t2v-transformers-dev
       # - t2v-transformers-fast
     ports:
-      - 8084:8080
+      - 8084:8084
       - 50051:50051
     volumes:
       - legal_ai_weaviate_prod:/var/lib/weaviate
     env_file: .env
     restart: always
+    networks:
+      - default
+      - nginx-router_proxy-tier
+    environment:
+      - LETSENCRYPT_HOST=legal-ai-weaviate.augustyniak.ai
+      - VIRTUAL_HOST=legal-ai-weaviate.augustyniak.ai
+      - LETSENCRYPT_EMAIL=lukasz@augustyniak.ai
+      - VIRTUAL_PORT=8084
     deploy:
       restart_policy:
         condition: on-failure
@@ -136,4 +144,8 @@ services:
 
 volumes:
   legal_ai_weaviate_prod:
+    external: true
+
+networks:
+  nginx-router_proxy-tier:
     external: true
