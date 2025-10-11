@@ -40,6 +40,9 @@ dev = [
     "coverage>=7.4.3",
     "dvc[s3]>=3.48.3",
     "jupyterlab>=4.3.1",
+    "mkdocs>=1.5.3",
+    "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.24.0",
     "mypy>=1.8.0",
     "nbdev>=2.3.34",
     "pre-commit>=3.7.1",
@@ -56,8 +59,10 @@ full = [
     "deepspeed>=0.15.4",
     "flash-attn>=2.7.4.post1",
     "langchain-community>=0.3.8",
+    "langchain-google-genai>=2.0.8",
     "langchain-openai>=0.2.10",
     "langchain-text-splitters>=0.3.2",
+    "langfuse>=2.59.1",
     "lightning_fabric>=2.3.1",
     "mpire>=2.10.0",
     "openpyxl>=3.1.2",
@@ -107,3 +112,12 @@ minversion = "8.0.0"
 pythonpath = ["."]
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+    "docs: Tests for documentation code examples",
+    "integration: Integration tests requiring external services",
+    "slow: Slow running tests",
+    "requires_weaviate: Tests requiring Weaviate instance",
+    "requires_gemini: Tests requiring Gemini API key",
+    "requires_gpu: Tests requiring GPU",
+    "requires_network: Tests requiring network access",
+]
