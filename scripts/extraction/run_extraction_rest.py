@@ -148,7 +148,8 @@ def fetch_documents_rest(
                 }
             }
         }
-        """ % fetch_size
+        """
+        % fetch_size
     }
 
     try:
@@ -220,7 +221,6 @@ def run_extraction(
         TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         console=console,
     ) as progress:
-
         task = progress.add_task("Extracting documents...", total=len(documents))
 
         for doc in documents:
@@ -256,19 +256,19 @@ def run_extraction(
 
                 results.append(result)
 
-                logger.info(
-                    f"✓ Extracted {document_id} ({len(extracted)} fields)"
-                )
+                logger.info(f"✓ Extracted {document_id} ({len(extracted)} fields)")
 
             except Exception as e:
                 logger.error(f"✗ Failed to extract {document_id}: {e}")
-                results.append({
-                    "document_id": document_id,
-                    "document_type": doc_type_str,
-                    "extraction_status": "failed",
-                    "error": str(e),
-                    "full_text_length": len(full_text),
-                })
+                results.append(
+                    {
+                        "document_id": document_id,
+                        "document_type": doc_type_str,
+                        "extraction_status": "failed",
+                        "error": str(e),
+                        "full_text_length": len(full_text),
+                    }
+                )
 
             progress.update(task, advance=1)
 
@@ -364,9 +364,7 @@ def main():
     """Main execution function."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Run Gemini extraction using Weaviate REST API"
-    )
+    parser = argparse.ArgumentParser(description="Run Gemini extraction using Weaviate REST API")
     parser.add_argument(
         "--sample-size",
         type=int,
@@ -376,9 +374,15 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="gemini-2.5-flash",
-        choices=["gemini-2.5-pro", "gemini-2.5-flash"],
-        help="Gemini model to use",
+        default="gemini-2.5-pro",
+        choices=[
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash-exp",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash",
+        ],
+        help="Gemini model to use (via Vertex AI)",
     )
     parser.add_argument(
         "--output-dir",
@@ -421,19 +425,27 @@ def main():
     weaviate_port = args.weaviate_port or int(os.getenv("WEAVIATE_PORT", "8084"))
     api_key = os.getenv("WEAVIATE_API_KEY", "")
 
+    # Get GCP project
+    vertex_project = os.getenv("VERTEX_PROJECT", "insbay-b32351")
+    vertex_location = os.getenv("VERTEX_LOCATION", "us-central1")
+
     console.print(
-        f"\n[bold cyan]Gemini Extraction - REST API Mode[/bold cyan]\n"
+        f"\n[bold cyan]Gemini Extraction - Vertex AI Mode[/bold cyan]\n"
         f"Weaviate: {weaviate_host}:{weaviate_port}\n"
+        f"GCP Project: {vertex_project}\n"
+        f"GCP Location: {vertex_location}\n"
         f"Sample size: {args.sample_size}\n"
         f"Model: {args.model}\n"
         f"Output: {args.output_dir}\n"
         f"Random seed: {args.seed}\n"
     )
 
-    # Initialize extraction chain
-    logger.info("Initializing Gemini extraction chain...")
+    # Initialize extraction chain (Vertex AI uses application default credentials)
+    logger.info("Initializing Vertex AI Gemini extraction chain...")
     chain = GeminiExtractionChain(
         model_name=args.model,
+        project=vertex_project,
+        location=vertex_location,
         cache_path=args.cache_path,
         temperature=0.0,
     )
