@@ -10,7 +10,7 @@ from langchain_community.cache import SQLiteCache
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableSequence
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_vertexai import ChatVertexAI
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -90,24 +90,35 @@ class GeminiExtractionChain:
 
     def __init__(
         self,
-        model_name: Literal["gemini-2.5-pro", "gemini-2.5-flash"] = "gemini-2.5-flash",
-        api_key: Optional[str] = None,
+        model_name: Literal["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"] = "gemini-2.5-pro",
+        project: Optional[str] = None,
+        location: str = "us-central1",
         temperature: float = 0.0,
         cache_path: Optional[str | Path] = None,
         max_output_tokens: Optional[int] = 8192,
     ):
-        """Initialize Gemini extraction chain.
+        """Initialize Gemini extraction chain using Vertex AI.
 
         Args:
-            model_name: Gemini model to use ('gemini-2.5-pro' or 'gemini-2.5-flash')
-            api_key: Google API key (if not set via GOOGLE_API_KEY env var)
+            model_name: Gemini model to use (via Vertex AI)
+            project: GCP project ID (defaults to VERTEX_PROJECT or gcloud default)
+            location: GCP region (default: us-central1)
             temperature: Sampling temperature (0.0 for deterministic)
             cache_path: Path to SQLite cache file (default: .cache/langchain.db)
             max_output_tokens: Maximum tokens in response
         """
+        import os
+
         self.model_name = model_name
         self.temperature = temperature
         self.max_output_tokens = max_output_tokens
+
+        # Get project from env or parameter
+        self.project = project or os.getenv("VERTEX_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT")
+        if not self.project:
+            logger.warning("No GCP project specified, will use gcloud default")
+
+        self.location = location
 
         # Set up caching
         if cache_path:
@@ -121,15 +132,16 @@ class GeminiExtractionChain:
             langchain.llm_cache = SQLiteCache(database_path=str(default_cache))
             logger.info(f"Enabled LangChain SQLite cache: {default_cache}")
 
-        # Initialize Gemini model
-        self.llm = ChatGoogleGenerativeAI(
+        # Initialize Vertex AI Gemini model (uses application default credentials)
+        self.llm = ChatVertexAI(
             model=model_name,
-            google_api_key=api_key,
+            project=self.project,
+            location=self.location,
             temperature=temperature,
-            max_output_tokens=max_output_tokens,
+            max_tokens=max_output_tokens,
         )
 
-        logger.info(f"Initialized GeminiExtractionChain with {model_name}")
+        logger.info(f"Initialized VertexAI GeminiExtractionChain with {model_name} (project: {self.project}, location: {self.location})")
 
     def _build_extraction_prompt(
         self,
