@@ -1,0 +1,147 @@
+# Configuration for Documentation Code Example Testing
+# This file configures automated testing of Python code examples in markdown files
+
+# Paths to scan for markdown files with code examples
+scan_paths:
+  - docs/
+  - README.md
+
+# Paths to exclude from scanning
+exclude_paths:
+  - docs/archive/
+  - docs/.venv/
+  - docs/node_modules/
+
+# File patterns to match
+include_patterns:
+  - "*.md"
+
+# Test execution settings
+execution:
+  # Timeout for each code example (seconds)
+  timeout: 30
+
+  # Maximum number of workers for parallel execution
+  max_workers: 4
+
+  # Isolate each code example in separate process
+  isolate: true
+
+  # Show output from code examples
+  show_output: false
+
+# Code example annotations and their behavior
+annotations:
+  # Skip this code example entirely
+  skip:
+    - "# doctest: +SKIP"
+    - "# doctest: SKIP"
+    - "# skip-test"
+
+  # Skip if specific dependency is not available
+  requires:
+    - pattern: "# requires: weaviate"
+      check: "check_weaviate_available"
+    - pattern: "# requires: gemini"
+      check: "check_gemini_api_key"
+    - pattern: "# requires: gpu"
+      check: "check_gpu_available"
+    - pattern: "# requires: network"
+      check: "check_network_available"
+
+  # Validate expected output
+  output:
+    - pattern: "# expected-output:"
+      validate: true
+
+# Code block detection settings
+code_blocks:
+  # Language identifiers to process
+  languages:
+    - python
+    - python3
+
+  # Detect code blocks that are demonstrations only (not executable)
+  demo_markers:
+    - "# demonstration-only"
+    - "# demo"
+    - "# example-output"
+    - "..."  # Ellipsis in code suggests incomplete example
+    - "<"    # Placeholder angle brackets
+
+  # Code patterns that indicate non-executable examples
+  placeholder_patterns:
+    - "YOUR_.*"
+    - "\\.\\.\\."
+    - "<[A-Z_]+>"
+
+# Mock configuration for external services
+mocks:
+  weaviate:
+    enabled: true
+    mock_class: "tests.docs.fixtures.MockWeaviateClient"
+
+  gemini:
+    enabled: true
+    mock_class: "tests.docs.fixtures.MockGeminiAPI"
+
+  datasets:
+    enabled: true
+    use_sample_data: true
+    sample_data_path: "data/sample_data/"
+
+# Pytest integration
+pytest:
+  # Additional pytest markers to apply
+  markers:
+    - "docs: Tests for documentation code examples"
+    - "integration: Integration tests requiring external services"
+    - "slow: Slow running tests"
+
+  # Pytest options to pass
+  options:
+    - "-v"
+    - "--tb=short"
+    - "--strict-markers"
+
+  # Coverage configuration
+  coverage:
+    enabled: false  # Don't measure coverage for doc examples
+
+# Reporting settings
+reporting:
+  # Report format (text, json, html)
+  format: text
+
+  # Verbosity level (0=quiet, 1=normal, 2=verbose)
+  verbosity: 1
+
+  # Generate report file
+  output_file: null
+
+  # Show successful examples
+  show_success: false
+
+  # Show skipped examples
+  show_skipped: true
+
+  # Group results by file
+  group_by_file: true
+
+# Quality checks
+quality:
+  # Warn if code examples are too old
+  staleness_days: 90
+
+  # Check for common issues
+  checks:
+    - "syntax_errors"
+    - "missing_imports"
+    - "undefined_variables"
+    - "deprecated_usage"
+
+  # Require minimum documentation coverage
+  min_examples_per_module: 1
+
+  # Flag complex examples that should be simplified
+  max_example_lines: 50
