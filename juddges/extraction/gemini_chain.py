@@ -6,7 +6,7 @@ from typing import Any, Literal, Optional
 
 import langchain
 from langchain.output_parsers.json import parse_json_markdown
-from langchain_community.cache import SQLiteCache
+from langchain_community.cache import SQLAlchemyCache, SQLAlchemyMd5Cache, SQLiteCache
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableSequence
@@ -59,15 +59,20 @@ class GeminiExtractionChain:
 
     Features:
     - Google Gemini 2.5 Pro/Flash model support
-    - SQLite caching to avoid redundant API calls
+    - PostgreSQL caching (via POSTGRES_CACHE_URL env var) with SQLite fallback
     - Langfuse callback integration for observability
     - Structured output parsing to dictionary
     - Document type-aware prompting
 
+    Cache Configuration:
+    - Set POSTGRES_CACHE_URL environment variable for PostgreSQL caching
+    - Falls back to SQLite if PostgreSQL is unavailable or not configured
+    - Custom SQLite path can be specified via cache_path parameter
+
     Example:
         >>> chain = GeminiExtractionChain(
         ...     model_name="gemini-2.5-pro",
-        ...     cache_path="cache/extraction.db",
+        ...     cache_path="cache/extraction.db",  # SQLite fallback path
         ...     temperature=0.0,
         ... )
         >>>
@@ -104,8 +109,13 @@ class GeminiExtractionChain:
             project: GCP project ID (defaults to VERTEX_PROJECT or gcloud default)
             location: GCP region (default: us-central1)
             temperature: Sampling temperature (0.0 for deterministic)
-            cache_path: Path to SQLite cache file (default: .cache/langchain.db)
+            cache_path: Path to SQLite cache file (used as fallback if PostgreSQL unavailable)
             max_output_tokens: Maximum tokens in response
+
+        Environment Variables:
+            POSTGRES_CACHE_URL: PostgreSQL connection string for LLM caching (preferred)
+            VERTEX_PROJECT: GCP project ID for Vertex AI
+            GOOGLE_CLOUD_PROJECT: Alternative GCP project ID
         """
         import os
 
@@ -120,13 +130,34 @@ class GeminiExtractionChain:
 
         self.location = location
 
-        # Set up caching
-        if cache_path:
+        # Set up caching - prefer PostgreSQL via SQLAlchemy with MD5, fallback to SQLite
+        postgres_url = os.getenv("POSTGRES_CACHE_URL")
+
+        if postgres_url:
+            try:
+                from sqlalchemy import create_engine
+
+                # Create PostgreSQL cache using SQLAlchemyMd5Cache (avoids 8KB index size limit)
+                engine = create_engine(postgres_url)
+                langchain.llm_cache = SQLAlchemyMd5Cache(engine)
+                # Extract host/port from URL for logging (format: postgresql://user:pass@host:port/db)
+                db_location = postgres_url.split('@')[1] if '@' in postgres_url else 'configured'
+                logger.info(f"Enabled LangChain PostgreSQL cache (SQLAlchemy MD5): {db_location}")
+            except Exception as e:
+                logger.warning(f"Failed to initialize PostgreSQL cache: {e}, falling back to SQLite")
+                # Fallback to SQLite
+                default_cache = Path(".cache/langchain.db")
+                default_cache.parent.mkdir(parents=True, exist_ok=True)
+                langchain.llm_cache = SQLiteCache(database_path=str(default_cache))
+                logger.info(f"Enabled LangChain SQLite cache (fallback): {default_cache}")
+        elif cache_path:
+            # Use custom SQLite path if provided
             cache_file = Path(cache_path)
             cache_file.parent.mkdir(parents=True, exist_ok=True)
             langchain.llm_cache = SQLiteCache(database_path=str(cache_file))
             logger.info(f"Enabled LangChain SQLite cache: {cache_file}")
         else:
+            # Default SQLite cache
             default_cache = Path(".cache/langchain.db")
             default_cache.parent.mkdir(parents=True, exist_ok=True)
             langchain.llm_cache = SQLiteCache(database_path=str(default_cache))
