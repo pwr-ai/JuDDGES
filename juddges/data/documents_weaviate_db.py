@@ -281,6 +281,19 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                     description="JSON string: Analysis elements common across document types",
                     skip_vectorization=True,
                 ),
+                # LLM-extracted fields
+                wvcc.Property(
+                    name="factual_state",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Factual circumstances and background of the case (LLM-extracted)",
+                    skip_vectorization=False,
+                ),
+                wvcc.Property(
+                    name="legal_state",
+                    data_type=wvcc.DataType.TEXT,
+                    description="Legal basis and applicable law (LLM-extracted)",
+                    skip_vectorization=False,
+                ),
                 wvcc.Property(
                     name="structured_content",
                     data_type=wvcc.DataType.TEXT,
