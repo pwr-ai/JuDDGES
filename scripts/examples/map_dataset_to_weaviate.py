@@ -22,7 +22,7 @@ def main():
     db = WeaviateLegalDocumentsDatabase(
         host="localhost",
         port=8222,
-        grpc_port=50051,
+        grpc_port=8085,
     )
 
     # Initialize mapper with a dataset
