@@ -12,7 +12,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableSequence
 from langchain_google_vertexai import ChatVertexAI
 from loguru import logger
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 
 
 class DocumentType(str, Enum):
@@ -53,16 +53,46 @@ class ExtractionSchema(BaseModel):
         """Convert schema to string format for prompt."""
         return "\n".join(f"{key}: {val}" for key, val in self.fields.items())
 
+    def to_pydantic_model(self, model_name: str = "ExtractionOutput") -> type[BaseModel]:
+        """Convert schema to a Pydantic model for structured output.
+
+        Creates a dynamic Pydantic model with all fields as Optional[Any] to handle
+        the variety of data types defined in the schema (strings, lists, dicts, etc.).
+
+        Args:
+            model_name: Name for the generated Pydantic model
+
+        Returns:
+            Dynamically created Pydantic BaseModel class
+        """
+        # Create field definitions - all fields are Optional[Any] to handle diverse types
+        field_definitions = {
+            field_name: (
+                Optional[Any],
+                Field(default=None, description=field_desc[:500]),
+            )  # Truncate long descriptions
+            for field_name, field_desc in self.fields.items()
+        }
+
+        # Create dynamic Pydantic model
+        return create_model(
+            model_name,
+            **field_definitions,
+            __doc__=f"Structured extraction output for {self.language} legal documents",
+        )
+
 
 class GeminiExtractionChain:
-    """LangChain extraction chain using Gemini 2.5 Pro.
+    """LangChain extraction chain using Gemini 2.5 Pro with guaranteed valid JSON output.
 
     Features:
     - Google Gemini 2.5 Pro/Flash model support
+    - Native structured output via with_structured_output() - guarantees valid JSON responses
+    - Eliminates JSON parsing errors by using Gemini's response_schema API
     - PostgreSQL caching (via POSTGRES_CACHE_URL env var) with SQLite fallback
     - Langfuse callback integration for observability
-    - Structured output parsing to dictionary
     - Document type-aware prompting
+    - Dynamic Pydantic model generation from ExtractionSchema
 
     Cache Configuration:
     - Set POSTGRES_CACHE_URL environment variable for PostgreSQL caching
@@ -95,7 +125,13 @@ class GeminiExtractionChain:
 
     def __init__(
         self,
-        model_name: Literal["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"] = "gemini-2.5-pro",
+        model_name: Literal[
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash-exp",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash",
+        ] = "gemini-2.5-pro",
         project: Optional[str] = None,
         location: str = "us-central1",
         temperature: float = 0.0,
@@ -141,10 +177,12 @@ class GeminiExtractionChain:
                 engine = create_engine(postgres_url)
                 langchain.llm_cache = SQLAlchemyMd5Cache(engine)
                 # Extract host/port from URL for logging (format: postgresql://user:pass@host:port/db)
-                db_location = postgres_url.split('@')[1] if '@' in postgres_url else 'configured'
+                db_location = postgres_url.split("@")[1] if "@" in postgres_url else "configured"
                 logger.info(f"Enabled LangChain PostgreSQL cache (SQLAlchemy MD5): {db_location}")
             except Exception as e:
-                logger.warning(f"Failed to initialize PostgreSQL cache: {e}, falling back to SQLite")
+                logger.warning(
+                    f"Failed to initialize PostgreSQL cache: {e}, falling back to SQLite"
+                )
                 # Fallback to SQLite
                 default_cache = Path(".cache/langchain.db")
                 default_cache.parent.mkdir(parents=True, exist_ok=True)
@@ -172,7 +210,9 @@ class GeminiExtractionChain:
             max_tokens=max_output_tokens,
         )
 
-        logger.info(f"Initialized VertexAI GeminiExtractionChain with {model_name} (project: {self.project}, location: {self.location})")
+        logger.info(
+            f"Initialized VertexAI GeminiExtractionChain with {model_name} (project: {self.project}, location: {self.location})"
+        )
 
     def _build_extraction_prompt(
         self,
@@ -234,7 +274,7 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
         # Document type specific context
         doc_type_names = {
             DocumentType.JUDGMENT: "court judgments and legal decisions",
-            DocumentType.TAX_INTERPRETATION: "tax interpretations and fiscal rulings",
+            DocumentType.TAX_INTERPRETATION: "tax interpretations",
         }
 
         return ChatPromptTemplate.from_template(
@@ -245,19 +285,32 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
     def _build_chain(
         self,
         document_type: DocumentType,
+        schema: ExtractionSchema,
     ) -> RunnableSequence:
-        """Build the extraction chain.
+        """Build the extraction chain with structured output.
 
         Args:
             document_type: Type of legal document
+            schema: Extraction schema to convert to Pydantic model
 
         Returns:
-            Configured RunnableSequence for extraction
+            Configured RunnableSequence for extraction with guaranteed valid JSON
         """
         prompt = self._build_extraction_prompt(document_type)
 
-        # Chain: prompt -> LLM -> parse JSON
-        chain = prompt | self.llm | (lambda x: parse_json_markdown(x.content))
+        # Convert schema to Pydantic model for structured output
+        pydantic_model = schema.to_pydantic_model(f"{document_type.value}_extraction")
+
+        # Use with_structured_output to guarantee valid JSON responses
+        # This uses Gemini's native structured output API (response_schema)
+        structured_llm = self.llm.with_structured_output(pydantic_model)
+
+        # Chain: prompt -> structured LLM (returns Pydantic model) -> convert to dict
+        chain = (
+            prompt
+            | structured_llm
+            | (lambda x: x.model_dump() if hasattr(x, "model_dump") else x.dict())
+        )
 
         return chain
 
@@ -298,13 +351,11 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
         """
         # Truncate text if too long
         if len(text) > max_text_length:
-            logger.warning(
-                f"Text length {len(text)} exceeds max {max_text_length}, truncating"
-            )
+            logger.warning(f"Text length {len(text)} exceeds max {max_text_length}, truncating")
             text = text[:max_text_length]
 
-        # Build chain for this document type
-        chain = self._build_chain(document_type)
+        # Build chain for this document type with structured output
+        chain = self._build_chain(document_type, schema)
 
         # Prepare input
         chain_input = {
@@ -312,9 +363,7 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
             "schema": schema.to_schema_string(),
             "language": schema.language,
             "additional_instructions": (
-                f"\nAdditional instructions:\n{schema.instructions}"
-                if schema.instructions
-                else ""
+                f"\nAdditional instructions:\n{schema.instructions}" if schema.instructions else ""
             ),
         }
 
@@ -322,12 +371,12 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
         config = {}
         if langfuse_handler:
             config["callbacks"] = [langfuse_handler]
-            logger.debug("Executing extraction with Langfuse tracing")
+            logger.debug("Executing extraction with Langfuse tracing (structured output mode)")
 
         try:
             result = chain.invoke(chain_input, config=config)
             logger.info(
-                f"Successfully extracted {len(result)} fields from {document_type.value}"
+                f"Successfully extracted {len(result)} fields from {document_type.value} using structured output"
             )
             return result
         except Exception as e:
@@ -354,7 +403,8 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
         Returns:
             List of extraction results as dictionaries
         """
-        chain = self._build_chain(document_type)
+        # Build chain with structured output
+        chain = self._build_chain(document_type, schema)
 
         # Prepare batch inputs
         batch_inputs = [
@@ -379,7 +429,7 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
         try:
             results = chain.batch(batch_inputs, config=config)
             logger.info(
-                f"Successfully extracted from {len(results)} {document_type.value} documents"
+                f"Successfully extracted from {len(results)} {document_type.value} documents using structured output"
             )
             return results
         except Exception as e:
