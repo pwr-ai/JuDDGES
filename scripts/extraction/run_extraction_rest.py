@@ -17,6 +17,9 @@ from loguru import logger
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from langfuse.langchain import CallbackHandler
+from langchain_community.cache import SQLAlchemyCache
+from langchain.globals import set_llm_cache
+from sqlalchemy import create_engine
 
 from juddges.extraction import GeminiExtractionChain
 from juddges.extraction.gemini_chain import DocumentType, ExtractionSchema
@@ -667,6 +670,8 @@ def fetch_documents_rest(
     api_key: str,
     sample_size: int = 50,
     chunk_size: int = 1000,
+    search_query: str = None,
+    document_type_filter: str = None,
 ) -> List[Dict[str, Any]]:
     """Fetch documents using Weaviate REST API directly with pagination.
 
@@ -676,6 +681,8 @@ def fetch_documents_rest(
         api_key: Weaviate API key
         sample_size: Number of documents to sample
         chunk_size: Number of documents to fetch per request (max 10000)
+        search_query: Optional search query for hybrid/semantic search
+        document_type_filter: Optional filter by document_type (e.g., "judgment", "tax_interpretation")
 
     Returns:
         List of document properties
@@ -694,8 +701,17 @@ def fetch_documents_rest(
     target_size = min(target_size, max_offset)  # Cap at Weaviate limit
     chunk_size = min(chunk_size, 1000)  # Reasonable chunk size
 
+    # Build filter info for logging
+    filter_info = []
+    if search_query:
+        filter_info.append(f"search='{search_query}'")
+    if document_type_filter:
+        filter_info.append(f"type={document_type_filter}")
+
+    filter_str = f" with filters: {', '.join(filter_info)}" if filter_info else ""
+
     logger.info(
-        f"Fetching up to {target_size} documents from {base_url} in chunks of {chunk_size} (REST API)..."
+        f"Fetching up to {target_size} documents from {base_url} in chunks of {chunk_size} (REST API){filter_str}..."
     )
     logger.info(
         f"Note: Weaviate offset limit is {max_offset}, so maximum fetchable documents is {max_offset}"
@@ -709,12 +725,44 @@ def fetch_documents_rest(
         remaining = min(target_size - len(all_documents), max_offset - offset)
         current_limit = min(chunk_size, remaining)
 
-        # GraphQL query with offset and limit
+        # Build GraphQL query with optional search and filter
+        # Construct the where clause if needed
+        where_clause = ""
+        if document_type_filter:
+            where_clause = f"""
+                where: {{
+                    path: ["document_type"],
+                    operator: Equal,
+                    valueText: "{document_type_filter}"
+                }}
+            """
+
+        # Construct hybrid search or regular query
+        if search_query:
+            # Use hybrid search (combines semantic + keyword search)
+            query_method = f"""
+                hybrid: {{
+                    query: "{search_query}",
+                    alpha: 0.5
+                }}
+                {where_clause}
+                limit: {current_limit}
+                offset: {offset}
+            """
+        else:
+            # Regular query with optional filter
+            query_method = f"""
+                {where_clause}
+                limit: {current_limit}
+                offset: {offset}
+            """
+
+        # Full GraphQL query
         query = {
             "query": """
             {
                 Get {
-                    LegalDocuments(limit: %d, offset: %d) {
+                    LegalDocuments(%s) {
                         document_id
                         document_type
                         full_text
@@ -724,7 +772,7 @@ def fetch_documents_rest(
                 }
             }
             """
-            % (current_limit, offset)
+            % query_method
         }
 
         try:
@@ -1020,11 +1068,11 @@ def save_results(
 
     logger.info(f"Saved {len(documents)} full_text documents to {full_text_file}")
 
-    # Save extraction results
+    # Save extraction results (single-line JSON for proper JSONL format)
     extracted_file = output_dir / "sample_documents_extracted.jsonl"
     with open(extracted_file, "w", encoding="utf-8") as f:
         for result in extraction_results:
-            f.write(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+            f.write(json.dumps(result, ensure_ascii=False) + "\n")
 
     logger.info(f"Saved {len(extraction_results)} extraction results to {extracted_file}")
 
@@ -1038,7 +1086,9 @@ def save_results(
     field_coverage = {}
     for result in extraction_results:
         if result.get("extraction_status") == "success":
-            extracted_data = result.get("extracted_data", {})
+            extracted_data = result.get("extracted_data") or {}
+            if not isinstance(extracted_data, dict):
+                continue
             for field, value in extracted_data.items():
                 if field not in field_coverage:
                     field_coverage[field] = {"populated": 0, "empty": 0}
@@ -1149,6 +1199,19 @@ def main():
         default=1,
         help="Number of parallel threads for batch processing (default: 1, recommended: 3-5)",
     )
+    parser.add_argument(
+        "--search-query",
+        type=str,
+        default=None,
+        help="Optional search query for hybrid/semantic search (e.g., 'kredyt frankowy', 'VAT')",
+    )
+    parser.add_argument(
+        "--document-type",
+        type=str,
+        default=None,
+        choices=["judgment", "tax_interpretation"],
+        help="Optional filter by document type (judgment or tax_interpretation)",
+    )
 
     args = parser.parse_args()
 
@@ -1164,6 +1227,14 @@ def main():
     vertex_project = os.getenv("VERTEX_PROJECT", "insbay-b32351")
     vertex_location = os.getenv("VERTEX_LOCATION", "us-central1")
 
+    # Build filter display
+    filter_display = []
+    if args.search_query:
+        filter_display.append(f"Search: '{args.search_query}'")
+    if args.document_type:
+        filter_display.append(f"Type: {args.document_type}")
+    filter_str = "\n" + "\n".join(filter_display) if filter_display else ""
+
     console.print(
         f"\n[bold cyan]Gemini Extraction - Vertex AI Mode[/bold cyan]\n"
         f"Weaviate: {weaviate_host}:{weaviate_port}\n"
@@ -1174,8 +1245,23 @@ def main():
         f"Max workers: {args.max_workers} {'(parallel)' if args.max_workers > 1 else '(sequential)'}\n"
         f"Model: {args.model}\n"
         f"Output: {args.output_dir}\n"
-        f"Random seed: {args.seed}\n"
+        f"Random seed: {args.seed}{filter_str}\n"
     )
+
+    # Initialize LangChain PostgreSQL Cache
+    postgres_cache_url = os.getenv("POSTGRES_CACHE_URL")
+    if postgres_cache_url:
+        try:
+            logger.info(f"Initializing LangChain PostgreSQL cache at {postgres_cache_url}...")
+            engine = create_engine(postgres_cache_url)
+            set_llm_cache(SQLAlchemyCache(engine=engine))
+            console.print(f"[green]✓[/green] LangChain PostgreSQL cache enabled ({postgres_cache_url})")
+            logger.info("LangChain PostgreSQL cache initialized successfully")
+        except Exception as e:
+            logger.warning(f"Failed to initialize LangChain cache: {e}")
+            console.print(f"[yellow]Warning: LangChain cache initialization failed: {e}[/yellow]")
+    else:
+        console.print("[yellow]LangChain cache disabled (POSTGRES_CACHE_URL not set)[/yellow]")
 
     # Initialize extraction chain (Vertex AI uses application default credentials)
     logger.info("Initializing Vertex AI Gemini extraction chain...")
@@ -1214,6 +1300,8 @@ def main():
         weaviate_port=weaviate_port,
         api_key=api_key,
         sample_size=args.sample_size,
+        search_query=args.search_query,
+        document_type_filter=args.document_type,
     )
 
     if not documents:
