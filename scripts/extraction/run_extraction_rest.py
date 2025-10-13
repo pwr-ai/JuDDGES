@@ -6,23 +6,26 @@ This script bypasses the Weaviate Python client GRPC issues by using REST API di
 import json
 import os
 import random
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
-from typing import List, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from dotenv import load_dotenv
 import requests
+import weaviate.util
+from dotenv import load_dotenv
+from langchain.globals import set_llm_cache
+from langchain_community.cache import SQLAlchemyMd5Cache
+from langfuse.langchain import CallbackHandler
 from loguru import logger
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from langfuse.langchain import CallbackHandler
-from langchain_community.cache import SQLAlchemyCache
-from langchain.globals import set_llm_cache
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from sqlalchemy import create_engine
 
 from juddges.extraction import GeminiExtractionChain
 from juddges.extraction.gemini_chain import DocumentType, ExtractionSchema
+from juddges.extraction.extraction_storage import ExtractionStorage
 from juddges.settings import ROOT_PATH
 
 # Load environment variables
@@ -853,6 +856,8 @@ def _process_batch(
     schema: ExtractionSchema,
     langfuse_handler,
     batch_idx: int,
+    storage: Optional[ExtractionStorage] = None,
+    run_id: Optional[Any] = None,
 ) -> List[Dict[str, Any]]:
     """Process a single batch of documents (used for parallel processing).
 
@@ -909,16 +914,35 @@ def _process_batch(
         )
 
         # Process batch results
-        for extracted, metadata in zip(extracted_batch, batch_metadata):
+        for extracted, metadata, doc in zip(extracted_batch, batch_metadata, batch_docs):
             result = {
                 "document_id": metadata["document_id"],
+                "document_number": doc.get("document_number"),
                 "document_type": metadata["doc_type_str"],
                 "extraction_status": "success",
                 "extracted_data": extracted,
+                "full_text": doc.get("full_text", ""),
                 "full_text_length": metadata["full_text_length"],
                 "source_language": metadata["language"],
             }
             batch_results.append(result)
+
+            # Save to database if storage provided
+            if storage and run_id:
+                try:
+                    storage.save_extraction_result(
+                        run_id=run_id,
+                        document_id=metadata["document_id"],
+                        document_number=doc.get("document_number"),
+                        document_type=metadata["doc_type_str"],
+                        full_text=doc.get("full_text", ""),
+                        extraction_status="success",
+                        extracted_data=extracted,
+                        source_language=metadata["language"],
+                    )
+                except Exception as db_error:
+                    logger.warning(f"Failed to save to database: {db_error}")
+
             logger.info(
                 f"[Batch {batch_idx}] ✓ Extracted {metadata['document_id']} ({len(extracted)} fields)"
             )
@@ -929,7 +953,7 @@ def _process_batch(
             f"[Batch {batch_idx}] Batch extraction failed: {e}, falling back to individual processing"
         )
 
-        for text, metadata in zip(batch_texts, batch_metadata):
+        for text, metadata, doc in zip(batch_texts, batch_metadata, batch_docs):
             try:
                 extracted = chain.extract(
                     document_type=metadata["document_type"],
@@ -941,13 +965,32 @@ def _process_batch(
 
                 result = {
                     "document_id": metadata["document_id"],
+                    "document_number": doc.get("document_number"),
                     "document_type": metadata["doc_type_str"],
                     "extraction_status": "success",
                     "extracted_data": extracted,
+                    "full_text": doc.get("full_text", ""),
                     "full_text_length": metadata["full_text_length"],
                     "source_language": metadata["language"],
                 }
                 batch_results.append(result)
+
+                # Save to database if storage provided
+                if storage and run_id:
+                    try:
+                        storage.save_extraction_result(
+                            run_id=run_id,
+                            document_id=metadata["document_id"],
+                            document_number=doc.get("document_number"),
+                            document_type=metadata["doc_type_str"],
+                            full_text=doc.get("full_text", ""),
+                            extraction_status="success",
+                            extracted_data=extracted,
+                            source_language=metadata["language"],
+                        )
+                    except Exception as db_error:
+                        logger.warning(f"Failed to save to database: {db_error}")
+
                 logger.info(
                     f"[Batch {batch_idx}] ✓ Extracted {metadata['document_id']} ({len(extracted)} fields)"
                 )
@@ -956,15 +999,32 @@ def _process_batch(
                 logger.error(
                     f"[Batch {batch_idx}] ✗ Failed to extract {metadata['document_id']}: {e2}"
                 )
-                batch_results.append(
-                    {
-                        "document_id": metadata["document_id"],
-                        "document_type": metadata["doc_type_str"],
-                        "extraction_status": "failed",
-                        "error": str(e2),
-                        "full_text_length": metadata["full_text_length"],
-                    }
-                )
+                result = {
+                    "document_id": metadata["document_id"],
+                    "document_number": doc.get("document_number"),
+                    "document_type": metadata["doc_type_str"],
+                    "extraction_status": "failed",
+                    "error": str(e2),
+                    "full_text": doc.get("full_text", ""),
+                    "full_text_length": metadata["full_text_length"],
+                }
+                batch_results.append(result)
+
+                # Save failed result to database if storage provided
+                if storage and run_id:
+                    try:
+                        storage.save_extraction_result(
+                            run_id=run_id,
+                            document_id=metadata["document_id"],
+                            document_number=doc.get("document_number"),
+                            document_type=metadata["doc_type_str"],
+                            full_text=doc.get("full_text", ""),
+                            extraction_status="failed",
+                            error_message=str(e2),
+                            error_type=type(e2).__name__,
+                        )
+                    except Exception as db_error:
+                        logger.warning(f"Failed to save error to database: {db_error}")
 
     return batch_results
 
@@ -976,6 +1036,8 @@ def run_extraction(
     langfuse_handler=None,
     batch_size: int = 10,
     max_workers: int = 1,
+    storage: Optional[ExtractionStorage] = None,
+    run_id: Optional[Any] = None,
 ) -> List[Dict[str, Any]]:
     """Run extraction on sampled documents using parallel batch processing.
 
@@ -986,6 +1048,8 @@ def run_extraction(
         langfuse_handler: Optional Langfuse callback handler for observability
         batch_size: Number of documents to process in each batch (default: 10)
         max_workers: Number of parallel threads for batch processing (default: 1, max: 5)
+        storage: Optional ExtractionStorage for database persistence
+        run_id: Optional run_id for database storage
 
     Returns:
         List of extraction results with metadata
@@ -1016,7 +1080,7 @@ def run_extraction(
             # Sequential processing (no threading)
             for batch_idx, batch_docs in batches:
                 batch_results = _process_batch(
-                    batch_docs, chain, schema, langfuse_handler, batch_idx
+                    batch_docs, chain, schema, langfuse_handler, batch_idx, storage, run_id
                 )
                 with results_lock:
                     results.extend(batch_results)
@@ -1027,7 +1091,14 @@ def run_extraction(
                 # Submit all batches
                 future_to_batch = {
                     executor.submit(
-                        _process_batch, batch_docs, chain, schema, langfuse_handler, batch_idx
+                        _process_batch,
+                        batch_docs,
+                        chain,
+                        schema,
+                        langfuse_handler,
+                        batch_idx,
+                        storage,
+                        run_id,
                     ): batch_idx
                     for batch_idx, batch_docs in batches
                 }
@@ -1133,6 +1204,614 @@ def save_results(
         console.print(f"  {field}: {coverage:.1f}% ({stats['populated']}/{total})")
 
 
+# ============================================================================
+# WEAVIATE INGESTION FUNCTIONS
+# ============================================================================
+
+# Field mapping from extraction schema to Weaviate properties
+# All properties already exist in Weaviate - no need for "extracted_" prefix!
+# NOTE: document_number, document_type, and date_issued are excluded as they're always already valid
+EXTRACTION_TO_WEAVIATE_MAPPING = {
+    # Direct TEXT mappings (existing properties in Weaviate)
+    "title": "title",
+    "summary": "summary",
+    "thesis": "thesis",  # Use existing property
+    # TEXT_ARRAY (existing property - native array support)
+    "keywords": "keywords",
+    # NEW properties (just added to schema)
+    "factual_state": "factual_state",
+    "legal_state": "legal_state",
+    # TEXT (JSON) properties (existing - need JSON serialization)
+    "legal_references": "legal_references",
+    "legal_concepts": "legal_concepts",
+    "parties": "parties",
+    "outcome": "outcome",
+    "legal_analysis": "legal_analysis",
+    "judgment_specific": "judgment_specific",
+    "tax_interpretation_specific": "tax_interpretation_specific",
+}
+
+
+def build_update_payload(extracted_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Transform extracted data to Weaviate property update payload.
+
+    Handles:
+    - Direct TEXT fields (no transformation)
+    - TEXT_ARRAY fields (keywords - no transformation)
+    - TEXT (JSON) fields (need JSON serialization for lists/objects)
+
+    Args:
+        extracted_data: Dictionary with extracted fields from LLM
+
+    Returns:
+        Dictionary with Weaviate properties ready for PATCH request
+    """
+    payload = {}
+
+    # Fields that need JSON serialization (stored as TEXT in Weaviate)
+    json_fields = {
+        "legal_references",
+        "legal_concepts",
+        "parties",
+        "outcome",
+        "legal_analysis",
+        "judgment_specific",
+        "tax_interpretation_specific",
+    }
+
+    for extracted_field, weaviate_property in EXTRACTION_TO_WEAVIATE_MAPPING.items():
+        value = extracted_data.get(extracted_field)
+
+        # Skip empty/null values
+        if value is None or value == "":
+            continue
+
+        # Handle list fields
+        if isinstance(value, list):
+            # Filter out empty strings
+            cleaned_list = [v for v in value if v and str(v).strip()]
+            if not cleaned_list:
+                continue
+
+            # keywords is TEXT_ARRAY - use directly
+            # Other lists need JSON serialization
+            if extracted_field == "keywords":
+                payload[weaviate_property] = cleaned_list
+            elif extracted_field in json_fields:
+                payload[weaviate_property] = json.dumps(cleaned_list, ensure_ascii=False)
+            else:
+                # Default: direct assignment
+                payload[weaviate_property] = cleaned_list
+
+        # Handle object/dict fields (judgment_specific, tax_interpretation_specific)
+        elif isinstance(value, dict):
+            # Only include if dict has meaningful content
+            if not value or all(v is None or v == "" for v in value.values()):
+                continue
+
+            if extracted_field in json_fields:
+                payload[weaviate_property] = json.dumps(value, ensure_ascii=False)
+            else:
+                # Default: direct assignment (shouldn't happen)
+                payload[weaviate_property] = value
+
+        # Handle string fields
+        elif isinstance(value, str):
+            # Special case: keywords field might be a JSON string or comma-separated string
+            if extracted_field == "keywords":
+                # Try to parse as JSON array first
+                if value.startswith("[") and value.endswith("]"):
+                    try:
+                        parsed_list = json.loads(value)
+                        if isinstance(parsed_list, list):
+                            cleaned_list = [v for v in parsed_list if v and str(v).strip()]
+                            if cleaned_list:
+                                payload[weaviate_property] = cleaned_list
+                            continue
+                    except (json.JSONDecodeError, ValueError):
+                        logger.warning(
+                            f"Failed to parse keywords as JSON list: {value[:100]}"
+                        )
+
+                # If not JSON, try comma-separated string
+                if "," in value or value.strip():  # Single keyword or comma-separated
+                    # Split by comma and clean up
+                    keywords_list = [k.strip() for k in value.split(",") if k.strip()]
+                    if keywords_list:
+                        payload[weaviate_property] = keywords_list
+                        continue
+
+            if extracted_field in json_fields:
+                # String fields that need JSON wrapping (outcome, legal_analysis)
+                payload[weaviate_property] = json.dumps(value, ensure_ascii=False)
+            else:
+                # Direct TEXT fields (most common)
+                payload[weaviate_property] = value
+
+        else:
+            # Default: direct assignment for other types
+            payload[weaviate_property] = value
+
+    return payload
+
+
+def ingest_batch_via_batch_api(
+    batch_data: List[Dict[str, Any]],
+    base_url: str,
+    headers: Dict[str, str],
+    overwrite_existing: bool = False,
+) -> tuple[int, int, List[Dict[str, str]]]:
+    """
+    Ingest a batch of documents using Weaviate's batch API.
+
+    This is more efficient than individual PATCH requests and less likely to block queries.
+
+    Args:
+        batch_data: List of dicts with 'uuid', 'payload', and 'document_id'
+        base_url: Weaviate base URL
+        headers: Request headers
+        overwrite_existing: Whether to overwrite existing values
+
+    Returns:
+        Tuple of (successful_updates, failed_updates, errors)
+    """
+    successful = 0
+    failed = 0
+    errors = []
+
+    # Build batch objects for update
+    batch_objects = []
+
+    for item in batch_data:
+        uuid = item["uuid"]
+        payload = item["payload"]
+        document_id = item["document_id"]
+
+        if not payload:
+            # No fields to update
+            successful += 1
+            continue
+
+        # Fetch existing data if not overwriting
+        if not overwrite_existing:
+            try:
+                get_url = f"{base_url}/v1/objects/LegalDocuments/{uuid}"
+                get_response = requests.get(get_url, headers=headers, timeout=10)
+
+                if get_response.ok:
+                    existing_data = get_response.json().get("properties", {})
+
+                    # Filter out non-empty fields
+                    filtered_payload = {}
+                    for field, value in payload.items():
+                        existing_value = existing_data.get(field)
+                        is_empty = (
+                            existing_value is None
+                            or existing_value == ""
+                            or (isinstance(existing_value, list) and not existing_value)
+                        )
+                        if is_empty:
+                            filtered_payload[field] = value
+
+                    payload = filtered_payload
+
+                    if not payload:
+                        # All fields already populated
+                        successful += 1
+                        continue
+            except Exception as e:
+                logger.warning(f"Error fetching existing data for {document_id}: {e}")
+                # Continue with full payload
+
+        batch_objects.append({
+            "id": uuid,
+            "class": "LegalDocuments",
+            "properties": payload,
+        })
+
+    if not batch_objects:
+        # All documents skipped (no updates needed)
+        return successful, failed, errors
+
+    # Send batch request
+    batch_url = f"{base_url}/v1/batch/objects"
+
+    try:
+        response = requests.post(
+            batch_url,
+            headers=headers,
+            json={"objects": batch_objects, "action": "MERGE"},  # MERGE updates only specified fields
+            timeout=60,
+        )
+
+        response.raise_for_status()
+        result = response.json()
+
+        # Process batch results
+        if isinstance(result, list):
+            for item_result in result:
+                if item_result.get("result", {}).get("status") == "SUCCESS":
+                    successful += 1
+                else:
+                    failed += 1
+                    error_msg = item_result.get("result", {}).get("errors", {})
+                    errors.append({
+                        "document_id": item_result.get("id", "unknown"),
+                        "error": str(error_msg),
+                    })
+        else:
+            # Assume all successful if no error
+            successful += len(batch_objects)
+
+    except requests.exceptions.HTTPError as e:
+        # Batch failed - mark all as failed
+        failed += len(batch_objects)
+        for item in batch_data:
+            errors.append({
+                "document_id": item["document_id"],
+                "error": f"Batch API error: {e}",
+                "status_code": e.response.status_code if e.response else None,
+            })
+        logger.error(f"Batch API request failed: {e}")
+
+    except Exception as e:
+        failed += len(batch_objects)
+        for item in batch_data:
+            errors.append({
+                "document_id": item["document_id"],
+                "error": f"Batch processing error: {e}",
+            })
+        logger.error(f"Batch processing failed: {e}")
+
+    return successful, failed, errors
+
+
+def ingest_extracted_to_weaviate(
+    extraction_results: List[Dict[str, Any]],
+    weaviate_host: str,
+    weaviate_port: int,
+    api_key: str,
+    batch_size: int = 50,
+    skip_on_error: bool = True,
+    delay_between_batches: float = 0.5,
+    overwrite_existing: bool = False,
+    use_batch_api: bool = True,
+) -> Dict[str, Any]:
+    """
+    Ingest extracted data back into Weaviate, updating existing documents.
+
+    This function:
+    1. Filters for successfully extracted documents
+    2. Builds update payloads mapping extracted fields to Weaviate properties
+    3. Checks existing document values before updating (unless overwrite_existing=True)
+    4. Uses PATCH requests to update documents in batches
+    5. Tracks success/failure statistics
+    6. Generates detailed error reports
+
+    Args:
+        extraction_results: List of extraction results from run_extraction()
+        weaviate_host: Weaviate server host
+        weaviate_port: Weaviate server port
+        api_key: Weaviate API key
+        batch_size: Number of documents to update per batch (default: 50)
+        skip_on_error: Continue on individual document errors (default: True)
+        delay_between_batches: Seconds to wait between batches (default: 0.5)
+        overwrite_existing: If False (default), only update empty/null fields in Weaviate.
+                           If True, overwrite existing non-empty values.
+        use_batch_api: If True (default), use Weaviate's batch API for better performance.
+                       If False, use individual PATCH requests (legacy behavior).
+
+    Returns:
+        Dictionary with ingestion statistics:
+        {
+            "total_documents": int,
+            "successful_updates": int,
+            "failed_updates": int,
+            "skipped_documents": int,
+            "duration_seconds": float,
+            "timestamp": str,
+            "errors": List[Dict[str, str]]
+        }
+    """
+    start_time = time.time()
+
+    # Filter for successful extractions only
+    successful_results = [r for r in extraction_results if r.get("extraction_status") == "success"]
+
+    total_documents = len(extraction_results)
+    skipped_documents = total_documents - len(successful_results)
+
+    console.print(f"\n[cyan]Ingestion Plan:[/cyan]")
+    console.print(f"  • Total extraction results: {total_documents}")
+    console.print(f"  • Successful extractions: {len(successful_results)}")
+    console.print(f"  • Skipped (failed extractions): {skipped_documents}")
+    console.print(f"  • Batch size: {batch_size}")
+    console.print(
+        f"  • Batches to process: {(len(successful_results) + batch_size - 1) // batch_size}"
+    )
+
+    if not successful_results:
+        logger.warning("No successful extractions to ingest")
+        return {
+            "total_documents": total_documents,
+            "successful_updates": 0,
+            "failed_updates": 0,
+            "skipped_documents": skipped_documents,
+            "duration_seconds": 0,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "errors": [],
+        }
+
+    # Setup for batch processing
+    base_url = f"http://{weaviate_host}:{weaviate_port}"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    successful_updates = 0
+    failed_updates = 0
+    errors = []
+
+    # Process in batches with progress bar
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TextColumn("({task.completed}/{task.total})"),
+    ) as progress:
+        task = progress.add_task("Ingesting to Weaviate...", total=len(successful_results))
+
+        # Process in batches
+        for batch_idx, batch_start in enumerate(range(0, len(successful_results), batch_size)):
+            batch = successful_results[batch_start : batch_start + batch_size]
+
+            logger.info(
+                f"Processing batch {batch_idx + 1}/{(len(successful_results) + batch_size - 1) // batch_size}"
+            )
+
+            # Use batch API for more efficient updates
+            if use_batch_api:
+                batch_data = []
+
+                for result in batch:
+                    document_id = result.get("document_id", "")
+                    extracted_data = result.get("extracted_data", {})
+
+                    if not document_id or not extracted_data:
+                        logger.warning(f"Skipping result with missing document_id or extracted_data")
+                        failed_updates += 1
+                        progress.update(task, advance=1)
+                        continue
+
+                    # Convert document_id to Weaviate UUID
+                    weaviate_uuid = weaviate.util.generate_uuid5(document_id)
+
+                    # Build update payload
+                    try:
+                        update_payload = build_update_payload(extracted_data)
+
+                        if not update_payload:
+                            logger.debug(f"No non-empty fields to update for {document_id}")
+                            successful_updates += 1
+                            progress.update(task, advance=1)
+                            continue
+
+                        batch_data.append({
+                            "uuid": weaviate_uuid,
+                            "payload": update_payload,
+                            "document_id": document_id,
+                        })
+
+                    except Exception as e:
+                        logger.error(f"Error building payload for {document_id}: {e}")
+                        failed_updates += 1
+                        errors.append({
+                            "document_id": document_id,
+                            "error": f"Payload build error: {e}",
+                        })
+                        progress.update(task, advance=1)
+
+                # Process batch via batch API
+                if batch_data:
+                    batch_successful, batch_failed, batch_errors = ingest_batch_via_batch_api(
+                        batch_data=batch_data,
+                        base_url=base_url,
+                        headers=headers,
+                        overwrite_existing=overwrite_existing,
+                    )
+
+                    successful_updates += batch_successful
+                    failed_updates += batch_failed
+                    errors.extend(batch_errors)
+
+                    progress.update(task, advance=len(batch_data))
+
+                    logger.info(
+                        f"Batch {batch_idx + 1}: {batch_successful} successful, {batch_failed} failed"
+                    )
+
+            else:
+                # Legacy: individual PATCH requests
+                for result in batch:
+                    document_id = result.get("document_id", "")
+                    extracted_data = result.get("extracted_data", {})
+
+                    if not document_id or not extracted_data:
+                        logger.warning(f"Skipping result with missing document_id or extracted_data")
+                        failed_updates += 1
+                        progress.update(task, advance=1)
+                        continue
+
+                    # Convert document_id to Weaviate UUID using deterministic UUID generation
+                    # This ensures we use the same UUID that was used when ingesting the document
+                    weaviate_uuid = weaviate.util.generate_uuid5(document_id)
+
+                    # Build update payload
+                    try:
+                        update_payload = build_update_payload(extracted_data)
+
+                        if not update_payload:
+                            logger.debug(f"No non-empty fields to update for {document_id}")
+                            successful_updates += 1  # Consider this success (nothing to update)
+                            progress.update(task, advance=1)
+                            continue
+
+                        # Fetch existing document properties if overwrite_existing is False
+                        if not overwrite_existing:
+                            get_url = f"{base_url}/v1/objects/LegalDocuments/{weaviate_uuid}"
+                            try:
+                                get_response = requests.get(get_url, headers=headers, timeout=10)
+                                if get_response.ok:
+                                    existing_data = get_response.json().get("properties", {})
+
+                                    # Filter out fields that already have non-empty values
+                                    filtered_payload = {}
+                                    for field, value in update_payload.items():
+                                        existing_value = existing_data.get(field)
+
+                                        # Check if existing value is empty/null
+                                        is_empty = (
+                                            existing_value is None
+                                            or existing_value == ""
+                                            or (isinstance(existing_value, list) and not existing_value)
+                                        )
+
+                                        # Only include field if existing value is empty
+                                        if is_empty:
+                                            filtered_payload[field] = value
+                                        else:
+                                            logger.debug(
+                                                f"Skipping field '{field}' for {document_id} - already has value"
+                                            )
+
+                                    update_payload = filtered_payload
+
+                                    # Skip update if no fields remain after filtering
+                                    if not update_payload:
+                                        logger.debug(
+                                            f"No empty fields to update for {document_id} (all fields already populated)"
+                                        )
+                                        successful_updates += 1
+                                        progress.update(task, advance=1)
+                                        continue
+                                else:
+                                    logger.warning(
+                                        f"Could not fetch existing data for {document_id}: {get_response.status_code}"
+                                    )
+                                    # Continue with full payload if GET fails
+                            except Exception as get_error:
+                                logger.warning(
+                                    f"Error fetching existing data for {document_id}: {get_error}, continuing with full update"
+                                )
+                                # Continue with full payload if GET fails
+
+                        # PATCH request to update document
+                        url = f"{base_url}/v1/objects/LegalDocuments/{weaviate_uuid}"
+
+                        response = requests.patch(
+                            url=url,
+                            headers=headers,
+                            json={"properties": update_payload},
+                            timeout=30,
+                        )
+
+                        response.raise_for_status()
+                        successful_updates += 1
+
+                        logger.debug(f"✓ Updated {document_id} with {len(update_payload)} properties")
+
+                    except requests.exceptions.HTTPError as e:
+                        error_info = {
+                            "document_id": document_id,
+                            "weaviate_uuid": weaviate_uuid,
+                            "error": str(e),
+                            "status_code": e.response.status_code if e.response else None,
+                            "response": e.response.text if e.response else None,
+                        }
+                        errors.append(error_info)
+                        failed_updates += 1
+
+                        # Enhanced logging for 422 errors to see validation details
+                        if e.response and e.response.status_code == 422:
+                            logger.warning(
+                                f"✗ Failed to update {document_id} with 422 validation error. "
+                                f"Response: {e.response.text[:500]}"
+                            )
+                        else:
+                            logger.warning(f"✗ Failed to update {document_id}: {e}")
+
+                        if not skip_on_error:
+                            raise
+
+                    except Exception as e:
+                        error_info = {
+                            "document_id": document_id,
+                            "error": str(e),
+                            "error_type": type(e).__name__,
+                        }
+                        errors.append(error_info)
+                        failed_updates += 1
+
+                        logger.warning(f"✗ Error processing {document_id}: {e}")
+
+                        if not skip_on_error:
+                            raise
+
+                    progress.update(task, advance=1)
+
+            # Small delay between batches to avoid overwhelming Weaviate
+            if batch_idx < (len(successful_results) + batch_size - 1) // batch_size - 1:
+                time.sleep(delay_between_batches)
+
+    # Calculate statistics
+    duration = time.time() - start_time
+
+    stats = {
+        "total_documents": total_documents,
+        "successful_updates": successful_updates,
+        "failed_updates": failed_updates,
+        "skipped_documents": skipped_documents,
+        "duration_seconds": round(duration, 2),
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "errors": errors,
+    }
+
+    return stats
+
+
+def display_ingestion_results(stats: Dict[str, Any], console: Console):
+    """Display ingestion results in a formatted way."""
+
+    console.print("\n" + "=" * 60)
+    console.print("[bold green]✓ Weaviate Ingestion Complete![/bold green]")
+    console.print("=" * 60)
+
+    console.print(f"\n[cyan]Statistics:[/cyan]")
+    console.print(f"  • Total documents: {stats['total_documents']}")
+    console.print(f"  • Successful updates: [green]{stats['successful_updates']}[/green]")
+    console.print(f"  • Failed updates: [red]{stats['failed_updates']}[/red]")
+    console.print(
+        f"  • Skipped (failed extractions): [yellow]{stats['skipped_documents']}[/yellow]"
+    )
+    console.print(f"  • Duration: {stats['duration_seconds']:.1f} seconds")
+
+    if stats["successful_updates"] > 0:
+        success_rate = (
+            stats["successful_updates"] / (stats["successful_updates"] + stats["failed_updates"])
+        ) * 100
+        console.print(f"  • Success rate: [green]{success_rate:.1f}%[/green]")
+
+    if stats["errors"]:
+        console.print(f"\n[red]Errors ({len(stats['errors'])}):[/red]")
+        for error in stats["errors"][:5]:  # Show first 5 errors
+            console.print(f"  • {error['document_id']}: {error.get('error', 'Unknown error')}")
+        if len(stats["errors"]) > 5:
+            console.print(f"  ... and {len(stats['errors']) - 5} more errors")
+
+
 def main():
     """Main execution function."""
     import argparse
@@ -1151,9 +1830,9 @@ def main():
         choices=[
             "gemini-2.5-pro",
             "gemini-2.5-flash",
-            "gemini-2.0-flash-exp",
-            "gemini-1.5-pro",
-            "gemini-1.5-flash",
+            # "gemini-2.0-flash-exp",
+            # "gemini-1.5-pro",
+            # "gemini-1.5-flash",
         ],
         help="Gemini model to use (via Vertex AI)",
     )
@@ -1190,14 +1869,14 @@ def main():
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=10,
-        help="Number of documents to process in each batch (default: 10)",
+        default=5,
+        help="Number of documents to process in each batch (default: 5)",
     )
     parser.add_argument(
         "--max-workers",
         type=int,
-        default=1,
-        help="Number of parallel threads for batch processing (default: 1, recommended: 3-5)",
+        default=5,
+        help="Number of parallel threads for batch processing (default: 5, max: 10)",
     )
     parser.add_argument(
         "--search-query",
@@ -1211,6 +1890,22 @@ def main():
         default=None,
         choices=["judgment", "tax_interpretation"],
         help="Optional filter by document type (judgment or tax_interpretation)",
+    )
+    parser.add_argument(
+        "--ingest-to-weaviate",
+        action="store_true",
+        help="Ingest extracted data back to Weaviate after extraction (updates existing documents)",
+    )
+    parser.add_argument(
+        "--ingest-batch-size",
+        type=int,
+        default=50,
+        help="Number of documents to ingest per batch when ingesting to Weaviate (default: 50)",
+    )
+    parser.add_argument(
+        "--overwrite-existing",
+        action="store_true",
+        help="Overwrite existing non-empty values in Weaviate (default: only update empty fields)",
     )
 
     args = parser.parse_args()
@@ -1248,15 +1943,22 @@ def main():
         f"Random seed: {args.seed}{filter_str}\n"
     )
 
-    # Initialize LangChain PostgreSQL Cache
+    # Initialize LangChain PostgreSQL Cache using SQLAlchemyMd5Cache
+    # This stores MD5 hashes instead of full prompts, avoiding index size limits
     postgres_cache_url = os.getenv("POSTGRES_CACHE_URL")
     if postgres_cache_url:
         try:
-            logger.info(f"Initializing LangChain PostgreSQL cache at {postgres_cache_url}...")
+            logger.info(f"Initializing LangChain PostgreSQL cache (MD5) at {postgres_cache_url}...")
             engine = create_engine(postgres_cache_url)
-            set_llm_cache(SQLAlchemyCache(engine=engine))
-            console.print(f"[green]✓[/green] LangChain PostgreSQL cache enabled ({postgres_cache_url})")
-            logger.info("LangChain PostgreSQL cache initialized successfully")
+
+            # Use SQLAlchemyMd5Cache instead of SQLAlchemyCache
+            # This stores MD5 hashes of prompts to avoid index size limits with large prompts
+            set_llm_cache(SQLAlchemyMd5Cache(engine=engine))
+
+            console.print(
+                f"[green]✓[/green] LangChain PostgreSQL cache (MD5) enabled ({postgres_cache_url})"
+            )
+            logger.info("LangChain PostgreSQL MD5 cache initialized successfully")
         except Exception as e:
             logger.warning(f"Failed to initialize LangChain cache: {e}")
             console.print(f"[yellow]Warning: LangChain cache initialization failed: {e}[/yellow]")
@@ -1276,6 +1978,17 @@ def main():
     # Create schema
     schema = create_comprehensive_schema()
     logger.info(f"Created extraction schema with {len(schema.fields)} fields")
+
+    # Initialize extraction storage
+    storage = None
+    run_id = None
+    try:
+        storage = ExtractionStorage()
+        logger.info("Initialized extraction storage (PostgreSQL)")
+        console.print("[green]✓[/green] Extraction storage enabled (PostgreSQL)")
+    except Exception as e:
+        logger.warning(f"Failed to initialize extraction storage: {e}")
+        console.print(f"[yellow]Warning: Extraction storage disabled - {e}[/yellow]")
 
     # Initialize Langfuse (enable by default if keys are available)
     langfuse_handler = None
@@ -1308,6 +2021,33 @@ def main():
         console.print("[red]No documents found for extraction![/red]")
         return
 
+    # Create extraction run in database
+    start_time = time.time()
+    if storage:
+        try:
+            run_id = storage.create_extraction_run(
+                model_name=args.model,
+                sample_size=args.sample_size,
+                batch_size=args.batch_size,
+                max_workers=args.max_workers,
+                weaviate_host=weaviate_host,
+                weaviate_port=weaviate_port,
+                search_query=args.search_query,
+                document_type_filter=args.document_type,
+                vertex_project=vertex_project,
+                vertex_location=vertex_location,
+                temperature=0.0,
+                prompt_template=schema.instructions,  # Save full instructions
+                extraction_schema=schema.fields,  # Save complete schema
+                random_seed=args.seed,
+                notes=f"Extraction run with {args.sample_size} documents",
+            )
+            logger.info(f"Created extraction run: {run_id}")
+            console.print(f"[cyan]Extraction run ID:[/cyan] {run_id}")
+        except Exception as e:
+            logger.error(f"Failed to create extraction run: {e}")
+            console.print(f"[red]Failed to create extraction run: {e}[/red]")
+
     # Run extraction with parallel batch processing
     logger.info(
         f"Running extraction on {len(documents)} documents "
@@ -1320,11 +2060,111 @@ def main():
         langfuse_handler,
         batch_size=args.batch_size,
         max_workers=args.max_workers,
+        storage=storage,
+        run_id=run_id,
     )
 
     # Save results
     output_dir = Path(args.output_dir)
     save_results(documents, extraction_results, output_dir)
+
+    # Complete extraction run in database
+    if storage and run_id:
+        try:
+            duration = time.time() - start_time
+            successful = sum(
+                1 for r in extraction_results if r.get("extraction_status") == "success"
+            )
+            failed = len(extraction_results) - successful
+
+            storage.complete_extraction_run(
+                run_id=run_id,
+                total_documents=len(extraction_results),
+                successful_extractions=successful,
+                failed_extractions=failed,
+                duration_seconds=duration,
+            )
+
+            # Save field coverage
+            field_coverage = {}
+            for result in extraction_results:
+                if result.get("extraction_status") == "success":
+                    extracted_data = result.get("extracted_data") or {}
+                    if isinstance(extracted_data, dict):
+                        for field, value in extracted_data.items():
+                            if field not in field_coverage:
+                                field_coverage[field] = {"populated": 0, "empty": 0}
+
+                            # Check if field is populated
+                            if value:
+                                if isinstance(value, str) and value.strip():
+                                    field_coverage[field]["populated"] += 1
+                                elif isinstance(value, list) and value:
+                                    field_coverage[field]["populated"] += 1
+                                elif isinstance(value, dict) and value:
+                                    field_coverage[field]["populated"] += 1
+                                else:
+                                    field_coverage[field]["empty"] += 1
+                            else:
+                                field_coverage[field]["empty"] += 1
+
+            if field_coverage:
+                storage.save_field_coverage(run_id, field_coverage)
+
+            logger.info(f"Completed extraction run: {run_id}")
+            console.print(f"[green]✓[/green] Extraction run completed and saved to database")
+        except Exception as e:
+            logger.error(f"Failed to complete extraction run: {e}")
+            console.print(f"[red]Failed to complete extraction run: {e}[/red]")
+
+    # Optional: Ingest extracted data back to Weaviate
+    if args.ingest_to_weaviate:
+        console.print("\n[bold blue]Starting Weaviate ingestion...[/bold blue]")
+
+        try:
+            ingestion_stats = ingest_extracted_to_weaviate(
+                extraction_results=extraction_results,
+                weaviate_host=weaviate_host,
+                weaviate_port=weaviate_port,
+                api_key=api_key,
+                batch_size=args.ingest_batch_size,
+                skip_on_error=True,
+                overwrite_existing=args.overwrite_existing,
+            )
+
+            # Display results
+            display_ingestion_results(ingestion_stats, console)
+
+            # Log ingestion to database
+            if storage and run_id:
+                try:
+                    storage.log_ingestion(
+                        run_id=run_id,
+                        batch_size=args.ingest_batch_size,
+                        overwrite_existing=args.overwrite_existing,
+                        total_documents=ingestion_stats["total_documents"],
+                        successful_updates=ingestion_stats["successful_updates"],
+                        failed_updates=ingestion_stats["failed_updates"],
+                        skipped_documents=ingestion_stats["skipped_documents"],
+                        duration_seconds=ingestion_stats["duration_seconds"],
+                        errors=ingestion_stats.get("errors", []),
+                        status="completed",
+                    )
+                    logger.info(f"Logged ingestion for run: {run_id}")
+                except Exception as e:
+                    logger.error(f"Failed to log ingestion: {e}")
+
+            # Save ingestion report
+            ingestion_report_path = output_dir / "ingestion_report.json"
+            with open(ingestion_report_path, "w", encoding="utf-8") as f:
+                json.dump(ingestion_stats, f, ensure_ascii=False, indent=2)
+
+            console.print(f"\n[cyan]Ingestion report saved to:[/cyan] {ingestion_report_path}")
+
+        except Exception as e:
+            console.print(f"\n[red]✗ Ingestion failed: {e}[/red]")
+            logger.exception("Ingestion error")
+            raise
 
     console.print(f"\n[bold green]✓ Extraction complete![/bold green]")
     console.print(f"Results saved to: {output_dir}")
