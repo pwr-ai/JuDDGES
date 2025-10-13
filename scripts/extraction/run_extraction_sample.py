@@ -21,7 +21,7 @@ if not os.getenv("WEAVIATE_PORT"):
     os.environ["WEAVIATE_PORT"] = "8084"
 
 if not os.getenv("WEAVIATE_GRPC_PORT"):
-    os.environ["WEAVIATE_GRPC_PORT"] = "50051"
+    os.environ["WEAVIATE_GRPC_PORT"] = "8085"
 
 from loguru import logger
 from rich.console import Console
