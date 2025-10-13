@@ -5,7 +5,7 @@ import os
 # Set environment BEFORE importing anything
 os.environ["WEAVIATE_HOST"] = "localhost"
 os.environ["WEAVIATE_PORT"] = "8084"
-os.environ["WEAVIATE_GRPC_PORT"] = "50051"
+os.environ["WEAVIATE_GRPC_PORT"] = "8085"
 os.environ["WEAVIATE_API_KEY"] = ""  # No auth for local
 
 import sys
