@@ -42,7 +42,7 @@ class BaseWeaviateDB(ABC):
                     http_port=int(os.getenv("WEAVIATE_PORT", "8084")),
                     http_secure=False,
                     grpc_host=weaviate_host,  # Same host but GRPC won't be used
-                    grpc_port=50051,  # Dummy port, won't be used
+                    grpc_port=8085,  # Dummy port, won't be used
                     grpc_secure=False,
                     auth_credentials=weaviate.auth.AuthApiKey(
                         api_key=os.getenv("WEAVIATE_API_KEY", "")
@@ -76,7 +76,7 @@ class BaseWeaviateDB(ABC):
                     http_port=int(os.getenv("WEAVIATE_PORT", "8084")),
                     http_secure=False,
                     grpc_host=weaviate_host,
-                    grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),
+                    grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "8085")),
                     grpc_secure=False,
                     auth_credentials=weaviate.auth.AuthApiKey(
                         api_key=os.getenv("WEAVIATE_API_KEY", "")
