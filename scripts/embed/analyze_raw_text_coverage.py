@@ -116,8 +116,8 @@ def main():
     parser.add_argument(
         "--weaviate-grpc-port",
         type=int,
-        default=50051,
-        help="Weaviate gRPC port (default: 50051)",
+        default=8085,
+        help="Weaviate gRPC port (default: 8085)",
     )
     parser.add_argument(
         "--show-missing",

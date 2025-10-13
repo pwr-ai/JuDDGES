@@ -16,7 +16,7 @@ services:
       # - t2v-transformers-fast
     ports:
       - 8084:8084
-      - 50051:50051
+      - 8085:50051
     volumes:
       - legal_ai_weaviate_prod:/var/lib/weaviate
     env_file: .env
@@ -29,6 +29,20 @@ services:
       - VIRTUAL_HOST=legal-ai-weaviate.augustyniak.ai
       - LETSENCRYPT_EMAIL=lukasz@augustyniak.ai
       - VIRTUAL_PORT=8084
+      # Performance tuning
+      - QUERY_MAXIMUM_RESULTS=10000
+      - QUERY_DEFAULTS_LIMIT=25
+      - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+      - PERSISTENCE_LSM_ACCESS_STRATEGY=mmap
+      - DISK_USE_READONLY_PERCENTAGE=95
+      - ASYNC_INDEXING=true
+      - REINDEX_VECTOR_DIMENSIONS_AT_STARTUP=false
+      # Connection and timeout settings
+      - GOMEMLIMIT=100GiB
+      - GOGC=100
+      # Batch processing optimization
+      - BATCH_DELETE_TIMEOUT=10m
+      - BATCH_UPDATE_TIMEOUT=10m
     deploy:
       restart_policy:
         condition: on-failure
@@ -142,9 +156,38 @@ services:
   #       max-size: "10m"
   #       max-file: "3"
 
+  # PostgreSQL for extraction storage (separate from cache)
+  extraction-postgres:
+    image: postgres:16-alpine
+    container_name: legal_ai_extraction_postgres
+    environment:
+      POSTGRES_USER: ${EXTRACTION_POSTGRES_USER:-extraction_user}
+      POSTGRES_PASSWORD: ${EXTRACTION_POSTGRES_PASSWORD:-extraction_pass}
+      POSTGRES_DB: ${EXTRACTION_POSTGRES_DB:-legal_extraction}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5434:5432"  # Port 5434 (5432, 5433, 5555 already in use)
+    volumes:
+      - legal_ai_extraction_postgres_data:/var/lib/postgresql/data
+      - ./init_extraction_db.sql:/docker-entrypoint-initdb.d/init_extraction_db.sql:ro
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: '8G'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - default
+
 volumes:
   legal_ai_weaviate_prod:
     external: true
+  legal_ai_extraction_postgres_data:
 
 networks:
   nginx-router_proxy-tier:
