@@ -1,6 +1,6 @@
 #!/bin/bash
 # Large-scale extraction with configurable queries
-# Configuration: batch_size=5, max_workers=20, sample_size=30000 per query
+# Configuration: batch_size=5, max_workers=20, max_documents=30000 per query
 
 set -e  # Exit on error
 
@@ -15,7 +15,7 @@ cd "$PROJECT_ROOT"
 # Processing configuration
 BATCH_SIZE=5
 MAX_WORKERS=20
-SAMPLE_SIZE=30000
+MAX_DOCUMENTS=30000
 MODEL="gemini-2.5-pro"
 
 # Output configuration (auto-generated based on timestamp)
@@ -48,7 +48,7 @@ mkdir -p "$LOG_DIR"
 
 # Count queries
 TOTAL_QUERIES=${#QUERIES[@]}
-EXPECTED_DOCS=$((TOTAL_QUERIES * SAMPLE_SIZE))
+EXPECTED_DOCS=$((TOTAL_QUERIES * MAX_DOCUMENTS))
 
 echo "=========================================="
 echo "Large-Scale Extraction Run"
@@ -56,7 +56,7 @@ echo "=========================================="
 echo "Timestamp: $TIMESTAMP"
 echo "Batch size: $BATCH_SIZE"
 echo "Parallel workers: $MAX_WORKERS"
-echo "Sample size per query: $SAMPLE_SIZE"
+echo "Max documents per query: $MAX_DOCUMENTS"
 echo "Model: $MODEL"
 echo "Output directory: $BASE_OUTPUT_DIR"
 echo "Total queries: $TOTAL_QUERIES"
@@ -92,7 +92,7 @@ for QUERY_ENTRY in "${QUERIES[@]}"; do
 
     # Run extraction
     python scripts/extraction/run_extraction_rest.py \
-        --sample-size $SAMPLE_SIZE \
+        --max-documents $MAX_DOCUMENTS \
         --search-query "$SEARCH_QUERY" \
         --model $MODEL \
         --batch-size $BATCH_SIZE \

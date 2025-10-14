@@ -123,13 +123,13 @@ Extract factual information from the legal document.
 
 
 def sample_documents(
-    db: WeaviateLegalDocumentsDatabase, sample_size: int = 50
+    db: WeaviateLegalDocumentsDatabase, max_documents: int = 50
 ) -> List[Dict[str, Any]]:
     """Sample random documents with full_text from Weaviate.
 
     Args:
         db: Weaviate database connection
-        sample_size: Number of documents to sample
+        max_documents: Maximum number of documents to sample
 
     Returns:
         List of document properties
@@ -139,7 +139,7 @@ def sample_documents(
     # Fetch documents with full_text
     # Use larger fetch size to ensure we get enough valid documents
     # Avoid aggregate.over_all() which uses GRPC
-    fetch_size = sample_size * 5  # Fetch 5x more to filter for valid full_text
+    fetch_size = max_documents * 5  # Fetch 5x more to filter for valid full_text
 
     logger.info(f"Fetching up to {fetch_size} documents from Weaviate (REST API)...")
 
@@ -167,7 +167,7 @@ def sample_documents(
         return []
 
     # Random sample
-    sample = random.sample(valid_docs, min(sample_size, len(valid_docs)))
+    sample = random.sample(valid_docs, min(max_documents, len(valid_docs)))
 
     logger.info(f"Sampled {len(sample)} documents for extraction")
 
@@ -349,10 +349,10 @@ def main():
         description="Run Gemini extraction on random sample of documents"
     )
     parser.add_argument(
-        "--sample-size",
+        "--max-documents",
         type=int,
         default=50,
-        help="Number of documents to sample",
+        help="Maximum number of documents to sample",
     )
     parser.add_argument(
         "--model",
@@ -387,7 +387,7 @@ def main():
 
     console.print(
         f"\n[bold cyan]Gemini Extraction - Random Sample[/bold cyan]\n"
-        f"Sample size: {args.sample_size}\n"
+        f"Max documents: {args.max_documents}\n"
         f"Model: {args.model}\n"
         f"Output: {args.output_dir}\n"
         f"Random seed: {args.seed}\n"
@@ -424,7 +424,7 @@ def main():
     # Connect to Weaviate and sample documents
     logger.info("Connecting to Weaviate...")
     with WeaviateLegalDocumentsDatabase() as db:
-        documents = sample_documents(db, sample_size=args.sample_size)
+        documents = sample_documents(db, max_documents=args.max_documents)
 
     if not documents:
         console.print("[red]No documents found for extraction![/red]")

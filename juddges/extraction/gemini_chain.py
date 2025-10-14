@@ -89,17 +89,25 @@ class GeminiExtractionChain:
     - Google Gemini 2.5 Pro/Flash model support
     - Native structured output via with_structured_output() - guarantees valid JSON responses
     - Eliminates JSON parsing errors by using Gemini's response_schema API
+    - Optional extended thinking mode for Gemini 2.5 models (disabled by default)
     - PostgreSQL caching (via POSTGRES_CACHE_URL env var) with SQLite fallback
     - Langfuse callback integration for observability
     - Document type-aware prompting
     - Dynamic Pydantic model generation from ExtractionSchema
+
+    Thinking Mode (Gemini 2.5 only):
+    - Extended thinking mode shows the model's reasoning process before providing the answer
+    - Can improve accuracy for complex reasoning tasks
+    - Increases latency and token usage
+    - Default: disabled (enable_thinking=False)
+    - Recommended: keep disabled for structured extraction tasks, enable for complex reasoning
 
     Cache Configuration:
     - Set POSTGRES_CACHE_URL environment variable for PostgreSQL caching
     - Falls back to SQLite if PostgreSQL is unavailable or not configured
     - Custom SQLite path can be specified via cache_path parameter
 
-    Example:
+    Example (default - no thinking):
         >>> chain = GeminiExtractionChain(
         ...     model_name="gemini-2.5-pro",
         ...     cache_path="cache/extraction.db",  # SQLite fallback path
@@ -121,6 +129,13 @@ class GeminiExtractionChain:
         ...     langfuse_handler=my_langfuse_handler,  # Optional
         ... )
         >>> print(result)  # {"verdict_date": "2024-01-15", "court": "Sąd Najwyższy"}
+
+    Example (with thinking enabled):
+        >>> chain = GeminiExtractionChain(
+        ...     model_name="gemini-2.5-pro",
+        ...     enable_thinking=True,  # Enable extended thinking mode
+        ... )
+        >>> # Model will show reasoning process in responses
     """
 
     def __init__(
@@ -137,6 +152,7 @@ class GeminiExtractionChain:
         temperature: float = 0.0,
         cache_path: Optional[str | Path] = None,
         max_output_tokens: Optional[int] = 8192,
+        enable_thinking: bool = False,
     ):
         """Initialize Gemini extraction chain using Vertex AI.
 
@@ -147,6 +163,10 @@ class GeminiExtractionChain:
             temperature: Sampling temperature (0.0 for deterministic)
             cache_path: Path to SQLite cache file (used as fallback if PostgreSQL unavailable)
             max_output_tokens: Maximum tokens in response
+            enable_thinking: Enable extended thinking mode for Gemini 2.5 models (default: False).
+                           When enabled, the model shows its reasoning process before answering.
+                           This can improve accuracy for complex tasks but increases latency and token usage.
+                           Recommended for complex reasoning tasks, not for simple structured extraction.
 
         Environment Variables:
             POSTGRES_CACHE_URL: PostgreSQL connection string for LLM caching (preferred)
@@ -158,6 +178,7 @@ class GeminiExtractionChain:
         self.model_name = model_name
         self.temperature = temperature
         self.max_output_tokens = max_output_tokens
+        self.enable_thinking = enable_thinking
 
         # Get project from env or parameter
         self.project = project or os.getenv("VERTEX_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT")
@@ -202,16 +223,38 @@ class GeminiExtractionChain:
             logger.info(f"Enabled LangChain SQLite cache: {default_cache}")
 
         # Initialize Vertex AI Gemini model (uses application default credentials)
-        self.llm = ChatVertexAI(
-            model=model_name,
-            project=self.project,
-            location=self.location,
-            temperature=temperature,
-            max_tokens=max_output_tokens,
-        )
+        # Configure model kwargs for thinking mode if enabled
+        model_kwargs = {}
+        if self.enable_thinking and "2.5" in model_name:
+            # Gemini 2.5 models support extended thinking mode
+            # This enables the model to show its reasoning process
+            model_kwargs["thinking"] = True
+            logger.info(f"Extended thinking mode enabled for {model_name}")
+        elif self.enable_thinking:
+            logger.warning(
+                f"Thinking mode requested but not supported for {model_name}. "
+                "Only Gemini 2.5 models support extended thinking."
+            )
+
+        # Build kwargs for ChatVertexAI - only include model_kwargs if not empty
+        llm_kwargs = {
+            "model": model_name,
+            "project": self.project,
+            "location": self.location,
+            "temperature": temperature,
+            "max_tokens": max_output_tokens,
+        }
+
+        # Only add model_kwargs if there are any (empty dict causes issues with LangChain)
+        if model_kwargs:
+            llm_kwargs["model_kwargs"] = model_kwargs
+
+        self.llm = ChatVertexAI(**llm_kwargs)
 
         logger.info(
-            f"Initialized VertexAI GeminiExtractionChain with {model_name} (project: {self.project}, location: {self.location})"
+            f"Initialized VertexAI GeminiExtractionChain with {model_name} "
+            f"(project: {self.project}, location: {self.location}, "
+            f"thinking: {self.enable_thinking})"
         )
 
     def _build_extraction_prompt(
@@ -375,12 +418,38 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
 
         try:
             result = chain.invoke(chain_input, config=config)
+
+            # Check if result is None (API returned nothing)
+            if result is None:
+                error_msg = "API returned None - likely rate limit, timeout, or API error"
+                logger.error(f"Extraction failed: {error_msg}")
+                raise ValueError(error_msg)
+
             logger.info(
                 f"Successfully extracted {len(result)} fields from {document_type.value} using structured output"
             )
             return result
         except Exception as e:
-            logger.error(f"Extraction failed: {e}")
+            # Enhanced error logging with exception details
+            error_type = type(e).__name__
+            error_details = {
+                "error_type": error_type,
+                "error_message": str(e),
+                "document_type": document_type.value,
+                "text_length": len(text),
+            }
+
+            # Check for specific API errors
+            if hasattr(e, 'code'):
+                error_details["http_code"] = e.code
+            if hasattr(e, 'status_code'):
+                error_details["status_code"] = e.status_code
+
+            # Log detailed error
+            logger.error(
+                f"Extraction failed: {error_type} - {str(e)} | "
+                f"Details: {error_details}"
+            )
             raise
 
     def batch_extract(
@@ -428,10 +497,42 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
 
         try:
             results = chain.batch(batch_inputs, config=config)
+
+            # Check for None results in batch
+            if results is None or None in results:
+                none_count = results.count(None) if results else len(texts)
+                error_msg = f"API returned None for {none_count}/{len(texts)} documents - likely rate limit or API error"
+                logger.error(f"Batch extraction failed: {error_msg}")
+                raise ValueError(error_msg)
+
             logger.info(
                 f"Successfully extracted from {len(results)} {document_type.value} documents using structured output"
             )
             return results
         except Exception as e:
-            logger.error(f"Batch extraction failed: {e}")
+            # Enhanced error logging
+            error_type = type(e).__name__
+            error_details = {
+                "error_type": error_type,
+                "error_message": str(e),
+                "document_type": document_type.value,
+                "batch_size": len(texts),
+            }
+
+            # Check for specific API errors
+            if hasattr(e, 'code'):
+                error_details["http_code"] = e.code
+            if hasattr(e, 'status_code'):
+                error_details["status_code"] = e.status_code
+            if "429" in str(e):
+                error_details["likely_cause"] = "Rate limit exceeded"
+            elif "500" in str(e) or "503" in str(e):
+                error_details["likely_cause"] = "API server error"
+            elif "timeout" in str(e).lower():
+                error_details["likely_cause"] = "Request timeout"
+
+            logger.error(
+                f"Batch extraction failed: {error_type} - {str(e)} | "
+                f"Details: {error_details}"
+            )
             raise

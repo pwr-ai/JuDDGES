@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # Redis for job queue
+  redis:
+    image: redis:7-alpine
+    container_name: extraction-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # Extraction worker (scale to N replicas)
+  extraction-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: juddges:latest
+    command: >
+      python scripts/extraction/worker.py
+      --worker-id ${WORKER_ID:-1}
+      --redis-url redis://redis:6379
+      --batch-size ${BATCH_SIZE:-3}
+      --model ${MODEL:-gemini-2.5-pro}
+      --langfuse-sample-rate ${LANGFUSE_SAMPLE_RATE:-0.01}
+    environment:
+      # Weaviate
+      - WEAVIATE_HOST=${WEAVIATE_HOST}
+      - WEAVIATE_PORT=${WEAVIATE_PORT}
+      - WEAVIATE_API_KEY=${WEAVIATE_API_KEY}
+
+      # Vertex AI
+      - VERTEX_PROJECT=${VERTEX_PROJECT}
+      - VERTEX_LOCATION=${VERTEX_LOCATION}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+
+      # PostgreSQL
+      - POSTGRES_CACHE_URL=${POSTGRES_CACHE_URL}
+      - EXTRACTION_DB_URL=${EXTRACTION_DB_URL}
+
+      # Langfuse (optional)
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST}
+    volumes:
+      - ${GOOGLE_CREDENTIALS_PATH}:/app/credentials.json:ro
+      - ./data:/app/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+    # Scale this service:
+    # docker compose -f docker-compose.extraction.yml up --scale extraction-worker=20
+
+  # Coordinator (run once to queue jobs)
+  coordinator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: juddges:latest
+    command: >
+      python scripts/extraction/coordinator.py
+      --search-queries "${SEARCH_QUERIES}"
+      --sample-size ${SAMPLE_SIZE:-1000}
+      --job-batch-size ${JOB_BATCH_SIZE:-50}
+      --redis-url redis://redis:6379
+      ${MONITOR_FLAG}
+    environment:
+      # Weaviate
+      - WEAVIATE_HOST=${WEAVIATE_HOST}
+      - WEAVIATE_PORT=${WEAVIATE_PORT}
+      - WEAVIATE_API_KEY=${WEAVIATE_API_KEY}
+
+      # PostgreSQL
+      - EXTRACTION_DB_URL=${EXTRACTION_DB_URL}
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+    profiles:
+      - coordinator  # Only run with --profile coordinator
+
+volumes:
+  redis-data:
+    driver: local
+
+# Usage:
+#
+# 1. Start Redis and workers (20 workers):
+#    docker compose -f docker-compose.extraction.yml up -d --scale extraction-worker=20
+#
+# 2. Queue extraction jobs (run coordinator once):
+#    SEARCH_QUERIES="kredyt frankowy" SAMPLE_SIZE=100000 \
+#    docker compose -f docker-compose.extraction.yml --profile coordinator run coordinator
+#
+# 3. Monitor progress:
+#    docker compose -f docker-compose.extraction.yml logs -f extraction-worker
+#
+# 4. Scale workers dynamically:
+#    docker compose -f docker-compose.extraction.yml up -d --scale extraction-worker=50
+#
+# 5. Stop all:
+#    docker compose -f docker-compose.extraction.yml down
