@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # Override command line args
     sys.argv = [
         "test_extraction_local.py",
-        "--sample-size", "5",
+        "--max-documents", "5",
         "--model", "gemini-2.5-flash",
         "--output-dir", "data/extraction_results",
     ]

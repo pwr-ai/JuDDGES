@@ -126,7 +126,7 @@ function show_stats() {
             run_id,
             search_query,
             model_name,
-            sample_size,
+            sample_size as max_documents,
             successful_extractions,
             failed_extractions,
             started_at

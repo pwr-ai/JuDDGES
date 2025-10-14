@@ -156,6 +156,34 @@ services:
   #       max-size: "10m"
   #       max-file: "3"
 
+  # Redis for distributed extraction queue
+  extraction-redis:
+    image: redis:7-alpine
+    container_name: legal_ai_extraction_redis
+    command: redis-server --appendonly no --save "" --maxmemory 2gb --maxmemory-policy allkeys-lru
+    ports:
+      - "6381:6379"  # Port 6381 to avoid conflicts with other Redis instances
+    volumes:
+      - legal_ai_extraction_redis_data:/data
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '4G'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   # PostgreSQL for extraction storage (separate from cache)
   extraction-postgres:
     image: postgres:16-alpine
@@ -187,6 +215,7 @@ services:
 volumes:
   legal_ai_weaviate_prod:
     external: true
+  legal_ai_extraction_redis_data:
   legal_ai_extraction_postgres_data:
 
 networks:
