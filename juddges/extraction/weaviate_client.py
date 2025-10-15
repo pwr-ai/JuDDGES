@@ -70,6 +70,7 @@ class WeaviateRestClient:
         use_cursor: bool = True,
         search_mode: str = "hybrid",
         force_cursor: bool = False,
+        skip_documents: int = 0,
     ) -> List[Dict[str, Any]]:
         """Fetch documents using Weaviate REST API with cursor-based pagination.
 
@@ -81,6 +82,7 @@ class WeaviateRestClient:
             use_cursor: Use cursor-based pagination (no 10K limit) instead of offset (default: True)
             search_mode: Search mode - "keyword" (BM25), "semantic" (vector), or "hybrid" (default: "hybrid")
             force_cursor: Skip search query and use cursor pagination to iterate through ALL documents
+            skip_documents: Number of documents to skip before starting to collect results (default: 0)
 
         Returns:
             List of all valid document properties with full_text (no sampling)
@@ -95,6 +97,9 @@ class WeaviateRestClient:
 
             RECOMMENDED: Use force_cursor=True WITHOUT search_query to iterate through all documents
             and bypass the 10K offset limit. The search_query will be ignored when force_cursor=True.
+
+            The skip_documents parameter allows you to skip the first N documents in the result set,
+            useful for resuming interrupted extraction jobs or distributing work across multiple runs.
         """
         # Weaviate cursor API limitation: can't use 'after' with other params (hybrid, where)
         # Fall back to offset pagination if filters/search are needed
@@ -116,6 +121,7 @@ class WeaviateRestClient:
                 search_query=search_query,
                 document_type_filter=document_type_filter,
                 search_mode=search_mode,
+                skip_documents=skip_documents,
             )
         else:
             if has_filters and use_cursor:
@@ -130,6 +136,7 @@ class WeaviateRestClient:
                 search_query=search_query,
                 document_type_filter=document_type_filter,
                 search_mode=search_mode,
+                skip_documents=skip_documents,
             )
 
     def _fetch_documents_cursor(
@@ -139,6 +146,7 @@ class WeaviateRestClient:
         search_query: Optional[str],
         document_type_filter: Optional[str],
         search_mode: str = "hybrid",
+        skip_documents: int = 0,
     ) -> List[Dict[str, Any]]:
         """Fetch documents using cursor-based pagination (no 10K limit).
 
@@ -148,6 +156,7 @@ class WeaviateRestClient:
             search_query: Optional search query
             document_type_filter: Optional document type filter
             search_mode: Search mode - "keyword", "semantic", or "hybrid"
+            skip_documents: Number of documents to skip before collecting results
 
         Returns:
             List of all valid documents up to max_documents (no sampling)
@@ -162,30 +171,55 @@ class WeaviateRestClient:
             filter_info.append(f"type={document_type_filter}")
         filter_str = f" with filters: {', '.join(filter_info)}" if filter_info else ""
 
-        logger.info(
-            f"Fetching up to {max_documents} documents from {self.base_url} in chunks of {chunk_size}{filter_str} (cursor-based)..."
-        )
+        if skip_documents > 0:
+            logger.info(
+                f"Fetching up to {max_documents} documents from {self.base_url} in chunks of {chunk_size}{filter_str} (cursor-based), skipping first {skip_documents} documents..."
+            )
+        else:
+            logger.info(
+                f"Fetching up to {max_documents} documents from {self.base_url} in chunks of {chunk_size}{filter_str} (cursor-based)..."
+            )
 
         all_documents = []
+        skipped_count = 0
         cursor = None
         iteration = 0
 
-        while len(all_documents) < max_documents:
-            iteration += 1
-            current_limit = min(chunk_size, max_documents - len(all_documents))
+        # Use larger chunks during skip phase for faster skipping
+        skip_chunk_size = 1000  # Always use max size when skipping
 
-            # Build GraphQL query with cursor
-            query = self._build_graphql_query_cursor(
-                limit=current_limit,
-                cursor=cursor,
-                search_query=search_query,
-                document_type_filter=document_type_filter,
-                search_mode=search_mode,
-            )
+        while len(all_documents) < max_documents or skipped_count < skip_documents:
+            iteration += 1
+
+            # If we're still skipping, use large chunks and minimal fields
+            if skipped_count < skip_documents:
+                # Calculate how many more to skip
+                remaining_skip = skip_documents - skipped_count
+                current_limit = min(skip_chunk_size, remaining_skip)
+                # Use minimal query during skip phase (only IDs)
+                query = self._build_graphql_query_cursor_minimal(
+                    limit=current_limit,
+                    cursor=cursor,
+                    document_type_filter=document_type_filter,
+                )
+            else:
+                # Normal fetching after skip phase with full fields
+                current_limit = min(chunk_size, max_documents - len(all_documents))
+                query = self._build_graphql_query_cursor(
+                    limit=current_limit,
+                    cursor=cursor,
+                    search_query=search_query,
+                    document_type_filter=document_type_filter,
+                    search_mode=search_mode,
+                )
 
             try:
                 if cursor:
-                    logger.info(f"Fetching chunk {iteration}: limit={current_limit}, cursor={cursor[:20]}...")
+                    if skipped_count < skip_documents:
+                        if iteration % 50 == 0:  # Log every 50th iteration to reduce noise
+                            logger.info(f"Skipping chunk {iteration}: limit={current_limit}, cursor={cursor[:20]}... (skipped: {skipped_count}/{skip_documents})")
+                    else:
+                        logger.info(f"Fetching chunk {iteration}: limit={current_limit}, cursor={cursor[:20]}...")
                 else:
                     logger.info(f"Fetching chunk {iteration}: limit={current_limit} (initial)")
 
@@ -208,8 +242,14 @@ class WeaviateRestClient:
                     logger.info(f"No more documents available at iteration {iteration}")
                     break
 
-                all_documents.extend(documents)
-                logger.info(f"Fetched {len(documents)} documents (total: {len(all_documents)})")
+                # If we're in skip phase, just count and don't add to results
+                if skipped_count < skip_documents:
+                    skipped_count += len(documents)
+                    if iteration % 50 == 0 or skipped_count >= skip_documents:  # Log progress periodically
+                        logger.info(f"Skipped {len(documents)} documents (total skipped: {skipped_count}/{skip_documents})")
+                else:
+                    all_documents.extend(documents)
+                    logger.info(f"Fetched {len(documents)} documents (total: {len(all_documents)})")
 
                 # Extract cursor from last document's _additional field
                 if documents and documents[-1].get("_additional", {}).get("id"):
@@ -252,6 +292,7 @@ class WeaviateRestClient:
         search_query: Optional[str],
         document_type_filter: Optional[str],
         search_mode: str = "hybrid",
+        skip_documents: int = 0,
     ) -> List[Dict[str, Any]]:
         """Fetch documents using offset-based pagination (legacy, max 10K limit).
 
@@ -261,6 +302,7 @@ class WeaviateRestClient:
             search_query: Optional search query
             document_type_filter: Optional document type filter
             search_mode: Search mode - "keyword", "semantic", or "hybrid"
+            skip_documents: Number of documents to skip before collecting results
 
         Returns:
             List of all valid documents up to max_documents (no sampling)
@@ -268,7 +310,16 @@ class WeaviateRestClient:
         # Fetch documents in chunks with pagination
         # Note: Weaviate has a hard limit of offset < 10000
         max_offset = 10000  # Weaviate offset limit
-        max_documents = min(max_documents, max_offset)  # Enforce Weaviate limit
+
+        # Start offset at skip_documents position
+        if skip_documents >= max_offset:
+            logger.warning(
+                f"skip_documents ({skip_documents}) exceeds Weaviate offset limit ({max_offset}). "
+                "Use cursor-based pagination with force_cursor=True for skipping beyond 10K."
+            )
+            return []
+
+        max_documents = min(max_documents, max_offset - skip_documents)  # Enforce Weaviate limit
         chunk_size = min(chunk_size, 1000)
 
         # Build filter info for logging
@@ -279,12 +330,17 @@ class WeaviateRestClient:
             filter_info.append(f"type={document_type_filter}")
         filter_str = f" with filters: {', '.join(filter_info)}" if filter_info else ""
 
-        logger.info(
-            f"Fetching up to {max_documents} documents from {self.base_url} in chunks of {chunk_size}{filter_str} (offset-based, max 10K)..."
-        )
+        if skip_documents > 0:
+            logger.info(
+                f"Fetching up to {max_documents} documents from {self.base_url} in chunks of {chunk_size}{filter_str} (offset-based, max 10K), starting at offset {skip_documents}..."
+            )
+        else:
+            logger.info(
+                f"Fetching up to {max_documents} documents from {self.base_url} in chunks of {chunk_size}{filter_str} (offset-based, max 10K)..."
+            )
 
         all_documents = []
-        offset = 0
+        offset = skip_documents  # Start from skip position
 
         while len(all_documents) < max_documents and offset < max_offset:
             # Calculate how many more documents we need
@@ -587,6 +643,59 @@ class WeaviateRestClient:
                         full_text
                         language
                         document_number
+                    }}
+                }}
+            }}
+        """
+
+    def _build_graphql_query_cursor_minimal(
+        self,
+        limit: int,
+        cursor: Optional[str],
+        document_type_filter: Optional[str] = None,
+    ) -> str:
+        """Build minimal GraphQL query for fast cursor-based skipping (only fetches IDs).
+
+        Args:
+            limit: Maximum number of documents to return
+            cursor: Cursor (document ID) to start after (None for first page)
+            document_type_filter: Optional document type filter
+
+        Returns:
+            GraphQL query string with minimal fields
+        """
+        # Build where clause for document type filter
+        where_clause = ""
+        if document_type_filter:
+            where_clause = f"""
+                where: {{
+                    path: ["document_type"],
+                    operator: Equal,
+                    valueText: "{document_type_filter}"
+                }}
+            """
+
+        # Cursor pagination without search - minimal fields
+        if cursor:
+            query_method = f"""
+                {where_clause}
+                limit: {limit}
+                after: "{cursor}"
+            """
+        else:
+            query_method = f"""
+                {where_clause}
+                limit: {limit}
+            """
+
+        # Minimal query - only fetch _additional.id for cursor
+        return f"""
+            {{
+                Get {{
+                    LegalDocuments({query_method}) {{
+                        _additional {{
+                            id
+                        }}
                     }}
                 }}
             }}
