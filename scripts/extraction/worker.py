@@ -17,6 +17,7 @@ import os
 import signal
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
 import redis
@@ -62,10 +63,13 @@ class ExtractionWorker:
         worker_id: int,
         redis_url: str,
         queue_name: str = "extraction_queue",
-        batch_size: int = 3,
+        batch_size: int = 2,
         model_name: str = "gemini-2.5-pro",
-        use_langfuse: bool = False,
-        langfuse_sample_rate: float = 0.01,
+        use_langfuse: bool = True,
+        langfuse_sample_rate: float = 0.05,
+        max_fetch_threads: int = 10,
+        max_extraction_threads: int = 3,
+        region: Optional[str] = None,
     ):
         """Initialize extraction worker.
 
@@ -73,19 +77,32 @@ class ExtractionWorker:
             worker_id: Unique worker identifier
             redis_url: Redis connection URL
             queue_name: Name of Redis queue to poll
-            batch_size: Number of documents per extraction batch (keep small for long docs)
+            batch_size: Number of documents per extraction batch
             model_name: Gemini model to use
             use_langfuse: Whether to enable Langfuse tracing
             langfuse_sample_rate: Fraction of requests to trace (reduces overhead)
+            max_fetch_threads: Max concurrent threads for fetching documents from Weaviate
+            max_extraction_threads: Max concurrent threads for Gemini API calls
+            region: Vertex AI region (overrides VERTEX_LOCATION env var)
         """
         self.worker_id = worker_id
         self.queue_name = queue_name
         self.batch_size = batch_size
         self.model_name = model_name
+        self.max_fetch_threads = max_fetch_threads
+        self.max_extraction_threads = max_extraction_threads
 
         # Connect to Redis
         logger.info(f"[Worker {worker_id}] Connecting to Redis: {redis_url}")
         self.redis_client = redis.from_url(redis_url, decode_responses=True)
+
+        # Thread pools for parallel I/O operations
+        self.fetch_executor = ThreadPoolExecutor(
+            max_workers=max_fetch_threads, thread_name_prefix=f"fetch-w{worker_id}"
+        )
+        self.extraction_executor = ThreadPoolExecutor(
+            max_workers=max_extraction_threads, thread_name_prefix=f"extract-w{worker_id}"
+        )
 
         # Initialize LangChain cache
         self._init_cache()
@@ -93,7 +110,9 @@ class ExtractionWorker:
         # Initialize Gemini chain
         logger.info(f"[Worker {worker_id}] Initializing Gemini extraction chain...")
         vertex_project = os.getenv("VERTEX_PROJECT", "insbay-b32351")
-        vertex_location = os.getenv("VERTEX_LOCATION", "us-central1")
+        vertex_location = region or os.getenv("VERTEX_LOCATION", "us-central1")
+
+        logger.info(f"[Worker {worker_id}] Using Vertex AI region: {vertex_location}")
 
         self.chain = GeminiExtractionChain(
             model_name=model_name,
@@ -124,7 +143,7 @@ class ExtractionWorker:
                 self.langfuse_handler = CallbackHandler()
                 self.langfuse_sample_rate = langfuse_sample_rate
                 logger.info(
-                    f"[Worker {worker_id}] Langfuse enabled with {langfuse_sample_rate*100}% sampling"
+                    f"[Worker {worker_id}] Langfuse enabled with {langfuse_sample_rate * 100}% sampling"
                 )
             except Exception as e:
                 logger.warning(f"[Worker {worker_id}] Failed to init Langfuse: {e}")
@@ -154,6 +173,8 @@ class ExtractionWorker:
         logger.info(f"[Worker {self.worker_id}] Starting worker loop...")
         logger.info(f"[Worker {self.worker_id}] Queue: {self.queue_name}")
         logger.info(f"[Worker {self.worker_id}] Batch size: {self.batch_size}")
+        logger.info(f"[Worker {self.worker_id}] Fetch threads: {self.max_fetch_threads}")
+        logger.info(f"[Worker {self.worker_id}] Extraction threads: {self.max_extraction_threads}")
 
         consecutive_empty_polls = 0
         max_empty_polls = 10  # Exit after 10 empty polls (queue exhausted)
@@ -187,6 +208,9 @@ class ExtractionWorker:
             except Exception as e:
                 logger.error(f"[Worker {self.worker_id}] Error in main loop: {e}")
                 time.sleep(1)
+
+        # Clean up thread pools
+        self.cleanup()
 
         # Print final statistics
         self.print_statistics()
@@ -231,15 +255,14 @@ class ExtractionWorker:
             )
 
             logger.info(
-                f"[Worker {self.worker_id}] Completed job {job_id}: "
-                f"{len(results)} docs processed"
+                f"[Worker {self.worker_id}] Completed job {job_id}: {len(results)} docs processed"
             )
 
         except Exception as e:
             logger.error(f"[Worker {self.worker_id}] Failed to process job {job_id}: {e}")
 
     def _fetch_documents(self, document_ids: List[str]) -> List[Dict[str, Any]]:
-        """Fetch full document content from Weaviate.
+        """Fetch full document content from Weaviate using multithreading.
 
         Args:
             document_ids: List of document IDs to fetch
@@ -249,29 +272,39 @@ class ExtractionWorker:
         """
         documents = []
 
-        for doc_id in document_ids:
+        def fetch_single_doc(doc_id: str) -> Optional[Dict[str, Any]]:
+            """Fetch a single document from Weaviate."""
             try:
                 doc = self.weaviate_client.get_document(doc_id)
                 if doc and doc.get("properties"):
                     props = doc["properties"]
-                    documents.append(
-                        {
-                            "document_id": props.get("document_id"),
-                            "document_number": props.get("document_number"),
-                            "document_type": props.get("document_type"),
-                            "full_text": props.get("full_text", ""),
-                            "language": props.get("language", "pl"),
-                        }
-                    )
+                    return {
+                        "document_id": props.get("document_id"),
+                        "document_number": props.get("document_number"),
+                        "document_type": props.get("document_type"),
+                        "full_text": props.get("full_text", ""),
+                        "language": props.get("language", "pl"),
+                    }
             except Exception as e:
                 logger.error(f"[Worker {self.worker_id}] Failed to fetch {doc_id}: {e}")
+            return None
+
+        # Fetch documents concurrently
+        futures = {
+            self.fetch_executor.submit(fetch_single_doc, doc_id): doc_id for doc_id in document_ids
+        }
+
+        for future in as_completed(futures):
+            doc = future.result()
+            if doc:
+                documents.append(doc)
 
         return documents
 
     def _extract_documents(
         self, documents: List[Dict[str, Any]], run_id: Optional[str]
     ) -> List[Dict[str, Any]]:
-        """Extract data from documents in small batches.
+        """Extract data from documents in batches using multithreading.
 
         Args:
             documents: List of documents to extract
@@ -280,11 +313,10 @@ class ExtractionWorker:
         Returns:
             List of extraction results
         """
-        results = []
 
-        # Process in small batches (3 docs to avoid token limits)
-        for i in range(0, len(documents), self.batch_size):
-            batch = documents[i : i + self.batch_size]
+        def process_batch(batch: List[Dict[str, Any]], batch_idx: int) -> List[Dict[str, Any]]:
+            """Process a single batch of documents."""
+            batch_results = []
 
             # Determine if we should trace this batch
             use_langfuse = (
@@ -333,7 +365,7 @@ class ExtractionWorker:
                         "full_text_length": len(doc.get("full_text", "")),
                         "source_language": doc.get("language", "pl"),
                     }
-                    results.append(result)
+                    batch_results.append(result)
 
                     # Save to storage if available
                     if self.storage and run_id:
@@ -349,13 +381,9 @@ class ExtractionWorker:
                                 source_language=doc.get("language", "pl"),
                             )
                         except Exception as e:
-                            logger.warning(
-                                f"[Worker {self.worker_id}] Failed to save to DB: {e}"
-                            )
+                            logger.warning(f"[Worker {self.worker_id}] Failed to save to DB: {e}")
 
-                    logger.debug(
-                        f"[Worker {self.worker_id}] ✓ Extracted {metadata['document_id']}"
-                    )
+                    logger.debug(f"[Worker {self.worker_id}] ✓ Extracted {metadata['document_id']}")
 
             except Exception as e:
                 error_msg = str(e)
@@ -368,11 +396,17 @@ class ExtractionWorker:
 
                 # Log error type for better debugging
                 if is_rate_limit:
-                    logger.warning(f"[Worker {self.worker_id}] Rate limit detected - will retry individual docs with backoff")
+                    logger.warning(
+                        f"[Worker {self.worker_id}] Rate limit detected - will retry individual docs with backoff"
+                    )
                 elif is_server_error:
-                    logger.warning(f"[Worker {self.worker_id}] API server error - will retry individual docs")
+                    logger.warning(
+                        f"[Worker {self.worker_id}] API server error - will retry individual docs"
+                    )
                 elif is_timeout:
-                    logger.warning(f"[Worker {self.worker_id}] Timeout error - will retry individual docs")
+                    logger.warning(
+                        f"[Worker {self.worker_id}] Timeout error - will retry individual docs"
+                    )
 
                 # Fallback to individual processing with retry logic
                 for doc in batch:
@@ -395,7 +429,7 @@ class ExtractionWorker:
                                 "extraction_status": "success",
                                 "extracted_data": extracted,
                             }
-                            results.append(result)
+                            batch_results.append(result)
 
                             # Save to storage if available
                             if self.storage and run_id:
@@ -415,12 +449,14 @@ class ExtractionWorker:
                                         f"[Worker {self.worker_id}] Failed to save to DB: {storage_err}"
                                     )
 
-                            logger.debug(f"[Worker {self.worker_id}] ✓ Extracted {doc['document_id']}")
+                            logger.debug(
+                                f"[Worker {self.worker_id}] ✓ Extracted {doc['document_id']}"
+                            )
                             break  # Success - exit retry loop
 
                         except Exception as e2:
                             error_str = str(e2)
-                            is_last_attempt = (attempt == max_retries - 1)
+                            is_last_attempt = attempt == max_retries - 1
 
                             # Log with appropriate severity
                             if is_last_attempt:
@@ -436,10 +472,10 @@ class ExtractionWorker:
                                     "error": error_str,
                                     "attempts": max_retries,
                                 }
-                                results.append(result)
+                                batch_results.append(result)
                             else:
                                 # Retry with exponential backoff
-                                backoff_time = retry_delay * (2 ** attempt)
+                                backoff_time = retry_delay * (2**attempt)
                                 logger.warning(
                                     f"[Worker {self.worker_id}] Attempt {attempt + 1}/{max_retries} "
                                     f"failed for {doc['document_id']}: {error_str}. "
@@ -447,24 +483,52 @@ class ExtractionWorker:
                                 )
                                 time.sleep(backoff_time)
 
+            return batch_results
+
+        # Split documents into batches
+        batches = [
+            documents[i : i + self.batch_size] for i in range(0, len(documents), self.batch_size)
+        ]
+
+        # Process batches concurrently
+        futures = {
+            self.extraction_executor.submit(process_batch, batch, idx): idx
+            for idx, batch in enumerate(batches)
+        }
+
+        results = []
+        for future in as_completed(futures):
+            batch_results = future.result()
+            results.extend(batch_results)
+
         return results
+
+    def cleanup(self):
+        """Cleanup resources and shutdown thread pools gracefully."""
+        logger.info(f"[Worker {self.worker_id}] Shutting down thread pools...")
+
+        # Shutdown extraction executor first (longer running tasks)
+        self.extraction_executor.shutdown(wait=True, cancel_futures=False)
+        logger.info(f"[Worker {self.worker_id}] Extraction thread pool shut down")
+
+        # Shutdown fetch executor
+        self.fetch_executor.shutdown(wait=True, cancel_futures=False)
+        logger.info(f"[Worker {self.worker_id}] Fetch thread pool shut down")
 
     def print_statistics(self):
         """Print worker statistics."""
         duration = time.time() - self.stats["start_time"]
-        docs_per_min = (
-            (self.stats["documents_extracted"] / duration) * 60 if duration > 0 else 0
-        )
+        docs_per_min = (self.stats["documents_extracted"] / duration) * 60 if duration > 0 else 0
 
-        logger.info(f"\n{'='*60}")
+        logger.info(f"\n{'=' * 60}")
         logger.info(f"[Worker {self.worker_id}] Final Statistics")
-        logger.info(f"{'='*60}")
+        logger.info(f"{'=' * 60}")
         logger.info(f"  Jobs processed: {self.stats['jobs_processed']}")
         logger.info(f"  Documents extracted: {self.stats['documents_extracted']}")
         logger.info(f"  Documents failed: {self.stats['documents_failed']}")
         logger.info(f"  Duration: {duration:.1f} seconds")
         logger.info(f"  Throughput: {docs_per_min:.1f} docs/min")
-        logger.info(f"{'='*60}\n")
+        logger.info(f"{'=' * 60}\n")
 
 
 def main():
@@ -491,8 +555,8 @@ def main():
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=3,
-        help="Batch size for extraction (keep small for long documents)",
+        default=5,
+        help="Batch size for extraction (default: 5 documents per batch)",
     )
     parser.add_argument(
         "--model",
@@ -511,6 +575,24 @@ def main():
         default=0.01,
         help="Fraction of requests to trace with Langfuse (default: 0.01 = 1%%)",
     )
+    parser.add_argument(
+        "--max-fetch-threads",
+        type=int,
+        default=10,
+        help="Max concurrent threads for fetching documents from Weaviate (default: 10)",
+    )
+    parser.add_argument(
+        "--max-extraction-threads",
+        type=int,
+        default=3,
+        help="Max concurrent threads for Gemini API calls (default: 3)",
+    )
+    parser.add_argument(
+        "--region",
+        type=str,
+        default=None,
+        help="Vertex AI region (e.g., us-central1, europe-west1, asia-southeast1). Overrides VERTEX_LOCATION env var",
+    )
 
     args = parser.parse_args()
 
@@ -523,6 +605,9 @@ def main():
         model_name=args.model,
         use_langfuse=args.use_langfuse,
         langfuse_sample_rate=args.langfuse_sample_rate,
+        max_fetch_threads=args.max_fetch_threads,
+        max_extraction_threads=args.max_extraction_threads,
+        region=args.region,
     )
 
     try:
