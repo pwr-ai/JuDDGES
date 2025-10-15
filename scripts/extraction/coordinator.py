@@ -101,6 +101,7 @@ class ExtractionCoordinator:
         run_name: Optional[str] = None,
         search_mode: str = "hybrid",
         force_cursor: bool = False,
+        skip_documents: int = 0,
     ) -> str:
         """Coordinate large-scale extraction.
 
@@ -112,6 +113,7 @@ class ExtractionCoordinator:
             run_name: Optional name for this extraction run
             search_mode: Search mode - "keyword" (BM25), "semantic" (vector), or "hybrid" (default)
             force_cursor: Skip search queries and iterate through ALL documents using cursor pagination
+            skip_documents: Number of documents to skip before starting extraction (useful for resuming)
 
         Returns:
             Extraction run ID
@@ -127,6 +129,8 @@ class ExtractionCoordinator:
         console.print(f"\n[bold cyan]Extraction Coordinator[/bold cyan]")
         console.print(f"Run ID: {run_id}")
         console.print(f"Target documents: {max_documents:,}")
+        if skip_documents > 0:
+            console.print(f"Skip documents: [yellow]{skip_documents:,}[/yellow] (starting from offset)")
         if search_queries:
             console.print(f"Search queries: {', '.join(search_queries)}")
             console.print(f"Search mode: {search_mode}")
@@ -151,6 +155,7 @@ class ExtractionCoordinator:
                 limit=max_documents,
                 search_mode=search_mode,
                 force_cursor=force_cursor,
+                skip_documents=skip_documents,
             )
             all_document_ids.extend(doc_ids)
             console.print(f"  Found: {len(doc_ids):,} documents")
@@ -164,6 +169,7 @@ class ExtractionCoordinator:
                     limit=max_documents,
                     search_mode=search_mode,
                     force_cursor=force_cursor,
+                    skip_documents=skip_documents,
                 )
                 all_document_ids.extend(doc_ids)
                 console.print(f"  Found: {len(doc_ids):,} documents")
@@ -270,6 +276,7 @@ class ExtractionCoordinator:
         limit: int,
         search_mode: str = "hybrid",
         force_cursor: bool = False,
+        skip_documents: int = 0,
     ) -> List[str]:
         """Fetch document IDs from Weaviate.
 
@@ -279,6 +286,7 @@ class ExtractionCoordinator:
             limit: Maximum number of documents
             search_mode: Search mode - "keyword", "semantic", or "hybrid"
             force_cursor: Force cursor pagination even with filters/search
+            skip_documents: Number of documents to skip before collecting results
 
         Returns:
             List of document IDs
@@ -296,6 +304,7 @@ class ExtractionCoordinator:
             document_type_filter=document_type_filter,
             search_mode=search_mode,
             force_cursor=force_cursor,
+            skip_documents=skip_documents,
         )
 
         return [doc.get("document_id") for doc in documents if doc.get("document_id")]
@@ -412,6 +421,12 @@ def main():
         help="Skip search queries and use cursor pagination to fetch ALL documents (bypasses 10K offset limit)",
     )
     parser.add_argument(
+        "--skip-documents",
+        type=int,
+        default=0,
+        help="Number of documents to skip before starting extraction (useful for resuming interrupted jobs, default: 0)",
+    )
+    parser.add_argument(
         "--monitor",
         action="store_true",
         help="Monitor progress after queuing jobs",
@@ -456,6 +471,7 @@ def main():
         run_name=args.run_name,
         search_mode=args.search_mode,
         force_cursor=args.force_cursor,
+        skip_documents=args.skip_documents,
     )
 
     # Optional: Monitor progress
