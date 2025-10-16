@@ -16,7 +16,7 @@ graph TB
     subgraph "Weaviate Infrastructure"
         subgraph "Docker Container"
             WeaviateCore["Weaviate Core<br/>v1.24+"]
-            GRPC["gRPC Server<br/>Port 50051"]
+            GRPC["gRPC Server<br/>Port 8085"]
             REST["REST API<br/>Port 8080"]
             GraphQL["GraphQL API<br/>Port 8080"]
         end
@@ -340,7 +340,7 @@ graph TB
         subgraph "Weaviate Service"
             Container["weaviate:latest<br/>Container"]
             Volumes["Volumes<br/>• /var/lib/weaviate<br/>• ./data:/data"]
-            Ports["Ports<br/>• 8080:8080<br/>• 50051:50051"]
+            Ports["Ports<br/>• 8080:8080<br/>• 8085:50051"]
             Env["Environment<br/>• ENABLE_MODULES<br/>• PERSISTENCE_DATA_PATH"]
         end
 
@@ -428,6 +428,7 @@ stateDiagram-v2
 ## API Examples
 
 ### Creating a Collection
+
 ```python
 # Schema definition for legal_documents
 schema = {
@@ -445,6 +446,7 @@ schema = {
 ```
 
 ### Querying Documents
+
 ```graphql
 # GraphQL query for semantic search
 {
