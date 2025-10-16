@@ -102,6 +102,7 @@ class ExtractionCoordinator:
         search_mode: str = "hybrid",
         force_cursor: bool = False,
         skip_documents: int = 0,
+        sort_by_creation_time: bool = False,
     ) -> str:
         """Coordinate large-scale extraction.
 
@@ -114,6 +115,7 @@ class ExtractionCoordinator:
             search_mode: Search mode - "keyword" (BM25), "semantic" (vector), or "hybrid" (default)
             force_cursor: Skip search queries and iterate through ALL documents using cursor pagination
             skip_documents: Number of documents to skip before starting extraction (useful for resuming)
+            sort_by_creation_time: Sort documents by creation time (oldest first). Useful for processing in chronological order.
 
         Returns:
             Extraction run ID
@@ -156,6 +158,7 @@ class ExtractionCoordinator:
                 search_mode=search_mode,
                 force_cursor=force_cursor,
                 skip_documents=skip_documents,
+                sort_by_creation_time=sort_by_creation_time,
             )
             all_document_ids.extend(doc_ids)
             console.print(f"  Found: {len(doc_ids):,} documents")
@@ -170,6 +173,7 @@ class ExtractionCoordinator:
                     search_mode=search_mode,
                     force_cursor=force_cursor,
                     skip_documents=skip_documents,
+                    sort_by_creation_time=sort_by_creation_time,
                 )
                 all_document_ids.extend(doc_ids)
                 console.print(f"  Found: {len(doc_ids):,} documents")
@@ -277,6 +281,7 @@ class ExtractionCoordinator:
         search_mode: str = "hybrid",
         force_cursor: bool = False,
         skip_documents: int = 0,
+        sort_by_creation_time: bool = False,
     ) -> List[str]:
         """Fetch document IDs from Weaviate.
 
@@ -287,6 +292,7 @@ class ExtractionCoordinator:
             search_mode: Search mode - "keyword", "semantic", or "hybrid"
             force_cursor: Force cursor pagination even with filters/search
             skip_documents: Number of documents to skip before collecting results
+            sort_by_creation_time: Sort by creation time (oldest first)
 
         Returns:
             List of document IDs
@@ -305,6 +311,8 @@ class ExtractionCoordinator:
             search_mode=search_mode,
             force_cursor=force_cursor,
             skip_documents=skip_documents,
+            sort_by="publication_date" if sort_by_creation_time else None,
+            sort_order="asc" if sort_by_creation_time else "asc",
         )
 
         return [doc.get("document_id") for doc in documents if doc.get("document_id")]
@@ -319,12 +327,31 @@ class ExtractionCoordinator:
             List of document IDs needing extraction
         """
         if not self.storage:
+            logger.warning("Storage not available, cannot filter already-extracted documents")
             return document_ids
 
-        # TODO: Implement check in Weaviate to see which docs have empty fields
-        # For now, return all documents
-        logger.warning("Filter already-extracted not yet implemented, returning all docs")
-        return document_ids
+        try:
+            # Get all successfully processed document IDs from the database
+            processed_ids = self.storage.get_processed_document_ids(status="success")
+
+            # Convert input list to set for efficient filtering
+            document_ids_set = set(document_ids)
+
+            # Filter out already processed documents
+            remaining_ids = document_ids_set - processed_ids
+
+            filtered_count = len(document_ids) - len(remaining_ids)
+            logger.info(
+                f"Filtered {filtered_count:,} already-extracted documents. "
+                f"Remaining: {len(remaining_ids):,} documents"
+            )
+
+            return list(remaining_ids)
+
+        except Exception as e:
+            logger.error(f"Failed to filter already-extracted documents: {e}")
+            logger.warning("Returning all documents without filtering")
+            return document_ids
 
     def monitor_progress(self, run_id: str, refresh_interval: int = 30):
         """Monitor extraction progress.
@@ -427,6 +454,11 @@ def main():
         help="Number of documents to skip before starting extraction (useful for resuming interrupted jobs, default: 0)",
     )
     parser.add_argument(
+        "--sort-by-creation-time",
+        action="store_true",
+        help="Sort documents by publication_date (oldest first). Note: Sorting is LIMITED to 10K documents (Weaviate offset limit) and CANNOT be used with --force-cursor or hybrid/semantic search.",
+    )
+    parser.add_argument(
         "--monitor",
         action="store_true",
         help="Monitor progress after queuing jobs",
@@ -472,6 +504,7 @@ def main():
         search_mode=args.search_mode,
         force_cursor=args.force_cursor,
         skip_documents=args.skip_documents,
+        sort_by_creation_time=args.sort_by_creation_time,
     )
 
     # Optional: Monitor progress

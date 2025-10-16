@@ -173,3 +173,6 @@ SAMPLE_INGESTION_CODE.py
 
 # LangChain cache
 .cache/
+
+# Temporary worker launcher scripts (ad-hoc configurations)
+start_*_workers*.sh
