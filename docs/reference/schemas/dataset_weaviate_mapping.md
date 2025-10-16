@@ -90,7 +90,7 @@ from juddges.data import DatasetToWeaviateMapper, WeaviateLegalDocumentsDatabase
 db = WeaviateLegalDocumentsDatabase(
     host="localhost",
     port=8222,
-    grpc_port=50051,
+    grpc_port=8085,
 )
 
 # Initialize mapper
@@ -403,7 +403,7 @@ python scripts/embed/analyze_raw_content_coverage.py \
 ```python
 from juddges.data import WeaviateLegalDocumentsDatabase
 
-db = WeaviateLegalDocumentsDatabase(host="localhost", port=8222, grpc_port=50051)
+db = WeaviateLegalDocumentsDatabase(host="localhost", port=8222, grpc_port=8085)
 
 # Get documents WITH raw_content
 with_raw = db.filter_by_raw_content_presence(has_raw_content=True, limit=100)
