@@ -520,6 +520,68 @@ class ExtractionStorage:
             logger.info(f"Logged ingestion for run {run_id}: {result}")
             return result
 
+    def get_processed_document_ids(
+        self, status: Optional[str] = "success", run_id: Optional[UUID] = None
+    ) -> set[str]:
+        """Get all document IDs that have been successfully processed.
+
+        Args:
+            status: Filter by extraction status (default: "success", None for all statuses)
+            run_id: Optional run_id to filter by specific extraction run
+
+        Returns:
+            Set of document IDs that have been processed
+        """
+        with self.session_scope() as session:
+            if status is not None:
+                if run_id is not None:
+                    result = session.execute(
+                        text(
+                            """
+                        SELECT DISTINCT document_id
+                        FROM extraction_results
+                        WHERE extraction_status = :status AND run_id = :run_id
+                        """
+                        ),
+                        {"status": status, "run_id": run_id},
+                    )
+                else:
+                    result = session.execute(
+                        text(
+                            """
+                        SELECT DISTINCT document_id
+                        FROM extraction_results
+                        WHERE extraction_status = :status
+                        """
+                        ),
+                        {"status": status},
+                    )
+            else:
+                if run_id is not None:
+                    result = session.execute(
+                        text(
+                            """
+                        SELECT DISTINCT document_id
+                        FROM extraction_results
+                        WHERE run_id = :run_id
+                        """
+                        ),
+                        {"run_id": run_id},
+                    )
+                else:
+                    result = session.execute(
+                        text(
+                            """
+                        SELECT DISTINCT document_id
+                        FROM extraction_results
+                        """
+                        )
+                    )
+
+            document_ids = {row.document_id for row in result}
+            logger.info(f"Found {len(document_ids)} processed document IDs")
+            return document_ids
+
     def export_to_jsonl(
         self, run_id: UUID, output_path: str, include_full_text: bool = True
     ):

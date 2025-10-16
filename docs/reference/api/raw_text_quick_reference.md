@@ -43,7 +43,7 @@ python scripts/embed/update_raw_content.py \
 ```python
 from juddges.data import WeaviateLegalDocumentsDatabase
 
-db = WeaviateLegalDocumentsDatabase(host="localhost", port=8222, grpc_port=50051)
+db = WeaviateLegalDocumentsDatabase(host="localhost", port=8222, grpc_port=8085)
 stats = db.get_raw_content_statistics()
 
 print(f"Coverage: {stats['coverage_percentage']}%")
@@ -133,7 +133,7 @@ python scripts/embed/analyze_raw_content_coverage.py --by-type
 ```python
 from juddges.data import WeaviateLegalDocumentsDatabase
 
-db = WeaviateLegalDocumentsDatabase(host="localhost", port=8222, grpc_port=50051)
+db = WeaviateLegalDocumentsDatabase(host="localhost", port=8222, grpc_port=8085)
 
 # Check judgments
 judgments_missing = db.filter_by_document_type_and_raw_content(
@@ -159,7 +159,7 @@ print(f"Tax interpretations missing raw_content: {len(tax_missing)}")
 # Only update documents without raw_content
 from juddges.data import DatasetToWeaviateMapper, WeaviateLegalDocumentsDatabase
 
-db = WeaviateLegalDocumentsDatabase(host="localhost", port=8222, grpc_port=50051)
+db = WeaviateLegalDocumentsDatabase(host="localhost", port=8222, grpc_port=8085)
 mapper = DatasetToWeaviateMapper(db=db, dataset_name="juddges/pl-court-raw")
 mapper.build_index(id_field="judgment_id", secondary_id_field="docket_number")
 

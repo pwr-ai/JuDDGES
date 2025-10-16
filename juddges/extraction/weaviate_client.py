@@ -71,6 +71,8 @@ class WeaviateRestClient:
         search_mode: str = "hybrid",
         force_cursor: bool = False,
         skip_documents: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
     ) -> List[Dict[str, Any]]:
         """Fetch documents using Weaviate REST API with cursor-based pagination.
 
@@ -83,6 +85,8 @@ class WeaviateRestClient:
             search_mode: Search mode - "keyword" (BM25), "semantic" (vector), or "hybrid" (default: "hybrid")
             force_cursor: Skip search query and use cursor pagination to iterate through ALL documents
             skip_documents: Number of documents to skip before starting to collect results (default: 0)
+            sort_by: Optional field to sort by (e.g., "_creationTimeUnix", "document_number"). Use None for no sorting.
+            sort_order: Sort order - "asc" (ascending, default) or "desc" (descending)
 
         Returns:
             List of all valid document properties with full_text (no sampling)
@@ -101,9 +105,28 @@ class WeaviateRestClient:
             The skip_documents parameter allows you to skip the first N documents in the result set,
             useful for resuming interrupted extraction jobs or distributing work across multiple runs.
         """
-        # Weaviate cursor API limitation: can't use 'after' with other params (hybrid, where)
-        # Fall back to offset pagination if filters/search are needed
+        # Weaviate limitations:
+        # 1. Cursor API ('after') cannot be used with sort - they are mutually exclusive
+        # 2. Hybrid/semantic search is not compatible with sort
+        # 3. Sort only works with: offset pagination + (plain queries OR BM25 keyword search)
         has_filters = bool(search_query or document_type_filter)
+
+        # If sort is requested, we MUST use offset pagination (not cursor)
+        if sort_by:
+            if use_cursor:
+                logger.warning(
+                    f"Sort requires offset pagination (cursor pagination doesn't support sorting). "
+                    f"Switching to offset pagination (max 10K limit applies)."
+                )
+                use_cursor = False
+
+            # Check if search mode is compatible with sort
+            if search_query and search_mode in ["hybrid", "semantic"]:
+                logger.warning(
+                    f"Sort is not compatible with {search_mode} search in Weaviate. "
+                    f"Disabling sort. To use sort, switch to search_mode='keyword' (BM25) or remove search query."
+                )
+                sort_by = None  # Disable sorting to avoid errors
 
         # If force_cursor is enabled, remove search query to ensure cursor pagination works
         if force_cursor and search_query:
@@ -122,6 +145,8 @@ class WeaviateRestClient:
                 document_type_filter=document_type_filter,
                 search_mode=search_mode,
                 skip_documents=skip_documents,
+                sort_by=sort_by,
+                sort_order=sort_order,
             )
         else:
             if has_filters and use_cursor:
@@ -137,6 +162,8 @@ class WeaviateRestClient:
                 document_type_filter=document_type_filter,
                 search_mode=search_mode,
                 skip_documents=skip_documents,
+                sort_by=sort_by,
+                sort_order=sort_order,
             )
 
     def _fetch_documents_cursor(
@@ -147,6 +174,8 @@ class WeaviateRestClient:
         document_type_filter: Optional[str],
         search_mode: str = "hybrid",
         skip_documents: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
     ) -> List[Dict[str, Any]]:
         """Fetch documents using cursor-based pagination (no 10K limit).
 
@@ -157,6 +186,8 @@ class WeaviateRestClient:
             document_type_filter: Optional document type filter
             search_mode: Search mode - "keyword", "semantic", or "hybrid"
             skip_documents: Number of documents to skip before collecting results
+            sort_by: Optional field to sort by (e.g., "_creationTimeUnix")
+            sort_order: Sort order - "asc" or "desc"
 
         Returns:
             List of all valid documents up to max_documents (no sampling)
@@ -201,6 +232,8 @@ class WeaviateRestClient:
                     limit=current_limit,
                     cursor=cursor,
                     document_type_filter=document_type_filter,
+                    sort_by=sort_by,
+                    sort_order=sort_order,
                 )
             else:
                 # Normal fetching after skip phase with full fields
@@ -211,6 +244,8 @@ class WeaviateRestClient:
                     search_query=search_query,
                     document_type_filter=document_type_filter,
                     search_mode=search_mode,
+                    sort_by=sort_by,
+                    sort_order=sort_order,
                 )
 
             try:
@@ -293,6 +328,8 @@ class WeaviateRestClient:
         document_type_filter: Optional[str],
         search_mode: str = "hybrid",
         skip_documents: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
     ) -> List[Dict[str, Any]]:
         """Fetch documents using offset-based pagination (legacy, max 10K limit).
 
@@ -303,6 +340,8 @@ class WeaviateRestClient:
             document_type_filter: Optional document type filter
             search_mode: Search mode - "keyword", "semantic", or "hybrid"
             skip_documents: Number of documents to skip before collecting results
+            sort_by: Optional field to sort by (e.g., "_creationTimeUnix")
+            sort_order: Sort order - "asc" or "desc"
 
         Returns:
             List of all valid documents up to max_documents (no sampling)
@@ -354,6 +393,8 @@ class WeaviateRestClient:
                 search_query=search_query,
                 document_type_filter=document_type_filter,
                 search_mode=search_mode,
+                sort_by=sort_by,
+                sort_order=sort_order,
             )
 
             try:
@@ -568,6 +609,8 @@ class WeaviateRestClient:
         search_query: Optional[str] = None,
         document_type_filter: Optional[str] = None,
         search_mode: str = "hybrid",
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
     ) -> str:
         """Build GraphQL query for document fetching.
 
@@ -577,6 +620,8 @@ class WeaviateRestClient:
             search_query: Optional search query
             document_type_filter: Optional document type filter
             search_mode: Search mode - "keyword" (BM25), "semantic" (vector), or "hybrid"
+            sort_by: Optional field to sort by (e.g., "_creationTimeUnix")
+            sort_order: Sort order - "asc" or "desc"
 
         Returns:
             GraphQL query string
@@ -592,6 +637,18 @@ class WeaviateRestClient:
                 }}
             """
 
+        # Build sort clause
+        sort_clause = ""
+        if sort_by:
+            # Weaviate uses lowercase for sort order
+            order = sort_order.lower() if sort_order else "asc"
+            sort_clause = f"""
+                sort: [{{
+                    path: ["{sort_by}"]
+                    order: {order}
+                }}]
+            """
+
         # Build query method based on search mode
         if search_query:
             if search_mode == "keyword":
@@ -601,6 +658,7 @@ class WeaviateRestClient:
                         query: "{search_query}"
                     }}
                     {where_clause}
+                    {sort_clause}
                     limit: {limit}
                     offset: {offset}
                 """
@@ -611,6 +669,7 @@ class WeaviateRestClient:
                         concepts: ["{search_query}"]
                     }}
                     {where_clause}
+                    {sort_clause}
                     limit: {limit}
                     offset: {offset}
                 """
@@ -622,6 +681,7 @@ class WeaviateRestClient:
                         alpha: 0.5
                     }}
                     {where_clause}
+                    {sort_clause}
                     limit: {limit}
                     offset: {offset}
                 """
@@ -629,6 +689,7 @@ class WeaviateRestClient:
             # No search query - just filter
             query_method = f"""
                 {where_clause}
+                {sort_clause}
                 limit: {limit}
                 offset: {offset}
             """
@@ -653,6 +714,8 @@ class WeaviateRestClient:
         limit: int,
         cursor: Optional[str],
         document_type_filter: Optional[str] = None,
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
     ) -> str:
         """Build minimal GraphQL query for fast cursor-based skipping (only fetches IDs).
 
@@ -660,6 +723,8 @@ class WeaviateRestClient:
             limit: Maximum number of documents to return
             cursor: Cursor (document ID) to start after (None for first page)
             document_type_filter: Optional document type filter
+            sort_by: Optional field to sort by
+            sort_order: Sort order - "asc" or "desc"
 
         Returns:
             GraphQL query string with minimal fields
@@ -675,16 +740,29 @@ class WeaviateRestClient:
                 }}
             """
 
+        # Build sort clause
+        sort_clause = ""
+        if sort_by:
+            order = sort_order.lower() if sort_order else "asc"
+            sort_clause = f"""
+                sort: [{{
+                    path: ["{sort_by}"]
+                    order: {order}
+                }}]
+            """
+
         # Cursor pagination without search - minimal fields
         if cursor:
             query_method = f"""
                 {where_clause}
+                {sort_clause}
                 limit: {limit}
                 after: "{cursor}"
             """
         else:
             query_method = f"""
                 {where_clause}
+                {sort_clause}
                 limit: {limit}
             """
 
@@ -708,6 +786,8 @@ class WeaviateRestClient:
         search_query: Optional[str] = None,
         document_type_filter: Optional[str] = None,
         search_mode: str = "hybrid",
+        sort_by: Optional[str] = None,
+        sort_order: str = "asc",
     ) -> str:
         """Build GraphQL query for cursor-based pagination.
 
@@ -717,6 +797,8 @@ class WeaviateRestClient:
             search_query: Optional search query
             document_type_filter: Optional document type filter
             search_mode: Search mode - "keyword" (BM25), "semantic" (vector), or "hybrid"
+            sort_by: Optional field to sort by
+            sort_order: Sort order - "asc" or "desc"
 
         Returns:
             GraphQL query string
@@ -730,6 +812,17 @@ class WeaviateRestClient:
                     operator: Equal,
                     valueText: "{document_type_filter}"
                 }}
+            """
+
+        # Build sort clause
+        sort_clause = ""
+        if sort_by:
+            order = sort_order.lower() if sort_order else "asc"
+            sort_clause = f"""
+                sort: [{{
+                    path: ["{sort_by}"]
+                    order: {order}
+                }}]
             """
 
         # Build query method based on search mode with cursor
@@ -760,6 +853,7 @@ class WeaviateRestClient:
                 query_method = f"""
                     {search_clause}
                     {where_clause}
+                    {sort_clause}
                     limit: {limit}
                     after: "{cursor}"
                 """
@@ -767,6 +861,7 @@ class WeaviateRestClient:
                 query_method = f"""
                     {search_clause}
                     {where_clause}
+                    {sort_clause}
                     limit: {limit}
                 """
         else:
@@ -774,12 +869,14 @@ class WeaviateRestClient:
             if cursor:
                 query_method = f"""
                     {where_clause}
+                    {sort_clause}
                     limit: {limit}
                     after: "{cursor}"
                 """
             else:
                 query_method = f"""
                     {where_clause}
+                    {sort_clause}
                     limit: {limit}
                 """
 

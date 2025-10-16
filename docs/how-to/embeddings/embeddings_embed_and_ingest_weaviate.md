@@ -17,7 +17,7 @@ The embedding workflow consists of three main steps:
   ```env
   WV_HOST=localhost       # Weaviate host
   WV_PORT=8080            # Weaviate port
-  WV_GRPC_PORT=50051      # Weaviate gRPC port
+  WV_GRPC_PORT=8085       # Weaviate gRPC port
   WV_API_KEY=<your-key>   # Weaviate API key (if applicable)
   ```
 
