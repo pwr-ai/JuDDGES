@@ -2,7 +2,6 @@ _docs/
 _proc/
 
 *.bak
-.gitattributes
 .last_checked
 .gitconfig
 *.bak
@@ -169,3 +168,15 @@ CLAUDE.md
 # UMAP models and coordinates (large files)
 models/umap/*.pkl
 umap_coords/*.parquet
+data/embeddings_samples
+
+# Extraction results and test data
+data/extraction_*/
+data/test_postgres_cache*/
+SAMPLE_INGESTION_CODE.py
+
+# LangChain cache
+.cache/
+
+# Temporary worker launcher scripts (ad-hoc configurations)
+start_*_workers*.sh

@@ -47,5 +47,35 @@ COPY scripts/ ./scripts/
 COPY README.md .
 
 RUN pip install uv && \
-    uv pip install --system -e . && \
-    pip install flash-attn --no-build-isolation
+    uv pip install --system -e "." && \
+    uv pip install --system --no-build-isolation \
+        "accelerate>=1.2.1" \
+        "bitsandbytes>=0.45.0" \
+        "chardet>=5.2.0" \
+        "deepdiff>=7.0.1" \
+        "deepspeed>=0.15.4" \
+        "flash-attn>=2.7.4.post1" \
+        "langchain-community>=0.3.8" \
+        "langchain-openai>=0.2.10" \
+        "langchain-text-splitters>=0.3.2" \
+        "lightning_fabric>=2.3.1" \
+        "mpire>=2.10.0" \
+        "openpyxl>=3.1.2" \
+        "peft>=0.14.0" \
+        "pyarrow>=15.0.0" \
+        "pymongo>=4.3.3" \
+        "pytz>=2024.1" \
+        "PyYAML>=6.0.1" \
+        "scikit-learn>=1.5.0" \
+        "seaborn>=0.13.2" \
+        "streamlit>=1.40.2" \
+        "tenacity>=8.2.3" \
+        "tensorboard>=2.16.2" \
+        "torchmetrics>=1.4.0" \
+        "torch_geometric>=2.5.3" \
+        "trl>=0.12.2" \
+        "umap-learn>=0.5.5" \
+        "vllm>=0.6.4.post1" \
+        "wandb>=0.19.0" \
+        "xmltodict>=0.13.0" \
+        "xlsxwriter>=3.2.0"

@@ -27,17 +27,62 @@ class BaseWeaviateDB(ABC):
     def __enter__(self):
         """Set up the database connection when entering context."""
         if self.client is None:
-            self.client = weaviate.connect_to_custom(
-                http_host=os.getenv("WEAVIATE_HOST", "localhost"),
-                http_port=int(os.getenv("WEAVIATE_PORT", "8084")),
-                http_secure=False,
-                grpc_host=os.getenv("WEAVIATE_HOST", "localhost"),
-                grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),
-                grpc_secure=False,
-                auth_credentials=weaviate.auth.AuthApiKey(
-                    api_key=os.getenv("WEAVIATE_API_KEY", "")
-                ),
-            )
+            weaviate_host = os.getenv("WEAVIATE_HOST", "localhost")
+            weaviate_scheme = os.getenv("WEAVIATE_SCHEME", "http")
+
+            # Check if using public instance
+            if weaviate_host not in ["localhost", "127.0.0.1", "weaviate"]:
+                # Public instance - use REST API only (no GRPC)
+                logger.info(f"Connecting to public Weaviate instance: {weaviate_host} (REST-only on port 8084)")
+
+                # Use connect_to_custom with dummy GRPC values
+                # The client will fall back to REST when GRPC is unavailable
+                self.client = weaviate.connect_to_custom(
+                    http_host=weaviate_host,
+                    http_port=int(os.getenv("WEAVIATE_PORT", "8084")),
+                    http_secure=False,
+                    grpc_host=weaviate_host,  # Same host but GRPC won't be used
+                    grpc_port=8085,  # Dummy port, won't be used
+                    grpc_secure=False,
+                    auth_credentials=weaviate.auth.AuthApiKey(
+                        api_key=os.getenv("WEAVIATE_API_KEY", "")
+                    ),
+                    skip_init_checks=True,  # Skip init checks to avoid GRPC requirement
+                )
+
+                # Force disable GRPC by redirecting grpc_search to http_search
+                try:
+                    if hasattr(self.client, '_connection'):
+                        # Store original http_search method
+                        original_http_search = self.client._connection.http_search
+
+                        # Replace grpc_search with http_search
+                        self.client._connection.grpc_search = original_http_search
+
+                        # Also set grpc stub to None
+                        if hasattr(self.client._connection, '_grpc_stub'):
+                            self.client._connection._grpc_stub = None
+
+                        logger.info("Disabled GRPC connection - redirected all queries to REST API")
+                except Exception as e:
+                    logger.warning(f"Could not redirect GRPC to HTTP: {e}")
+
+                logger.info("Connected using REST API (GRPC disabled)")
+            else:
+                # Local instance - use HTTP and GRPC
+                logger.info(f"Connecting to local Weaviate instance: {weaviate_host}")
+                self.client = weaviate.connect_to_custom(
+                    http_host=weaviate_host,
+                    http_port=int(os.getenv("WEAVIATE_PORT", "8084")),
+                    http_secure=False,
+                    grpc_host=weaviate_host,
+                    grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "8085")),
+                    grpc_secure=False,
+                    auth_credentials=weaviate.auth.AuthApiKey(
+                        api_key=os.getenv("WEAVIATE_API_KEY", "")
+                    ),
+                    skip_init_checks=True,
+                )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

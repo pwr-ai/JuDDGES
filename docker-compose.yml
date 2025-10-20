@@ -14,6 +14,7 @@ services:
     restart: always
     networks:
       - juddges-network
+      - legal_ai_default
     deploy:
       resources:
         reservations:
@@ -53,6 +54,8 @@ services:
 networks:
   juddges-network:
     driver: bridge
+  legal_ai_default:
+    external: true
 
 volumes:
   postgres-juddges-db:
