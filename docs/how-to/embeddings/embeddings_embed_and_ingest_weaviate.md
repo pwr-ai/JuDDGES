@@ -11,13 +11,13 @@ The embedding workflow consists of three main steps:
 
 ## Prerequisites
 
-1. Deploy Weaviate instance (see [docs/embeddings_deploy_weaviate.md](/docs/embeddings_deploy_weaviate.md))
+1. Deploy Weaviate instance (see [embeddings_deploy_weaviate.md](embeddings_deploy_weaviate.md))
 2. Setup environment variables in `.env` file
 
   ```env
   WV_HOST=localhost       # Weaviate host
   WV_PORT=8080            # Weaviate port
-  WV_GRPC_PORT=50051      # Weaviate gRPC port
+  WV_GRPC_PORT=8085       # Weaviate gRPC port
   WV_API_KEY=<your-key>   # Weaviate API key (if applicable)
   ```
 
@@ -27,9 +27,9 @@ The embedding generation script (`scripts/embed/embed_text.py`) converts raw tex
 
 ### Running Embedding Generation
 
-* Full configuration of embedding generation is defined in file [`configs/embedding.yaml`](/configs/embedding.yaml).
+* Full configuration of embedding generation is defined in file `configs/embedding.yaml`.
 * To run the embedding simply run command with proper dataset and embedding model with following command.
-  * It overrides hydra config, so for embedding model use names of configs present in [`configs/embedding_model`](/configs/embedding_model), and for dataset simply use name from huggingface hub.
+  * It overrides hydra config, so for embedding model use names of configs present in `configs/embedding_model`, and for dataset simply use name from huggingface hub.
 * The output will be two dirs with chunk and aggregated embeddings:
   * `data/embeddings/<dataset_name>/<embedding_model>/chunk_embeddings`
   * `data/embeddings/<dataset_name>/<embedding_model>/agg_embeddings`

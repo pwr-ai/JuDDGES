@@ -1,0 +1,238 @@
+name: Documentation Quality Checks
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.markdownlint.json'
+      - 'cspell.json'
+      - '.github/workflows/docs-quality-checks.yaml'
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+
+jobs:
+  markdown-lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: 'docs/**/*.md'
+          config: '.markdownlint.json'
+
+  link-checker:
+    name: Link Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-linkcheck-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-linkcheck-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs-material mkdocstrings[python] pymdown-extensions
+          pip install -e .
+
+      - name: Build documentation
+        run: mkdocs build --strict
+
+      - name: Check internal links
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: |
+            --verbose
+            --no-progress
+            --accept 200,204,429
+            --timeout 30
+            --max-retries 3
+            --exclude-path './site/_static'
+            --exclude 'linkedin.com'
+            --exclude 'twitter.com'
+            --exclude 'facebook.com'
+            './site/**/*.html'
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  spell-checker:
+    name: Spell Checking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install cspell
+        run: npm install -g cspell@latest
+
+      - name: Run spell checker
+        run: cspell --config cspell.json "docs/**/*.md" "README.md"
+
+  code-examples:
+    name: Validate Python Code Examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-examples-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-examples-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml rich loguru
+          pip install -e .
+
+      - name: Test code examples with pytest
+        run: |
+          python -m pytest tests/docs/test_documentation_examples.py -v --tb=short -m "docs and not integration"
+
+      - name: Run standalone code example validator
+        run: |
+          python scripts/docs/test_code_examples.py --verbose
+
+      - name: Generate code example report
+        if: always()
+        run: |
+          python scripts/docs/test_code_examples.py --report code-examples-report.json
+
+      - name: Upload code example report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-examples-report
+          path: code-examples-report.json
+
+  build-test:
+    name: Test Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-build-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-build-
+            ${{ runner.os }}-pip-
+
+      - name: Cache MkDocs build
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: ${{ runner.os }}-mkdocs-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-mkdocs-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs-material mkdocstrings[python] pymdown-extensions
+          pip install -e .
+
+      - name: Build documentation (strict mode)
+        run: mkdocs build --strict --verbose
+
+      - name: Check for broken references
+        run: |
+          # Check for common documentation issues
+          if grep -r "TODO\|FIXME\|XXX" docs/ --include="*.md"; then
+            echo "Warning: Found TODO/FIXME/XXX markers in documentation"
+            echo "Please resolve these before merging"
+            exit 1
+          fi
+
+      - name: Verify navigation structure
+        run: |
+          python - << 'EOF'
+          import yaml
+          from pathlib import Path
+
+          with open("mkdocs.yml") as f:
+              config = yaml.safe_load(f)
+
+          nav = config.get("nav", [])
+          docs_dir = Path("docs")
+
+          def check_nav_item(item, indent=0):
+              if isinstance(item, dict):
+                  for key, value in item.items():
+                      if isinstance(value, str):
+                          file_path = docs_dir / value
+                          if not file_path.exists():
+                              print(f"{'  ' * indent}Missing: {value}")
+                              return False
+                      elif isinstance(value, list):
+                          for sub_item in value:
+                              if not check_nav_item(sub_item, indent + 1):
+                                  return False
+              elif isinstance(item, str):
+                  file_path = docs_dir / item
+                  if not file_path.exists():
+                      print(f"{'  ' * indent}Missing: {item}")
+                      return False
+              return True
+
+          all_exist = all(check_nav_item(item) for item in nav)
+          if not all_exist:
+              print("\nError: Some files referenced in navigation don't exist")
+              exit(1)
+          else:
+              print("All navigation references are valid!")
+          EOF

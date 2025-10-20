@@ -1,0 +1,312 @@
+# LLM Field Extraction Schema for Legal Documents
+# This schema defines how to extract/generate fields from legal documents (judgments, tax interpretations, etc.)
+# Each field specifies: extraction method, purpose, and expected output format
+
+fields:
+  # HIGH PRIORITY FIELDS - Low coverage, high impact
+
+  thesis:
+    description: "The main legal principle, rule, or thesis established by this document"
+    extraction_method: |
+      Extract the core legal principle or holding from the document. For judgments, this is typically found in:
+      - The reasoning section where the court establishes a legal principle
+      - Summary sections or headnotes
+      - Conclusions that articulate binding precedent
+      For tax interpretations, extract the interpretive principle or rule being established.
+    why_extract: "Essential for legal research - enables users to quickly understand the precedential value and main legal principle without reading entire document"
+    output_format: "1-3 sentence summary of the main legal principle"
+    output_length: "50-300 characters"
+    priority: 1
+    current_coverage: 17.3%
+    example: "Contracts signed under duress lacking genuine consent are voidable at the option of the coerced party within reasonable time after duress ceases."
+
+  title:
+    description: "A concise, descriptive title that captures the essence of the legal document"
+    extraction_method: |
+      Generate a title that includes:
+      - For judgments: Court name + case type + main legal issue or parties (if notable)
+      - For tax interpretations: Subject matter + type of interpretation + date/reference
+      Use existing document_number, court_name, date_issued, and main legal issue from content.
+      If parties are present and case is notable, include party names.
+    why_extract: "Improves document discoverability, provides immediate context in search results and document lists"
+    output_format: "Descriptive title following legal citation conventions"
+    output_length: "30-150 characters"
+    priority: 2
+    current_coverage: 15.5%
+    example: "Supreme Court Administrative Chamber - VAT Deduction Eligibility for Holding Companies (2024)"
+
+  outcome:
+    description: "The final decision, ruling, or outcome of the legal document"
+    extraction_method: |
+      For judgments, extract from the decision/dispositif section:
+      - Whether the appeal was granted/denied
+      - Whether the case was remanded, dismissed, or decided
+      - Specific remedies ordered
+      For tax interpretations, summarize the interpretive conclusion or guidance provided.
+    why_extract: "Critical for case law research - allows filtering by outcome and understanding practical impact without reading full document"
+    output_format: "Clear statement of outcome with key details"
+    output_length: "50-200 characters"
+    priority: 3
+    current_coverage: 69.6%
+    example: "Appeal granted. Lower court decision reversed. Case remanded for recalculation of tax liability using correct valuation method."
+
+  keywords:
+    description: "Relevant legal keywords and subject matter tags for enhanced searchability"
+    extraction_method: |
+      Extract/generate 5-15 keywords covering:
+      - Legal areas (e.g., "contract law", "administrative procedure", "VAT")
+      - Specific legal concepts (e.g., "force majeure", "legitimate expectations")
+      - Procedural aspects (e.g., "appeal", "cassation", "preliminary ruling")
+      - Subject matter (e.g., "real estate", "employment", "taxation")
+      Use both explicit terms from the document and implicit conceptual tags.
+    why_extract: "Essential for search, filtering, and topic-based navigation. Enables users to find related cases by concept rather than exact text match"
+    output_format: "List of lowercase keywords/phrases"
+    output_length: "5-15 keywords"
+    priority: 4
+    current_coverage: 83.2%
+    example:
+      [
+        "tax law",
+        "vat deduction",
+        "holding company",
+        "economic activity",
+        "eu directive 2006/112",
+        "cost sharing",
+        "administrative appeal",
+      ]
+
+  # MEDIUM PRIORITY FIELDS - Contextual information
+
+  summary:
+    description: "Executive summary of the entire legal document"
+    extraction_method: |
+      Generate a comprehensive summary (3-5 paragraphs) covering:
+      1. Background/facts of the case or situation
+      2. Legal issue(s) presented
+      3. Key arguments or interpretive questions
+      4. Court's/authority's reasoning
+      5. Conclusion/decision
+      For tax interpretations, summarize the question, applicable law, and interpretive guidance.
+    why_extract: "Provides comprehensive overview for researchers who need more than thesis but less than full text. Speeds up relevance assessment"
+    output_format: "3-5 paragraph structured summary in plain language"
+    output_length: "500-1500 characters"
+    priority: 5
+    current_coverage: 99.9%
+    example: "The taxpayer challenged the tax authority's denial of VAT input deduction for services acquired from subsidiaries. The authority argued the taxpayer, as a holding company, was not engaged in economic activity. The court examined whether shareholding activities and cost-sharing arrangements constitute economic activity under EU Directive 2006/112/EC. Applying CJEU case law (Larentia + Minerva), the court held that holding companies providing management, administrative, and financial services to subsidiaries are engaged in economic activity. The VAT deduction denial was therefore unlawful. Case remanded to recalculate deductible input VAT."
+
+  legal_concepts:
+    description: "Structured list of legal concepts and doctrines discussed in the document"
+    extraction_method: |
+      Identify and list major legal concepts, doctrines, principles, or tests mentioned/applied:
+      - Constitutional principles (e.g., "proportionality", "legal certainty")
+      - Legal doctrines (e.g., "res judicata", "abuse of rights")
+      - Tests or standards (e.g., "reasonableness test", "effective control test")
+      - Procedural rules (e.g., "burden of proof", "standard of review")
+      Format as JSON array with concept name and brief context.
+    why_extract: "Enables semantic search and concept-based legal research. Helps identify patterns in how courts apply specific legal concepts"
+    output_format: "JSON array of objects with 'concept' and 'context' keys"
+    output_length: "3-20 concepts"
+    priority: 6
+    current_coverage: 0%
+    example: '[{"concept": "economic activity", "context": "VAT law - whether holding company activities qualify"}, {"concept": "input VAT deduction", "context": "right to deduct requires link to economic activity"}, {"concept": "EU law supremacy", "context": "national law must conform to EU Directive 2006/112/EC"}]'
+
+  parties:
+    description: "Structured information about parties involved in the case or legal matter"
+    extraction_method: |
+      Extract party information including:
+      - For judgments: appellant/respondent, plaintiff/defendant, their roles
+      - Legal status (individual, company, government entity)
+      - Anonymous references (e.g., "Company A", "Taxpayer")
+      Preserve anonymization if present. Format as JSON object with roles.
+    why_extract: "Enables party-based case search, tracking litigation patterns, and analyzing party types in legal disputes"
+    output_format: "JSON object mapping roles to party identifiers"
+    output_length: "2-10 parties"
+    priority: 7
+    current_coverage: 99.2%
+    example: '{"appellant": "ABC Holdings Sp. z o.o.", "respondent": "Director of Tax Chamber in Warsaw", "party_type": {"appellant": "legal entity", "respondent": "government authority"}}'
+
+  tags:
+    description: "Flexible semantic tags for document categorization and discovery"
+    extraction_method: |
+      Generate descriptive tags that capture:
+      - Legal domain (e.g., #tax-law, #civil-procedure)
+      - Document characteristics (e.g., #landmark-case, #eu-law-reference)
+      - Practical relevance (e.g., #business-law, #cross-border)
+      - Procedural stage (e.g., #cassation, #first-instance)
+      Use hashtag format for consistency. More flexible than keywords.
+    why_extract: "Enables faceted search, trending topic analysis, and flexible categorization beyond rigid keyword systems"
+    output_format: "List of hashtag-formatted tags"
+    output_length: "5-20 tags"
+    priority: 8
+    current_coverage: 0%
+    example:
+      [
+        "#tax-law",
+        "#vat-deduction",
+        "#holding-companies",
+        "#eu-directive",
+        "#administrative-appeal",
+        "#business-taxation",
+        "#landmark-2024",
+        "#cost-sharing",
+      ]
+
+  # SPECIALIZED EXTRACTION FIELDS
+
+  legal_references:
+    description: "Structured citations to statutes, regulations, and case law referenced in document"
+    extraction_method: |
+      Extract and structure all legal citations:
+      - Statutes: full citation with article/section numbers
+      - EU Directives/Regulations: number and article
+      - Case law: court, case number, date, and what proposition it supports
+      - Regulations: full name and relevant provisions
+      Format as JSON array with type, citation, and context.
+    why_extract: "Critical for legal research - shows precedential basis, enables citation network analysis, and helps find related cases"
+    output_format: "JSON array of citation objects with type, reference, and context"
+    output_length: "5-50 references"
+    priority: 9
+    current_coverage: 100%
+    example: '[{"type": "eu_directive", "reference": "Council Directive 2006/112/EC Article 168", "context": "right to deduct input VAT"}, {"type": "cjeu_case", "reference": "C-108/14 and C-109/14 Larentia + Minerva", "context": "holding companies and economic activity"}, {"type": "national_law", "reference": "VAT Act Article 86 Section 1", "context": "national implementation of deduction right"}]'
+
+  issuing_body:
+    description: "Information about the body that issued the legal document"
+    extraction_method: |
+      Extract institutional information:
+      - Court name and chamber (for judgments)
+      - Administrative body name (for interpretations)
+      - Jurisdiction level (supreme court, appellate, first instance)
+      - Geographic jurisdiction if applicable
+      May be derived from court_name, department_name fields or document metadata.
+    why_extract: "Essential for understanding precedential weight and jurisdiction. Enables filtering by court or authority"
+    output_format: "Structured JSON with body name, type, and level"
+    output_length: "50-200 characters"
+    priority: 10
+    current_coverage: 15.5%
+    example: '{"name": "Naczelny Sąd Administracyjny", "type": "supreme_administrative_court", "chamber": "First Chamber - Tax Law", "jurisdiction": "Poland - nationwide"}'
+
+  # ADVANCED ANALYTICAL FIELDS
+
+  legal_analysis:
+    description: "Structured analysis of legal reasoning employed in the document"
+    extraction_method: |
+      Analyze and structure the legal reasoning:
+      - Interpretive methods used (textual, purposive, systematic, historical)
+      - Legal tests or standards applied
+      - How precedents were distinguished or followed
+      - Policy considerations mentioned
+      - Strength of reasoning (conclusory vs. detailed analysis)
+      Format as JSON with reasoning_type, methods, and strength assessment.
+    why_extract: "Supports advanced legal research and AI training - understanding how courts reason helps predict outcomes and identify persuasive arguments"
+    output_format: "JSON object with reasoning analysis"
+    output_length: "200-500 characters"
+    priority: 11
+    current_coverage: 0%
+    example: '{"primary_reasoning": "purposive_interpretation", "interpretation_methods": ["textual", "eu_law_conform"], "precedent_treatment": "followed CJEU Larentia ruling strictly", "policy_considerations": ["tax neutrality", "single market objectives"], "reasoning_depth": "detailed - examined each element of economic activity test"}'
+
+  structured_content:
+    description: "Hierarchical structure of document content with section identification"
+    extraction_method: |
+      Parse document into structured sections:
+      - Facts/Background
+      - Procedural History
+      - Legal Issues
+      - Arguments (by party)
+      - Court's Analysis/Reasoning
+      - Conclusion/Decision
+      Map actual document sections to these semantic categories. Preserve section numbers if present.
+      Format as JSON with section type, heading, and text snippet.
+    why_extract: "Enables section-specific search, supports AI training on document structure, and allows targeted extraction of specific information types"
+    output_format: "JSON array of section objects"
+    output_length: "5-15 sections"
+    priority: 12
+    current_coverage: 0%
+    example: '[{"section_type": "facts", "heading": "Stan faktyczny", "position": 1, "char_start": 120, "char_end": 850}, {"section_type": "legal_issue", "heading": "Zagadnienie prawne", "position": 2, "char_start": 851, "char_end": 1200}, {"section_type": "reasoning", "heading": "Uzasadnienie", "position": 3, "char_start": 1201, "char_end": 5600}]'
+
+# EXTRACTION PIPELINE CONFIGURATION
+
+extraction_order:
+  phase_1_core:
+    - thesis
+    - title
+    - outcome
+    - keywords
+  phase_2_context:
+    - summary
+    - parties
+    - legal_references
+  phase_3_advanced:
+    - legal_concepts
+    - tags
+    - legal_analysis
+    - structured_content
+    - issuing_body
+
+# MODEL PROMPTING GUIDELINES
+
+prompting_guidelines:
+  general:
+    - "Always extract from the full_text field of the document"
+    - "Preserve legal terminology and formal language where appropriate"
+    - "For Polish documents, extract in Polish; for English documents, extract in English"
+    - "If a field cannot be reliably extracted, return null rather than guessing"
+    - "Maintain objectivity - do not editorialize or add personal interpretation"
+
+  quality_checks:
+    - "Thesis must be a complete, grammatically correct sentence"
+    - "Keywords must be lowercase and relevant to legal domain"
+    - "Citations must be verifiable from the source document"
+    - "Summaries must be factual and comprehensive"
+    - "JSON outputs must be valid and properly escaped"
+
+  context_awareness:
+    - "Consider document_type when extracting (judgment vs. tax interpretation)"
+    - "Use existing metadata fields (date_issued, court_name, etc.) to inform extraction"
+    - "Maintain consistency with existing populated fields"
+    - "Respect document language and jurisdiction-specific conventions"
+
+# VALIDATION RULES
+
+validation:
+  thesis:
+    min_length: 50
+    max_length: 500
+    must_contain: ["legal", "principle", "rule", "holding", "standard"]
+    format: "sentence"
+
+  title:
+    min_length: 20
+    max_length: 200
+    format: "title_case"
+
+  outcome:
+    min_length: 30
+    max_length: 300
+    must_contain:
+      ["granted", "denied", "dismissed", "remanded", "affirmed", "reversed"]
+
+  keywords:
+    min_items: 5
+    max_items: 20
+    format: "lowercase"
+
+  summary:
+    min_length: 300
+    max_length: 2000
+    format: "paragraph"
+
+# USAGE EXAMPLES
+
+usage_example: |
+  # Example LLM prompt for thesis extraction:
+
+  You are a legal document analyzer. Extract the main legal thesis from this judgment.
+
+  Document Type: {document_type}
+  Court: {court_name}
+  Full Text: {full_text[:3000]}...
+
+  Extract the core legal principle or holding in 1-3 sentences (50-300 chars).
+  Focus on the precedential value and main legal rule established.
+
+  Output only the thesis text, nothing else.

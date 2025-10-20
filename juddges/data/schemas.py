@@ -67,7 +67,7 @@ class LegalDocument(BaseModel):
     country: Optional[str] = Field(None, description="Country of origin")
 
     # Content fields
-    full_text: Optional[str] = Field(None, description="Raw full text")
+    full_text: Optional[str] = Field(None, description="Processed full text for vectorization")
     summary: Optional[str] = Field(None, description="Abstract or summary")
     thesis: Optional[str] = Field(None, description="Thesis or main point of the document")
     keywords: Optional[List[str]] = None
