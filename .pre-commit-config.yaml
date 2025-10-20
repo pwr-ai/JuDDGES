@@ -41,4 +41,30 @@ repos:
       - id: nbdev_export
         name: Notebook exporter
 
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.13.0
+    hooks:
+      - id: markdownlint-cli2
+        name: Markdown Lint
+        files: ^docs/.*\.md$
+        args: ["--config", ".markdownlint.json"]
+
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v8.6.0
+    hooks:
+      - id: cspell
+        name: Spell Checker
+        args: ["--config", "cspell.json"]
+        files: ^(docs/.*\.md|README\.md)$
+
+  - repo: local
+    hooks:
+      - id: test-doc-code-examples
+        name: Test Documentation Code Examples
+        entry: python scripts/docs/test_code_examples.py
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: true
+        always_run: false
+
 exclude: 'data/|dvc.lock'
