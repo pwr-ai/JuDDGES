@@ -165,3 +165,7 @@ data/datasets/pl/
 data/experiments/
 .claude/settings.local.json
 CLAUDE.md
+
+# UMAP models and coordinates (large files)
+models/umap/*.pkl
+umap_coords/*.parquet
