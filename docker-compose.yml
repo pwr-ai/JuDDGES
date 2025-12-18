@@ -7,24 +7,21 @@ services:
     volumes:
       - ./:/app
       - ~/.cache:/root/.cache
-      # - L:\docker-configs\zsh\smartass_zsh_history:/root/.zsh_history
     tty: true
     shm_size: "2gb"
     env_file:
       - .env
     restart: always
+    networks:
+      - juddges-network
+      - legal_ai_default
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              capabilities:
-                - gpu
-                - utility # nvidia-smi
-                - compute # CUDA. Required to avoid "CUDA version: N/A"
-                - video # NVDEC/NVENC. For instance to use a hardware accelerated ffmpeg. Skip it if you don't need it
-    networks:
-      - juddges-network
+              count: all
+              capabilities: [gpu]
 
   auth:
     restart: always
@@ -57,6 +54,8 @@ services:
 networks:
   juddges-network:
     driver: bridge
+  legal_ai_default:
+    external: true
 
 volumes:
   postgres-juddges-db:

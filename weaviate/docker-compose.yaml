@@ -1,48 +1,205 @@
 name: legal_ai
 
-
 services:
   weaviate:
     command:
       - --host
       - 0.0.0.0
       - --port
-      - '8080'
+      - '8084'
       - --scheme
       - http
-    image: cr.weaviate.io/semitechnologies/weaviate:1.29.0
+    image: cr.weaviate.io/semitechnologies/weaviate:1.30.2
     depends_on:
-      - t2v-transformers
+      - t2v-transformers-base
+      # - t2v-transformers-dev
+      # - t2v-transformers-fast
     ports:
-      - 8084:8080
-      - 50051:50051
+      - 8084:8084
+      - 8085:50051
     volumes:
-      - legal_ai_weaviate_data:/var/lib/weaviate
+      - legal_ai_weaviate_prod:/var/lib/weaviate
     env_file: .env
-    restart: on-failure
+    restart: always
+    networks:
+      - default
+      - nginx-router_proxy-tier
+    environment:
+      - LETSENCRYPT_HOST=legal-ai-weaviate.augustyniak.ai
+      - VIRTUAL_HOST=legal-ai-weaviate.augustyniak.ai
+      - LETSENCRYPT_EMAIL=lukasz@augustyniak.ai
+      - VIRTUAL_PORT=8084
+      # Performance tuning
+      - QUERY_MAXIMUM_RESULTS=10000
+      - QUERY_DEFAULTS_LIMIT=25
+      - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+      - PERSISTENCE_LSM_ACCESS_STRATEGY=mmap
+      - DISK_USE_READONLY_PERCENTAGE=95
+      - ASYNC_INDEXING=true
+      - REINDEX_VECTOR_DIMENSIONS_AT_STARTUP=false
+      # Connection and timeout settings
+      - GOMEMLIMIT=100GiB
+      - GOGC=100
+      # Batch processing optimization
+      - BATCH_DELETE_TIMEOUT=10m
+      - BATCH_UPDATE_TIMEOUT=10m
     deploy:
       restart_policy:
         condition: on-failure
         max_attempts: 3
       resources:
         limits:
-          cpus: '10'
-          memory: '60G'
+          cpus: '32'
+          memory: '128G'
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
-  t2v-transformers:
-    image: t2v-transformers:latest
+  # Base model transformer service (mmlw-roberta-large)
+  t2v-transformers-base:
+    build:
+      context: .
+      dockerfile: hf_transformers.dockerfile
+      args:
+        MODEL_NAME: 'sdadas/mmlw-roberta-large'
+        ENABLE_CUDA: ${ENABLE_CUDA}
+    ports:
+      - "8080:8080"
     environment:
-      ENABLE_CUDA: 0 # Set to 1 to enable
-    restart: on-failure
+      ENABLE_CUDA: ${ENABLE_CUDA}
+      MODEL_NAME: 'sdadas/mmlw-roberta-large'
+    restart: always
     deploy:
       restart_policy:
         condition: on-failure
         max_attempts: 3
+      resources:
+        limits:
+          cpus: '8'
+          memory: '16G'
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Dev model transformer service (all-mpnet-base-v2)
+  # t2v-transformers-dev:
+  #   build:
+  #     context: .
+  #     dockerfile: hf_transformers.dockerfile
+  #     args:
+  #       MODEL_NAME: 'sentence-transformers/all-mpnet-base-v2'
+  #       ENABLE_CUDA: ${ENABLE_CUDA}
+  #   ports:
+  #     - "8081:8080"
+  #   environment:
+  #     ENABLE_CUDA: ${ENABLE_CUDA}
+  #     MODEL_NAME: 'sentence-transformers/all-mpnet-base-v2'
+  #   restart: always
+  #   deploy:
+  #     restart_policy:
+  #       condition: on-failure
+  #       max_attempts: 3
+  #     resources:
+  #       limits:
+  #         cpus: '8'
+  #         memory: '16G'
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [ gpu ]
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+
+  # Fast model transformer service (all-MiniLM-L6-v2)
+  # t2v-transformers-fast:
+  #   build:
+  #     context: .
+  #     dockerfile: hf_transformers.dockerfile
+  #     args:
+  #       MODEL_NAME: 'sentence-transformers/all-MiniLM-L6-v2'
+  #       ENABLE_CUDA: ${ENABLE_CUDA}
+  #   ports:
+  #     - "8085:8080"
+  #   environment:
+  #     ENABLE_CUDA: ${ENABLE_CUDA}
+  #     MODEL_NAME: 'sentence-transformers/all-MiniLM-L6-v2'
+  #   restart: always
+  #   deploy:
+  #     restart_policy:
+  #       condition: on-failure
+  #       max_attempts: 3
+  #     resources:
+  #       limits:
+  #         cpus: '4'
+  #         memory: '8G'
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [ gpu ]
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+
+  # Redis for distributed extraction queue
+  extraction-redis:
+    image: redis:7-alpine
+    container_name: legal_ai_extraction_redis
+    command: redis-server --appendonly no --save "" --maxmemory 2gb --maxmemory-policy allkeys-lru
+    ports:
+      - "6381:6379"  # Port 6381 to avoid conflicts with other Redis instances
+    volumes:
+      - legal_ai_extraction_redis_data:/data
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '4G'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # PostgreSQL for extraction storage (separate from cache)
+  extraction-postgres:
+    image: postgres:16-alpine
+    container_name: legal_ai_extraction_postgres
+    environment:
+      POSTGRES_USER: ${EXTRACTION_POSTGRES_USER:-extraction_user}
+      POSTGRES_PASSWORD: ${EXTRACTION_POSTGRES_PASSWORD:-extraction_pass}
+      POSTGRES_DB: ${EXTRACTION_POSTGRES_DB:-legal_extraction}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5434:5432"  # Port 5434 (5432, 5433, 5555 already in use)
+    volumes:
+      - legal_ai_extraction_postgres_data:/var/lib/postgresql/data
+      - ./init_extraction_db.sql:/docker-entrypoint-initdb.d/init_extraction_db.sql:ro
+    restart: always
+    deploy:
       resources:
         limits:
           cpus: '4'
@@ -52,7 +209,15 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    networks:
+      - default
 
 volumes:
-  legal_ai_weaviate_data:
-    driver: local
+  legal_ai_weaviate_prod:
+    external: true
+  legal_ai_extraction_redis_data:
+  legal_ai_extraction_postgres_data:
+
+networks:
+  nginx-router_proxy-tier:
+    external: true

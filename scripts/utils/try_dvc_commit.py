@@ -34,7 +34,7 @@ def main(
 
 def get_stages_to_run(stages: list[str], glob: bool) -> List[str]:
     """Run dvc repro --dry and extract stages that would run."""
-    cmd = ["dvc", "repro", "-s", "--dry"] + stages
+    cmd = ["dvc", "repro", "-s", "--dry", "--ignore-errors"] + stages
 
     if glob:
         cmd.append("--glob")

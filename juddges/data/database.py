@@ -61,15 +61,19 @@ class MongoInterface:
         if self.client:
             self.client.close()
 
-    def update_documents(
+    def update_or_insert_documents(
         self,
         documents: list[dict[str, Any]],
         upsert: bool = True,
     ) -> BulkWriteResult:
         assert self.collection is not None, "Collection not initialized"
-
         update_batch = [
-            UpdateOne({"_id": doc["_id"]}, {"$set": doc}, upsert=upsert) for doc in documents
+            UpdateOne(
+                filter={"_id": doc["judgment_id"]},
+                update={"$set": doc},
+                upsert=upsert,
+            )
+            for doc in documents
         ]
 
         try:
@@ -236,4 +240,4 @@ class BatchDatabaseUpdate:
             db_name=self.mongo_db_name,
             collection_name=self.mongo_collection_name,
         ) as db:
-            return db.update_documents(update_batch)
+            return db.update_or_insert_documents(update_batch)

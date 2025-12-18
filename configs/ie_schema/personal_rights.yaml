@@ -1,0 +1,79 @@
+naruszenie_dobr_osobistych:
+  type: enum
+  choices: ['Tak', 'Nie']
+  description: "Czy sprawa dotyczy naruszenia dóbr osobistych"
+
+podstawa_prawna:
+  type: list
+  items:
+    type: enum
+    choices: ['23 KC', '24 KC', 'Inne']
+  description: "Podstawa prawna – artykuły Kodeksu Cywilnego"
+  required: false
+
+inne_podstawy_prawne:
+  type: list
+  items:
+    type: string
+  description: "Inne podstawy prawne, jeśli wybrano opcję 'Inne'. Każdy artykuł wprowadź oddzielnie"
+  required: false
+
+rodzaj_naruszajacego:
+  type: enum
+  choices: ['Instytucja/firma', 'Osoba prywatna']
+  description: "Kto naruszył dobra osobiste - czy instytucja/firma czy osoba prywatna"
+  required: false
+
+rodzaj_dobra_osobistego:
+  type: list
+  items:
+    type: enum
+    choices: ['Zdrowie', 'Wolność', 'Cześć', 'Swoboda sumienia', 'Nazwisko lub pseudonim', 'Wizerunek', 'Tajemnica korespondencji', 'Nietykalność mieszkania', 'Twórczość naukowa, artystyczna, wynalazcza i racjonalizatorska', 'Inne']
+  description: "Rodzaj dobra osobistego, które zostało naruszone"
+  required: false
+
+opis_naruszenia:
+  type: string
+  description: "Opis naruszenia dobra osobistego np. zacytowanie"
+  required: false
+
+miejsce_naruszenia:
+  type: enum
+  choices: ['Miejsce publiczne', 'Miejsce prywatne', 'Miejsce pracy', 'W internecie']
+  description: "Jakie było miejsce naruszenia"
+  required: false
+
+naruszenie_media_spolecznosciowe:
+  type: enum
+  choices: ['Tak', 'Nie']
+  description: "Czy naruszenie zaszło na mediach społecznościowych. Jeśli niedotyczy pozostaw puste"
+  required: false
+
+portale_spolecznosciowe:
+  type: list
+  items:
+    type: enum
+    choices: ['Facebook', 'Instagram', 'TikTok', 'Linkedin', 'Forum dyskusyjne', 'Inne miejsce w internecie']
+  description: "Portale społecznościowe lub internetowe, gdzie doszło do naruszenia. Jeśli niedotyczy pozostaw puste"
+  required: false
+
+skala_naruszenia:
+  type: integer
+  description: "Skala 1-5 oceny stopnia naruszenia dóbr osobistych. 0 - brak naruszenia, 1 - bardzo lekkie, 2 - lekkie, 3 - średnie, 4 - mocne, 5 - bardzo mocne"
+  required: false
+
+zadania:
+  type: list
+  items:
+    type: enum
+    choices: ['Zaniechania działania', 'Żądanie ażeby pozwany dopełnił czynności potrzebnych do usunięcia skutków naruszenia. W szczególności ażeby złożyła oświadczenie odpowiedniej treści i w odpowiedniej formie', 'Zadośćuczynienia pieniężnego', 'Zapłaty odpowiedniej sumy pieniężnej na wskazany cel społeczny']
+  description: "Rodzaje żądań występujące w sprawie"
+  required: false
+
+dowody:
+  type: list
+  items:
+    type: enum
+    choices: ['Przesłuchanie świadków', 'Przesłuchanie stron', 'Dokumenty', 'Zrzut ekranu/print screen']
+  description: "Rodzaje dowodów przedstawione w sprawie"
+  required: false

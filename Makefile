@@ -16,10 +16,11 @@ test:
 
 all: check test
 
-install: cuda := 124
+install: cuda := 128
 install:
-	pip install -r requirements.txt --find-links https://download.pytorch.org/whl/cu$(cuda)
-	pip install flash-attn==2.6.3 --no-build-isolation
+	pip install torch==2.7.0 --index-url https://download.pytorch.org/whl/cu$(cuda)
+	pip install -r requirements.txt
+	pip install flash-attn==2.7.4.post1 --no-build-isolation
 
 install_macos:
 	# bitsandbytes are not supported on macOS (https://github.com/pwr-ai/JuDDGES/pull/41)
@@ -28,7 +29,7 @@ install_macos:
 install_cpu:
 	pip install --find-links https://download.pytorch.org/whl/cpu -r requirements.txt
 
-install_unsloth: cuda := 124
+install_unsloth: cuda := 128
 install_unsloth:
 	conda install \
 		pytorch-cuda=$(cuda) \

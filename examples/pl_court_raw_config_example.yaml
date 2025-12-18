@@ -1,0 +1,85 @@
+# Auto-generated configuration for JuDDGES/pl-court-raw
+# This shows exactly what the Universal Ingestion System would create
+
+name: "JuDDGES/pl-court-raw"
+document_type: "judgment"
+
+# Intelligent column mapping based on semantic analysis
+column_mapping:
+  judgment_id: "document_id"           # Primary identifier
+  docket_number: "document_number"     # Case reference number
+  judgment_date: "date_issued"         # When judgment was made
+  publication_date: "publication_date" # When published
+  last_update: "last_updated"          # Last modification
+  court_id: "source_id"                # Court identifier
+  department_id: "issuing_body"        # Department that issued
+  judgment_type: "judgment_type"       # Type of judgment
+  excerpt: "summary"                   # Short summary/abstract
+  xml_content: "raw_content"           # Original XML content
+  presiding_judge: "presiding_judge"   # Lead judge
+  decision: "outcome"                  # Court decision
+  judges: "judges"                     # List of judges
+  legal_bases: "legal_bases"           # Legal foundation references
+  publisher: "publisher"               # Publishing entity
+  recorder: "recorder"                 # Who recorded the judgment
+  reviser: "reviser"                   # Who revised the judgment
+  keywords: "keywords"                 # Subject keywords
+  num_pages: "num_pages"               # Document length
+  full_text: "full_text"               # Complete judgment text
+  volume_number: "volume_number"       # Publication volume
+  volume_type: "volume_type"           # Type of publication
+  court_name: "court_name"             # Human-readable court name
+  department_name: "department_name"   # Department name
+  extracted_legal_bases: "extracted_legal_bases"  # Structured legal refs
+  references: "references"             # Citation references
+  thesis: "thesis"                     # Main legal principle
+  country: "country"                   # Jurisdiction country
+  court_type: "court_type"             # Type of court
+
+# Fields that must be present
+required_fields:
+  - "document_id"
+  - "full_text"
+
+# Fields containing substantial text for embeddings
+text_fields:
+  - "full_text"      # Main document content
+  - "summary"        # Brief summary
+  - "thesis"         # Legal principle
+  - "outcome"        # Decision text
+
+# Fields containing dates
+date_fields:
+  - "date_issued"
+  - "publication_date"
+  - "last_updated"
+
+# Fields containing arrays/lists
+array_fields:
+  - "keywords"       # Subject tags
+  - "judges"         # List of judge names
+  - "legal_bases"    # Legal reference list
+  - "references"     # Citation list
+
+# Fields containing JSON objects
+json_fields:
+  - "extracted_legal_bases"  # Structured legal references
+
+# Default values for missing fields
+default_values:
+  language: "pl"           # Polish language (auto-detected)
+  country: "Poland"        # Poland jurisdiction
+  document_type: "judgment" # Court judgment type
+
+# Document chunking strategy
+chunk_strategy: "recursive"
+max_chunk_size: 1000
+chunk_overlap: 200
+
+# Processing optimizations for Polish legal documents
+processing_hints:
+  - "Polish legal document structure"
+  - "Court judgment metadata"
+  - "Multi-judge panels common"
+  - "Complex legal reference format"
+  - "Date formats: YYYY-MM-DD common"

@@ -45,6 +45,14 @@ while [ $# -gt 0 ]; do
             stage="$2"
             shift 2
             ;;
+        -p|--prompt)
+            prompt="$2"
+            shift 2
+            ;;
+        -i|--ie_schema)
+            ie_schema="$2"
+            shift 2
+            ;;
         -r|--random_seed)
             random_seed="$2"
             shift 2
@@ -52,14 +60,14 @@ while [ $# -gt 0 ]; do
         *)
             echo "Invalid option: $1" >&2
             if [ "$stage" = "predict" ] || [ -z "$stage" ]; then
-                echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed>" >&2
-                echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed>" >&2
+                echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed> [--prompt <prompt>] [--ie_schema <schema>]" >&2
+                echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed> [-p <prompt>] [-i <schema>]" >&2
             else
-                echo "Usage: $0 --model <model> --dataset <dataset> --stage sft [--random_seed <seed>]" >&2
-                echo "   or: $0 -m <model> -d <dataset> -s sft [-r <seed>]" >&2
+                echo "Usage: $0 --model <model> --dataset <dataset> --stage sft [--random_seed <seed>] [--prompt <prompt>] [--ie_schema <schema>]" >&2
+                echo "   or: $0 -m <model> -d <dataset> -s sft [-r <seed>] [-p <prompt>] [-i <schema>]" >&2
             fi
-            echo "Example for sft: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft" >&2
-            echo "Example for predict: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage predict --random_seed 42" >&2
+            echo "Example for sft: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft --prompt default --ie_schema basic" >&2
+            echo "Example for predict: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage predict --random_seed 42 --prompt default --ie_schema basic" >&2
             exit 1
             ;;
     esac
@@ -70,26 +78,26 @@ if [ -z "$random_seed" ]; then
     # For predict stage, random_seed is obligatory
     if [ "$stage" = "predict" ]; then
         echo "Error: random_seed parameter is required for predict stage" >&2
-        echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed>" >&2
-        echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed>" >&2
+        echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed> [--prompt <prompt>] [--ie_schema <schema>]" >&2
+        echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed> [-p <prompt>] [-i <schema>]" >&2
         exit 1
     fi
 elif [ "$stage" = "sft" ] && [ -n "$random_seed" ]; then
     echo "Warning: random_seed parameter has no effect for sft stage, but will be stored in wandb metadata"
 fi
 
-# check if all parameters are provided
+# check if all required parameters are provided
 if [ -z "$model" ] || [ -z "$dataset" ] || [ -z "$stage" ]; then
     echo "Model (--model), dataset (--dataset) and stage (--stage) parameters are required" >&2
     if [ "$stage" = "predict" ] || [ -z "$stage" ]; then
-        echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed>" >&2
-        echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed>" >&2
+        echo "Usage: $0 --model <model> --dataset <dataset> --stage predict --random_seed <seed> [--prompt <prompt>] [--ie_schema <schema>]" >&2
+        echo "   or: $0 -m <model> -d <dataset> -s predict -r <seed> [-p <prompt>] [-i <schema>]" >&2
     else
-        echo "Usage: $0 --model <model> --dataset <dataset> --stage sft [--random_seed <seed>]" >&2
-        echo "   or: $0 -m <model> -d <dataset> -s sft [-r <seed>]" >&2
+        echo "Usage: $0 --model <model> --dataset <dataset> --stage sft [--random_seed <seed>] [--prompt <prompt>] [--ie_schema <schema>]" >&2
+        echo "   or: $0 -m <model> -d <dataset> -s sft [-r <seed>] [-p <prompt>] [-i <schema>]" >&2
     fi
-    echo "Example for sft: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft" >&2
-    echo "Example for predict: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage predict --random_seed 42" >&2
+    echo "Example for sft: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage sft --prompt default --ie_schema basic" >&2
+    echo "Example for predict: $0 --model Unsloth-Llama-3-8B-Instruct --dataset pl-court-instruct --stage predict --random_seed 42 --prompt default --ie_schema basic" >&2
     exit 1
 fi
 
@@ -105,6 +113,8 @@ export PYTHONPATH=$PYTHONPATH:.
 export model
 export dataset
 export random_seed
+export prompt
+export ie_schema
 
 cd $WORKDIR
 
@@ -113,19 +123,24 @@ if [ "$stage" = "sft" ]; then
         --num_processes=$WORLD_SIZE \
         --num_machines=1 \
         --use-deepspeed \
-        --zero-stage 2 \
+        --zero-stage 3 \
+        --zero3_init_flag true \
         --mixed_precision=bf16 \
         --dynamo_backend=no \
         scripts/sft/fine_tune_deepspeed.py \
-            model=${model} \
+            llm=${model} \
             dataset=${dataset} \
-    "
+            prompt=${prompt} \
+            ie_schema=${ie_schema} \
+            "
 else
     export COMMAND="python scripts/sft/predict.py \
-        model=${model} \
+        llm=${model} \
         dataset=${dataset} \
-        random_seed=${random_seed}
-    "
+        prompt=${prompt} \
+        ie_schema=${ie_schema} \
+        random_seed=${random_seed} \
+        "
 fi
 
 echo "Running the following command with apptainer: $COMMAND"

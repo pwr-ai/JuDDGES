@@ -1,0 +1,193 @@
+site_name: JuDDGES API Documentation
+site_description: Comprehensive API reference for the JuDDGES legal AI project
+site_author: JuDDGES Team
+repo_url: https://github.com/laugustyniak/JuDDGES
+repo_name: laugustyniak/JuDDGES
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.tracking
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+  language: en
+
+plugins:
+  - search
+  - mkdocstrings:
+      enabled: true
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            docstring_section_style: spacy
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_object_full_path: false
+            show_category_heading: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            group_by_category: true
+            show_signature_annotations: true
+            separate_signature: true
+            line_length: 80
+            merge_init_into_class: true
+            docstring_options:
+              ignore_init_summary: true
+            filters:
+              - "!^_"  # Exclude private members
+              - "!^__pycache__"
+            show_if_no_docstring: false
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - attr_list
+  - md_in_html
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+  - Tutorials:
+    - Overview: tutorials/index.md
+    - Getting Started: tutorials/getting_started.md
+    - Gemini Extraction: tutorials/gemini_extraction.md
+  - How-To Guides:
+    - Overview: how-to/index.md
+    - Data Acquisition: how-to/data_acquisition.md
+    - Embeddings & Vector DB: how-to/embeddings.md
+    - Information Extraction: how-to/extraction.md
+    - Documentation:
+      - Contributing to Docs: how-to/documentation/CONTRIBUTING_TO_DOCS.md
+  - API Reference:
+    - Overview: reference/api/index.md
+    - Core:
+      - Configuration: reference/api/core/config.md
+      - Settings: reference/api/core/settings.md
+      - Data Models: reference/api/core/data_models.md
+      - Schema: reference/api/core/schema.md
+    - Data:
+      - Overview: reference/api/data/index.md
+      - Loaders: reference/api/data/loaders.md
+      - Weaviate Base: reference/api/data/base_weaviate_db.md
+      - Judgments Database: reference/api/data/judgments_weaviate_db.md
+      - Documents Database: reference/api/data/documents_weaviate_db.md
+      - Dataset Factory: reference/api/data/dataset_factory.md
+      - Dataset Mapper: reference/api/data/dataset_mapper.md
+      - Stream Ingester: reference/api/data/stream_ingester.md
+      - Schemas: reference/api/data/schemas.md
+      - Utils: reference/api/data/utils.md
+    - LLM:
+      - Overview: reference/api/llm/index.md
+      - Factory: reference/api/llm/factory.md
+      - Predict: reference/api/llm/predict.md
+    - Extraction:
+      - Overview: reference/api/extraction/index.md
+      - Gemini Chain: reference/api/extraction/gemini_chain.md
+    - Preprocessing:
+      - Overview: reference/api/preprocessing/index.md
+      - Text Chunker: reference/api/preprocessing/text_chunker.md
+      - Text Encoder: reference/api/preprocessing/text_encoder.md
+      - Context Truncator: reference/api/preprocessing/context_truncator.md
+      - Formatters: reference/api/preprocessing/formatters.md
+      - Parser Base: reference/api/preprocessing/parser_base.md
+      - PL Court Parser: reference/api/preprocessing/pl_court_parser.md
+    - Evaluation:
+      - Overview: reference/api/evals/index.md
+      - Metrics: reference/api/evals/metrics.md
+      - Extraction: reference/api/evals/extraction.md
+    - LLM as Judge:
+      - Overview: reference/api/llm_as_judge/index.md
+      - Base: reference/api/llm_as_judge/base.md
+      - Judge: reference/api/llm_as_judge/judge.md
+      - Batched Judge: reference/api/llm_as_judge/batched_judge.md
+      - Data Model: reference/api/llm_as_judge/data_model.md
+      - Result Loading: reference/api/llm_as_judge/result_loading.md
+    - Retrieval:
+      - Overview: reference/api/retrieval/index.md
+      - Mongo Hybrid Search: reference/api/retrieval/mongo_hybrid_search.md
+      - Mongo Term Search: reference/api/retrieval/mongo_term_based_search.md
+    - Utils:
+      - Overview: reference/api/utils/index.md
+      - Config: reference/api/utils/config.md
+      - Logging: reference/api/utils/logging.md
+      - Pipeline: reference/api/utils/pipeline.md
+      - HuggingFace: reference/api/utils/hf.md
+      - Date Utils: reference/api/utils/date_utils.md
+      - Misc: reference/api/utils/misc.md
+    - CI/CD:
+      - Documentation CI/CD: reference/cicd/documentation-cicd.md
+  - Explanation:
+    - Overview: explanation/index.md
+    - Architecture: explanation/architecture.md
+    - Research: explanation/research.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/laugustyniak/JuDDGES
+    - icon: fontawesome/brands/huggingface
+      link: https://huggingface.co/JuDDGES
+
+extra_css:
+  - stylesheets/extra.css

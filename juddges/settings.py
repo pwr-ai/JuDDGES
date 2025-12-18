@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import langchain
 import mlflow
 import tiktoken
 from sqlalchemy import create_engine
@@ -14,13 +15,16 @@ LOGS_PATH = ROOT_PATH / "logs"
 
 DATA_PATH = ROOT_PATH / "data"
 CONFIG_PATH = ROOT_PATH / "configs"
+PROMPTS_PATH = CONFIG_PATH / "prompt"
+UMAP_MODELS_PATH = ROOT_PATH / "models" / "umap"
 
 SAMPLE_DATA_PATH = DATA_PATH / "sample_data"
 FRANKOWICZE_DATA_PATH = DATA_PATH / "analysis" / "sprawy_frankowe"
+ARTICLE_111_DATA_PATH = DATA_PATH / "analysis" / "agitacja_wyborcza"
 
-PL_JUDGEMENTS_PATH = DATA_PATH / "datasets" / "pl"
-PL_COURT_DEP_ID_2_NAME = PL_JUDGEMENTS_PATH / "court_id_2_name.csv"
-PL_JUDGEMENTS_PATH_RAW = PL_JUDGEMENTS_PATH / "pl-court-raw" / "data"
+PL_JUDGMENTS_PATH = DATA_PATH / "datasets" / "pl"
+PL_COURT_DEP_ID_2_NAME = PL_JUDGMENTS_PATH / "court_id_2_name.csv"
+PL_JUDGMENTS_PATH_RAW = PL_JUDGMENTS_PATH / "pl-court-raw" / "data"
 
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
@@ -28,6 +32,20 @@ TEXT_EMBEDDING_MODEL = "sdadas/mmlw-roberta-large"
 
 # NSA
 NSA_DATA_PATH = DATA_PATH / "datasets" / "nsa"
+
+
+class VectorName:
+    """Available vector names for semantic search.
+
+    These vector names are used to specify which vector embedding to use for semantic search:
+    - BASE: Default vector for general search
+    - DEV: Vector for development/testing
+    - FAST: Optimized vector for speed over accuracy
+    """
+
+    BASE = "base"
+    DEV = "dev"
+    FAST = "fast"
 
 
 def num_tokens_from_string(
@@ -54,7 +72,7 @@ LLM_TO_PRICE_COMPLETION = {
     "gpt-3.5-turbo-1106": 0.002 / 1000,
 }
 
-LOCAL_POSTGRES = "postgresql+psycopg2://llm:llm@postgres-juddges:5432/llm"
+LOCAL_POSTGRES = "postgresql+psycopg2://llm:llm@localhost:3456/llm"
 
 
 def get_sqlalchemy_engine() -> Engine:
@@ -69,8 +87,7 @@ def get_sqlalchemy_engine() -> Engine:
 
 
 def prepare_langchain_cache() -> None:
-    import langchain
-    from langchain.cache import SQLAlchemyMd5Cache
+    from langchain_community.cache import SQLAlchemyMd5Cache
 
     langchain.llm_cache = SQLAlchemyMd5Cache(get_sqlalchemy_engine())
 

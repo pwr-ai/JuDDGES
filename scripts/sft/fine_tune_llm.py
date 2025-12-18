@@ -26,9 +26,9 @@ from transformers import (
 from trl import SFTConfig, SFTTrainer
 
 from juddges.config import FineTuningConfig
-from juddges.data.datasets.utils import format_to_conversations
-from juddges.models.factory import get_model
+from juddges.llm.factory import get_llm
 from juddges.preprocessing.context_truncator import ContextTruncator
+from juddges.preprocessing.formatters import format_to_conversations
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
 
@@ -49,8 +49,8 @@ def main(cfg: DictConfig) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     dataset = load_dataset(config.dataset.name, split="train", num_proc=NUM_PROC)
-    model_pack = get_model(
-        config.model,
+    model_pack = get_llm(
+        config.llm,
         device_map={"": PartialState().process_index},
     )
     model_pack.model.config.use_cache = False
@@ -129,7 +129,7 @@ def get_trainer(
         **config.training_args,
     )
 
-    if config.use_peft and config.model.use_unsloth:
+    if config.use_peft and config.llm.use_unsloth:
         from unsloth import FastLanguageModel
 
         model = FastLanguageModel.get_peft_model(
