@@ -17,6 +17,7 @@ services:
     ports:
       - 8084:8084
       - 8085:50051
+      - 6060:6060  # Debug/profiling endpoint for migration status
     volumes:
       - legal_ai_weaviate_prod:/var/lib/weaviate
     env_file: .env
@@ -43,6 +44,9 @@ services:
       # Batch processing optimization
       - BATCH_DELETE_TIMEOUT=10m
       - BATCH_UPDATE_TIMEOUT=10m
+      # BlockMax WAND: not applicable - collection uses older LSM format (not mapcollection)
+      # To enable BlockMax, recreate collection in v1.30+ and re-ingest data
+      # - REINDEX_MAP_TO_BLOCKMAX_AT_STARTUP=juddges-vm
     deploy:
       restart_policy:
         condition: on-failure
