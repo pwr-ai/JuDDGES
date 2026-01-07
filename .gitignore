@@ -180,3 +180,7 @@ SAMPLE_INGESTION_CODE.py
 
 # Temporary worker launcher scripts (ad-hoc configurations)
 start_*_workers*.sh
+data/analysis/sprawy_frankowe/extractions_with_doc_id.pkl
+
+# Context files (not version controlled)
+.context/
