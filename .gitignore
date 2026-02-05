@@ -189,3 +189,6 @@ data/analysis/sprawy_frankowe/extractions_with_doc_id.pkl
 *.parquet
 *.jsonl.gz
 dumps/
+
+# Enriched datasets (generated from extraction results)
+data/enriched_datasets/
