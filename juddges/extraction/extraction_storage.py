@@ -625,3 +625,50 @@ class ExtractionStorage:
                     count += 1
 
             logger.info(f"Exported {count} records to {output_path}")
+
+    def get_extractions_for_hf_dataset(self) -> List[Dict[str, Any]]:
+        """Export all successful extractions for HuggingFace dataset enrichment.
+
+        Returns the latest extraction for each document_id, with both identifiers
+        for flexible joining with different HF datasets.
+
+        Returns:
+            List of dicts with document_id, document_number, document_type,
+            and all extracted fields (title, summary, thesis, keywords,
+            factual_state, legal_state, outcome, legal_references,
+            legal_concepts, parties, legal_analysis, judgment_specific,
+            tax_interpretation_specific)
+        """
+        with self.session_scope() as session:
+            result = session.execute(
+                text(
+                    """
+                    SELECT DISTINCT ON (document_id)
+                        document_id,
+                        document_number,
+                        document_type,
+                        extracted_data->>'title' as extracted_title,
+                        extracted_data->>'date_issued' as extracted_date_issued,
+                        extracted_data->>'summary' as extracted_summary,
+                        extracted_data->>'thesis' as extracted_thesis,
+                        extracted_data->>'keywords' as extracted_keywords,
+                        extracted_data->>'factual_state' as factual_state,
+                        extracted_data->>'legal_state' as legal_state,
+                        extracted_data->>'outcome' as extracted_outcome,
+                        extracted_data->>'legal_references' as extracted_legal_references,
+                        extracted_data->>'legal_concepts' as extracted_legal_concepts,
+                        extracted_data->>'parties' as extracted_parties,
+                        extracted_data->>'legal_analysis' as extracted_legal_analysis,
+                        extracted_data->>'judgment_specific' as extracted_judgment_specific,
+                        extracted_data->>'tax_interpretation_specific' as extracted_tax_interpretation_specific
+                    FROM extraction_results
+                    WHERE extraction_status = 'success'
+                      AND extracted_data IS NOT NULL
+                    ORDER BY document_id, extracted_at DESC
+                    """
+                )
+            )
+
+            extractions = [dict(row._mapping) for row in result]
+            logger.info(f"Exported {len(extractions)} extractions for HF dataset enrichment")
+            return extractions
