@@ -20,6 +20,7 @@ services:
       - 6060:6060  # Debug/profiling endpoint for migration status
     volumes:
       - legal_ai_weaviate_prod:/var/lib/weaviate
+      - /mnt/readynas/datasets/legal-ai-weaviate/native-backups:/var/lib/weaviate-backups
     env_file: .env
     restart: always
     networks:
@@ -70,7 +71,7 @@ services:
         MODEL_NAME: 'sdadas/mmlw-roberta-large'
         ENABLE_CUDA: ${ENABLE_CUDA}
     ports:
-      - "8080:8080"
+      - "8082:8080"  # Changed from 8080:8080 to avoid conflict with unite_transformers
     environment:
       ENABLE_CUDA: ${ENABLE_CUDA}
       MODEL_NAME: 'sdadas/mmlw-roberta-large'
