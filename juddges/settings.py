@@ -28,22 +28,20 @@ PL_JUDGMENTS_PATH_RAW = PL_JUDGMENTS_PATH / "pl-court-raw" / "data"
 
 MLFLOW_EXP_NAME = "Juddges-Information-Extraction"
 
-TEXT_EMBEDDING_MODEL = "sdadas/mmlw-roberta-large"
+TEXT_EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-0.6B"
+TEXT_EMBEDDING_DIM = 128  # Matryoshka truncation dimension
+TEXT_EMBEDDING_MODEL_LEGACY = "sdadas/mmlw-roberta-large"
 
 # NSA
 NSA_DATA_PATH = DATA_PATH / "datasets" / "nsa"
 
 
 class VectorName:
-    """Available vector names for semantic search.
+    """Available vector names for semantic search."""
 
-    These vector names are used to specify which vector embedding to use for semantic search:
-    - BASE: Default vector for general search
-    - DEV: Vector for development/testing
-    - FAST: Optimized vector for speed over accuracy
-    """
-
-    BASE = "base"
+    DEFAULT = "default"
+    # Legacy names kept for backward compatibility with existing code
+    BASE = "default"
     DEV = "dev"
     FAST = "fast"
 
