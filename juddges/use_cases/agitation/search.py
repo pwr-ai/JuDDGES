@@ -203,7 +203,7 @@ async def semantic_judgment_search(
         logger.info(f"Loading existing vector judgments from {output_path}")
         return pd.read_pickle(output_path)
 
-    model = SentenceTransformer("sdadas/mmlw-roberta-large")
+    model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B", truncate_dim=128)
 
     logger.info("Performing semantic search for digital campaign materials")
 

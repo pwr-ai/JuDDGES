@@ -46,9 +46,7 @@ class DatasetConfig(BaseModel):
     batch_size: int = Field(default=100, gt=0, description="Batch size for dataset operations")
     embedding_models: Dict[str, str] = Field(
         default_factory=lambda: {
-            "base": "sdadas/mmlw-roberta-large",
-            "dev": "sentence-transformers/all-MiniLM-L6-v2",
-            "fast": "sentence-transformers/all-mpnet-base-v2",
+            "default": "Qwen/Qwen3-Embedding-0.6B",
         },
         description="Mapping of named vectors to embedding models",
     )
@@ -60,24 +58,9 @@ class DatasetConfig(BaseModel):
         if not v:
             raise ValueError("embedding_models cannot be empty - at least one model is required")
 
-        # Check for required vector names
-        required_vectors = {"base", "dev", "fast"}
-        missing_vectors = required_vectors - set(v.keys())
-        if missing_vectors:
-            raise ValueError(f"Missing required vector names: {missing_vectors}")
-
-        # Validate that we have actual model names
         for vector_name, model_name in v.items():
             if not model_name or not isinstance(model_name, str):
                 raise ValueError(f"Invalid model name for vector '{vector_name}': {model_name}")
-
-        # Check for duplicates and warn if found
-        unique_models = set(v.values())
-        if len(unique_models) < len(v):
-            # Note: Using print instead of logger since this is in a validator
-            print(
-                "Warning: Some embedding models are duplicated - consider using different models for better performance"
-            )
 
         return v
 
@@ -93,7 +76,7 @@ class IngestionConfig(BaseModel):
 
     # Embedding settings
     embedding_model: str = Field(
-        default="sdadas/mmlw-roberta-large", description="Sentence transformer model name"
+        default="Qwen/Qwen3-Embedding-0.6B", description="Sentence transformer model name"
     )
     embedding_batch_size: int = Field(
         default=32, gt=0, description="Embedding generation batch size"
