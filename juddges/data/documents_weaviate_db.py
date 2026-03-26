@@ -213,8 +213,8 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
         description: str,
         properties: List[wvcc.Property],
         vectorizer_config: Any,
-        inverted_index_config: Any = None,
-        sharding_config: Any = None,
+        inverted_index_config: Optional[Any] = None,
+        sharding_config: Optional[Any] = None,
         references: Optional[List[ReferenceProperty]] = None,
     ) -> None:
         """Safely create a collection if it doesn't already exist."""
