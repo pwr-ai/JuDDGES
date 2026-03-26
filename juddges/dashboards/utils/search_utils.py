@@ -6,7 +6,7 @@ from pymongo.collection import Collection
 from sentence_transformers import SentenceTransformer
 
 from juddges.data.database import get_mongo_collection
-from juddges.settings import TEXT_EMBEDDING_MODEL
+from juddges.settings import TEXT_EMBEDDING_DIM, TEXT_EMBEDDING_MODEL
 
 
 @st.cache_resource
@@ -18,7 +18,7 @@ def get_judgments_collection(collection_name: str = "pl-court") -> Collection:
 @st.cache_resource
 def get_embedding_model() -> Any:
     """Get the sentence transformer model for text embeddings."""
-    return SentenceTransformer(TEXT_EMBEDDING_MODEL)
+    return SentenceTransformer(TEXT_EMBEDDING_MODEL, truncate_dim=TEXT_EMBEDDING_DIM)
 
 
 def process_highlights(item: Dict[str, Any]) -> str:

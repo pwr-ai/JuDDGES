@@ -58,6 +58,4 @@ batch_size: 100  # Batch size for dataset operations
 
 # Embedding model mapping for different named vectors
 embedding_models:
-  base: "sdadas/mmlw-roberta-large"
-  dev: "sentence-transformers/all-mpnet-base-v2"
-  fast: "sentence-transformers/all-MiniLM-L6-v2"
+  default: "Qwen/Qwen3-Embedding-0.6B"
