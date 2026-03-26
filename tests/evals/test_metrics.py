@@ -1,5 +1,7 @@
 import pytest
 
+pytest.importorskip("torchmetrics", reason="torchmetrics not installed")
+
 from juddges.evals.metrics import (
     evaluate_date,
     evaluate_enum,
