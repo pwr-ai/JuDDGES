@@ -66,7 +66,9 @@ WEAVIATE_GRPC_PORT = 8085 if WEAVIATE_HOST in ("localhost", "127.0.0.1") else in
 WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "")
 
 BATCH_SIZE = 100
-EMBED_BATCH_SIZE = 256
+EMBED_BATCH_SIZE = 8
+# Max chars to embed per text - Qwen3 supports 32K tokens but GPU memory limits us
+MAX_EMBED_CHARS = 4096
 
 
 def get_client() -> weaviate.WeaviateClient:
@@ -93,14 +95,6 @@ def recreate_collections(client: weaviate.WeaviateClient) -> None:
         except Exception:
             logger.info(f"Collection {name} does not exist, skipping delete")
 
-    # Import and use the database class for proper schema creation
-    from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
-
-    # We need to create collections via the class method, but it requires a connected instance.
-    # Instead, create minimal collections here with the correct vectorizer config.
-    # The full schema from documents_weaviate_db.py will be used for production.
-
-    # For reingest, we create simplified collections that match the parquet schema
     _create_legal_documents_collection(client)
     _create_document_chunks_collection(client)
 
@@ -240,9 +234,24 @@ def ingest_collection(
                     # Parse JSON arrays back
                     if isinstance(val, str) and val.startswith("["):
                         try:
-                            val = json.loads(val)
+                            parsed = json.loads(val)
+                            # Keep as JSON string for TEXT fields that get arrays
+                            if isinstance(parsed, list) and col not in ("keywords", "judges", "legal_bases", "references", "tags", "cited_references"):
+                                val = json.dumps(parsed, ensure_ascii=False)
+                            else:
+                                val = parsed
                         except (json.JSONDecodeError, ValueError):
                             pass
+                    # Coerce float-encoded integers
+                    if col in ("chunk_id", "position") and isinstance(val, (str, float)):
+                        try:
+                            val = int(float(val))
+                        except (ValueError, TypeError):
+                            val = 0
+                    # Fix date formats to RFC3339
+                    if col in ("date_issued", "publication_date", "ingestion_date", "last_updated"):
+                        if isinstance(val, str) and len(val) == 10:
+                            val = f"{val}T00:00:00Z"
                     props[col] = val
 
                 text_for_embedding = str(props.get(text_field, ""))
@@ -254,7 +263,7 @@ def ingest_collection(
                 uuid = row.get("uuid", weaviate.util.generate_uuid5(str(props.get("document_id", count))))
 
                 batch_objects.append((uuid, props))
-                batch_texts.append(text_for_embedding[:8192])  # Truncate very long texts for embedding
+                batch_texts.append(text_for_embedding[:MAX_EMBED_CHARS])
 
                 # Process batch when full
                 if len(batch_texts) >= EMBED_BATCH_SIZE:

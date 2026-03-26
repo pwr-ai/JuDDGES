@@ -18,8 +18,7 @@ services:
       - 6060:6060  # Debug/profiling endpoint for migration status
     volumes:
       - legal_ai_weaviate_prod:/var/lib/weaviate
-      # Uncomment when NAS is mounted at /mnt/readynas
-      # - /mnt/readynas/datasets/legal-ai-weaviate/native-backups:/var/lib/weaviate-backups
+      - /mnt/readynas/datasets/legal-ai-weaviate/native-backups:/var/lib/weaviate-backups
     env_file: .env
     restart: always
     networks:
