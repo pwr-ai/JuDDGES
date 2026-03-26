@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("langchain_google_vertexai", reason="langchain_google_vertexai not installed")
+
 from juddges.extraction import GeminiExtractionChain
 from juddges.extraction.gemini_chain import DocumentType, ExtractionSchema
 

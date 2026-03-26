@@ -4,6 +4,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+pytest.importorskip("langchain_google_vertexai", reason="langchain_google_vertexai not installed")
+
 from langchain_core.messages import AIMessage
 
 from juddges.extraction.gemini_chain import (

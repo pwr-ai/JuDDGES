@@ -1,7 +1,17 @@
 """Information extraction module using LangChain and Gemini."""
 
-# Core extraction chain (existing)
-from juddges.extraction.gemini_chain import DocumentType, ExtractionSchema, GeminiExtractionChain
+# Core extraction chain — requires langchain_google_vertexai (optional)
+try:
+    from juddges.extraction.gemini_chain import (
+        DocumentType,
+        ExtractionSchema,
+        GeminiExtractionChain,
+    )
+except ImportError:
+    GeminiExtractionChain = None  # type: ignore[assignment, misc]
+    DocumentType = None  # type: ignore[assignment, misc]
+    ExtractionSchema = None  # type: ignore[assignment, misc]
+
 from juddges.extraction.extraction_storage import ExtractionStorage
 
 # Schema definitions

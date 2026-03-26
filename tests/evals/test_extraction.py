@@ -1,5 +1,7 @@
 import pytest
 
+pytest.importorskip("torchmetrics", reason="torchmetrics not installed")
+
 from juddges.evals.extraction import ExtractionEvaluator
 from juddges.llm_as_judge.base import ItemEvalResult
 from juddges.llm_as_judge.data_model import PredictionLoader

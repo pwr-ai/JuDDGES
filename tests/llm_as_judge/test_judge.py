@@ -5,6 +5,8 @@ from typing import Generator
 from unittest.mock import AsyncMock
 
 import pytest
+
+pytest.importorskip("langchain_openai", reason="langchain_openai not installed")
 from langchain_openai import ChatOpenAI
 
 from juddges.llm_as_judge.base import EvalResults
