@@ -627,14 +627,15 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                 ),
             ],
             vectorizer_config=[
-                wvcc.Configure.NamedVectors.text2vec_transformers(
-                    name=VectorName.BASE,
-                    vectorize_collection_name=False,
-                    source_properties=["full_text"],
+                wvcc.Configure.NamedVectors.none(
+                    name=VectorName.DEFAULT,
                     vector_index_config=wvcc.Configure.VectorIndex.hnsw(
-                        ef_construction=128,
-                        max_connections=32,
+                        ef_construction=64,
+                        max_connections=16,
                         distance_metric=wvcc.VectorDistances.COSINE,
+                        quantizer=wvcc.Configure.VectorIndex.Quantizer.bq(
+                            rescore_limit=200,
+                        ),
                     ),
                 ),
             ],
@@ -777,20 +778,21 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
                 ),
             ],
             vectorizer_config=[
-                wvcc.Configure.NamedVectors.text2vec_transformers(
-                    name=VectorName.BASE,
-                    vectorize_collection_name=False,
-                    source_properties=["chunk_text"],
+                wvcc.Configure.NamedVectors.none(
+                    name=VectorName.DEFAULT,
                     vector_index_config=wvcc.Configure.VectorIndex.hnsw(
-                        ef_construction=128,
-                        max_connections=32,
+                        ef_construction=64,
+                        max_connections=16,
                         distance_metric=wvcc.VectorDistances.COSINE,
+                        quantizer=wvcc.Configure.VectorIndex.Quantizer.bq(
+                            rescore_limit=200,
+                        ),
                     ),
                 ),
             ],
         )
 
-        logger.info("Collections created with BlockMax WAND support")
+        logger.info("Collections created with BQ quantization and single vector")
 
     @staticmethod
     def uuid_from_document_id(document_id: str) -> str:
@@ -924,7 +926,7 @@ class WeaviateLegalDocumentsDatabase(BaseWeaviateDB):
             alpha=alpha,
             filters=filters,
             limit=limit,
-            target_vector="base",
+            target_vector=VectorName.DEFAULT,
             return_metadata=weaviate.classes.query.MetadataQuery(score=True),
         )
 

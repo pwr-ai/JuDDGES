@@ -1,0 +1,3 @@
+name: Qwen/Qwen3-Embedding-0.6B
+max_seq_length: 32768
+truncate_dim: 128

@@ -11,9 +11,7 @@ services:
       - http
     image: cr.weaviate.io/semitechnologies/weaviate:1.30.2
     depends_on:
-      - t2v-transformers-base
-      # - t2v-transformers-dev
-      # - t2v-transformers-fast
+      - embedding-server
     ports:
       - 8084:8084
       - 8085:50051
@@ -62,19 +60,16 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Base model transformer service (mmlw-roberta-large)
-  t2v-transformers-base:
-    build:
-      context: .
-      dockerfile: hf_transformers.dockerfile
-      args:
-        MODEL_NAME: 'sdadas/mmlw-roberta-large'
-        ENABLE_CUDA: ${ENABLE_CUDA}
+  # Embedding server: Qwen3-Embedding-0.6B via HuggingFace TEI
+  # Vectors are pre-computed during ingestion (Weaviate vectorizer=none)
+  # This service is used by the stream_ingester for embedding generation
+  embedding-server:
+    image: ghcr.io/huggingface/text-embeddings-inference:1.7.2
+    command: --model-id Qwen/Qwen3-Embedding-0.6B --max-client-batch-size 256
     ports:
-      - "8082:8080"  # Changed from 8080:8080 to avoid conflict with unite_transformers
-    environment:
-      ENABLE_CUDA: ${ENABLE_CUDA}
-      MODEL_NAME: 'sdadas/mmlw-roberta-large'
+      - "8082:80"
+    volumes:
+      - embedding_model_cache:/data
     restart: always
     deploy:
       restart_policy:
@@ -94,72 +89,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-  # Dev model transformer service (all-mpnet-base-v2)
-  # t2v-transformers-dev:
-  #   build:
-  #     context: .
-  #     dockerfile: hf_transformers.dockerfile
-  #     args:
-  #       MODEL_NAME: 'sentence-transformers/all-mpnet-base-v2'
-  #       ENABLE_CUDA: ${ENABLE_CUDA}
-  #   ports:
-  #     - "8081:8080"
-  #   environment:
-  #     ENABLE_CUDA: ${ENABLE_CUDA}
-  #     MODEL_NAME: 'sentence-transformers/all-mpnet-base-v2'
-  #   restart: always
-  #   deploy:
-  #     restart_policy:
-  #       condition: on-failure
-  #       max_attempts: 3
-  #     resources:
-  #       limits:
-  #         cpus: '8'
-  #         memory: '16G'
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [ gpu ]
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-
-  # Fast model transformer service (all-MiniLM-L6-v2)
-  # t2v-transformers-fast:
-  #   build:
-  #     context: .
-  #     dockerfile: hf_transformers.dockerfile
-  #     args:
-  #       MODEL_NAME: 'sentence-transformers/all-MiniLM-L6-v2'
-  #       ENABLE_CUDA: ${ENABLE_CUDA}
-  #   ports:
-  #     - "8085:8080"
-  #   environment:
-  #     ENABLE_CUDA: ${ENABLE_CUDA}
-  #     MODEL_NAME: 'sentence-transformers/all-MiniLM-L6-v2'
-  #   restart: always
-  #   deploy:
-  #     restart_policy:
-  #       condition: on-failure
-  #       max_attempts: 3
-  #     resources:
-  #       limits:
-  #         cpus: '4'
-  #         memory: '8G'
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [ gpu ]
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
 
   # Redis for distributed extraction queue
   extraction-redis:
@@ -222,6 +151,7 @@ volumes:
     external: true
   legal_ai_extraction_redis_data:
   legal_ai_extraction_postgres_data:
+  embedding_model_cache:
 
 networks:
   nginx-router_proxy-tier:

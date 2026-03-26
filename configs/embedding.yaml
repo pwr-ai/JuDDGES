@@ -1,15 +1,15 @@
 defaults:
-  - embedding_model: mmlw-roberta-large
+  - embedding_model: qwen3-embedding-0.6b
   - _self_
   - override hydra/hydra_logging: disabled
   - override hydra/job_logging: disabled
 
 dataset_name: ???
 chunk_config:
-  chunk_size: ${embedding_model.max_seq_length}
-  min_split_chars: 50
-  take_n_first_chunks: 16
-  chunk_overlap: 128
+  chunk_size: 2048
+  min_split_chars: 200
+  take_n_first_chunks: 8
+  chunk_overlap: 256
 
 batch_size: 4096
 num_output_shards: 10

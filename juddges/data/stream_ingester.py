@@ -175,16 +175,18 @@ class StreamingIngester:
     def __init__(
         self,
         weaviate_url: str = "http://localhost:8084",
-        embedding_model: str = "sdadas/mmlw-roberta-large",
-        chunk_size: int = 512,
-        min_chunk_size: int = 256,
-        overlap: int = 128,
+        embedding_model: str = "Qwen/Qwen3-Embedding-0.6B",
+        truncate_dim: int = 128,
+        chunk_size: int = 2048,
+        min_chunk_size: int = 200,
+        overlap: int = 256,
         batch_size: int = 32,
         tracker_db: str = "processed_documents.db",
         dataset_config=None,
         embedding_models: Optional[Dict[str, str]] = None,
     ):
         self.console = Console()
+        self.truncate_dim = truncate_dim
 
         # Parse URL to get host and port
         url_parts = weaviate_url.split("://")[-1].split(":")
@@ -206,56 +208,30 @@ class StreamingIngester:
             self.weaviate_client = weaviate.connect_to_local(host=host, port=port)
             logger.info("Connected to Weaviate without authentication")
 
-        # Set up embedding models - require multiple different models
-        if not embedding_models:
-            # Use default mapping with different models
-            self.embedding_models = {
-                "base": "sdadas/mmlw-roberta-large",
-                "dev": "sentence-transformers/all-mpnet-base-v2",
-                "fast": "sentence-transformers/all-MiniLM-L6-v2",
-            }
-            logger.warning(
-                "No embedding_models provided, using default multiple model configuration"
-            )
-        else:
-            self.embedding_models = embedding_models
+        # Single embedding model with Matryoshka truncation
+        model_name = embedding_model
+        if embedding_models:
+            # Legacy support: use first model if dict provided
+            model_name = list(embedding_models.values())[0]
+            logger.warning(f"Multiple embedding_models provided, using first: {model_name}")
 
-        # Validate that we have different models for different vectors
-        unique_models = set(self.embedding_models.values())
-        if len(unique_models) < len(self.embedding_models):
-            logger.warning(
-                "Some embedding models are duplicated across vectors - this reduces the benefit of multiple embeddings"
-            )
+        logger.info(f"Loading embedding model: {model_name} (truncate_dim={truncate_dim})")
+        self.transformer = SentenceTransformer(model_name, truncate_dim=truncate_dim)
 
-        logger.info(f"Using embedding models: {self.embedding_models}")
+        # Legacy compatibility
+        self.embedding_model = self.transformer
+        self.transformers = {VectorName.DEFAULT: self.transformer}
+        self.embedding_models = {VectorName.DEFAULT: model_name}
 
-        # Initialize SentenceTransformer models and tokenizers for each named vector
-        self.transformers = {}
-        self.tokenizers = {}
-        for vector_name, model_name in self.embedding_models.items():
-            transformer = SentenceTransformer(model_name)
-            self.transformers[vector_name] = transformer
-            # Get the tokenizer from the first module in the transformer
-            if hasattr(transformer[0], "tokenizer"):
-                self.tokenizers[vector_name] = transformer[0].tokenizer
-            elif hasattr(transformer, "tokenizer"):
-                self.tokenizers[vector_name] = transformer.tokenizer
-            else:
-                logger.warning(
-                    f"Could not extract tokenizer for {model_name}, will use character-based chunking"
-                )
-                self.tokenizers[vector_name] = None
-            logger.info(f"Initialized {vector_name} vector with model: {model_name}")
+        # Get tokenizer for chunking
+        primary_tokenizer = None
+        if hasattr(self.transformer[0], "tokenizer"):
+            primary_tokenizer = self.transformer[0].tokenizer
+        elif hasattr(self.transformer, "tokenizer"):
+            primary_tokenizer = self.transformer.tokenizer
 
-        # Keep the original embedding_model for backward compatibility
-        self.embedding_model = self.transformers.get("base")
-
-        # Use the primary tokenizer (from base model) for chunking
-        primary_tokenizer = self.tokenizers.get("base")
         if primary_tokenizer:
-            logger.info(
-                f"Using tokenizer-aware chunking with {self.embedding_models['base']} tokenizer"
-            )
+            logger.info(f"Using tokenizer-aware chunking with {model_name} tokenizer")
         else:
             logger.warning("No tokenizer available, falling back to character-based chunking")
 
@@ -669,30 +645,20 @@ class StreamingIngester:
                     wvc.Property(name="y", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
                 ],
                 vectorizer_config=[
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.BASE,
-                        vectorize_collection_name=False,
-                        source_properties=["full_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-base:8080",
-                    ),
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.DEV,
-                        vectorize_collection_name=False,
-                        source_properties=["full_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-dev:8080",
-                    ),
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.FAST,
-                        vectorize_collection_name=False,
-                        source_properties=["full_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-fast:8080",
+                    wvc.Configure.NamedVectors.none(
+                        name=VectorName.DEFAULT,
+                        vector_index_config=wvc.Configure.VectorIndex.hnsw(
+                            ef_construction=64,
+                            max_connections=16,
+                            distance_metric=wvc.VectorDistances.COSINE,
+                            quantizer=wvc.Configure.VectorIndex.Quantizer.bq(
+                                rescore_limit=200,
+                            ),
+                        ),
                     ),
                 ],
             )
-            logger.info(f"Created {self.LEGAL_DOCUMENTS_COLLECTION} collection")
+            logger.info(f"Created {self.LEGAL_DOCUMENTS_COLLECTION} collection with BQ")
         except Exception as e:
             if "already exists" in str(e).lower():
                 logger.info(
@@ -754,30 +720,20 @@ class StreamingIngester:
                     wvc.Property(name="y", data_type=wvc.DataType.NUMBER, skip_vectorization=True),
                 ],
                 vectorizer_config=[
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.BASE,
-                        vectorize_collection_name=False,
-                        source_properties=["chunk_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-base:8080",
-                    ),
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.DEV,
-                        vectorize_collection_name=False,
-                        source_properties=["chunk_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-dev:8080",
-                    ),
-                    wvc.Configure.NamedVectors.text2vec_transformers(
-                        name=VectorName.FAST,
-                        vectorize_collection_name=False,
-                        source_properties=["chunk_text"],
-                        vector_index_config=wvc.Configure.VectorIndex.hnsw(),
-                        inference_url="http://t2v-transformers-fast:8080",
+                    wvc.Configure.NamedVectors.none(
+                        name=VectorName.DEFAULT,
+                        vector_index_config=wvc.Configure.VectorIndex.hnsw(
+                            ef_construction=64,
+                            max_connections=16,
+                            distance_metric=wvc.VectorDistances.COSINE,
+                            quantizer=wvc.Configure.VectorIndex.Quantizer.bq(
+                                rescore_limit=200,
+                            ),
+                        ),
                     ),
                 ],
             )
-            logger.info(f"Created {self.DOCUMENT_CHUNKS_COLLECTION} collection")
+            logger.info(f"Created {self.DOCUMENT_CHUNKS_COLLECTION} collection with BQ")
         except Exception as e:
             if "already exists" in str(e).lower():
                 logger.info(
@@ -788,47 +744,30 @@ class StreamingIngester:
                 raise
 
     def _generate_embeddings(self, texts: List[str]) -> Dict[str, List[List[float]]]:
-        """Generate embeddings for batch of texts using all models."""
-        embeddings_dict = {}
-
-        for vector_name, transformer in self.transformers.items():
-            try:
-                embeddings = transformer.encode(
-                    texts,
-                    batch_size=self.batch_size,
-                    show_progress_bar=False,
-                    convert_to_numpy=True,
-                )
-                embeddings_dict[vector_name] = embeddings.tolist()
-                logger.debug(f"Generated {vector_name} embeddings for {len(texts)} texts")
-            except Exception as e:
-                logger.error(f"Failed to generate {vector_name} embeddings: {e}")
-                # Return zero embeddings as fallback - get dimensions from model
-                try:
-                    dim = transformer.get_sentence_embedding_dimension()
-                except Exception:
-                    dim = 768  # Default fallback
-                embeddings_dict[vector_name] = [[0.0] * dim for _ in texts]
-
-        return embeddings_dict
+        """Generate embeddings using single model with Matryoshka truncation."""
+        try:
+            embeddings = self.transformer.encode(
+                texts,
+                batch_size=self.batch_size,
+                show_progress_bar=False,
+                convert_to_numpy=True,
+            )
+            return {VectorName.DEFAULT: embeddings.tolist()}
+        except Exception as e:
+            logger.error(f"Failed to generate embeddings: {e}")
+            dim = self.truncate_dim
+            return {VectorName.DEFAULT: [[0.0] * dim for _ in texts]}
 
     def _aggregate_embeddings(
         self, embeddings_dict: Dict[str, List[List[float]]]
     ) -> Dict[str, List[float]]:
-        """Aggregate chunk embeddings into document embeddings for each vector."""
+        """Aggregate chunk embeddings into document embedding."""
         aggregated_dict = {}
-
         for vector_name, embeddings in embeddings_dict.items():
             if not embeddings:
-                # Get default size from the transformer
-                try:
-                    dim = self.transformers[vector_name].get_sentence_embedding_dimension()
-                except Exception:
-                    dim = 768  # Default fallback
-                aggregated_dict[vector_name] = [0.0] * dim
+                aggregated_dict[vector_name] = [0.0] * self.truncate_dim
             else:
                 aggregated_dict[vector_name] = np.mean(embeddings, axis=0).tolist()
-
         return aggregated_dict
 
     def _apply_column_mapping(self, doc_data: Dict[str, Any]) -> Dict[str, Any]:
