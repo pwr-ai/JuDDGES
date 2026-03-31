@@ -90,17 +90,20 @@ def get_client() -> weaviate.WeaviateClient:
     )
 
 
-def recreate_collections(client: weaviate.WeaviateClient) -> None:
-    """Delete old collections and create new ones with BQ."""
-    for name in ["LegalDocuments", "DocumentChunks"]:
+def recreate_collections(client: weaviate.WeaviateClient, collections: list[str] | None = None) -> None:
+    """Delete and recreate specified collections with BQ."""
+    targets = collections or ["LegalDocuments", "DocumentChunks"]
+    for name in targets:
         try:
             client.collections.delete(name)
             logger.info(f"Deleted collection: {name}")
         except Exception:
             logger.info(f"Collection {name} does not exist, skipping delete")
 
-    _create_legal_documents_collection(client)
-    _create_document_chunks_collection(client)
+    if "LegalDocuments" in targets:
+        _create_legal_documents_collection(client)
+    if "DocumentChunks" in targets:
+        _create_document_chunks_collection(client)
 
 
 def _create_legal_documents_collection(client: weaviate.WeaviateClient) -> None:
@@ -392,8 +395,9 @@ def main():
         console.print("[green]Connected to Weaviate[/green]")
 
         if not args.skip_recreate:
-            console.print("\n[yellow]Recreating collections...[/yellow]")
-            recreate_collections(client)
+            targets = [args.collection] if args.collection != "all" else None
+            console.print(f"\n[yellow]Recreating collections: {targets or 'all'}...[/yellow]")
+            recreate_collections(client, targets)
 
         start_time = time.time()
         total_ingested = 0
