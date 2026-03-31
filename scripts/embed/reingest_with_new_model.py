@@ -289,7 +289,7 @@ def ingest_collection(
 
 
 def _embed_via_tei(texts: list[str], truncate_dim: int = TEXT_EMBEDDING_DIM) -> list[list[float]]:
-    """Generate embeddings via TEI HTTP API with Matryoshka truncation."""
+    """Generate embeddings via TEI HTTP API with Matryoshka truncation and retry."""
     global TEI_SESSION
     if TEI_SESSION is None:
         TEI_SESSION = requests.Session()
@@ -298,18 +298,33 @@ def _embed_via_tei(texts: list[str], truncate_dim: int = TEXT_EMBEDDING_DIM) -> 
         )
         TEI_SESSION.mount("http://", adapter)
 
-    resp = TEI_SESSION.post(
-        f"{TEI_URL}/embed",
-        json={"inputs": texts, "truncate": True},
-        timeout=120,
-    )
-    resp.raise_for_status()
-    full_embeddings = resp.json()
+    for attempt in range(5):
+        try:
+            resp = TEI_SESSION.post(
+                f"{TEI_URL}/embed",
+                json={"inputs": texts, "truncate": True},
+                timeout=120,
+            )
+            resp.raise_for_status()
+            full_embeddings = resp.json()
 
-    # Matryoshka truncation: take first N dims
-    if truncate_dim and truncate_dim < len(full_embeddings[0]):
-        return [emb[:truncate_dim] for emb in full_embeddings]
-    return full_embeddings
+            # Matryoshka truncation: take first N dims
+            if truncate_dim and truncate_dim < len(full_embeddings[0]):
+                return [emb[:truncate_dim] for emb in full_embeddings]
+            return full_embeddings
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            wait = 2 ** attempt
+            logger.warning(f"TEI request failed (attempt {attempt + 1}/5): {e}. Retrying in {wait}s...")
+            time.sleep(wait)
+            # Reset session on connection errors
+            TEI_SESSION = None
+            TEI_SESSION = requests.Session()
+            adapter = requests.adapters.HTTPAdapter(
+                pool_connections=4, pool_maxsize=4, max_retries=3
+            )
+            TEI_SESSION.mount("http://", adapter)
+
+    raise RuntimeError(f"TEI embedding failed after 5 attempts for batch of {len(texts)} texts")
 
 
 def _flush_batch(
@@ -339,7 +354,12 @@ def main():
     parser.add_argument("--limit", type=int, help="Limit number of documents per collection")
     parser.add_argument("--skip-recreate", action="store_true", help="Skip collection recreation")
     parser.add_argument("--collection", choices=["LegalDocuments", "DocumentChunks", "all"], default="all")
+    parser.add_argument("--tei-url", type=str, default=None, help="TEI server URL (default: http://localhost:8082)")
     args = parser.parse_args()
+
+    global TEI_URL
+    if args.tei_url:
+        TEI_URL = args.tei_url
 
     console.print(f"\n[bold cyan]Weaviate Re-ingestion with {TEXT_EMBEDDING_MODEL}[/bold cyan]")
     console.print(f"Embedding dim: {TEXT_EMBEDDING_DIM} (Matryoshka truncation)")
