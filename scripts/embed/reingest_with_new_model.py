@@ -26,10 +26,12 @@ import json
 import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
 import pyarrow.parquet as pq
+import requests
 from dotenv import load_dotenv
 from loguru import logger
 from rich.console import Console
@@ -42,7 +44,6 @@ from rich.progress import (
     TimeElapsedColumn,
     TimeRemainingColumn,
 )
-from sentence_transformers import SentenceTransformer
 
 import weaviate
 import weaviate.classes.config as wvc
@@ -65,10 +66,13 @@ WEAVIATE_PORT = int(os.getenv("WEAVIATE_PORT", "8084"))
 WEAVIATE_GRPC_PORT = 8085 if WEAVIATE_HOST in ("localhost", "127.0.0.1") else int(os.getenv("WEAVIATE_GRPC_PORT", "8085"))
 WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "")
 
-BATCH_SIZE = 100
-EMBED_BATCH_SIZE = 8
-# Max chars to embed per text - Qwen3 supports 32K tokens but GPU memory limits us
-MAX_EMBED_CHARS = 4096
+BATCH_SIZE = 1024
+EMBED_BATCH_SIZE = 128
+# Max chars to embed per text - TEI handles truncation server-side
+MAX_EMBED_CHARS = 2048  # Shorter = faster embedding, BM25 handles precision
+# TEI embedding server endpoint
+TEI_URL = os.getenv("TEI_URL", "http://localhost:8082")
+TEI_SESSION = None
 
 
 def get_client() -> weaviate.WeaviateClient:
@@ -178,7 +182,6 @@ def _create_document_chunks_collection(client: weaviate.WeaviateClient) -> None:
 
 def ingest_collection(
     client: weaviate.WeaviateClient,
-    model: SentenceTransformer,
     parquet_path: Path,
     collection_name: str,
     text_field: str,
@@ -267,7 +270,7 @@ def ingest_collection(
 
                 # Process batch when full
                 if len(batch_texts) >= EMBED_BATCH_SIZE:
-                    _flush_batch(collection, model, batch_objects, batch_texts)
+                    _flush_batch(collection, batch_objects, batch_texts)
                     count += len(batch_texts)
                     batch_objects = []
                     batch_texts = []
@@ -278,33 +281,56 @@ def ingest_collection(
 
         # Flush remaining
         if batch_texts:
-            _flush_batch(collection, model, batch_objects, batch_texts)
+            _flush_batch(collection, batch_objects, batch_texts)
             count += len(batch_texts)
             progress.update(task, completed=count)
 
     return count
 
 
+def _embed_via_tei(texts: list[str], truncate_dim: int = TEXT_EMBEDDING_DIM) -> list[list[float]]:
+    """Generate embeddings via TEI HTTP API with Matryoshka truncation."""
+    global TEI_SESSION
+    if TEI_SESSION is None:
+        TEI_SESSION = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=4, pool_maxsize=4, max_retries=3
+        )
+        TEI_SESSION.mount("http://", adapter)
+
+    resp = TEI_SESSION.post(
+        f"{TEI_URL}/embed",
+        json={"inputs": texts, "truncate": True},
+        timeout=120,
+    )
+    resp.raise_for_status()
+    full_embeddings = resp.json()
+
+    # Matryoshka truncation: take first N dims
+    if truncate_dim and truncate_dim < len(full_embeddings[0]):
+        return [emb[:truncate_dim] for emb in full_embeddings]
+    return full_embeddings
+
+
 def _flush_batch(
     collection: weaviate.collections.Collection,
-    model: SentenceTransformer,
     batch_objects: list,
     batch_texts: list,
 ) -> None:
-    """Generate embeddings and insert batch."""
-    embeddings = model.encode(
-        batch_texts,
-        batch_size=EMBED_BATCH_SIZE,
-        show_progress_bar=False,
-        convert_to_numpy=True,
-    )
+    """Generate embeddings via TEI and insert batch."""
+    # Split into sub-batches for TEI (max 256 per request)
+    all_embeddings = []
+    for i in range(0, len(batch_texts), EMBED_BATCH_SIZE):
+        chunk = batch_texts[i : i + EMBED_BATCH_SIZE]
+        embeddings = _embed_via_tei(chunk)
+        all_embeddings.extend(embeddings)
 
     with collection.batch.dynamic() as batch:
-        for (uuid, props), embedding in zip(batch_objects, embeddings):
+        for (uuid, props), embedding in zip(batch_objects, all_embeddings):
             batch.add_object(
                 uuid=uuid,
                 properties=props,
-                vector={VectorName.DEFAULT: embedding.tolist()},
+                vector={VectorName.DEFAULT: embedding},
             )
 
 
@@ -327,10 +353,17 @@ def main():
             console.print(f"[red]Missing backup:[/red] {p}")
             sys.exit(1)
 
-    # Load embedding model
-    console.print(f"\nLoading model: {TEXT_EMBEDDING_MODEL}...")
-    model = SentenceTransformer(TEXT_EMBEDDING_MODEL, truncate_dim=TEXT_EMBEDDING_DIM)
-    console.print(f"[green]Model loaded[/green] (output dim: {TEXT_EMBEDDING_DIM})")
+    # Test TEI embedding server
+    console.print(f"\nTesting TEI server at {TEI_URL}...")
+    try:
+        test_resp = requests.get(f"{TEI_URL}/health", timeout=5)
+        test_resp.raise_for_status()
+        test_emb = _embed_via_tei(["test"])
+        console.print(f"[green]TEI server OK[/green] (output dim: {len(test_emb[0])})")
+    except Exception as e:
+        console.print(f"[red]TEI server not available:[/red] {e}")
+        console.print(f"Start it with: docker compose up -d embedding-server")
+        sys.exit(1)
 
     # Connect to Weaviate
     client = None
@@ -347,14 +380,14 @@ def main():
 
         if args.collection in ("LegalDocuments", "all"):
             n = ingest_collection(
-                client, model, LEGAL_DOCS_PARQUET, "LegalDocuments", "full_text", args.limit
+                client, LEGAL_DOCS_PARQUET, "LegalDocuments", "full_text", args.limit
             )
             total_ingested += n
             console.print(f"[green]LegalDocuments: {n:,} ingested[/green]")
 
         if args.collection in ("DocumentChunks", "all"):
             n = ingest_collection(
-                client, model, DOC_CHUNKS_PARQUET, "DocumentChunks", "chunk_text", args.limit
+                client, DOC_CHUNKS_PARQUET, "DocumentChunks", "chunk_text", args.limit
             )
             total_ingested += n
             console.print(f"[green]DocumentChunks: {n:,} ingested[/green]")
