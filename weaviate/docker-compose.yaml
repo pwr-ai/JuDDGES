@@ -60,12 +60,11 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Embedding server: Qwen3-Embedding-0.6B via HuggingFace TEI
-  # Vectors are pre-computed during ingestion (Weaviate vectorizer=none)
-  # This service is used by the stream_ingester for embedding generation
+  # Embedding servers: Qwen3-Embedding-0.6B via HuggingFace TEI
+  # One per GPU for parallel ingestion
   embedding-server:
     image: ghcr.io/huggingface/text-embeddings-inference:1.7.2
-    command: --model-id Qwen/Qwen3-Embedding-0.6B --max-client-batch-size 256
+    command: --model-id Qwen/Qwen3-Embedding-0.6B --max-client-batch-size 256 --auto-truncate --max-batch-tokens 131072
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -85,7 +84,37 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              device_ids: ['1']
+              capabilities: [ gpu ]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  embedding-server-2:
+    image: ghcr.io/huggingface/text-embeddings-inference:1.7.2
+    command: --model-id Qwen/Qwen3-Embedding-0.6B --max-client-batch-size 256 --auto-truncate --max-batch-tokens 131072
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    ports:
+      - "8083:80"
+    volumes:
+      - embedding_model_cache:/data
+    restart: always
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '8'
+          memory: '16G'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
               capabilities: [ gpu ]
     logging:
       driver: "json-file"
