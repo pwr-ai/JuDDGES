@@ -66,10 +66,11 @@ WEAVIATE_PORT = int(os.getenv("WEAVIATE_PORT", "8084"))
 WEAVIATE_GRPC_PORT = 8085 if WEAVIATE_HOST in ("localhost", "127.0.0.1") else int(os.getenv("WEAVIATE_GRPC_PORT", "8085"))
 WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "")
 
-BATCH_SIZE = 1024
-EMBED_BATCH_SIZE = 128
+BATCH_SIZE = 2048
+EMBED_BATCH_SIZE = 256
 # Max chars to embed per text - TEI handles truncation server-side
 MAX_EMBED_CHARS = 2048  # Shorter = faster embedding, BM25 handles precision
+NUM_WORKERS = 4  # Concurrent embed+insert pipelines
 # TEI embedding server endpoint
 TEI_URL = os.getenv("TEI_URL", "http://localhost:8082")
 TEI_SESSION = None
@@ -206,8 +207,39 @@ def ingest_collection(
     console.print(f"\n[bold]{collection_name}[/bold]: {total_rows:,} objects from {parquet_path.name}")
 
     count = 0
-    batch_objects = []
-    batch_texts = []
+    pending_batches = []
+
+    def _parse_row(row, columns):
+        """Parse a parquet row into (uuid, props, text)."""
+        props = {}
+        for col in columns:
+            if col == "uuid":
+                continue
+            val = row[col]
+            if val is None or (isinstance(val, str) and val == ""):
+                continue
+            if isinstance(val, str) and val.startswith("["):
+                try:
+                    parsed = json.loads(val)
+                    if isinstance(parsed, list) and col not in ("keywords", "judges", "legal_bases", "references", "tags", "cited_references"):
+                        val = json.dumps(parsed, ensure_ascii=False)
+                    else:
+                        val = parsed
+                except (json.JSONDecodeError, ValueError):
+                    pass
+            if col in ("chunk_id", "position") and isinstance(val, (str, float)):
+                try:
+                    val = int(float(val))
+                except (ValueError, TypeError):
+                    val = 0
+            if col in ("date_issued", "publication_date", "ingestion_date", "last_updated"):
+                if isinstance(val, str) and len(val) == 10:
+                    val = f"{val}T00:00:00Z"
+            props[col] = val
+
+        text = str(props.get(text_field, ""))[:MAX_EMBED_CHARS]
+        uuid = row.get("uuid", weaviate.util.generate_uuid5(str(props.get("document_id", ""))))
+        return uuid, props, text
 
     with Progress(
         SpinnerColumn(),
@@ -221,72 +253,50 @@ def ingest_collection(
     ) as progress:
         task = progress.add_task(f"Ingesting {collection_name}", total=total_rows)
 
-        for batch in pf.iter_batches(batch_size=BATCH_SIZE):
-            df = batch.to_pandas()
+        with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+            futures = []
 
-            for _, row in df.iterrows():
+            for parquet_batch in pf.iter_batches(batch_size=BATCH_SIZE):
+                df = parquet_batch.to_pandas()
+
+                batch_objects = []
+                batch_texts = []
+
+                for _, row in df.iterrows():
+                    if limit and count + len(batch_objects) >= limit:
+                        break
+                    uuid, props, text = _parse_row(row, df.columns)
+                    if not text:
+                        continue
+                    batch_objects.append((uuid, props))
+                    batch_texts.append(text)
+
+                if not batch_texts:
+                    continue
+
+                # Submit batch for async embed+insert
+                future = executor.submit(_flush_batch, collection, list(batch_objects), list(batch_texts))
+                futures.append((future, len(batch_texts)))
+
+                # Collect completed futures periodically
+                done = []
+                for i, (f, n) in enumerate(futures):
+                    if f.done():
+                        f.result()  # Raise exceptions if any
+                        count += n
+                        done.append(i)
+                for i in reversed(done):
+                    futures.pop(i)
+                progress.update(task, completed=count)
+
                 if limit and count >= limit:
                     break
 
-                props = {}
-                text_for_embedding = ""
-
-                for col in df.columns:
-                    if col == "uuid":
-                        continue
-                    val = row[col]
-                    if val is None or (isinstance(val, str) and val == ""):
-                        continue
-                    # Parse JSON arrays back
-                    if isinstance(val, str) and val.startswith("["):
-                        try:
-                            parsed = json.loads(val)
-                            # Keep as JSON string for TEXT fields that get arrays
-                            if isinstance(parsed, list) and col not in ("keywords", "judges", "legal_bases", "references", "tags", "cited_references"):
-                                val = json.dumps(parsed, ensure_ascii=False)
-                            else:
-                                val = parsed
-                        except (json.JSONDecodeError, ValueError):
-                            pass
-                    # Coerce float-encoded integers
-                    if col in ("chunk_id", "position") and isinstance(val, (str, float)):
-                        try:
-                            val = int(float(val))
-                        except (ValueError, TypeError):
-                            val = 0
-                    # Fix date formats to RFC3339
-                    if col in ("date_issued", "publication_date", "ingestion_date", "last_updated"):
-                        if isinstance(val, str) and len(val) == 10:
-                            val = f"{val}T00:00:00Z"
-                    props[col] = val
-
-                text_for_embedding = str(props.get(text_field, ""))
-                if not text_for_embedding:
-                    count += 1
-                    progress.update(task, completed=count)
-                    continue
-
-                uuid = row.get("uuid", weaviate.util.generate_uuid5(str(props.get("document_id", count))))
-
-                batch_objects.append((uuid, props))
-                batch_texts.append(text_for_embedding[:MAX_EMBED_CHARS])
-
-                # Process batch when full
-                if len(batch_texts) >= EMBED_BATCH_SIZE:
-                    _flush_batch(collection, batch_objects, batch_texts)
-                    count += len(batch_texts)
-                    batch_objects = []
-                    batch_texts = []
-                    progress.update(task, completed=count)
-
-            if limit and count >= limit:
-                break
-
-        # Flush remaining
-        if batch_texts:
-            _flush_batch(collection, batch_objects, batch_texts)
-            count += len(batch_texts)
-            progress.update(task, completed=count)
+            # Wait for remaining futures
+            for f, n in futures:
+                f.result()
+                count += n
+                progress.update(task, completed=count)
 
     return count
 
