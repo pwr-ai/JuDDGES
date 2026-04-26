@@ -233,3 +233,19 @@ The universities involved in the JuDDGES project are:
 1. Wroclaw University of Science and Technology (Poland)
 2. Middlesex University London (UK)
 3. University of Lyon 1 (France)​​.
+
+## Citation
+
+If you find this research useful, please cite our paper:
+
+```bibtex
+@inproceedings{augustyniak2026bridging,
+  author = {Lukasz Augustyniak and Jakub Binkowski and Albert Sawczyn and Kamil Tagowski and Denis Janiak and Mateusz Bystro{\'n}ski and Grzegorz Piotrowski and Michal Bernaczyk and Krzysztof Kami{\'n}ski and Adrian Szymczak and Tomasz Jan Kajdanowicz},
+  booktitle = {Bridge between Artificial Intelligence and Law},
+  pages = {207--214},
+  title = {Bridging {AI} and Law: A Scalable Multi-Agent Platform for Quantitative Legal Analytics Across Millions of Documents},
+  url = {https://openreview.net/forum?id=hWjsyTSWrY},
+  year = {2026}
+}
+```
+
