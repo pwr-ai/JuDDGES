@@ -9,6 +9,8 @@ description = "Juddges is a tool for managing and analyzing judgments."
 authors = [
     { name = "Lukasz Augustyniak", email = "lukasz.augustyniak@pwr.edu.pl" },
 ]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.9"
 dependencies = [
     "datasets>=3.1.0",
