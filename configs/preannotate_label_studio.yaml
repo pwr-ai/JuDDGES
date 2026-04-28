@@ -1,5 +1,5 @@
 defaults:
-  - model: ../api_model/gpt_4.1
+  - model: ../api_llm/gpt_4o_mini
   # - prompt: preannotate_label_studio_pl
   - prompt: annotate_personal_rights
   - _self_

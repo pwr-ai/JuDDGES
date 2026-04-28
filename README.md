@@ -82,6 +82,18 @@ UV is a fast, reliable Python package installer and resolver.
 The specific details of dataset creation are available in
 [scripts/README.md](scripts/README.md).
 
+### Annotation toolkit
+
+A generic Label Studio-based framework for LLM-assisted annotation of legal documents.
+Define your own annotation task as a Pydantic schema + Label Studio XML form, then run
+the bundled pipeline to preannotate with an LLM, review in the Label Studio UI, and
+export a structured dataset. Two fully-featured example tasks ship with the toolkit
+(Polish Swiss Franc loans, Polish personal rights — each with schema, form template,
+and prompt). A schema-only example for English appeal courts is also included.
+
+See [label_studio_toolkit/docs/README.md](label_studio_toolkit/docs/README.md) for
+setup, workflows, and how to add a new task.
+
 ### Inference, fine-tuning and evaluation
 
 All commands for running inference, fine-tuning, and evaluation are declared as stages in the [`dvc.yaml`](dvc.yaml) file (see [DVC docs for details](https://dvc.org/doc/user-guide)).

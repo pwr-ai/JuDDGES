@@ -1,5 +1,5 @@
 defaults:
-  - model: ../api_model/gpt_4.1
+  - model: ../api_llm/gpt_4o_mini
   - prompt: annotate_en_appealcourt
   - _self_
 
