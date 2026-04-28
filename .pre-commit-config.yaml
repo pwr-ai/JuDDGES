@@ -35,12 +35,6 @@ repos:
       - id: gitleaks
         language_version: 1.23.6 # due to: https://github.com/gitleaks/gitleaks/issues/1751
 
-  - repo: https://github.com/fastai/nbdev
-    rev: 2.2.10
-    hooks:
-      - id: nbdev_export
-        name: Notebook exporter
-
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.13.0
     hooks:
