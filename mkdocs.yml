@@ -1,8 +1,8 @@
 site_name: JuDDGES API Documentation
 site_description: Comprehensive API reference for the JuDDGES legal AI project
 site_author: JuDDGES Team
-repo_url: https://github.com/laugustyniak/JuDDGES
-repo_name: laugustyniak/JuDDGES
+repo_url: https://github.com/pwr-ai/JuDDGES
+repo_name: pwr-ai/JuDDGES
 
 theme:
   name: material
@@ -185,8 +185,8 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/laugustyniak/JuDDGES
-    - icon: fontawesome/brands/huggingface
+      link: https://github.com/pwr-ai/JuDDGES
+    - icon: simple/huggingface
       link: https://huggingface.co/JuDDGES
 
 copyright: >
