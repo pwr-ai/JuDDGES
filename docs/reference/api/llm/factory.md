@@ -16,18 +16,22 @@ The `juddges.llm.factory` module provides factory functions for creating and con
 ## Supported Models
 
 ### Llama 3 Models
+
 - `meta-llama/Llama-3.1-8B-Instruct`
 - `meta-llama/Llama-3.2-3B-Instruct`
 
 ### Phi Models
+
 - `microsoft/Phi-4`
 - `microsoft/Phi-4-mini-instruct`
 
 ### Mistral Models
+
 - `mistralai/Mistral-Nemo-Instruct-2407`
 - `CYFRAGOVPL/PLLuM-12B-instruct`
 
 ### Bielik Models (Polish)
+
 - `speakleash/Bielik-11B-v2.3-Instruct`
 
 ## Key Features
@@ -161,6 +165,7 @@ model_pack = get_llm(config)
 Each model returns generation kwargs optimized for that model:
 
 **Llama 3**:
+
 ```python
 {
     "eos_token_id": [tokenizer.eos_token_id, eot_token_id],
@@ -169,6 +174,7 @@ Each model returns generation kwargs optimized for that model:
 ```
 
 **Mistral/Phi/Bielik**:
+
 ```python
 {
     "pad_token_id": tokenizer.eos_token_id
@@ -189,6 +195,7 @@ config = LLMConfig(
 ```
 
 **Memory Usage**:
+
 - Without quantization: ~32GB (8B model)
 - With 4-bit: ~8GB (8B model)
 

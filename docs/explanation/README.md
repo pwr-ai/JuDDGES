@@ -1,9 +1,11 @@
 # Explanation Documentation
 
 ## Purpose
+
 Explanation documentation is **understanding-oriented** material that clarifies and illuminates topics. It provides context, background, and the "why" behind design decisions and architectural choices.
 
 ## What Belongs Here
+
 - Architecture overviews
 - Design decisions and rationale
 - Conceptual explanations
@@ -15,6 +17,7 @@ Explanation documentation is **understanding-oriented** material that clarifies 
 - Theoretical background
 
 ## Characteristics
+
 - Conceptual rather than practical
 - Discusses alternatives and trade-offs
 - Provides the big picture
@@ -30,6 +33,7 @@ Explanation documentation is **understanding-oriented** material that clarifies 
 Comprehensive architecture documentation with detailed Mermaid diagrams:
 
 **Core Documents**:
+
 - **[System Architecture](architecture/SYSTEM_ARCHITECTURE.md)** - High-level component overview with visual diagrams
 - **[Data Flow Pipeline](architecture/DATA_FLOW_PIPELINE.md)** - Complete data transformation journey from raw documents to insights
 - **[Weaviate Integration](architecture/WEAVIATE_INTEGRATION.md)** - Vector database architecture and operations
@@ -38,6 +42,7 @@ Comprehensive architecture documentation with detailed Mermaid diagrams:
 - **[Project Overview](architecture/PROJECT_OVERVIEW.md)** - Mission, features, and getting started
 
 **Key Features**:
+
 - Interactive Mermaid diagrams for all major system components
 - Data transformation stages and format evolution
 - Training and inference pipeline visualizations
@@ -49,20 +54,17 @@ Comprehensive architecture documentation with detailed Mermaid diagrams:
 See [Architecture README](architecture/README.md) for detailed navigation guide.
 
 ### [Research](research/)
+
 - Research publications and papers
 - Theoretical foundations
 - Academic context
 
-### [Achievements](achievements/)
-- Milestones and project evolution
-- Impact assessments
-- Performance benchmarks
-- Success stories
-
 ### Main Explanations
-- [Executive Summary](EXECUTIVE_SUMMARY.md) - High-level project overview for stakeholders
+
+- [Project Overview](architecture/PROJECT_OVERVIEW.md) - High-level project overview
 
 ## Explanation Template
+
 ```markdown
 # Understanding [Concept]
 
@@ -101,6 +103,7 @@ How this evolved over time.
 ```
 
 ## Writing Guidelines
+
 1. Focus on concepts, not instructions
 2. Provide context and background
 3. Discuss the "why" behind decisions

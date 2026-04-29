@@ -31,6 +31,7 @@ The helper script automatically handles authentication issues:
 ```
 
 This script automatically:
+
 - Disables Google Cloud SDK interference
 - Sets proper environment variables
 - Ensures API key authentication
@@ -49,6 +50,7 @@ CLOUDSDK_CONFIG=/dev/null python scripts/extraction/your_script.py
 ### Issue 1: 403 Authentication Errors
 
 **Error Message**:
+
 ```
 403 Request had insufficient authentication scopes.
 reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT"
@@ -60,11 +62,13 @@ service: "generativelanguage.googleapis.com"
 **Solution**:
 
 1. **Immediate Fix**: Use helper script
+
    ```bash
    ./scripts/extraction/run_extraction.sh test_langfuse_simple.py
    ```
 
 2. **Code Fix**: Explicitly pass API key
+
    ```python
    import os
 
@@ -77,6 +81,7 @@ service: "generativelanguage.googleapis.com"
 ### Issue 2: API Key Not Found
 
 **Error Message**:
+
 ```
 API key not found. Please set GOOGLE_API_KEY environment variable.
 ```
@@ -85,10 +90,13 @@ API key not found. Please set GOOGLE_API_KEY environment variable.
 
 1. **Get API Key**: https://aistudio.google.com/apikey
 2. **Set in `.env`**:
+
    ```bash
    GOOGLE_API_KEY=AIzaSy...your-key-here...
    ```
+
 3. **Load environment**:
+
    ```bash
    source .env  # Linux/macOS
    # or
@@ -98,15 +106,18 @@ API key not found. Please set GOOGLE_API_KEY environment variable.
 ### Issue 3: LangChain Integration Failures
 
 **Symptoms**:
+
 - Direct API calls work
 - LangChain's `ChatGoogleGenerativeAI` fails
 
 **Root Cause**: LangChain credential discovery order:
+
 1. Application Default Credentials (ADC) - **Checked first**
 2. Service account JSON files
 3. API key environment variable - **Checked last**
 
 **Solution**: Explicitly pass API key to bypass discovery:
+
 ```python
 chain = GeminiExtractionChain(
     model_name="gemini-2.5-flash",
@@ -121,12 +132,14 @@ chain = GeminiExtractionChain(
 #### 1. API Key Authentication (Recommended for JuDDGES)
 
 **Pros**:
+
 - Simple setup
 - No OAuth2 complexity
 - Works immediately
 - Perfect for development
 
 **How to get**:
+
 ```bash
 # Visit Google AI Studio
 https://aistudio.google.com/apikey
@@ -140,6 +153,7 @@ https://aistudio.google.com/apikey
 **What it is**: Google's automatic credential discovery
 
 **Discovery order**:
+
 1. `GOOGLE_APPLICATION_CREDENTIALS` env var
 2. gcloud CLI configuration (`~/.config/gcloud`)
 3. GCE/GKE metadata server
@@ -152,6 +166,7 @@ https://aistudio.google.com/apikey
 **When to use**: Production deployments with fine-grained access control
 
 **Setup**:
+
 1. Create service account in GCP Console
 2. Grant "Generative AI User" role
 3. Download JSON key
@@ -160,6 +175,7 @@ https://aistudio.google.com/apikey
 ### Why LangChain Has Issues
 
 LangChain's authentication logic:
+
 ```python
 # Simplified version of what LangChain does
 if google_cloud_sdk_installed():
@@ -169,6 +185,7 @@ elif api_key_provided:
 ```
 
 Our fix ensures API key is always used:
+
 ```python
 # Force API key usage
 api_key=os.getenv("GOOGLE_API_KEY")  # Explicit > Implicit
@@ -184,6 +201,7 @@ python scripts/extraction/diagnose_api_key.py
 ```
 
 Expected output:
+
 ```
 Testing API key: AIzaSy...
 ✅ YOUR API KEY WORKS!
@@ -197,6 +215,7 @@ Response: "Hello! How can I help you today?"
 ```
 
 Expected output:
+
 ```
 Disabling Google Cloud SDK to prevent authentication issues...
 Running extraction script...
@@ -209,6 +228,7 @@ Extracted Data: {...}
 Visit: https://legal-ai-langfuse.augustyniak.ai
 
 Check for:
+
 - ✅ Successful traces (green status)
 - ✅ Full prompts and responses
 - ✅ Token usage statistics
@@ -352,6 +372,7 @@ This ensures reliable Gemini API access for all extraction tasks.
 ## Support
 
 For additional help, check:
+
 - GitHub Issues for similar problems
 - Langfuse dashboard for error details
 - Google AI Studio documentation

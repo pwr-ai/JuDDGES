@@ -16,6 +16,7 @@ repos:
       - id: check-yaml
         name: Check yaml
         args: [--allow-multiple-documents]
+        exclude: ^mkdocs\.yml$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.10
@@ -34,12 +35,6 @@ repos:
     hooks:
       - id: gitleaks
         language_version: 1.23.6 # due to: https://github.com/gitleaks/gitleaks/issues/1751
-
-  - repo: https://github.com/fastai/nbdev
-    rev: 2.2.10
-    hooks:
-      - id: nbdev_export
-        name: Notebook exporter
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.13.0
@@ -62,7 +57,11 @@ repos:
       - id: test-doc-code-examples
         name: Test Documentation Code Examples
         entry: python scripts/docs/test_code_examples.py
-        language: system
+        language: python
+        additional_dependencies:
+          - pyyaml
+          - loguru
+          - rich
         files: ^docs/.*\.md$
         pass_filenames: true
         always_run: false

@@ -4,12 +4,15 @@ Demo local dataset ingestion without external dependencies.
 Shows how to ingest local parquet files into Weaviate.
 """
 
+import os
 from pathlib import Path
 
 import requests
 
 WEAVIATE_URL = "http://localhost:8084"
-API_KEY = "<REDACTED-WEAVIATE-API-KEY>"
+API_KEY = os.getenv("WEAVIATE_API_KEY")
+if not API_KEY:
+    raise RuntimeError("WEAVIATE_API_KEY env var is required")
 HEADERS = {"Authorization": f"Bearer {API_KEY}"}
 
 

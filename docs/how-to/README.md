@@ -1,9 +1,11 @@
 # How-To Guides
 
 ## Purpose
+
 How-to guides are **task-oriented** instructions that show users how to solve specific problems or achieve certain goals. They assume basic knowledge and focus on practical solutions.
 
 ## What Belongs Here
+
 - Step-by-step solutions to specific problems
 - Recipes for common tasks
 - Troubleshooting guides
@@ -12,6 +14,7 @@ How-to guides are **task-oriented** instructions that show users how to solve sp
 - Performance optimization techniques
 
 ## Characteristics
+
 - Problem-focused rather than learning-focused
 - Assumes user already understands basics
 - Direct, actionable steps
@@ -22,32 +25,38 @@ How-to guides are **task-oriented** instructions that show users how to solve sp
 ## Current Categories
 
 ### [Data Acquisition](data-acquisition/)
+
 - Guides for acquiring and preparing legal datasets
 - Data collection from various sources
 - Data cleaning and preprocessing
 
 ### [Embeddings](embeddings/)
+
 - Document embedding generation
 - Vector database ingestion
 - Weaviate deployment and management
 - Streaming ingestion techniques
 
 ### [Extraction](extraction/)
+
 - Information extraction from legal documents
 - Iterative refinement techniques
 - Success summaries and best practices
 
 ### [Visualization](visualization/)
+
 - UMAP coordinate application
 - Sampling strategies for visualization
 - Creating visual representations of document clusters
 
 ### [Troubleshooting](troubleshooting/)
+
 - Gemini API authentication fixes
 - Common API issues and solutions
 - Debugging guides
 
 ## How-To Template
+
 ```markdown
 # How to [Accomplish Task]
 
@@ -78,6 +87,7 @@ Common issues and their solutions.
 ```
 
 ## Writing Guidelines
+
 1. Start with a clear problem statement
 2. List prerequisites explicitly
 3. Provide concrete, runnable commands

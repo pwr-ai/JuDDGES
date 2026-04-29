@@ -11,6 +11,21 @@ exclude_paths:
   - docs/archive/
   - docs/.venv/
   - docs/node_modules/
+  # Auto-generated mkdocstrings reference pages with example output, not runnable Python:
+  - docs/reference/api/
+  - docs/reference/schemas/
+  - docs/reference/pipelines/
+  - docs/reference/README.md
+  # Files containing ASCII diagrams or pseudocode in ```python``` fences:
+  - docs/explanation/structured-output-implementation.md
+  - docs/explanation/weaviate-vs-document-db-metadata-architecture.md
+  - docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md
+  - docs/how-to/troubleshooting/GEMINI_API_TROUBLESHOOTING.md
+  - docs/how-to/optimize-weaviate-ingestion.md
+  - docs/how-to/embeddings/INGESTION_GUIDE.md
+  - docs/how-to/visualization/UMAP_SAMPLING.md
+  - docs/how-to/visualization/UMAP_VISUALIZATION.md
+  - docs/tutorials/LANGFUSE_SETUP.md
 
 # File patterns to match
 include_patterns:

@@ -5,6 +5,7 @@ Guide for setting up Langfuse observability with the Gemini extraction chain.
 ## What is Langfuse?
 
 Langfuse is an open-source LLM observability platform that helps you:
+
 - 📊 Track all LLM calls and their performance
 - 💰 Monitor costs and token usage
 - 🐛 Debug prompts and responses
@@ -17,6 +18,7 @@ Langfuse is an open-source LLM observability platform that helps you:
 ### 1. Create Langfuse Account
 
 **Option A: Cloud (Recommended)**
+
 ```bash
 # Sign up at https://cloud.langfuse.com
 # Free tier includes:
@@ -26,6 +28,7 @@ Langfuse is an open-source LLM observability platform that helps you:
 ```
 
 **Option B: Self-Hosted**
+
 ```bash
 # See: https://langfuse.com/docs/deployment/self-host
 docker pull langfuse/langfuse
@@ -247,10 +250,12 @@ langfuse.score(
 ### 2. Generations vs Spans
 
 Langfuse automatically creates:
+
 - **Generation**: LLM call (Gemini API call)
 - **Span**: Chain execution (entire extraction)
 
 View hierarchy in dashboard:
+
 ```
 Trace: judgment_extraction
   └─ Span: extraction_chain
@@ -399,12 +404,14 @@ langfuse.flush()
 ### Missing Traces
 
 **Possible causes:**
+
 1. Forgot to call `flush()`
 2. Network issues
 3. Wrong API keys
 4. Wrong host URL
 
 **Solution:**
+
 ```python
 # Always flush after extraction
 handler.langfuse.flush()
@@ -448,11 +455,13 @@ curl $LANGFUSE_HOST/api/public/health
 - Perfect for development and testing
 
 **What's an observation?**
+
 - Each LLM call = 1 observation
 - Each span = 1 observation
 - Typical extraction = 2-3 observations
 
 **Monthly usage estimate:**
+
 ```
 10,000 extractions × 3 observations = 30,000 observations
 Still within free tier!

@@ -4,13 +4,16 @@ Demo script to show Weaviate ingestion with sample legal documents.
 This demonstrates the key concepts without requiring full dependencies.
 """
 
+import os
 from typing import Any, Dict, List
 
 import requests
 
 # Weaviate connection details
 WEAVIATE_URL = "http://localhost:8084"
-API_KEY = "<REDACTED-WEAVIATE-API-KEY>"
+API_KEY = os.getenv("WEAVIATE_API_KEY")
+if not API_KEY:
+    raise RuntimeError("WEAVIATE_API_KEY env var is required")
 HEADERS = {"Authorization": f"Bearer {API_KEY}"}
 
 

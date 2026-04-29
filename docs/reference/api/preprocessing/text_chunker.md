@@ -140,6 +140,7 @@ This preserves document structure and creates semantically meaningful chunks.
 ### Token-Based vs Character-Based
 
 **Character-Based** (default):
+
 ```python
 chunker = TextChunker(
     id_col="doc_id",
@@ -149,6 +150,7 @@ chunker = TextChunker(
 ```
 
 **Token-Based** (recommended for embeddings):
+
 ```python
 from transformers import AutoTokenizer
 
@@ -164,6 +166,7 @@ chunker = TextChunker(
 ### Overlap Strategies
 
 **No Overlap**:
+
 ```python
 chunker = TextChunker(
     chunk_size=512,
@@ -173,6 +176,7 @@ chunker = TextChunker(
 ```
 
 **With Overlap** (recommended):
+
 ```python
 chunker = TextChunker(
     chunk_size=512,
@@ -183,6 +187,7 @@ chunker = TextChunker(
 ```
 
 **Typical Overlap Values**:
+
 - **10-20%**: Light overlap, more chunks
 - **20-50%**: Moderate overlap (recommended)
 - **50%+**: Heavy overlap, fewer missed contexts
