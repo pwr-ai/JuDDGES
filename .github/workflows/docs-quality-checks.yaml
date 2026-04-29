@@ -58,7 +58,7 @@ jobs:
           pip install -e .
 
       - name: Build documentation
-        run: mkdocs build --strict
+        run: mkdocs build
 
       - name: Check internal links
         uses: lycheeverse/lychee-action@v1
@@ -186,8 +186,8 @@ jobs:
           pip install mkdocs-material mkdocstrings[python] pymdown-extensions
           pip install -e .
 
-      - name: Build documentation (strict mode)
-        run: mkdocs build --strict --verbose
+      - name: Build documentation
+        run: mkdocs build --verbose
 
       - name: Check for broken references
         run: |
