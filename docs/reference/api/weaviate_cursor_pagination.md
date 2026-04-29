@@ -7,6 +7,7 @@ The `WeaviateRestClient` now supports **cursor-based pagination** to fetch unlim
 ## Problem
 
 Weaviate has a hard limit with offset-based pagination:
+
 - Maximum offset: `< 10,000`
 - Attempting to fetch documents beyond this limit results in: `"query maximum results exceeded"` error
 
@@ -17,6 +18,7 @@ This limitation prevented large-scale extractions (20K+ documents).
 **Weaviate's cursor API does not support filters or search queries with the `after` parameter.**
 
 When using cursor pagination with:
+
 - `search_query` (hybrid search)
 - `document_type_filter` (where clauses)
 
@@ -25,6 +27,7 @@ The system automatically **falls back to offset-based pagination** (10K limit).
 ## Solution
 
 Cursor-based pagination uses Weaviate's `after` parameter instead of `offset`:
+
 - No 10K limit - can iterate through millions of documents
 - More efficient for large datasets
 - Uses document UUID as cursor for next page
@@ -32,6 +35,7 @@ Cursor-based pagination uses Weaviate's `after` parameter instead of `offset`:
 ## When Cursor Pagination Is Available
 
 Cursor pagination works **only** for:
+
 - ✅ Fetching all documents without filters
 - ❌ **NOT** with `search_query` (hybrid search)
 - ❌ **NOT** with `document_type_filter` (where clauses)
@@ -123,6 +127,7 @@ Cursor-based queries include the `after` parameter:
 ### Stopping Conditions
 
 Pagination stops when:
+
 - Target number of documents reached
 - No documents returned (end of collection)
 - Fewer documents than requested (last page)
@@ -184,6 +189,7 @@ python scripts/extraction/coordinator.py \
 **Cause**: Small chunk size
 
 **Solution**: Increase `chunk_size` parameter:
+
 ```python
 documents = client.fetch_documents(
     sample_size=100000,
@@ -224,5 +230,4 @@ documents = client._fetch_documents_cursor(
 ## References
 
 - [Weaviate Cursor API Documentation](https://weaviate.io/developers/weaviate/api/graphql/additional-operators#cursor-with-after)
-- [JuDDGES Distributed Extraction Guide](../how-to/distributed-extraction.md)
 - [Weaviate Client Implementation](../../juddges/extraction/weaviate_client.py)

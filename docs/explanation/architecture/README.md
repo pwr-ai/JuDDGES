@@ -11,15 +11,18 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 ### Core Architecture Documents
 
 #### [System Architecture](./SYSTEM_ARCHITECTURE.md)
+
 **Purpose**: High-level overview of the entire JuDDGES system
 
 **What You'll Learn**:
+
 - Overall system architecture and main components
 - External integrations (Weaviate, HuggingFace, DVC)
 - Technology stack and component interactions
 - Scalability and security considerations
 
 **Diagrams**:
+
 - High-level system architecture
 - Component interaction patterns
 - Technology stack relationships
@@ -29,15 +32,18 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 ---
 
 #### [Data Flow Pipeline](./DATA_FLOW_PIPELINE.md)
+
 **Purpose**: Detailed visualization of data transformation journey
 
 **What You'll Learn**:
+
 - 9-stage data processing pipeline
 - Data format transformations (PDF → Text → Vectors → Predictions)
 - Parallel processing architecture
 - Processing metrics and performance optimization
 
 **Diagrams**:
+
 - Complete data flow pipeline (Stage 1-9)
 - Data format evolution
 - Parallel execution paths
@@ -49,15 +55,18 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 ---
 
 #### [Weaviate Integration](./WEAVIATE_INTEGRATION.md)
+
 **Purpose**: Vector database architecture and operations
 
 **What You'll Learn**:
+
 - Weaviate infrastructure and deployment
 - Schema design for legal documents and chunks
 - Query patterns (semantic, hybrid, RAG)
 - Performance optimization strategies
 
 **Diagrams**:
+
 - Integration architecture
 - Collection schemas (class diagrams)
 - Data ingestion pipeline
@@ -70,9 +79,11 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 ---
 
 #### [Model Training Flow](./MODEL_TRAINING_FLOW.md)
+
 **Purpose**: Training and inference workflow visualization
 
 **What You'll Learn**:
+
 - Complete training pipeline from data to checkpoints
 - PEFT/LoRA fine-tuning strategy
 - Multi-model training matrix
@@ -80,6 +91,7 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 - Optimization techniques and hardware requirements
 
 **Diagrams**:
+
 - Training architecture (end-to-end)
 - LoRA parameter-efficient fine-tuning
 - Multi-model training matrix
@@ -93,9 +105,11 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 ---
 
 #### [Component Relationships](./COMPONENT_RELATIONSHIPS.md)
+
 **Purpose**: Module dependencies and interaction patterns
 
 **What You'll Learn**:
+
 - JuDDGES module structure and dependencies
 - Class relationships and inheritance
 - Configuration hierarchy
@@ -103,6 +117,7 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 - Testing structure
 
 **Diagrams**:
+
 - High-level component architecture
 - Detailed module dependencies
 - Class relationship diagrams
@@ -117,9 +132,11 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 ---
 
 #### [Project Overview](./PROJECT_OVERVIEW.md)
+
 **Purpose**: Introduction to JuDDGES mission and capabilities
 
 **What You'll Learn**:
+
 - Mission statement and research vision
 - Key features and target domains
 - Project consortium and collaborators
@@ -133,6 +150,7 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 ## How to Use This Documentation
 
 ### For Developers
+
 1. Start with [System Architecture](./SYSTEM_ARCHITECTURE.md) for the big picture
 2. Review [Component Relationships](./COMPONENT_RELATIONSHIPS.md) to understand code structure
 3. Dive into [Data Flow Pipeline](./DATA_FLOW_PIPELINE.md) when working with data processing
@@ -140,18 +158,21 @@ JuDDGES is a complex legal AI system with multiple interconnected components. Th
 5. Reference [Weaviate Integration](./WEAVIATE_INTEGRATION.md) for database operations
 
 ### For Researchers
+
 1. Begin with [Project Overview](./PROJECT_OVERVIEW.md) to understand the project
 2. Study [System Architecture](./SYSTEM_ARCHITECTURE.md) for technical understanding
 3. Examine [Data Flow Pipeline](./DATA_FLOW_PIPELINE.md) for data processing methodology
 4. Review [Model Training Flow](./MODEL_TRAINING_FLOW.md) for reproducibility details
 
 ### For System Architects
+
 1. Review [System Architecture](./SYSTEM_ARCHITECTURE.md) for overall design
 2. Analyze [Component Relationships](./COMPONENT_RELATIONSHIPS.md) for dependencies
 3. Study [Weaviate Integration](./WEAVIATE_INTEGRATION.md) for scalability patterns
 4. Examine [Data Flow Pipeline](./DATA_FLOW_PIPELINE.md) for bottleneck identification
 
 ### For Data Engineers
+
 1. Focus on [Data Flow Pipeline](./DATA_FLOW_PIPELINE.md) for end-to-end understanding
 2. Study [Weaviate Integration](./WEAVIATE_INTEGRATION.md) for data storage patterns
 3. Review [System Architecture](./SYSTEM_ARCHITECTURE.md) for data source integrations
@@ -179,12 +200,14 @@ All diagrams in this documentation use consistent styling:
 ## Cross-References
 
 ### Related Documentation
+
 - **[DVC Pipeline Reference](../../reference/pipelines/DVC_PIPELINE.md)** - Pipeline stage specifications
 - **[How-To Guides](../../how-to/)** - Practical task instructions
 - **[Tutorials](../../tutorials/)** - Step-by-step learning guides
 - **[API Reference](../../reference/)** - Technical specifications
 
 ### External Resources
+
 - **[Mermaid Documentation](https://mermaid.js.org/)** - Diagram syntax reference
 - **[Weaviate Docs](https://weaviate.io/developers/weaviate)** - Vector database documentation
 - **[DVC Documentation](https://dvc.org/doc)** - Pipeline management

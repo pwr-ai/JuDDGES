@@ -86,11 +86,13 @@ flowchart LR
 **Command**: `dvc repro embed`
 
 **Dependencies**:
+
 - Input: `data/datasets/{pl,en}/raw/*.parquet`
 - Model: `sdadas/mmlw-roberta-large`
 - Output: Embedding files in `data/embeddings/`
 
 **Parameters**:
+
 ```yaml
 embedding_model:
   name: mmlw-roberta-large
@@ -144,6 +146,7 @@ flowchart TB
 **Command**: `CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro sft`
 
 **Matrix Expansion**:
+
 ```yaml
 stages:
   sft:

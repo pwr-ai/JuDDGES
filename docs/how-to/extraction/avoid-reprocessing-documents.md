@@ -53,6 +53,7 @@ python scripts/extraction/coordinator.py \
 ```
 
 > **Note:** Sorting has Weaviate limitations:
+>
 > - Maximum 10,000 documents (offset pagination limit)
 > - Cannot be combined with `--force-cursor` (cursor pagination)
 > - Cannot be used with hybrid/semantic search (only keyword search or no search)
@@ -168,6 +169,7 @@ EXTRACTION_POSTGRES_DB=legal_extraction
 ### Performance Considerations
 
 The database query is optimized with:
+
 - Index on `extraction_results.extraction_status`
 - Index on `extraction_results.document_id`
 - Set-based filtering in Python for O(1) lookup
@@ -176,6 +178,4 @@ Large result sets (300K+ documents) complete in under 1 second.
 
 ## See Also
 
-- [Distributed Extraction with Redis](../distributed-extraction-redis.md)
-- [Monitor Extraction Errors](../monitor-extraction-errors.md)
 - [Extraction Database Schema](../../reference/api/extraction_storage_schema.md)

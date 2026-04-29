@@ -35,16 +35,19 @@ By the end of this tutorial, you will:
 ## Prerequisites
 
 ### Required Knowledge
+
 - Completion of [Tutorial 1](./tutorial-01-first-legal-document-analysis.md) and [Tutorial 2](./tutorial-02-embeddings.md)
 - Understanding of language models and fine-tuning concepts
 - Familiarity with command line and Python
 
 ### Required Hardware
+
 - **GPU**: NVIDIA GPU with 40GB+ VRAM (A100, A6000, or similar)
 - **RAM**: 64GB+ system RAM
 - **Storage**: 100GB+ free space for models and datasets
 
 ### Required Software
+
 - JuDDGES environment with CUDA support
 - DVC installed and configured
 
@@ -255,6 +258,7 @@ if log_file.exists():
 ```
 
 **Expected Training Time**:
+
 - Llama-3.2-3B: ~2-3 hours on A100 (1000 examples)
 - Llama-3.1-8B: ~6-8 hours on A100 (1000 examples)
 
@@ -471,6 +475,7 @@ if train_loss plateaus high:
 ### 4. Evaluation
 
 Always evaluate on:
+
 - ✅ Held-out test set (not used in training)
 - ✅ Real-world examples
 - ✅ Edge cases and difficult examples
@@ -483,6 +488,7 @@ Always evaluate on:
 ### Issue: "CUDA out of memory"
 
 **Solutions**:
+
 ```python
 # 1. Reduce batch size
 per_device_train_batch_size = 1
@@ -501,6 +507,7 @@ model_name = "meta-llama/Llama-3.2-3B-Instruct"  # Instead of 8B
 ### Issue: "Model not learning"
 
 **Solutions**:
+
 ```python
 # 1. Increase learning rate
 learning_rate = 5e-4  # Instead of 2e-4
@@ -518,6 +525,7 @@ num_train_epochs = 5  # Instead of 3
 ### Issue: "Model overfitting"
 
 **Solutions**:
+
 ```python
 # 1. Reduce epochs
 num_train_epochs = 2
@@ -549,6 +557,7 @@ You've successfully fine-tuned a legal LLM!
 ### Key Metrics
 
 Your fine-tuned model should achieve:
+
 - **Exact Match**: 70-85% on legal extraction tasks
 - **F1 Score**: 80-90% on field-level evaluation
 - **Training Time**: 2-8 hours depending on model size

@@ -14,24 +14,12 @@ The extraction schema defines the structured fields that the LLM extraction pipe
 
 ## Documents in This Directory
 
-### Main Reference
-
-- **[schema_improvement_summary.md](schema_improvement_summary.md)** - Complete overview of schema validation findings
-  - Executive summary of all improvements
-  - Field-by-field analysis with recommendations
-  - Implementation checklist
-  - Expected impact assessment
-
-### Detailed Verification Documents
-
-Individual analysis documents for each schema component:
-
-1. **[legal_references_verification.md](legal_references_verification.md)** - Legal citation types (8 types)
-2. **[decision_types_verification.md](decision_types_verification.md)** - Court decision classifications (9 types)
-3. **[court_types_verification.md](court_types_verification.md)** - Polish court hierarchy (8 types)
-4. **[party_types_verification.md](party_types_verification.md)** - Legal party classifications (13 types)
-5. **[tax_types_verification.md](tax_types_verification.md)** - Polish tax system types (15 types)
-6. **[new_fields_specification.md](new_fields_specification.md)** - New required fields (factual_state, legal_state)
+- **[DOCUMENT_SCHEMA_MAPPING.md](DOCUMENT_SCHEMA_MAPPING.md)** - Mapping between source documents and schema fields
+- **[dataset_weaviate_mapping.md](dataset_weaviate_mapping.md)** - Mapping between dataset fields and Weaviate properties
+- **[extraction_schema_judgments.md](extraction_schema_judgments.md)** - Extraction schema specification for court judgments
+- **[extraction_schema_tax_interpretations.md](extraction_schema_tax_interpretations.md)** - Extraction schema specification for tax interpretations
+- **[gemini_extraction_schema.md](gemini_extraction_schema.md)** - Gemini structured output schema definition
+- **[llm_field_extraction_schema.yaml](llm_field_extraction_schema.yaml)** - YAML field extraction schema used by the LLM pipeline
 
 ---
 
@@ -64,10 +52,8 @@ Individual analysis documents for each schema component:
 
 When implementing or updating the extraction schema:
 
-1. Read **schema_improvement_summary.md** for the complete picture
-2. Reference specific verification documents for detailed field specifications
-3. Use the recommended enumerations in Polish terminology
-4. Follow the implementation checklist
+1. Reference the per-document schema specifications for detailed field definitions
+2. Use the recommended enumerations in Polish terminology
 
 ### For Researchers
 
@@ -137,7 +123,6 @@ Document-Specific (2 fields)
 ### Data Management
 
 - [Weaviate Schema Management](../../how-to/weaviate-schema-management.md) - How to update Weaviate properties
-- [Ingestion Integration](../../INGESTION_INTEGRATION_COMPLETE.md) - Ingesting extracted data back to Weaviate
 
 ---
 

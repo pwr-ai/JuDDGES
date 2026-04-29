@@ -232,6 +232,7 @@ result2 = chain.extract(...)  # No API call (cached)
 Default cache: `.cache/langchain.db`
 
 Custom cache:
+
 ```python
 chain = GeminiExtractionChain(
     cache_path="my_cache/extraction.db"
@@ -255,6 +256,7 @@ handler = CallbackHandler(
 ### Tracked Metrics
 
 Langfuse tracks:
+
 - **Traces**: Full extraction pipelines
 - **Latency**: Response times
 - **Token Usage**: Input/output tokens
@@ -264,11 +266,13 @@ Langfuse tracks:
 ### Viewing Results
 
 Access Langfuse dashboard:
+
 ```
 https://cloud.langfuse.com
 ```
 
 Filter by:
+
 - Document type
 - Date range
 - Success/failure status
@@ -303,11 +307,13 @@ chain = GeminiExtractionChain(
 ```
 
 **Pros**:
+
 - Faster responses
 - Lower cost
 - Good accuracy for structured tasks
 
 **Cons**:
+
 - Slightly lower accuracy on complex cases
 
 ### Gemini 2.5 Pro
@@ -319,11 +325,13 @@ chain = GeminiExtractionChain(
 ```
 
 **Pros**:
+
 - Highest accuracy
 - Better on complex documents
 - More reliable enum classification
 
 **Cons**:
+
 - Higher cost
 - Slower responses
 
@@ -369,7 +377,6 @@ chain = GeminiExtractionChain(
 
 - [Evaluation Metrics](../evals/metrics.md) - Evaluate extraction quality
 - [Gemini Tutorial](../../../tutorials/GEMINI_EXTRACTION.md) - Complete tutorial
-- [Extraction How-To](../../../how-to/extraction/EXTRACTION_SUCCESS_SUMMARY.md) - Best practices
 - [Langfuse Setup](../../../tutorials/LANGFUSE_SETUP.md) - Observability setup
 
 ## Common Patterns

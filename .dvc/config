@@ -1,6 +1,3 @@
 [core]
     remote = escience_minio
     autostage = true
-['remote "escience_minio"']
-    url = s3://s3min-tkajdanowicz-1724771116/juddges
-    endpointurl = https://s3min.e-science.pl

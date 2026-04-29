@@ -11,6 +11,7 @@ This document describes the process of sampling embeddings from Weaviate for UMA
 The sampling script queries Weaviate collections directly and creates stratified samples for UMAP computation:
 
 **Features:**
+
 - Samples up to 2,500 documents per unique combination of stratification fields (configurable)
 - Queries documents directly from Weaviate with their embeddings
 - Processes both LegalDocuments and DocumentChunks collections
@@ -64,6 +65,7 @@ data/embeddings_samples/
 ```
 
 Each parquet file contains:
+
 - `uuid`: Document/chunk UUID
 - `vector`: Embedding vector (array)
 - For LegalDocuments: `country`, `source_url`
@@ -76,10 +78,12 @@ The script uses different stratification fields depending on the collection:
 #### LegalDocuments Collection
 
 Samples up to 2,500 documents (default) for each unique combination of:
+
 - **Country**: `country` field (e.g., "Poland", "Switzerland")
 - **Source URL**: `source_url` field (different court systems)
 
 **Example strata:**
+
 - `Poland|saos-api` → up to 2,500 documents
 - `Poland|court-decisions-api` → up to 2,500 documents
 - `Switzerland|federal-court` → up to 2,500 documents
@@ -87,15 +91,18 @@ Samples up to 2,500 documents (default) for each unique combination of:
 #### DocumentChunks Collection
 
 Samples up to 2,500 chunks (default) for each unique combination of:
+
 - **Language**: `language` field (e.g., "pl", "en")
 - **Document Type**: `document_type` field (e.g., "judgment", "tax_interpretation")
 
 **Example strata:**
+
 - `pl|judgment` → up to 2,500 chunks
 - `en|judgment` → up to 2,500 chunks
 - `pl|tax_interpretation` → up to 2,500 chunks
 
 This ensures:
+
 - ✅ Balanced representation across countries/languages
 - ✅ Balanced representation across data sources/document types
 - ✅ Coverage of different court systems
@@ -104,6 +111,7 @@ This ensures:
 ## UMAP Configuration
 
 Default UMAP parameters:
+
 - `n_neighbors`: 15 (balances local vs global structure)
 - `min_dist`: 0.1 (minimum distance between points)
 - `metric`: cosine (suitable for embeddings)
@@ -125,6 +133,7 @@ docker compose run --rm web python scripts/embed/sample_and_calculate_umap.py \
 ```
 
 This will:
+
 1. ✅ Query Weaviate and sample up to 2.5k documents per stratum (default)
 2. ✅ Save sampled data with vectors to `data/embeddings_samples/`
 3. ✅ Normalize vectors using L2 normalization
@@ -150,6 +159,7 @@ docker compose run --rm web python scripts/embed/sample_and_calculate_umap.py \
 ```
 
 This will:
+
 1. ✅ Load the saved UMAP model
 2. ✅ Fetch ALL documents from Weaviate with their vectors
 3. ✅ Normalize vectors

@@ -38,11 +38,13 @@ By the end of this tutorial, you will be able to:
 ## Prerequisites
 
 ### Required Knowledge
+
 - Basic Python programming (variables, functions, loops)
 - Command line familiarity (running commands in terminal)
 - Basic understanding of JSON and dictionaries
 
 ### Required Software
+
 - **Python 3.10+** installed
 - **Docker** and **Docker Compose** installed
 - **Git** for cloning the repository
@@ -50,6 +52,7 @@ By the end of this tutorial, you will be able to:
 - **10GB+ free disk space**
 
 ### Optional
+
 - **Google API Key** for Gemini extraction (get it [here](https://ai.google.dev/gemini-api/docs/api-key))
 - **GPU** with CUDA support (for advanced features)
 
@@ -91,6 +94,7 @@ cd JuDDGES
 ```
 
 **Expected output**:
+
 ```
 Cloning into 'JuDDGES'...
 remote: Enumerating objects: 1234, done.
@@ -108,12 +112,14 @@ setup.bat
 ```
 
 This script will:
+
 - Create a virtual environment in `.venv/`
 - Install all Python dependencies
 - Set up pre-commit hooks
 - Configure Git LFS for large files
 
 **Expected output**:
+
 ```
 ✓ Creating virtual environment
 ✓ Installing dependencies
@@ -225,6 +231,7 @@ python my_first_analysis.py
 ```
 
 **Expected output**:
+
 ```
 Loading Polish court decisions dataset...
 ✓ Loaded 100 documents
@@ -255,6 +262,7 @@ You've successfully loaded and explored a legal dataset!
 <summary>Click to reveal answer</summary>
 
 Run this to find out:
+
 ```python
 print(f"Number of fields: {len(dataset.features)}")
 print(f"Field names: {list(dataset.features.keys())}")
@@ -357,6 +365,7 @@ oldest_doc = min(
 )
 console.print(f"Oldest: {oldest_doc['judgment_date']} from {oldest_doc['court']}")
 ```
+
 </details>
 
 ---
@@ -483,6 +492,7 @@ python extract_information.py
 ```
 
 **Expected output**:
+
 ```
 Initializing Gemini extraction chain...
 ✓ Chain initialized
@@ -514,6 +524,7 @@ You've successfully extracted structured data from a legal document!
 ### 🎯 Checkpoint 3: Extraction Challenge
 
 **Challenge**: Modify the schema to extract additional fields:
+
 - `legal_basis`: List of referenced laws
 - `verdict_type`: Type of verdict (e.g., "oddalono powództwo", "uwzględniono powództwo")
 
@@ -539,6 +550,7 @@ docker compose ps
 ```
 
 **Expected output**:
+
 ```
 NAME                IMAGE                       STATUS
 weaviate            semitechnologies/weaviate   Up 5 seconds
@@ -790,6 +802,7 @@ python simple_dashboard.py
 ```
 
 **Try This**:
+
 1. Browse documents (option 1)
 2. Extract information from document 0 (option 2)
 3. Search for "Warszawa" (option 3)
@@ -797,6 +810,7 @@ python simple_dashboard.py
 ### 🎯 Checkpoint 5: Final Challenge
 
 **Challenge**: Enhance the dashboard with a new feature:
+
 - Add option to filter documents by date range
 - Add option to export extracted data to JSON
 - Add option to compare two documents
@@ -811,6 +825,7 @@ Now that you've completed all steps, test your knowledge:
 
 **Exercise 1: Data Pipeline**
 Create a script that:
+
 1. Loads 20 documents
 2. Extracts information from each
 3. Saves results to a JSON file
@@ -857,16 +872,19 @@ with open("extracted_results.json", "w", encoding="utf-8") as f:
 
 print("✓ Results saved to extracted_results.json")
 ```
+
 </details>
 
 **Exercise 2: Document Statistics**
 Calculate:
+
 - Average document length
 - Most common court
 - Documents per year distribution
 
 **Exercise 3: Custom Schema**
 Create a schema for extracting:
+
 - All monetary amounts mentioned
 - All dates mentioned
 - All legal article references
@@ -878,6 +896,7 @@ Create a schema for extracting:
 ### Issue: "Module not found: juddges"
 
 **Solution**: Make sure you've installed the package:
+
 ```bash
 source .venv/bin/activate  # Activate environment
 pip install -e .  # Install in editable mode
@@ -886,6 +905,7 @@ pip install -e .  # Install in editable mode
 ### Issue: "GOOGLE_API_KEY not found"
 
 **Solution**: Set the environment variable:
+
 ```bash
 export GOOGLE_API_KEY="your-api-key"
 # Or add to .env file
@@ -894,6 +914,7 @@ export GOOGLE_API_KEY="your-api-key"
 ### Issue: "Weaviate connection failed"
 
 **Solution**: Ensure Weaviate is running:
+
 ```bash
 cd weaviate
 docker compose up -d
@@ -903,6 +924,7 @@ docker compose ps  # Check status
 ### Issue: "Out of memory"
 
 **Solution**: Reduce the number of documents:
+
 ```python
 # Instead of loading all documents
 dataset = load_dataset(..., split="train[:50]")  # Load only 50
@@ -911,6 +933,7 @@ dataset = load_dataset(..., split="train[:50]")  # Load only 50
 ### Issue: "Extraction is slow"
 
 **Solution**:
+
 - Use cache (it's enabled by default)
 - Use `gemini-2.5-flash` instead of `pro`
 - Process documents in smaller batches

@@ -304,6 +304,7 @@ Każde pole ma companion enum (sekcja B/C) do natychmiastowej agregacji.
 ## Instrukcje ekstrakcji
 
 ### Zasady ogólne
+
 - Ekstraktuj WYŁĄCZNIE z tekstu dokumentu
 - Język: polski
 - Daty: ISO 8601 (YYYY-MM-DD)
@@ -313,35 +314,41 @@ Każde pole ma companion enum (sekcja B/C) do natychmiastowej agregacji.
 ### Reguły mapowania na enum
 
 **`case_subject_category`** → klasyfikuj na podstawie meritum sprawy:
+
 - "unieważnienie umowy kredytu indeksowanego do CHF" → `kredyt_frankowy`
 - "odszkodowanie za wypadek komunikacyjny" → `odszkodowanie_szkoda_osobowa`
 - "przywrócenie do pracy po zwolnieniu dyscyplinarnym" → `prawo_pracy_zwolnienie`
 - "skarga na decyzję Dyrektora IS w przedmiocie VAT" → `podatek_vat`
 
 **`court_chamber`** → mapuj z wydziału/sygnatury:
+
 - "I Wydział Cywilny", sygnatura `I C ...` → `cywilny`
 - "II Wydział Karny", sygnatura `II K ...` → `karny`
 - "I SA/Wa ..." (WSA finansowy) → `finansowy`
 - "I CSK ..." (SN Izba Cywilna) → `izba_cywilna`
 
 **`plaintiff_type` / `defendant_type`** → identyfikuj z opisu stron:
+
 - "powód Jan Kowalski" + brak wzmianki o działalności → `osoba_fizyczna`
 - "pozwana ABC Sp. z o.o." → `spolka_kapitalowa`
 - "skarżący zaskarżył decyzję Dyrektora..." → plaintiff=`osoba_fizyczna`/`spolka`, defendant=`organ_administracji`
 
 **`primary_reasoning_method`** → identyfikuj dominującą metodę:
+
 - sąd analizuje brzmienie przepisu słowo po słowie → `jezykowa`
 - sąd bada cel regulacji, ratio legis → `celowosciowa`
 - sąd analizuje przepis w kontekście całego aktu → `systemowa`
 - sąd porównuje z prawem UE, interpretacja prounijna → `prounijna`
 
 **`party_power_asymmetry`**:
+
 - konsument vs bank/ubezpieczyciel → `silna_asymetria`
 - dwie spółki porównywalnej wielkości → `symetryczna`
 - osoba fizyczna vs organ administracji → `silna_asymetria`
 - mała firma vs duża korporacja → `umiarkowana_asymetria`
 
 ### Walidacja
+
 1. Każde pole ENUM używa TYLKO wartości z listy
 2. `court_chamber` jest spójny z `court_type` i `court_name`
 3. Pola BOOL: wyłącznie `true`/`false`, nie `null`

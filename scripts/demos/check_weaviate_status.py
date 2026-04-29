@@ -3,6 +3,8 @@
 Check Weaviate database status and document counts with rich formatting.
 """
 
+import os
+
 import requests
 from rich.console import Console
 from rich.panel import Panel
@@ -15,7 +17,9 @@ def check_weaviate_status():
 
     console = Console()
     weaviate_url = "http://localhost:8084"
-    api_key = "PQA2.12-**lafqf"
+    api_key = os.getenv("WEAVIATE_API_KEY")
+    if not api_key:
+        raise RuntimeError("WEAVIATE_API_KEY env var is required")
     headers = {"Authorization": f"Bearer {api_key}"}
 
     # Header

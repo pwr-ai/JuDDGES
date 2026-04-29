@@ -21,7 +21,7 @@ console = Console()
 
 # Configuration
 WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://localhost:8084")
-WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "PQA2.12-**lafqf")
+WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY")
 HEADERS = {"Authorization": f"Bearer {WEAVIATE_API_KEY}"}
 
 

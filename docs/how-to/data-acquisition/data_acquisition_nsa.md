@@ -38,6 +38,7 @@ python full_procedure.py --proxy-address YOUR_PROXY --db-uri YOUR_MONGODB_URI
 It is recommended to use cleanup iterations to remove duplicates and scrap data that was not scraped correctly due to errors in previous step.
 Scripts will use already scraped data from the database, so you don't need to set start date.
 - **Usage:**
+
   ```bash
   python full_procedure.py [OPTIONS]
   ```
@@ -57,7 +58,6 @@ Scripts will use already scraped data from the database, so you don't need to se
   | `--find-remove-changed-document-lists-iterations` | Number of iterations to find and remove changed document lists | `0`            |
   | `--redownload-days-back` | Days back to redownload pages from. Set to `0` to disable redownloading. | `730`   (2 years)         |
 
-
 - **Pipeline Steps:**
   0. Runs `find_remove_changed_document_lists.py` to find and remove changed document lists. (Disabled by default, use `--find-remove-changed-document-lists-iterations` to enable.)
   1. Runs `scrap_documents_list.py` to get initial document list
@@ -73,7 +73,6 @@ Scripts will use already scraped data from the database, so you don't need to se
      - `save_pages_from_db_to_file.py` to export pages to files
      - `extract_data_from_pages.py` to process the data
 
-
 ---
 
 ## Script Descriptions and Order of Execution
@@ -82,9 +81,11 @@ Scripts will use already scraped data from the database, so you don't need to se
 
 - **Purpose:** Finds and removes changed document lists in the `dates` collection in MongoDB. It acquire number of documents for each date and saves it to the `dates_num_docs` collection. Then it compares number of documents for each date with the previous number of documents and if they are changed, it removes the date from the `dates` collection. **It is recommended to run this script only to update the dataset fully. Do not run it in the middle of the pipeline as it will remove newly scraped document lists.**  To enable this step in `full_procedure.py`, set `find_remove_changed_document_lists_iterations` to positive number eg. `1`. It is disabled by default ie. `0`.
 - **Usage:**
+
   ```bash
   python find_remove_changed_document_lists.py [OPTIONS]
   ```
+
 - **Arguments:**
   | Argument                  | Description                                          | Default        |
   |--------------------------|------------------------------------------------------|----------------|
@@ -98,14 +99,15 @@ Scripts will use already scraped data from the database, so you don't need to se
   | `--n-jobs`              | Number of parallel workers                           | `30`           |
   | `--log-file`            | Path for the log file (None to disable)              | None           |
 
-
 ### 1. **`scrap_documents_list.py`**
 
 - **Purpose:** Scrapes a list of documents and from the NSA website for a specified date range.
 - **Usage:**
+
   ```bash
   python scrap_documents_list.py [OPTIONS]
   ```
+
 - **Arguments:**
 
   | Argument         | Description                                    | Default                    |
@@ -129,9 +131,11 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Note:** You should to rerun `scrap_documents_list.py` after running this script to update
   `documents.json`.
 - **Usage:**
+
   ```bash
   python drop_dates_with_duplicated_documents.py [OPTIONS]
   ```
+
 - **Arguments:**
 
   | Argument         | Description                    | Default |
@@ -147,9 +151,11 @@ Scripts will use already scraped data from the database, so you don't need to se
 
 - **Purpose:** Removes documents from the given number of days back to download again. It is done due to the fact that some documents are changed. To enable this step in `full_procedure.py`, set `redownload_days_back` to positive number eg. `720`, to disable set it to `0`.
 - **Usage:**
+
   ```bash
   python drop_docs_to_redownload.py [OPTIONS]
   ```
+
 - **Arguments:**
   | Argument         | Description                                    | Default |
   |------------------|------------------------------------------------|---------|
@@ -157,15 +163,16 @@ Scripts will use already scraped data from the database, so you don't need to se
   | `--redownload-days-back` | Days back to redownload pages from. | `720` (2 years) |
   | `--log-file`     | Path for the log file (None to disable)         | None                       |
 
-
 ### 4. **`download_document_pages.py`**
 
 - **Purpose:** Downloads document pages (raw HTML) using IDs retrieved from the `documents.json`
   file.
 - **Usage:**
+
   ```bash
   python download_document_pages.py [OPTIONS]
   ```
+
 - **Arguments:**
 
   | Argument         | Description                                    | Default |
@@ -187,9 +194,11 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Note:** You should to rerun `download_document_pages.py` after running this script to update the
   collection.
 - **Usage:**
+
   ```bash
   python drop_duplicated_document_pages.py [OPTIONS]
   ```
+
 - **Arguments:**
 
   | Argument         | Description                    | Default |
@@ -206,9 +215,11 @@ Scripts will use already scraped data from the database, so you don't need to se
 - **Purpose:** Exports document pages and errors from MongoDB to Parquet files for further
   processing.
 - **Usage:**
+
   ```bash
   python save_pages_from_db_to_file.py [OPTIONS]
   ```
+
 - **Arguments:**
 
   | Argument         | Description                    | Default |
@@ -224,9 +235,11 @@ Scripts will use already scraped data from the database, so you don't need to se
 
 - **Purpose:** Extracts structured data from downloaded document pages.
 - **Usage:**
+
      ```bash
      python extract_data_from_pages.py [OPTIONS]
      ```
+
 - **Arguments:**
 
   | Argument         | Description                                    | Default                |

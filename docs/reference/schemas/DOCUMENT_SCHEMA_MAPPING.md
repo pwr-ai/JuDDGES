@@ -5,6 +5,7 @@ This document explains the unified schema for legal documents in the JuDDGES, AI
 ## Schema Design
 
 The unified schema is designed to:
+
 1. Store standard metadata across all document types
 2. Provide type-specific fields for specialized information
 3. Support advanced search and retrieval
@@ -29,7 +30,7 @@ The table below maps properties between the unified schema, judgment-specific fi
 
 | Unified Schema                                   | Judgment Fields    | Tax Interpretation Fields | Legal Act Fields   | Description                              |
 | ------------------------------------------------ | ------------------ | ------------------------- | ------------------ | ---------------------------------------- |
-| **Common Fields**                                |
+| **Common Fields**                                | | | | |
 | document_id                                      | judgment_id        | id                        | id                 | Unique identifier                        |
 | document_type                                    | "judgment"         | "tax_interpretation"      | "legal_act"        | Type of document                         |
 | title                                            | -                  | TEZA                      | title              | Document title/name                      |
@@ -37,14 +38,14 @@ The table below maps properties between the unified schema, judgment-specific fi
 | document_number                                  | docket_number      | SYG                       | document_number    | Official reference number                |
 | language                                         | -                  | -                         | language           | Document language                        |
 | country                                          | country            | -                         | jurisdiction       | Country of origin                        |
-| **Issuing Body**                                 |
+| **Issuing Body**                                 | | | | |
 | issuing_body.name                                | court_name         | -                         | issuing_body       | Name of issuing institution              |
 | issuing_body.jurisdiction                        | -                  | -                         | jurisdiction       | Geographical/legal jurisdiction          |
 | issuing_body.type                                | court_type         | -                         | "legislative"      | Type of issuing body                     |
-| **Text Content**                                 |
+| **Text Content**                                 | | | | |
 | full_text                                        | full_text          | TRESC_INTERESARIUSZ       | full_text          | Raw document text                        |
 | summary                                          | excerpt            | -                         | -                  | Abstract or summary                      |
-| **Enhanced Semantic Structure**                  |
+| **Enhanced Semantic Structure**                  | | | | |
 | structured_content.sections[]                    | -                  | -                         | -                  | Segmented document content               |
 | structured_content.sections[].segment_id         | -                  | -                         | -                  | Unique segment identifier                |
 | structured_content.sections[].segment_type       | -                  | -                         | -                  | Semantic type (facts, legal basis, etc.) |
@@ -61,31 +62,31 @@ The table below maps properties between the unified schema, judgment-specific fi
 | structured_content.sections[].is_amended         | -                  | -                         | -                  | Whether segment has been amended         |
 | structured_content.semantic_graph                | -                  | -                         | -                  | Relationships between sections           |
 | structured_content.segmentation_method           | -                  | -                         | -                  | How document was segmented               |
-| **Legal References**                             |
+| **Legal References**                             | | | | |
 | legal_references[].ref_id                        | -                  | -                         | -                  | Reference identifier                     |
 | legal_references[].ref_type                      | -                  | -                         | -                  | Type of reference                        |
 | legal_references[].text                          | legal_bases[]      | PRZEPISY[]                | -                  | Reference text                           |
 | legal_references[].normalized_citation           | -                  | -                         | -                  | Standardized citation                    |
 | legal_references[].target_document_id            | -                  | -                         | -                  | ID of referenced document                |
-| **Document Relationships**                       |
+| **Document Relationships**                       | | | | |
 | relationships[].source_id                        | -                  | -                         | -                  | Source document ID                       |
 | relationships[].target_id                        | -                  | -                         | -                  | Target document ID                       |
 | relationships[].relationship_type                | -                  | -                         | -                  | Type of relationship                     |
 | relationships[].description                      | -                  | -                         | -                  | Relationship description                 |
 | relationships[].context_segment_id               | -                  | -                         | -                  | Segment containing the relationship      |
-| **Judgment-Specific**                            |
+| **Judgment-Specific**                            | | | | |
 | judgment_specific.court_level                    | -                  | -                         | -                  | Level of court                           |
 | judgment_specific.judges[].name                  | judges[]           | -                         | -                  | Judge names                              |
 | judgment_specific.judges[].role                  | presiding_judge    | -                         | -                  | Judge roles                              |
 | judgment_specific.procedural_history             | -                  | -                         | -                  | History of the case                      |
 | judgment_specific.verdict                        | decision           | -                         | -                  | Final verdict                            |
 | judgment_specific.dissenting_opinions            | dissenting_opinion | -                         | -                  | Opposing opinions                        |
-| **Tax Interpretation-Specific**                  |
+| **Tax Interpretation-Specific**                  | | | | |
 | tax_interpretation_specific.tax_area             | -                  | KATEGORIA_INFORMACJI      | -                  | Tax area covered                         |
 | tax_interpretation_specific.tax_provisions       | -                  | PRZEPISY[]                | -                  | Tax provisions referenced                |
 | tax_interpretation_specific.taxpayer_type        | -                  | -                         | -                  | Type of taxpayer                         |
 | tax_interpretation_specific.interpretation_scope | -                  | -                         | -                  | Scope of interpretation                  |
-| **Legal Act-Specific**                           |
+| **Legal Act-Specific**                           | | | | |
 | legal_act_specific.act_type                      | -                  | -                         | act_type           | Type of act (statute, regulation)        |
 | legal_act_specific.enactment_date                | -                  | -                         | enactment_date     | When the act was enacted                 |
 | legal_act_specific.effective_dates               | -                  | -                         | effective_date     | When the act takes/took effect           |
@@ -94,11 +95,11 @@ The table below maps properties between the unified schema, judgment-specific fi
 | legal_act_specific.amendment_history             | -                  | -                         | -                  | History of amendments                    |
 | legal_act_specific.current_status                | -                  | -                         | current_status     | In force, repealed, amended              |
 | legal_act_specific.isap_id                       | -                  | -                         | isap_id            | ID in Polish legal acts system           |
-| **Metadata**                                     |
+| **Metadata**                                     | | | | |
 | metadata.ingestion_date                          | -                  | _fetched_at               | -                  | When document was ingested               |
 | metadata.last_updated                            | last_update        | -                         | -                  | When document was updated                |
 | metadata.source_url                              | -                  | -                         | -                  | Source of document                       |
-| **Additional Fields**                            |
+| **Additional Fields**                            | | | | |
 | thesis                                           | thesis             | TEZA                      | -                  | Main point of document                   |
 | keywords                                         | keywords           | SLOWA_KLUCZOWE[]          | -                  | Keywords                                 |
 

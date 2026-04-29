@@ -131,7 +131,7 @@ Build a complete production-ready legal document analysis pipeline.
 
 1. [Tutorial 1: First Document Analysis](./tutorial-01-first-legal-document-analysis.md)
 2. [Tutorial 2: Embeddings](./tutorial-02-embeddings.md)
-3. Explore [Research Publications](../explanation/research/RESEARCH_PUBLICATIONS.md)
+3. Explore the [System Architecture](../explanation/architecture/SYSTEM_ARCHITECTURE.md)
 
 ### For Data Scientists
 
@@ -184,6 +184,7 @@ Build a complete production-ready legal document analysis pipeline.
 ### Learn by Doing
 
 Type code yourself to:
+
 - Understand syntax
 - Debug errors
 - Build muscle memory
@@ -192,6 +193,7 @@ Type code yourself to:
 ### Embrace Mistakes
 
 Errors are learning opportunities:
+
 - Read error messages carefully
 - Check Troubleshooting sections
 - Search documentation
@@ -200,6 +202,7 @@ Errors are learning opportunities:
 ### Experiment Freely
 
 After each section:
+
 - Modify parameters
 - Try different inputs
 - Test edge cases
@@ -251,13 +254,14 @@ Help improve tutorials:
 
 ---
 
-## 🎉 Start Learning!
+## 🎉 Start Learning
 
 Ready? Begin with:
 
 **[Tutorial 1: Your First Legal Document Analysis →](./tutorial-01-first-legal-document-analysis.md)**
 
 Or jump to:
+
 - [Tutorial 2: Embeddings](./tutorial-02-embeddings.md)
 - [Tutorial 3: Fine-tuning](./tutorial-03-model-finetuning.md)
 - [Tutorial 4: Advanced Extraction](./tutorial-04-advanced-extraction.md)

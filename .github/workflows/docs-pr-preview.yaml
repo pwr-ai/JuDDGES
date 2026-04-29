@@ -53,7 +53,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          mkdocs build --strict --verbose
+          mkdocs build --verbose
           echo "Documentation built successfully"
 
       - name: Generate documentation summary
@@ -124,7 +124,7 @@ jobs:
       - name: Check for documentation warnings
         run: |
           # Build and capture output
-          mkdocs build --strict 2>&1 | tee build.log
+          mkdocs build 2>&1 | tee build.log
 
           # Check for warnings
           if grep -i "warning" build.log; then

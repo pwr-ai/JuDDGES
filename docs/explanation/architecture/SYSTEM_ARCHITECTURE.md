@@ -109,11 +109,13 @@ graph TB
 ## Component Interactions
 
 ### Data Ingestion
+
 - **Document Loaders**: Handle multiple formats (PDF, DOCX, TXT) with specialized parsers
 - **Preprocessing**: Text extraction, cleaning, and normalization for downstream processing
 - **Chunking**: Intelligent document segmentation preserving legal context
 
 ### Embedding Pipeline
+
 - **Multilingual Support**: Polish and English legal documents
 - **Legal-Specific Model**: `sdadas/mmlw-roberta-large` optimized for legal text
 - **Vector Storage**: Weaviate provides semantic search capabilities with two collections:
@@ -121,15 +123,18 @@ graph TB
   - `document_chunks`: Granular text segments for detailed retrieval
 
 ### Model Layer
+
 - **Model Factory Pattern**: Flexible architecture supporting multiple LLM backends
 - **Fine-Tuning**: PEFT/LoRA for efficient domain adaptation
 - **Multi-Model Support**: Llama, Mistral, Bielik (Polish-specific), and Phi-4
 
 ### Evaluation Framework
+
 - **Multi-Strategy Evaluation**: Combines traditional metrics with LLM-based judgment
 - **Domain-Specific Metrics**: Legal accuracy, citation extraction, entity recognition
 
 ### Orchestration
+
 - **DVC**: Ensures reproducible ML experiments and pipeline management
 - **Hydra**: Hierarchical configuration for complex experimental setups
 - **Docker**: Containerized environments for consistent execution

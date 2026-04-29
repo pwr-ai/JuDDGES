@@ -1,9 +1,11 @@
 # Reference Documentation
 
 ## Purpose
+
 Reference documentation is **information-oriented** material that provides technical descriptions of the system. It's designed for users who need to look up specific information about APIs, configurations, schemas, and technical specifications.
 
 ## What Belongs Here
+
 - API documentation
 - Configuration parameters
 - Schema definitions
@@ -15,6 +17,7 @@ Reference documentation is **information-oriented** material that provides techn
 - Class hierarchies
 
 ## Characteristics
+
 - Comprehensive and accurate
 - Structured for easy lookup
 - Dry but precise language
@@ -26,24 +29,29 @@ Reference documentation is **information-oriented** material that provides techn
 ## Current Categories
 
 ### [API](api/)
+
 - LLM fields quick reference
 - Raw text processing reference
 - Module and function documentation
 
 ### [Schemas](schemas/)
+
 - Document schema mappings
 - Dataset to Weaviate mappings
 - Data structure definitions
 
 ### [Configurations](configurations/)
+
 - Configuration file formats
 - Parameter descriptions
 - Environment variables
 
 ### Style Guide
+
 - [Style Guide](STYLE_GUIDE.md) - Coding and documentation standards
 
 ## Reference Template
+
 ```markdown
 # [Component] Reference
 
@@ -83,6 +91,7 @@ code example
 ```
 
 ## Writing Guidelines
+
 1. Be exhaustive - document everything
 2. Use consistent terminology
 3. Provide type information
