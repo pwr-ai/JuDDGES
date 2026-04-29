@@ -12,7 +12,7 @@ Implemented a comprehensive automated code example testing system that validates
 
 ### 1. Configuration System
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/.doctest.yaml`
+**File**: `<path-to-JuDDGES>/.doctest.yaml`
 
 Centralized YAML configuration controlling all aspects of code example testing:
 
@@ -32,7 +32,7 @@ Centralized YAML configuration controlling all aspects of code example testing:
 
 ### 2. Test Script
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/scripts/docs/test_code_examples.py`
+**File**: `<path-to-JuDDGES>/scripts/docs/test_code_examples.py`
 
 Standalone Python script (600+ lines) for testing code examples:
 
@@ -54,7 +54,7 @@ python scripts/docs/test_code_examples.py [paths] [--verbose] [--report FILE]
 
 ### 3. Pytest Plugin
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/tests/conftest_docs.py`
+**File**: `<path-to-JuDDGES>/tests/conftest_docs.py`
 
 Pytest integration providing fixtures and dynamic test generation:
 
@@ -76,7 +76,7 @@ Pytest integration providing fixtures and dynamic test generation:
 
 ### 4. Mock Implementations
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/tests/docs/fixtures.py`
+**File**: `<path-to-JuDDGES>/tests/docs/fixtures.py`
 
 Comprehensive mock classes (500+ lines) for external dependencies:
 
@@ -97,7 +97,7 @@ Comprehensive mock classes (500+ lines) for external dependencies:
 
 ### 5. Pytest Test Suite
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/tests/docs/test_documentation_examples.py`
+**File**: `<path-to-JuDDGES>/tests/docs/test_documentation_examples.py`
 
 Comprehensive test suite (400+ lines) with multiple test classes:
 
@@ -119,7 +119,7 @@ Comprehensive test suite (400+ lines) with multiple test classes:
 
 ### 6. GitHub Actions Integration
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/.github/workflows/docs-quality-checks.yaml`
+**File**: `<path-to-JuDDGES>/.github/workflows/docs-quality-checks.yaml`
 
 Updated workflow with comprehensive code example testing:
 
@@ -140,7 +140,7 @@ Updated workflow with comprehensive code example testing:
 
 ### 7. Pre-commit Hook
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/.pre-commit-config.yaml`
+**File**: `<path-to-JuDDGES>/.pre-commit-config.yaml`
 
 Local pre-commit hook for documentation changes:
 
@@ -166,7 +166,7 @@ Local pre-commit hook for documentation changes:
 
 #### Reference Documentation
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/CODE_EXAMPLE_TESTING.md`
+**File**: `<path-to-JuDDGES>/docs/reference/CODE_EXAMPLE_TESTING.md`
 
 Complete technical reference (800+ lines):
 
@@ -183,7 +183,7 @@ Complete technical reference (800+ lines):
 
 #### How-To Guide
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/TEST_CODE_EXAMPLES.md`
+**File**: `<path-to-JuDDGES>/docs/how-to/documentation/TEST_CODE_EXAMPLES.md`
 
 Task-oriented guide (400+ lines):
 
@@ -199,7 +199,7 @@ Task-oriented guide (400+ lines):
 
 #### Updated Contributing Guide
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md`
+**File**: `<path-to-JuDDGES>/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md`
 
 Updated with code example testing section:
 
@@ -213,7 +213,7 @@ Updated with code example testing section:
 
 #### Scripts Documentation
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/scripts/docs/README.md`
+**File**: `<path-to-JuDDGES>/scripts/docs/README.md`
 
 Documentation for scripts directory:
 
@@ -227,7 +227,7 @@ Documentation for scripts directory:
 
 ### 9. Project Configuration
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/pyproject.toml`
+**File**: `<path-to-JuDDGES>/pyproject.toml`
 
 Updated pytest configuration:
 
@@ -247,7 +247,7 @@ markers = [
 
 ### 10. Spell Check Dictionary
 
-**File**: `/home/laugustyniak/github/legal-ai/JuDDGES/cspell.json`
+**File**: `<path-to-JuDDGES>/cspell.json`
 
 Added technical terms:
 

@@ -4,7 +4,7 @@
 
 ### Option 1: Quick Wins (No Migration Required)
 
-Apply these changes to `/home/laugustyniak/github/legal-ai/JuDDGES/weaviate/docker-compose.yaml`:
+Apply these changes to `<path-to-JuDDGES>/weaviate/docker-compose.yaml`:
 
 ```yaml
 environment:
@@ -63,7 +63,7 @@ deploy:
 
 **Apply changes:**
 ```bash
-cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate
+cd <path-to-JuDDGES>/weaviate
 docker compose down
 docker compose up -d
 docker compose logs -f weaviate
@@ -318,7 +318,7 @@ If any changes cause issues:
 
 ```bash
 # Restore previous configuration
-cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate
+cd <path-to-JuDDGES>/weaviate
 git checkout docker-compose.yaml
 
 # Restart with old config

@@ -41,7 +41,7 @@ Edit `.doctest.yaml` in the project root to configure:
 - Mock configurations
 - Reporting options
 
-See [Code Example Testing Reference](/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/CODE_EXAMPLE_TESTING.md) for complete documentation.
+See [Code Example Testing Reference](<path-to-JuDDGES>/docs/reference/CODE_EXAMPLE_TESTING.md) for complete documentation.
 
 ### Integration
 

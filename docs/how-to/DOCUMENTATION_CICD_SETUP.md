@@ -105,7 +105,7 @@ Technical reference documentation with:
 
 ### 5. README Updates
 
-Enhanced `/home/laugustyniak/github/legal-ai/JuDDGES/README.md` with:
+Enhanced `<path-to-JuDDGES>/README.md` with:
 
 - Documentation build status badges
 - Documentation quality check badges
@@ -348,8 +348,8 @@ None required - all configuration is in files.
 
 Common issues and solutions documented in:
 
-- `/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md`
-- `/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/cicd/documentation-cicd.md`
+- `<path-to-JuDDGES>/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md`
+- `<path-to-JuDDGES>/docs/reference/cicd/documentation-cicd.md`
 
 ## Next Steps
 
@@ -385,8 +385,8 @@ Consider adding:
 - [MkDocs Documentation](https://www.mkdocs.org/)
 - [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)
 - [Diátaxis Framework](https://diataxis.fr/)
-- [Contributing Guide](/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md)
-- [CI/CD Reference](/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/cicd/documentation-cicd.md)
+- [Contributing Guide](<path-to-JuDDGES>/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md)
+- [CI/CD Reference](<path-to-JuDDGES>/docs/reference/cicd/documentation-cicd.md)
 
 ### Tools
 

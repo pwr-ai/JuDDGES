@@ -191,8 +191,8 @@ markdownlint-cli2 "docs/**/*.md" --fix
 ## Resources
 
 - **Live Docs**: <https://laugustyniak.github.io/JuDDGES/>
-- **Full Guide**: [Contributing to Documentation](/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md)
-- **CI/CD Reference**: [Documentation CI/CD](/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/cicd/documentation-cicd.md)
+- **Full Guide**: [Contributing to Documentation](<path-to-JuDDGES>/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md)
+- **CI/CD Reference**: [Documentation CI/CD](<path-to-JuDDGES>/docs/reference/cicd/documentation-cicd.md)
 
 ## Diátaxis Framework
 
@@ -215,6 +215,6 @@ git push
 
 ## Need Help?
 
-- Check troubleshooting in [Contributing Guide](/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md)
-- Review [CI/CD Reference](/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/cicd/documentation-cicd.md)
+- Check troubleshooting in [Contributing Guide](<path-to-JuDDGES>/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md)
+- Review [CI/CD Reference](<path-to-JuDDGES>/docs/reference/cicd/documentation-cicd.md)
 - Open an issue on GitHub

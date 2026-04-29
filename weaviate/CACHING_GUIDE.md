@@ -14,7 +14,7 @@ Aggregate queries with `topOccurrences` take 110+ seconds on 3.1M documents.
 
 ### 1. Create Cache Script
 
-Create `/home/laugustyniak/github/legal-ai/JuDDGES/weaviate/cache_aggregates.py`:
+Create `<path-to-JuDDGES>/weaviate/cache_aggregates.py`:
 
 ```python
 #!/usr/bin/env python3
@@ -87,7 +87,7 @@ if __name__ == "__main__":
 ### 2. Make Executable and Test
 
 ```bash
-cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate
+cd <path-to-JuDDGES>/weaviate
 chmod +x cache_aggregates.py
 
 # Test it (will take 2+ minutes first time)
@@ -102,7 +102,7 @@ export WEAVIATE_API_KEY=<YOUR_WEAVIATE_API_KEY>
 crontab -e
 
 # Add this line (runs every 30 minutes)
-*/30 * * * * cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate && export WEAVIATE_API_KEY=<YOUR_WEAVIATE_API_KEY> && ./cache_aggregates.py >> /tmp/cache_aggregates.log 2>&1
+*/30 * * * * cd <path-to-JuDDGES>/weaviate && export WEAVIATE_API_KEY=<YOUR_WEAVIATE_API_KEY> && ./cache_aggregates.py >> /tmp/cache_aggregates.log 2>&1
 ```
 
 ### 4. Use Cached Data in Your Application
@@ -222,7 +222,7 @@ def create_collections(self) -> None:
 
 ## Quick Configuration Tweaks (Minor Improvements)
 
-Edit `/home/laugustyniak/github/legal-ai/JuDDGES/weaviate/docker-compose.yaml`:
+Edit `<path-to-JuDDGES>/weaviate/docker-compose.yaml`:
 
 ```yaml
 environment:
@@ -241,7 +241,7 @@ deploy:
 
 Then restart:
 ```bash
-cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate
+cd <path-to-JuDDGES>/weaviate
 docker compose down
 docker compose up -d
 ```
@@ -290,6 +290,6 @@ tail -f /tmp/cache_aggregates.log
 ## Support
 
 For issues or questions:
-- Full report: `/home/laugustyniak/github/legal-ai/JuDDGES/weaviate/AGGREGATE_QUERY_PERFORMANCE_REPORT.md`
+- Full report: `<path-to-JuDDGES>/weaviate/AGGREGATE_QUERY_PERFORMANCE_REPORT.md`
 - Weaviate docs: https://docs.weaviate.io/weaviate/search/aggregate
 - Community forum: https://forum.weaviate.io/

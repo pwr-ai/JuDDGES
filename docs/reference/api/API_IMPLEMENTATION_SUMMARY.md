@@ -424,7 +424,7 @@ Multiple example formats:
 All files created in this implementation:
 
 ```
-/home/laugustyniak/github/legal-ai/JuDDGES/
+<path-to-JuDDGES>/
 ├── mkdocs.yml                                      # MkDocs configuration
 ├── pyproject.toml                                  # Added mkdocs dependencies
 ├── scripts/docs/

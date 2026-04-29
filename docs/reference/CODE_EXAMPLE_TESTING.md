@@ -38,7 +38,7 @@ graph TD
 
 Central configuration for all code example testing behavior.
 
-**Location**: `/home/laugustyniak/github/legal-ai/JuDDGES/.doctest.yaml`
+**Location**: `<path-to-JuDDGES>/.doctest.yaml`
 
 **Key Sections**:
 
@@ -640,9 +640,9 @@ class CodeExampleValidator:
 
 ## Related Documentation
 
-- [Contributing to Documentation](/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md)
-- [Documentation Quick Start](/home/laugustyniak/github/legal-ai/JuDDGES/docs/DOCUMENTATION_QUICK_START.md)
-- [Documentation CI/CD](/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/cicd/documentation-cicd.md)
+- [Contributing to Documentation](<path-to-JuDDGES>/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md)
+- [Documentation Quick Start](<path-to-JuDDGES>/docs/DOCUMENTATION_QUICK_START.md)
+- [Documentation CI/CD](<path-to-JuDDGES>/docs/reference/cicd/documentation-cicd.md)
 
 ## Resources
 

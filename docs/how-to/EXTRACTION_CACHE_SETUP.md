@@ -4,8 +4,8 @@
 
 ### Where Scripts Run
 **Scripts run on HOST machine** (not in Docker):
-- Python: `/home/laugustyniak/github/legal-ai/JuDDGES/.venv/bin/python`
-- Working directory: `/home/laugustyniak/github/legal-ai/JuDDGES`
+- Python: `<path-to-JuDDGES>/.venv/bin/python`
+- Working directory: `<path-to-JuDDGES>`
 - .env file: Loaded automatically by `scripts/extraction/run_extraction_rest.py` (line 24)
 
 ### PostgreSQL Container

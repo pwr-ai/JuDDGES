@@ -147,9 +147,9 @@ import weaviate  # Will use mock
 
 ## 📚 Documentation
 
-- **Quick Guide**: `/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/TEST_CODE_EXAMPLES.md`
-- **Reference**: `/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/CODE_EXAMPLE_TESTING.md`
-- **Implementation**: `/home/laugustyniak/github/legal-ai/JuDDGES/docs/CODE_EXAMPLE_TESTING_IMPLEMENTATION.md`
+- **Quick Guide**: `<path-to-JuDDGES>/docs/how-to/documentation/TEST_CODE_EXAMPLES.md`
+- **Reference**: `<path-to-JuDDGES>/docs/reference/CODE_EXAMPLE_TESTING.md`
+- **Implementation**: `<path-to-JuDDGES>/docs/CODE_EXAMPLE_TESTING_IMPLEMENTATION.md`
 
 ## 🎯 Available Markers
 

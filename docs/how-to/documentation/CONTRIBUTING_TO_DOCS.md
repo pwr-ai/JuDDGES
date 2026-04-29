@@ -330,7 +330,7 @@ results = client.query.get(...)
 - `# requires: gemini` - Requires Gemini API (will use mock)
 - `# demonstration-only` - Demonstration code, not executable
 
-See [Code Example Testing Reference](/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/CODE_EXAMPLE_TESTING.md) for complete details.
+See [Code Example Testing Reference](<path-to-JuDDGES>/docs/reference/CODE_EXAMPLE_TESTING.md) for complete details.
 
 ### Pre-commit Hooks
 

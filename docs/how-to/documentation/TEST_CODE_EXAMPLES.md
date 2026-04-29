@@ -351,7 +351,7 @@ reporting:
   show_skipped: true
 ```
 
-See [Code Example Testing Reference](/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/CODE_EXAMPLE_TESTING.md) for all options.
+See [Code Example Testing Reference](<path-to-JuDDGES>/docs/reference/CODE_EXAMPLE_TESTING.md) for all options.
 
 ## Best Practices
 
@@ -430,9 +430,9 @@ The `docs-quality-checks.yaml` workflow:
 
 ## See Also
 
-- [Code Example Testing Reference](/home/laugustyniak/github/legal-ai/JuDDGES/docs/reference/CODE_EXAMPLE_TESTING.md) - Complete technical reference
-- [Contributing to Documentation](/home/laugustyniak/github/legal-ai/JuDDGES/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md) - General documentation guide
-- [Documentation Quick Start](/home/laugustyniak/github/legal-ai/JuDDGES/docs/DOCUMENTATION_QUICK_START.md) - Quick setup guide
+- [Code Example Testing Reference](<path-to-JuDDGES>/docs/reference/CODE_EXAMPLE_TESTING.md) - Complete technical reference
+- [Contributing to Documentation](<path-to-JuDDGES>/docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md) - General documentation guide
+- [Documentation Quick Start](<path-to-JuDDGES>/docs/DOCUMENTATION_QUICK_START.md) - Quick setup guide
 
 ## Summary
 

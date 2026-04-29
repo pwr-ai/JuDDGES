@@ -249,7 +249,7 @@ mkdocs serve
 
 ### MkDocs Configuration
 
-Located in `/home/laugustyniak/github/legal-ai/JuDDGES/mkdocs.yml`:
+Located in `<path-to-JuDDGES>/mkdocs.yml`:
 
 - **Site metadata**: Name, description, repository
 - **Theme**: Material with light/dark mode
@@ -277,7 +277,7 @@ Common options in documentation pages:
 ### Documentation Files
 
 ```
-/home/laugustyniak/github/legal-ai/JuDDGES/
+<path-to-JuDDGES>/
 ├── mkdocs.yml                          # Configuration
 ├── docs/reference/api/
 │   ├── index.md                        # API index

@@ -77,7 +77,7 @@ pip install git-filter-repo
 
 ```bash
 # 1. Make a backup of your repository first
-cd /home/laugustyniak/github/legal-ai/JuDDGES
+cd <path-to-JuDDGES>
 tar -czf ../JuDDGES-backup-$(date +%Y%m%d-%H%M%S).tar.gz .
 
 # 2. Create expressions file to replace the key
@@ -116,7 +116,7 @@ brew install bfg
 
 ```bash
 # 1. Make a backup
-cd /home/laugustyniak/github/legal-ai/JuDDGES
+cd <path-to-JuDDGES>
 tar -czf ../JuDDGES-backup-$(date +%Y%m%d-%H%M%S).tar.gz .
 
 # 2. Create a file with text to replace
@@ -168,7 +168,7 @@ Remove the key from the current working branch:
 
 ```bash
 # Edit the file to remove the exposed key
-cd /home/laugustyniak/github/legal-ai/JuDDGES
+cd <path-to-JuDDGES>
 
 # Remove the key from EXTRACTION_STATUS.md
 sed -i 's/GEMINI_API_KEY=[REDACTED-API-KEY]/GEMINI_API_KEY=[REDACTED]/g' docs/EXTRACTION_STATUS.md

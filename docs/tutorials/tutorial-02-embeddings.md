@@ -327,7 +327,7 @@ A score of 0.95 (on a scale of 0 to 1) means the documents are very similar sema
 
 ```bash
 # Navigate to weaviate directory
-cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate
+cd <path-to-JuDDGES>/weaviate
 
 # Start Weaviate with Docker Compose
 docker compose up -d
