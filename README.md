@@ -70,7 +70,19 @@ uv pip install -e .
 
 Step-by-step instructions for assembling datasets from raw court records live in [scripts/README.md](scripts/README.md).
 
-### Inference, fine-tuning, and evaluation
+### Annotation toolkit
+
+A generic Label Studio-based framework for LLM-assisted annotation of legal documents.
+Define your own annotation task as a Pydantic schema + Label Studio XML form, then run
+the bundled pipeline to preannotate with an LLM, review in the Label Studio UI, and
+export a structured dataset. Two fully-featured example tasks ship with the toolkit
+(Polish Swiss Franc loans, Polish personal rights — each with schema, form template,
+and prompt). A schema-only example for English appeal courts is also included.
+
+See [label_studio_toolkit/docs/README.md](label_studio_toolkit/docs/README.md) for
+setup, workflows, and how to add a new task.
+
+### Inference, fine-tuning and evaluation
 
 Inference, fine-tuning, and evaluation are all defined as stages in [`dvc.yaml`](dvc.yaml) (see the [DVC user guide](https://dvc.org/doc/user-guide) for background). Many stages are configured as a matrix and run for combinations of parameters such as models and random seeds. Most scripts are configured with [Hydra](https://github.com/facebookresearch/hydra); a few simpler ones (for example n-gram evaluation) take command-line arguments instead. The sections below show how to reproduce each stage and where to find its configuration.
 
