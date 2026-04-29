@@ -42,7 +42,7 @@ repos:
       - id: markdownlint-cli2
         name: Markdown Lint
         files: ^docs/.*\.md$
-        args: ["--config", ".markdownlint.json"]
+        args: ["--config", ".markdownlint.json", "--fix"]
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
     rev: v8.6.0
@@ -57,7 +57,11 @@ repos:
       - id: test-doc-code-examples
         name: Test Documentation Code Examples
         entry: python scripts/docs/test_code_examples.py
-        language: system
+        language: python
+        additional_dependencies:
+          - pyyaml
+          - loguru
+          - rich
         files: ^docs/.*\.md$
         pass_filenames: true
         always_run: false

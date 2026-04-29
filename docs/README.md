@@ -65,13 +65,10 @@ Task-oriented recipes for common problems. See the [full how-to index](how-to/).
 
 - [Iterative schema refinement](how-to/extraction/iterative_refinment.md)
 - [Avoid reprocessing documents](how-to/extraction/avoid-reprocessing-documents.md)
-- [Generate Redis tasks](how-to/extraction/generate-redis-tasks.md)
-- [Distributed extraction](how-to/distributed-extraction.md) and [Redis-coordinated workers](how-to/distributed-extraction-redis.md)
-- [Extraction cache setup](how-to/EXTRACTION_CACHE_SETUP.md) · [Extraction storage setup](how-to/extraction-storage-setup.md)
+- [Extraction storage setup](how-to/extraction-storage-setup.md)
 
 **Infrastructure**:
 
-- [Scale the Postgres LLM cache](how-to/infrastructure/scale-postgres-llm-cache.md)
 - [Weaviate backup & restore](how-to/infrastructure/weaviate-backup-restore.md)
 
 **Visualization (UMAP)**:
