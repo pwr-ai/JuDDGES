@@ -184,7 +184,7 @@ data/analysis/sprawy_frankowe/extractions_with_doc_id.pkl
 
 # Context files (not version controlled)
 .context/
-
+.claude/
 # Weaviate dumps
 *.parquet
 *.jsonl.gz
