@@ -129,7 +129,7 @@ deploy:
 1. Backup current data:
 ```bash
 curl -X POST \
-  -H "Authorization: Bearer <REDACTED-WEAVIATE-API-KEY>" \
+  -H "Authorization: Bearer <YOUR_WEAVIATE_API_KEY>" \
   http://legal-ai-weaviate.augustyniak.ai:8084/v1/backups/filesystem
 ```
 
@@ -339,16 +339,16 @@ After applying changes:
 
 ```bash
 # 1. Check service health
-curl -H "Authorization: Bearer <REDACTED-WEAVIATE-API-KEY>" \
+curl -H "Authorization: Bearer <YOUR_WEAVIATE_API_KEY>" \
   http://legal-ai-weaviate.augustyniak.ai:8084/v1/.well-known/ready
 
 # 2. Verify collection still accessible
-curl -H "Authorization: Bearer <REDACTED-WEAVIATE-API-KEY>" \
+curl -H "Authorization: Bearer <YOUR_WEAVIATE_API_KEY>" \
   http://legal-ai-weaviate.augustyniak.ai:8084/v1/schema/LegalDocuments
 
 # 3. Test simple count query
 curl -X POST \
-  -H "Authorization: Bearer <REDACTED-WEAVIATE-API-KEY>" \
+  -H "Authorization: Bearer <YOUR_WEAVIATE_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"query": "{ Aggregate { LegalDocuments { meta { count } } } }"}' \
   http://legal-ai-weaviate.augustyniak.ai:8084/v1/graphql
@@ -376,7 +376,7 @@ time curl -X POST [...] # Your aggregate query
 docker stats weaviate --no-stream > baseline_stats.txt
 
 # Memory info
-curl -H "Authorization: Bearer <REDACTED-WEAVIATE-API-KEY>" \
+curl -H "Authorization: Bearer <YOUR_WEAVIATE_API_KEY>" \
   http://legal-ai-weaviate.augustyniak.ai:8084/v1/meta | jq '.memory'
 ```
 

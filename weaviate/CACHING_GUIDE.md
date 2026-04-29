@@ -91,7 +91,7 @@ cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate
 chmod +x cache_aggregates.py
 
 # Test it (will take 2+ minutes first time)
-export WEAVIATE_API_KEY=<REDACTED-WEAVIATE-API-KEY>
+export WEAVIATE_API_KEY=<YOUR_WEAVIATE_API_KEY>
 ./cache_aggregates.py
 ```
 
@@ -102,7 +102,7 @@ export WEAVIATE_API_KEY=<REDACTED-WEAVIATE-API-KEY>
 crontab -e
 
 # Add this line (runs every 30 minutes)
-*/30 * * * * cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate && export WEAVIATE_API_KEY=<REDACTED-WEAVIATE-API-KEY> && ./cache_aggregates.py >> /tmp/cache_aggregates.log 2>&1
+*/30 * * * * cd /home/laugustyniak/github/legal-ai/JuDDGES/weaviate && export WEAVIATE_API_KEY=<YOUR_WEAVIATE_API_KEY> && ./cache_aggregates.py >> /tmp/cache_aggregates.log 2>&1
 ```
 
 ### 4. Use Cached Data in Your Application

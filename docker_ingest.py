@@ -3,6 +3,7 @@
 Simple Docker-based ingestion script for Polish court data into Weaviate.
 """
 
+import os
 import sys
 import uuid
 from datetime import datetime
@@ -13,7 +14,9 @@ import requests
 
 # Weaviate connection
 WEAVIATE_URL = "http://172.17.0.1:8084"  # Docker bridge network
-API_KEY = "<REDACTED-WEAVIATE-API-KEY>"
+API_KEY = os.getenv("WEAVIATE_API_KEY")
+if not API_KEY:
+    raise RuntimeError("WEAVIATE_API_KEY env var is required")
 HEADERS = {"Authorization": f"Bearer {API_KEY}"}
 
 
