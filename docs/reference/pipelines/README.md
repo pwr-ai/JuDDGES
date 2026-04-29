@@ -13,6 +13,7 @@ JuDDGES uses Data Version Control (DVC) to manage complex machine learning pipel
 **Purpose**: Complete reference for DVC pipeline stages, configurations, and execution
 
 **Contents**:
+
 - Pipeline DAG (Directed Acyclic Graph) visualization
 - Detailed stage specifications (embed, sft, predict, evaluate)
 - Matrix expansion strategy for multi-model training
@@ -22,6 +23,7 @@ JuDDGES uses Data Version Control (DVC) to manage complex machine learning pipel
 - Troubleshooting guide
 
 **Diagrams Include**:
+
 - Pipeline DAG showing all stages and dependencies
 - Stage-specific flowcharts (embed, sft, predict, evaluate)
 - Configuration hierarchy
@@ -30,6 +32,7 @@ JuDDGES uses Data Version Control (DVC) to manage complex machine learning pipel
 - Pipeline execution flow (sequence diagram)
 
 **Best For**:
+
 - Understanding pipeline stages and their dependencies
 - Configuring pipeline runs
 - Debugging pipeline issues
@@ -45,14 +48,17 @@ JuDDGES uses Data Version Control (DVC) to manage complex machine learning pipel
 **Purpose**: Generate vector embeddings for legal documents
 
 **Input**:
+
 - Parquet files in `data/datasets/{pl,en}/raw/`
 - Pre-trained model: `sdadas/mmlw-roberta-large`
 
 **Output**:
+
 - Embedding files in `data/embeddings/`
 - Ready for Weaviate ingestion
 
 **Key Parameters**:
+
 ```yaml
 embedding_model:
   name: mmlw-roberta-large
@@ -62,6 +68,7 @@ embedding_model:
 ```
 
 **Execution**:
+
 ```bash
 dvc repro embed
 ```
@@ -73,15 +80,18 @@ dvc repro embed
 **Purpose**: Fine-tune language models on legal instruction datasets
 
 **Input**:
+
 - Instruction datasets (Q&A format)
 - Pre-trained base models (Llama, Mistral, Bielik, Phi)
 - Fine-tuning configuration
 
 **Output**:
+
 - Model checkpoints in `models/{model}/{dataset}/`
 - Training metrics and logs
 
 **Key Parameters**:
+
 ```yaml
 training:
   peft_type: lora
@@ -94,6 +104,7 @@ training:
 ```
 
 **Execution**:
+
 ```bash
 CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro sft
 ```
@@ -107,15 +118,18 @@ CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro sft
 **Purpose**: Generate predictions using fine-tuned models
 
 **Input**:
+
 - Fine-tuned model checkpoints
 - Test datasets
 - Weaviate context (for RAG)
 
 **Output**:
+
 - Predictions in JSON/Parquet format
 - Stored in `outputs/predictions/`
 
 **Key Parameters**:
+
 ```yaml
 inference:
   batch_size: 8
@@ -126,6 +140,7 @@ inference:
 ```
 
 **Execution**:
+
 ```bash
 CUDA_VISIBLE_DEVICES=0 dvc repro predict
 ```
@@ -137,14 +152,17 @@ CUDA_VISIBLE_DEVICES=0 dvc repro predict
 **Purpose**: Calculate traditional metrics (BLEU, ROUGE, METEOR)
 
 **Input**:
+
 - Model predictions
 - Reference answers
 
 **Output**:
+
 - Metrics JSON files
 - Statistical analysis reports
 
 **Execution**:
+
 ```bash
 dvc repro evaluate
 ```
@@ -156,16 +174,19 @@ dvc repro evaluate
 **Purpose**: Qualitative evaluation using large language models
 
 **Input**:
+
 - Model predictions
 - Evaluation criteria
 - Judge model (GPT-4, Claude)
 
 **Output**:
+
 - Quality scores
 - Detailed feedback
 - Evaluation reports
 
 **Execution**:
+
 ```bash
 dvc repro evaluate_llm_as_judge
 ```
@@ -238,21 +259,25 @@ defaults:
 ### Advanced Usage
 
 **Run specific model-dataset combination**:
+
 ```bash
 dvc repro sft@Llama-3.2-3B-Instruct@pl-court-frankowe
 ```
 
 **Force rerun (ignore cache)**:
+
 ```bash
 dvc repro -f <stage>
 ```
 
 **Run downstream dependencies**:
+
 ```bash
 dvc repro --downstream <stage>
 ```
 
 **Dry run (show what would run)**:
+
 ```bash
 dvc repro --dry
 ```
@@ -296,21 +321,25 @@ stages:
 ### Performance Tips
 
 1. **Batch Size**: Maximize GPU memory usage
+
    ```bash
    BATCH_SIZE=16 dvc repro predict
    ```
 
 2. **Parallel Processing**: Use multiple CPU cores
+
    ```bash
    NUM_PROC=20 dvc repro embed
    ```
 
 3. **GPU Selection**: Distribute across GPUs
+
    ```bash
    CUDA_VISIBLE_DEVICES=0,1,2,3 dvc repro sft
    ```
 
 4. **Caching**: Enable remote cache for team collaboration
+
    ```bash
    dvc remote add -d myremote s3://mybucket/dvc-cache
    dvc push
@@ -332,6 +361,7 @@ stages:
 ### Common Issues
 
 #### Out of Memory (OOM)
+
 ```bash
 # Reduce batch size
 BATCH_SIZE=2 dvc repro sft
@@ -341,6 +371,7 @@ BATCH_SIZE=2 dvc repro sft
 ```
 
 #### Pipeline Stage Failed
+
 ```bash
 # Check logs
 cat .dvc/logs/sft.log
@@ -353,6 +384,7 @@ dvc status sft
 ```
 
 #### Cache Issues
+
 ```bash
 # Clear local cache
 dvc cache dir
@@ -365,6 +397,7 @@ dvc pull
 ```
 
 #### Configuration Errors
+
 ```bash
 # Validate config
 python -c "from hydra import compose, initialize; initialize(config_path='configs'); cfg = compose(config_name='main'); print(cfg)"
@@ -402,16 +435,19 @@ jobs:
 ## Related Documentation
 
 ### Architecture
+
 - **[System Architecture](../../explanation/architecture/SYSTEM_ARCHITECTURE.md)** - Overall system design
 - **[Data Flow Pipeline](../../explanation/architecture/DATA_FLOW_PIPELINE.md)** - Data transformations
 - **[Model Training Flow](../../explanation/architecture/MODEL_TRAINING_FLOW.md)** - Training details
 
 ### Practical Guides
+
 - **[Fine-Tuning How-To](../../how-to/training/fine_tuning.md)** - Step-by-step training guide
 - **[Evaluation How-To](../../how-to/evaluation/evaluation_guide.md)** - Running evaluations
 - **[Embeddings How-To](../../how-to/embeddings/embeddings_embed_and_ingest_weaviate.md)** - Embedding generation
 
 ### Configuration Reference
+
 - **[Model Configs](../configs/model_configs.md)** - Model specifications
 - **[Dataset Configs](../configs/dataset_configs.md)** - Dataset specifications
 

@@ -246,11 +246,13 @@ print(result)
 ### Choosing ROUGE vs Exact Match
 
 **Use ROUGE** when:
+
 - Text can be paraphrased
 - Word order doesn't matter
 - Partial credit is meaningful
 
 **Use Exact Match** when:
+
 - Precision is critical (legal basis references)
 - Format is standardized (case numbers)
 - No variation expected

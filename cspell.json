@@ -192,7 +192,11 @@
     "pgbouncer",
     "DBNAME",
     "blks",
-    "pkill"
+    "pkill",
+    "wvcc",
+    "cmap",
+    "xlabel",
+    "ylabel"
   ],
   "flagWords": [],
   "ignorePaths": [
@@ -213,7 +217,8 @@
     "*.min.js",
     "*.min.css",
     "package-lock.json",
-    "docs/tutorials/tutorial-04-advanced-extraction.md"
+    "docs/tutorials/tutorial-04-advanced-extraction.md",
+    "docs/reference/schemas/**"
   ],
   "patterns": [
     {

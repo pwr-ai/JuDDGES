@@ -262,6 +262,7 @@ Oparta na PKD 2007 (sekcje), uproszczona do granularności przydatnej w analizie
 ## Instrukcje ekstrakcji
 
 ### Zasady ogólne
+
 - Ekstraktuj WYŁĄCZNIE z tekstu dokumentu
 - Język: polski
 - Daty: ISO 8601 (YYYY-MM-DD)
@@ -271,33 +272,39 @@ Oparta na PKD 2007 (sekcje), uproszczona do granularności przydatnej w analizie
 ### Reguły mapowania na enum
 
 **`tax_type`** → szukaj w tytule, słowach kluczowych, cytowanych ustawach:
+
 - "podatku dochodowego od osób fizycznych" → `PIT`
 - "podatku dochodowego od osób prawnych" → `CIT`
 - "podatku od towarów i usług" → `VAT`
 - "podatku od czynności cywilnoprawnych" → `PCC`
 
 **`applicant_industry`** → dedukuj ze stanu faktycznego:
+
 - "prowadzi działalność w zakresie tworzenia oprogramowania" → `IT_software`
 - "sprzedaje towary za pośrednictwem platformy internetowej" → `e_commerce`
 - "jest spółką deweloperską" → `nieruchomosci`
 
 **`trigger_event`** → dedukuj z kontekstu wniosku:
+
 - "w związku ze zmianą ustawy od dnia..." → `zmiana_przepisow`
 - "zamierza zawrzeć umowę..." → `nowa_transakcja`
 - "w trakcie prowadzonej kontroli..." → `kontrola_podatkowa`
 
 **`case_subject_category`** → klasyfikuj na podstawie głównego pytania wnioskodawcy:
+
 - "czy wydatek na X stanowi koszt uzyskania przychodu" → `koszty_uzyskania_przychodow`
 - "czy usługa podlega opodatkowaniu VAT w Polsce" → `miejsce_swiadczenia`
 - "czy przysługuje prawo do odliczenia VAT naliczonego" → `odliczenie_vat`
 
 **`tax_planning_aggressiveness`** → oceniaj na podstawie dystansu między literalnym a proponowanym rozumieniem:
+
 - typowe pytanie o prawidłowe zastosowanie → `konserwatywne`
 - niestandardowa kwalifikacja w ramach przepisu → `umiarkowane`
 - wyraźnie korzystna wykładnia sprzeczna z celem przepisu → `agresywne`
 - na granicy obejścia prawa → `graniczne`
 
 ### Walidacja
+
 1. Każde pole ENUM używa TYLKO wartości z listy
 2. `tax_subtype` jest spójny z `tax_type`
 3. Pola BOOL: wyłącznie `true`/`false`, nie `null`

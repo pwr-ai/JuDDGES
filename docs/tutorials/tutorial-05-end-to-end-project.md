@@ -37,12 +37,14 @@ By the end of this tutorial, you will:
 ## Prerequisites
 
 ### Required Knowledge
+
 - Completion of Tutorials 1-4
 - Understanding of system architecture
 - API development experience
 - Docker and deployment basics
 
 ### Required Infrastructure
+
 - **Production environment** with GPU access
 - **Cloud storage** (S3, GCS, or similar)
 - **Database** (Weaviate + PostgreSQL)
@@ -57,6 +59,7 @@ By the end of this tutorial, you will:
 **Goal**: Build a Swiss Franc Loan Analysis System
 
 **Requirements**:
+
 1. Acquire and process 10,000+ court decisions
 2. Extract structured information (dates, amounts, parties, verdicts)
 3. Enable semantic search across all documents
@@ -820,6 +823,7 @@ Congratulations! You've built a complete legal document analysis system.
 ### System Capabilities
 
 Your system can now:
+
 - Process 100+ documents per hour
 - Search 10,000+ documents in <100ms
 - Extract structured information with 85%+ accuracy

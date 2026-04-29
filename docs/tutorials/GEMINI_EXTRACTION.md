@@ -41,6 +41,7 @@ pip install -e ".[full]"
 ```
 
 This installs:
+
 - `langchain-google-genai>=2.0.8` - Gemini model integration
 - `langfuse>=2.59.1` - Observability and tracing
 
@@ -49,17 +50,20 @@ This installs:
 If you have Google Cloud SDK (`gcloud`) installed, you may encounter 403 authentication errors when using LangChain with Gemini. This is because LangChain tries to use Application Default Credentials (ADC) before checking for API keys.
 
 **✅ Solution 1: Use Helper Script (Recommended)**
+
 ```bash
 ./scripts/extraction/run_extraction.sh test_langfuse_simple.py
 ./scripts/extraction/run_extraction.sh run_10_examples.py
 ```
 
 **✅ Solution 2: Disable Google Cloud SDK Temporarily**
+
 ```bash
 CLOUDSDK_CONFIG=/dev/null python scripts/extraction/your_script.py
 ```
 
 **✅ Solution 3: Explicitly Pass API Key in Code**
+
 ```python
 import os
 chain = GeminiExtractionChain(
@@ -171,6 +175,7 @@ schema = ExtractionSchema(
 ### Schema Field Types
 
 Supported field types:
+
 - `string` - Text fields
 - `date as ISO 8601` - Dates in YYYY-MM-DD format
 - `List[string]` - Lists of strings
@@ -488,7 +493,7 @@ Typical extraction times (approximate):
 | Pro | 5,000 tokens | 4-6s | <0.1s |
 | Pro | 20,000 tokens | 10-15s | <0.1s |
 
-*Cache hits return instantly, making repeated extractions extremely fast.*
+_Cache hits return instantly, making repeated extractions extremely fast._
 
 ## Contributing
 
@@ -509,6 +514,7 @@ To extend the extraction chain:
 ## Support
 
 For issues or questions:
+
 - Check existing code in `juddges/extraction/`
 - Review example script in `scripts/extraction/extract_with_gemini.py`
 - Open an issue on the project repository

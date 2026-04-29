@@ -10,15 +10,7 @@
   "MD007": {
     "indent": 2
   },
-  "MD013": {
-    "line_length": 120,
-    "heading_line_length": 120,
-    "code_block_line_length": 120,
-    "code_blocks": false,
-    "tables": false,
-    "headings": true,
-    "stern": false
-  },
+  "MD013": false,
   "MD024": {
     "siblings_only": true
   },
@@ -49,6 +41,7 @@
   "MD034": false,
   "MD036": false,
   "MD041": false,
+  "MD040": false,
   "MD046": {
     "style": "fenced"
   },

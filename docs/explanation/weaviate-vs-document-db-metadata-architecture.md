@@ -67,10 +67,12 @@ This is a **deal-breaker** if you're continuously extracting new metadata fields
 - Best if: Schema is relatively stable, new fields are rare
 
 **Pros:**
+
 - No additional infrastructure
 - Simpler architecture
 
 **Cons:**
+
 - Re-ingestion required for new filterable fields
 - Must plan schema comprehensively upfront
 
@@ -81,11 +83,13 @@ This is a **deal-breaker** if you're continuously extracting new metadata fields
 - Retrieve semantically similar docs from Weaviate → fetch full metadata from document DB
 
 **Pros:**
+
 - Best of both worlds
 - Continuously add new metadata fields without re-indexing
 - Document DB handles complex, nested metadata structures
 
 **Cons:**
+
 - Two systems to maintain
 - Synchronization complexity
 - Higher infrastructure cost
@@ -97,11 +101,13 @@ This is a **deal-breaker** if you're continuously extracting new metadata fields
 - SQL JOINs, ACID compliance, proper schema migrations
 
 **Pros:**
+
 - Single system for everything
 - Mature ecosystem
 - Proper schema migrations
 
 **Cons:**
+
 - Migration effort from existing Weaviate setup
 - Less specialized for vector search than dedicated vector DBs
 
@@ -161,6 +167,7 @@ Raw Documents
 ```
 
 **Key Patterns:**
+
 - Schema-constrained extraction with deterministic output schemas
 - Multi-pass extraction (entity recognition → relationships → tables → validation)
 - Self-checking loops with correction for anomalies
@@ -199,6 +206,7 @@ Given the existing Weaviate setup with `legal_documents` and `document_chunks` c
 ### Metadata Schema Design
 
 **Weaviate (stable, rarely changing):**
+
 ```yaml
 legal_documents:
   properties:
@@ -210,6 +218,7 @@ legal_documents:
 ```
 
 **MongoDB (evolving, frequently extended):**
+
 ```yaml
 legal_metadata:
   fields:
@@ -225,6 +234,7 @@ legal_metadata:
 ### Backfill Strategy
 
 When adding new metadata fields:
+
 1. Update document DB first (immediate, no re-indexing needed)
 2. Consider periodic Weaviate re-ingestion only for critical filter fields
 3. Track schema versions to know which documents have which metadata

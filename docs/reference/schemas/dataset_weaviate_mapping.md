@@ -342,6 +342,7 @@ RuntimeError: Index not built. Call build_index() first.
 ### Issue: Dataset Record Not Found
 
 **Causes:**
+
 1. Incorrect ID field names
 2. Mismatch between dataset and Weaviate IDs
 3. Dataset not fully loaded
@@ -455,6 +456,7 @@ if comparison:
 ## Examples
 
 Full examples available in:
+
 - [map_dataset_to_weaviate.py](../scripts/examples/map_dataset_to_weaviate.py)
 - [update_raw_content.py](../scripts/embed/update_raw_content.py)
 - [analyze_raw_content_coverage.py](../scripts/embed/analyze_raw_content_coverage.py)

@@ -15,6 +15,7 @@ Expecting property name enclosed in double quotes: line 37 column 5 (char 7459)
 ```
 
 **Key Issues:**
+
 - No retry logic for JSON parsing errors
 - Documents permanently marked as "failed"
 - ~5-10% extraction failure rate due to malformed JSON
@@ -76,6 +77,7 @@ def to_pydantic_model(self, model_name: str = "ExtractionOutput") -> type[BaseMo
 ```
 
 **Why Optional[Any]?**
+
 - Our extraction schema has 20+ fields with diverse types (strings, lists, dicts, nested objects)
 - Using `Any` provides flexibility while still enforcing field names via the schema
 - Gemini's API handles type validation based on the response_schema
@@ -130,6 +132,7 @@ This method leverages provider-specific APIs for structured output:
 - **For Anthropic**: Uses tool calling
 
 The method:
+
 1. Takes a Pydantic model as input
 2. Converts it to the provider's schema format (for Gemini: JSON Schema subset)
 3. Configures the LLM to enforce the schema
@@ -162,26 +165,31 @@ Gemini validates outputs against this schema **before** returning responses.
 ## Benefits
 
 ### 1. Zero JSON Parsing Errors ✅
+
 - Gemini's API guarantees valid JSON conforming to the schema
 - No more `JSONDecodeError` exceptions
 - Eliminates ~5-10% of extraction failures
 
 ### 2. Better Type Safety ✅
+
 - Pydantic models provide runtime validation
 - Field names are enforced by the schema
 - Type mismatches caught early
 
 ### 3. Cleaner Code ✅
+
 - Removed dependency on `parse_json_markdown()`
 - No complex error handling for malformed JSON
 - More maintainable and readable
 
 ### 4. Performance Improvements ✅
+
 - No retry logic needed (guaranteed valid output)
 - Reduced computational overhead (no parsing/validation on our side)
 - Faster extraction pipeline
 
 ### 5. Better Observability ✅
+
 - Langfuse tracing works seamlessly with structured output
 - Clearer logs: "using structured output mode"
 - Easier debugging (no parsing stack traces)

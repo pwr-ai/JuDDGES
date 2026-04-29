@@ -52,43 +52,52 @@ mkdocs build
 ### By Module Type
 
 **Core Configuration**:
+
 - [Config](core/config.md) - Hydra configuration
 - [Settings](core/settings.md) - Application settings
 - [Data Models](core/data_models.md) - Core data structures
 
 **Data Management**:
+
 - [Loaders](data/loaders.md) - Dataset loading
 - [Judgments DB](data/judgments_weaviate_db.md) - Weaviate operations
 - [Stream Ingester](data/stream_ingester.md) - Production ingestion
 
 **LLM Operations**:
+
 - [Factory](llm/factory.md) - Model creation
 - [Predict](llm/predict.md) - Inference pipeline
 
 **Information Extraction**:
+
 - [Gemini Chain](extraction/gemini_chain.md) - Gemini-based extraction
 
 **Evaluation**:
+
 - [Metrics](evals/metrics.md) - Field-level metrics
 - [LLM as Judge](llm_as_judge/judge.md) - LLM-based evaluation
 
 **Preprocessing**:
+
 - [Text Chunker](preprocessing/text_chunker.md) - Document chunking
 - [Text Encoder](preprocessing/text_encoder.md) - Tokenization
 
 ### By Use Case
 
 **Data Ingestion**:
+
 1. [Loaders](data/loaders.md) - Load datasets
 2. [Stream Ingester](data/stream_ingester.md) - Ingest to Weaviate
 3. [Judgments DB](data/judgments_weaviate_db.md) - Database operations
 
 **Model Inference**:
+
 1. [Factory](llm/factory.md) - Load model
 2. [Predict](llm/predict.md) - Generate predictions
 3. [Metrics](evals/metrics.md) - Evaluate results
 
 **Information Extraction**:
+
 1. [Gemini Chain](extraction/gemini_chain.md) - Extract with Gemini
 2. [Metrics](evals/metrics.md) - Evaluate extractions
 3. [LLM as Judge](llm_as_judge/judge.md) - LLM evaluation

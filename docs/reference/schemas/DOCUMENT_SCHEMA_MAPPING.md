@@ -5,6 +5,7 @@ This document explains the unified schema for legal documents in the JuDDGES, AI
 ## Schema Design
 
 The unified schema is designed to:
+
 1. Store standard metadata across all document types
 2. Provide type-specific fields for specialized information
 3. Support advanced search and retrieval

@@ -59,6 +59,7 @@ docker exec -it legal_ai_extraction_postgres psql -U extraction_user -d legal_ex
 The extraction storage is configured via environment variables:
 
 **Main `.env` file:**
+
 ```bash
 EXTRACTION_POSTGRES_USER=extraction_user
 EXTRACTION_POSTGRES_PASSWORD=extraction_pass
@@ -69,6 +70,7 @@ EXTRACTION_POSTGRES_URL=postgresql+psycopg://extraction_user:extraction_pass@loc
 ```
 
 **Weaviate `.env` file:**
+
 ```bash
 # Same variables for docker-compose
 EXTRACTION_POSTGRES_USER=extraction_user

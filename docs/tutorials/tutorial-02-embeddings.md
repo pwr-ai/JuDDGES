@@ -39,11 +39,13 @@ By the end of this tutorial, you will be able to:
 ## Prerequisites
 
 ### Required Knowledge
+
 - Completion of [Tutorial 1: First Legal Document Analysis](./tutorial-01-first-legal-document-analysis.md)
 - Basic understanding of vectors and similarity
 - Familiarity with Docker and databases
 
 ### Required Software
+
 - **Python 3.10+** with JuDDGES installed
 - **Docker** and **Docker Compose** running
 - **16GB+ RAM** (embeddings are memory-intensive)
@@ -51,6 +53,7 @@ By the end of this tutorial, you will be able to:
 - **(Optional) GPU** with CUDA for faster embedding generation
 
 ### Required Setup
+
 - JuDDGES environment activated
 - Weaviate running (we'll set this up together)
 
@@ -102,12 +105,14 @@ emb3 = [0.9, 0.1, 0.8, 0.2, ...]  # Different from emb1/emb2
 ### Why Use Embeddings?
 
 **Traditional Keyword Search**:
+
 ```python
 query = "swiss franc"
 results = search("swiss franc")  # Only finds exact matches
 ```
 
 **Semantic Search with Embeddings**:
+
 ```python
 query = "swiss franc"
 results = semantic_search("swiss franc")  # Finds:
@@ -119,6 +124,7 @@ results = semantic_search("swiss franc")  # Finds:
 ### The mmlw-roberta-large Model
 
 JuDDGES uses `sdadas/mmlw-roberta-large`:
+
 - **Multilingual**: Polish, English, and 100+ languages
 - **Legal-specific**: Trained on legal documents
 - **768-dimensional** embeddings
@@ -267,6 +273,7 @@ python generate_embeddings.py
 ```
 
 **Expected output**:
+
 ```
 Loading embedding model...
 Model: sdadas/mmlw-roberta-large
@@ -306,6 +313,7 @@ A score of 0.95 (on a scale of 0 to 1) means the documents are very similar sema
 - **0.5**: Somewhat related
 - **0.95**: Very similar
 - **1.0**: Identical
+
 </details>
 
 **Try This**: Modify the script to use only the first 500 characters instead of 2000. How do the similarity scores change?
@@ -317,6 +325,7 @@ A score of 0.95 (on a scale of 0 to 1) means the documents are very similar sema
 ### Why Weaviate?
 
 **Weaviate** is a vector database optimized for:
+
 - ⚡ **Fast similarity search** on millions of documents
 - 🔄 **Hybrid search** combining semantic and keyword search
 - 📊 **CRUD operations** with full document management
@@ -337,6 +346,7 @@ docker compose ps
 ```
 
 **Expected output**:
+
 ```
 NAME      IMAGE                              STATUS
 weaviate  semitechnologies/weaviate:1.25.0   Up 10 seconds (healthy)
@@ -457,6 +467,7 @@ print(f"Version: {client.get_meta()}")
 ```
 
 **Challenge**: What happens if you stop Weaviate? Try it:
+
 ```bash
 docker compose down
 # Run your script again
@@ -643,6 +654,7 @@ python ingest_to_weaviate.py
 ```
 
 **Expected output**:
+
 ```
 Connecting to Weaviate...
 ✓ Connected to Weaviate
@@ -843,6 +855,7 @@ python semantic_search_demo.py
 ### 🎯 Checkpoint 4: Search Exercises
 
 **Exercise 1**: Test multilingual search:
+
 ```python
 queries = [
     "frank szwajcarski",  # Polish
@@ -857,6 +870,7 @@ for query in queries:
 Do you get similar results?
 
 **Exercise 2**: Compare semantic vs keyword search:
+
 ```python
 # Semantic
 results_semantic = search("umowa kredytu", limit=5)
@@ -1072,6 +1086,7 @@ for config in umap_configs:
 
 **Exercise 1: Full Pipeline**
 Create a script that:
+
 1. Loads 100 documents
 2. Generates embeddings
 3. Ingests to Weaviate
@@ -1080,12 +1095,14 @@ Create a script that:
 
 **Exercise 2: Quality Analysis**
 Analyze embedding quality:
+
 - Calculate average similarity within same court
 - Calculate average similarity across different courts
 - Identify outlier documents (low similarity to all others)
 
 **Exercise 3: Production Optimization**
 Optimize for production:
+
 - Implement batch embedding generation
 - Add error handling and retry logic
 - Add progress tracking
@@ -1098,6 +1115,7 @@ Optimize for production:
 ### Issue: "CUDA out of memory"
 
 **Solution**: Use CPU or reduce batch size:
+
 ```python
 device = "cpu"  # Force CPU
 # Or use smaller batches
@@ -1107,6 +1125,7 @@ batch_size = 5  # Instead of 10
 ### Issue: "Weaviate connection timeout"
 
 **Solution**: Check Weaviate is running and increase timeout:
+
 ```python
 client = weaviate.Client(
     "http://localhost:8080",
@@ -1117,6 +1136,7 @@ client = weaviate.Client(
 ### Issue: "Poor search quality"
 
 **Solution**:
+
 - Use more text for embeddings (increase from 2000 to 5000 chars)
 - Try different embedding models
 - Adjust search limit and certainty threshold
@@ -1125,6 +1145,7 @@ client = weaviate.Client(
 ### Issue: "UMAP takes too long"
 
 **Solution**: Reduce dataset size or adjust parameters:
+
 ```python
 # Sample documents
 docs_sample = docs[:1000]  # Use first 1000
