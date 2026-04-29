@@ -131,7 +131,7 @@ Build a complete production-ready legal document analysis pipeline.
 
 1. [Tutorial 1: First Document Analysis](./tutorial-01-first-legal-document-analysis.md)
 2. [Tutorial 2: Embeddings](./tutorial-02-embeddings.md)
-3. Explore [Research Publications](../explanation/research/RESEARCH_PUBLICATIONS.md)
+3. Explore the [System Architecture](../explanation/architecture/SYSTEM_ARCHITECTURE.md)
 
 ### For Data Scientists
 

@@ -310,8 +310,6 @@ API documentation is automatically generated from source code docstrings using:
 - **mkdocstrings**: Python documentation plugin
 - **Material for MkDocs**: Modern theme
 
-See [API Documentation Guide](API_DOCUMENTATION_GUIDE.md) for detailed generation instructions.
-
 ## Related Documentation
 
 - **[Tutorials](../../tutorials/)** - Learn by doing

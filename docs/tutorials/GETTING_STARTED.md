@@ -218,8 +218,8 @@ Features:
 ### 3. Understand the Architecture
 
 - [Project Overview](../explanation/architecture/PROJECT_OVERVIEW.md)
-- [Executive Summary](../explanation/EXECUTIVE_SUMMARY.md)
-- [Impact Assessment](../explanation/achievements/IMPACT_ASSESSMENT.md)
+- [System Architecture](../explanation/architecture/SYSTEM_ARCHITECTURE.md)
+- [Data Flow Pipeline](../explanation/architecture/DATA_FLOW_PIPELINE.md)
 
 ### 4. Contribute
 
@@ -291,9 +291,8 @@ Congratulations! You've successfully:
 
 Continue your journey:
 - 📚 Read the [Project Overview](../explanation/architecture/PROJECT_OVERVIEW.md) for the big picture
-- 🔬 Explore [Research Publications](../explanation/research/RESEARCH_PUBLICATIONS.md) for academic insights
-- 🛠️ Check [Technical Documentation](../README.md#technical-documentation) for detailed guides
-- 🚀 See [Milestones & Achievements](../explanation/achievements/MILESTONES_AND_ACHIEVEMENTS.md) for capabilities
+- 🛠️ Check [Technical Documentation](../README.md) for detailed guides
+- 🏗️ See [System Architecture](../explanation/architecture/SYSTEM_ARCHITECTURE.md) for capabilities
 
 ---
 

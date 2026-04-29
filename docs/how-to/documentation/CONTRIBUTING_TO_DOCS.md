@@ -330,7 +330,7 @@ results = client.query.get(...)
 - `# requires: gemini` - Requires Gemini API (will use mock)
 - `# demonstration-only` - Demonstration code, not executable
 
-See [Code Example Testing Reference](<path-to-JuDDGES>/docs/reference/CODE_EXAMPLE_TESTING.md) for complete details.
+Each example is collected and validated by `scripts/docs/test_code_examples.py`.
 
 ### Pre-commit Hooks
 

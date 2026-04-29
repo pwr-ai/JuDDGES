@@ -269,9 +269,7 @@ If performance decreases after scaling:
 
 ## Related Documentation
 
-- [Multi-Region Worker Deployment](../extraction/multi-region-workers.md)
 - [Distributed Extraction](../distributed-extraction.md)
-- [Monitor Extraction Throughput](../extraction/monitor-extraction-throughput.md)
 
 ## Summary
 

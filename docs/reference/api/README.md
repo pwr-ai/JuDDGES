@@ -145,8 +145,6 @@ def function(arg: str) -> dict:
 4. **Test Locally**: Run `mkdocs serve`
 5. **Commit**: Include docs with code changes
 
-See [API Documentation Guide](API_DOCUMENTATION_GUIDE.md) for detailed instructions.
-
 ### Documentation Standards
 
 - **Google-style docstrings** required
@@ -191,8 +189,6 @@ Current documentation coverage:
 ### Documentation
 
 - [API Index](index.md) - Complete module listing
-- [Documentation Guide](API_DOCUMENTATION_GUIDE.md) - How to generate docs
-- [Implementation Summary](API_IMPLEMENTATION_SUMMARY.md) - What was implemented
 
 ### External Resources
 

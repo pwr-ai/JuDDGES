@@ -68,7 +68,7 @@ chain = GeminiExtractionChain(
 )
 ```
 
-📚 **Full details:** See [GEMINI_API_AUTH_FIX.md](./GEMINI_API_AUTH_FIX.md) for complete explanation and troubleshooting.
+📚 **Full details:** See [Gemini API Troubleshooting](../how-to/troubleshooting/GEMINI_API_TROUBLESHOOTING.md) for complete explanation and troubleshooting.
 
 ## Quick Start
 

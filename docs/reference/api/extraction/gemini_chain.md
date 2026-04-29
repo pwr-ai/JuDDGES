@@ -369,7 +369,6 @@ chain = GeminiExtractionChain(
 
 - [Evaluation Metrics](../evals/metrics.md) - Evaluate extraction quality
 - [Gemini Tutorial](../../../tutorials/GEMINI_EXTRACTION.md) - Complete tutorial
-- [Extraction How-To](../../../how-to/extraction/EXTRACTION_SUCCESS_SUMMARY.md) - Best practices
 - [Langfuse Setup](../../../tutorials/LANGFUSE_SETUP.md) - Observability setup
 
 ## Common Patterns

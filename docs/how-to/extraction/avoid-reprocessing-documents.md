@@ -177,5 +177,4 @@ Large result sets (300K+ documents) complete in under 1 second.
 ## See Also
 
 - [Distributed Extraction with Redis](../distributed-extraction-redis.md)
-- [Monitor Extraction Errors](../monitor-extraction-errors.md)
 - [Extraction Database Schema](../../reference/api/extraction_storage_schema.md)

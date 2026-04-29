@@ -863,9 +863,8 @@ Your system can now:
 
 ### Explore More
 
-- [Research Publications](../explanation/research/RESEARCH_PUBLICATIONS.md)
-- [Impact Assessment](../explanation/achievements/IMPACT_ASSESSMENT.md)
 - [System Architecture](../explanation/architecture/SYSTEM_ARCHITECTURE.md)
+- [Data Flow Pipeline](../explanation/architecture/DATA_FLOW_PIPELINE.md)
 
 ---
 

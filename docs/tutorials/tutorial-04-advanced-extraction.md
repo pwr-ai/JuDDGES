@@ -655,7 +655,6 @@ You've mastered advanced information extraction!
 
 - [Tutorial 5: End-to-End Project](./tutorial-05-end-to-end-project.md)
 - [Gemini API Troubleshooting](../how-to/troubleshooting/GEMINI_API_TROUBLESHOOTING.md)
-- [Extraction Success Summary](../how-to/extraction/EXTRACTION_SUCCESS_SUMMARY.md)
 
 ---
 

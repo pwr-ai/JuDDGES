@@ -92,10 +92,6 @@ See our comprehensive guides:
 - [Embeddings Pipeline](../../how-to/embeddings/embeddings_embed_and_ingest_weaviate.md)
 - [How-To Guides](../../how-to/)
 
-## Publications & Citation
-
-For academic use, please see our [Research Publications Roadmap](../research/RESEARCH_PUBLICATIONS.md) for citation information.
-
 ## License
 
 Open source under [appropriate license] - see LICENSE file for details.

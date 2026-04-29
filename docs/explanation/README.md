@@ -53,14 +53,8 @@ See [Architecture README](architecture/README.md) for detailed navigation guide.
 - Theoretical foundations
 - Academic context
 
-### [Achievements](achievements/)
-- Milestones and project evolution
-- Impact assessments
-- Performance benchmarks
-- Success stories
-
 ### Main Explanations
-- [Executive Summary](EXECUTIVE_SUMMARY.md) - High-level project overview for stakeholders
+- [Project Overview](architecture/PROJECT_OVERVIEW.md) - High-level project overview
 
 ## Explanation Template
 ```markdown

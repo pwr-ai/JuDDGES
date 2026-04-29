@@ -304,6 +304,4 @@ python scripts/extraction/check_worker_health.py
 ## Related Documentation
 
 - [Distributed Extraction with Redis](../distributed-extraction-redis.md)
-- [Multi-Region Workers](./multi-region-workers.md)
 - [Avoid Reprocessing Documents](./avoid-reprocessing-documents.md)
-- [Monitor Extraction Errors](../monitor-extraction-errors.md)
