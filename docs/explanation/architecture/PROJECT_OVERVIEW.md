@@ -11,22 +11,26 @@ Overcome barriers related to resources, language, data, and format inhomogeneity
 ## Key Features
 
 ### 🌍 Multilingual Support
+
 - **Polish Legal System**: Full coverage of Polish court decisions, Supreme Administrative Court (NSA)
 - **English Legal System**: England & Wales court appeals
 - **Expandable**: Architecture supports addition of new jurisdictions
 
 ### 🤖 Advanced NLP Capabilities
+
 - **Semantic Search**: Vector-based search across millions of legal documents
 - **Information Extraction**: Automated extraction of structured information from legal texts
 - **Fine-tuned LLMs**: Domain-specific language models trained on legal corpora
 - **Multilingual Embeddings**: Legal-specialized embeddings for semantic understanding
 
 ### 📊 Comprehensive Evaluation
+
 - **N-gram Metrics**: ROUGE, exact match, precision/recall for structured data
 - **LLM-as-Judge**: AI-powered qualitative assessment
 - **Multi-seed Testing**: Statistical robustness through repeated evaluations
 
 ### 🔬 Open Science
+
 - All software, tools, and datasets openly available
 - Reproducible pipelines using DVC
 - Public HuggingFace repositories
@@ -43,6 +47,7 @@ Overcome barriers related to resources, language, data, and format inhomogeneity
 ## Research Vision
 
 JuDDGES aims to democratize access to legal knowledge by:
+
 - Breaking down language barriers in cross-jurisdictional legal research
 - Automating labor-intensive legal document analysis
 - Enabling large-scale empirical legal studies
@@ -52,6 +57,7 @@ JuDDGES aims to democratize access to legal knowledge by:
 ## Project Consortium
 
 A tri-national collaboration between:
+
 - **Poland**: Legal AI research and data acquisition
 - **United Kingdom**: Court system analysis and appeals data
 - **France**: Research coordination and methodology
@@ -77,6 +83,7 @@ For comprehensive visual guides to the system architecture, see:
 - **[Component Relationships](./COMPONENT_RELATIONSHIPS.md)** - Module dependencies and interactions
 
 These documents provide detailed Mermaid diagrams showing:
+
 - System component interactions
 - Data transformation stages and formats
 - Training and inference pipelines
@@ -87,14 +94,11 @@ These documents provide detailed Mermaid diagrams showing:
 ## Getting Started
 
 See our comprehensive guides:
+
 - [Getting Started Tutorial](../../tutorials/GETTING_STARTED.md)
 - [Data Ingestion](../../how-to/embeddings/INGESTION_GUIDE.md)
 - [Embeddings Pipeline](../../how-to/embeddings/embeddings_embed_and_ingest_weaviate.md)
 - [How-To Guides](../../how-to/)
-
-## Publications & Citation
-
-For academic use, please see our [Research Publications Roadmap](../research/RESEARCH_PUBLICATIONS.md) for citation information.
 
 ## License
 
@@ -103,6 +107,7 @@ Open source under [appropriate license] - see LICENSE file for details.
 ## Contact
 
 For questions, issues, or collaboration inquiries:
+
 - GitHub Issues: [repository issues page]
 - Project Website: [if available]
 - Email: [contact email]

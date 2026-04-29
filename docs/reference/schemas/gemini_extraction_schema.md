@@ -30,6 +30,7 @@ This document defines the comprehensive extraction schema for augmenting Weaviat
 ```
 
 **Extraction Instructions:**
+
 - `document_number`: Look for official case numbers in header (format varies by court/jurisdiction)
 - `document_type`: Infer from document structure and terminology (wyrok=judgment, interpretacja podatkowa=tax interpretation)
 - `date_issued`: Primary date of document issuance, prefer over hearing/decision dates
@@ -48,6 +49,7 @@ This document defines the comprehensive extraction schema for augmenting Weaviat
 ```
 
 **Extraction Instructions:**
+
 - Generate a balanced summary covering all key aspects
 - For judgments: Include parties, legal issue, court decision, and reasoning basis
 - For tax interpretations: Include applicant, tax question, authority's position, legal basis
@@ -56,6 +58,7 @@ This document defines the comprehensive extraction schema for augmenting Weaviat
 - Use document's original language
 
 **Example (Judgment):**
+
 ```
 "Wyrok Sądu Okręgowego w Warszawie z dnia 15.01.2024 r., sygn. V C 1234/23.
 Sprawa dotyczyła roszczenia konsumenta o zwrot nienależnie pobranych opłat
@@ -75,6 +78,7 @@ Powództwo uwzględniono w całości na podstawie art. 410 k.c. w zw. z art. 405
 ```
 
 **Extraction Instructions:**
+
 - Extract the core legal principle or rule
 - For judgments: The precedential legal conclusion or interpretation
 - For tax interpretations: The authority's legal position on the tax matter
@@ -82,6 +86,7 @@ Powództwo uwzględniono w całości na podstawie art. 410 k.c. w zw. z art. 405
 - Focus on the "what does this document establish" question
 
 **Example:**
+
 ```
 "Pobieranie przez bank opłat za czynności bankowe niezgodnych z postanowieniami
 umowy rachunku bankowego stanowi bezpodstawne wzbogacenie w rozumieniu art. 405
@@ -103,6 +108,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - Generate 5-15 relevant keywords covering:
   - Legal domains (prawo cywilne, prawo podatkowe)
   - Legal institutions (bezpodstawne wzbogacenie, interpretacja indywidualna)
@@ -113,6 +119,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 - Include both broad and specific terms
 
 **Example:**
+
 ```json
 ["prawo cywilne", "bezpodstawne wzbogacenie", "umowa bankowa", "opłaty bankowe",
 "roszczenia konsumenckie", "art. 405 k.c.", "ochrona konsumenta"]
@@ -141,6 +148,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - **decision_type**: Classify the outcome (for judgments: granted/dismissed/modified; for interpretations: favorable/unfavorable)
 - **decision_summary**: 2-3 sentences explaining what the authority decided
 - **awarded_amounts**: Extract all monetary awards, including main amounts, interest, and costs
@@ -165,6 +173,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - Identify all significant legal concepts discussed
 - Focus on concepts that are:
   - Central to the legal reasoning
@@ -194,6 +203,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - Extract ALL legal citations including:
   - Domestic statutes (e.g., "art. 405 k.c.", "ustawa o VAT")
   - EU directives and regulations
@@ -205,6 +215,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 - Store as JSON string in Weaviate
 
 **Example:**
+
 ```json
 [
     {
@@ -237,6 +248,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - For judgments: Extract all parties from case header
 - Preserve party anonymization (use initials if document uses them)
 - Identify party roles correctly (powód=plaintiff, pozwany=defendant)
@@ -262,6 +274,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - Extract structured analysis from judgment reasoning or interpretation body
 - **facts_summary**: Key facts established by court (Stan faktyczny)
 - **legal_issues**: Main legal questions to be resolved
@@ -295,6 +308,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - Parse document structure into logical sections
 - Identify standard sections (sentencja, uzasadnienie, etc.)
 - Extract key points from each major section
@@ -331,6 +345,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - Extract from judgment header (Sąd ... w składzie:)
 - **court_name**: Full official court name
 - **judges**: Parse judge list with roles (Przewodniczący, Sędziowie)
@@ -362,6 +377,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - Extract from interpretation metadata
 - **interpretation_type**: Individual (indywidualna) vs general (ogólna)
 - **tax_authority**: Extract from document header
@@ -406,6 +422,7 @@ k.c. i obliguje do zwrotu nienależnie pobranych kwot."
 ```
 
 **Extraction Instructions:**
+
 - Identify relationships to other documents
 - For appeals: Link to lower instance decisions
 - For references: Link to cited precedents

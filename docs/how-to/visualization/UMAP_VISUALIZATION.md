@@ -14,6 +14,7 @@ The UMAP (Uniform Manifold Approximation and Projection) algorithm reduces high-
 ## Prerequisites
 
 1. **Install dependencies**:
+
    ```bash
    uv pip install -e ".[full]"
    ```
@@ -23,6 +24,7 @@ The UMAP (Uniform Manifold Approximation and Projection) algorithm reduces high-
    - These should be in a path like `data/embeddings/{dataset-name}/`
 
 3. **Weaviate running** (for updating coordinates):
+
    ```bash
    cd weaviate
    docker compose up -d
@@ -31,6 +33,7 @@ The UMAP (Uniform Manifold Approximation and Projection) algorithm reduces high-
 ## Two-Step Workflow (Recommended)
 
 The recommended approach is to calculate and save coordinates first, then update Weaviate separately. This allows you to:
+
 - Review coordinates before updating
 - Reuse coordinates for multiple updates
 - Separate computation from database updates
@@ -52,6 +55,7 @@ docker compose run --rm web python scripts/embed/calculate_umap_coords.py \
 ```
 
 Each parquet file contains three columns:
+
 - `uuid`: The deterministic UUID for the document/chunk
 - `x`: The x coordinate from UMAP
 - `y`: The y coordinate from UMAP
@@ -159,6 +163,7 @@ The script performs these phases:
    - Better UMAP clustering results
 
 3. **Compute UMAP Coordinates**
+
    ```python
    from umap import UMAP
 
@@ -212,6 +217,7 @@ Controls how tightly UMAP packs points:
 ### metric
 
 We use `cosine` distance because:
+
 - Embeddings represent semantic meaning
 - After L2 normalization, cosine distance is most appropriate
 - Works well for high-dimensional text embeddings
@@ -325,6 +331,7 @@ Approximate times (on standard CPU):
 **Problem**: Script reports "No embeddings extracted"
 
 **Solutions**:
+
 - Verify embeddings directory exists and contains parquet files
 - Check that `chunk_embeddings/` or `agg_embeddings/` subdirectories exist
 - Ensure embedding generation was successful (check DVC pipeline or embedding scripts)
@@ -335,6 +342,7 @@ Approximate times (on standard CPU):
 **Problem**: Out of memory during UMAP computation
 
 **Solutions**:
+
 - Process collections separately: `--collection LegalDocuments`
 - Use `--skip-update` to save coordinates without immediate Weaviate update
 - Increase Docker memory limit
@@ -345,6 +353,7 @@ Approximate times (on standard CPU):
 **Problem**: Some documents fail to update
 
 **Solutions**:
+
 - Check Weaviate logs for errors
 - Verify UUIDs in saved coordinates match documents in Weaviate
 - Ensure sufficient Weaviate resources
@@ -356,6 +365,7 @@ Approximate times (on standard CPU):
 **Problem**: Cannot load coordinates from saved file
 
 **Solutions**:
+
 - Verify the file path is correct
 - Ensure Step 1 (calculation) completed successfully
 - Check that the parquet file contains `uuid`, `x`, `y` columns
@@ -366,6 +376,7 @@ Approximate times (on standard CPU):
 **Problem**: Running calculation multiple times gives different coordinates
 
 **Solutions**:
+
 - This is expected - UMAP has random initialization
 - The script uses `random_state=42` for reproducibility within a single run
 - Coordinates are relative, not absolute

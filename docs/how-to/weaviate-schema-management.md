@@ -68,6 +68,7 @@ client.close()
 ### Recommended Approaches
 
 **Option 1: Add Properties Before Data Import** (Best)
+
 ```python
 # 1. Add all properties to schema first
 collection.config.add_property(...)
@@ -77,6 +78,7 @@ collection.data.insert_many(objects)
 ```
 
 **Option 2: Accept Limitations** (Quick)
+
 ```python
 # Add property to existing data
 # Accept that inverted index filtering may be limited
@@ -84,6 +86,7 @@ collection.config.add_property(...)
 ```
 
 **Option 3: Re-import Data** (Most Complete)
+
 ```python
 # 1. Export all existing data
 objects = collection.query.fetch_objects(limit=10000)
@@ -99,6 +102,7 @@ collection.data.insert_many(objects)
 ```
 
 **Option 4: Wait for Re-indexing API** (Future)
+
 - Weaviate is working on a re-indexing API
 - Will allow retroactive index updates
 - Not available yet (as of 2024)
@@ -108,6 +112,7 @@ collection.data.insert_many(objects)
 ### ❌ This is NOT Supported
 
 **You CANNOT**:
+
 - Change a property's data type (e.g., `TEXT` → `TEXT_ARRAY`)
 - Delete properties from a collection
 - Modify property configurations after creation
@@ -222,19 +227,23 @@ Based on our schema comparison, we have two options:
 #### Option A: Add Missing Properties Only (Recommended)
 
 Add these 2 new properties:
+
 - `extracted_factual_state` (TEXT)
 - `extracted_legal_state` (TEXT)
 
 **Pros**:
+
 - Simple, fast
 - No data migration needed
 - No downtime
 
 **Cons**:
+
 - Type mismatches remain (JSON strings for lists)
 - Less optimal for querying
 
 **Code**:
+
 ```python
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
 import weaviate.classes.config as wvcc
@@ -270,6 +279,7 @@ with WeaviateLegalDocumentsDatabase() as db:
 #### Option B: Full Schema Migration (Production-Ready)
 
 Fix all type mismatches:
+
 - `legal_references`: TEXT (JSON) → TEXT_ARRAY
 - `legal_concepts`: TEXT (JSON) → TEXT_ARRAY
 - `parties`: TEXT (JSON) → TEXT_ARRAY
@@ -278,12 +288,14 @@ Fix all type mismatches:
 - Add `extracted_factual_state` and `extracted_legal_state`
 
 **Pros**:
+
 - Proper types for optimal querying
 - Native array support for list fields
 - Better semantic search on text fields
 - Production-ready schema
 
 **Cons**:
+
 - Requires data migration
 - More complex
 - Temporary downtime or dual-collection period
@@ -295,12 +307,14 @@ Fix all type mismatches:
 ### For Our JuDDGES Project
 
 **Phase 1: Quick Implementation (This Week)**
+
 1. ✅ Add 2 missing properties (`extracted_factual_state`, `extracted_legal_state`)
 2. ✅ Implement ingestion with JSON serialization for existing properties
 3. ✅ Test with IP Box data (43 documents)
 4. ✅ Validate extraction pipeline works end-to-end
 
 **Phase 2: Production Migration (When Ready)**
+
 1. ⏸️ Plan data migration window
 2. ⏸️ Create migration script with proper type conversions
 3. ⏸️ Test migration on staging/copy of data
@@ -439,6 +453,7 @@ wvcc.DataType.UUID          # UUID reference to another object
 ## 7. Conclusion
 
 For our use case:
+
 - **Immediate action**: Add 2 missing properties using `collection.config.add_property()`
 - **Future consideration**: Full schema migration to fix type mismatches
 - **Current limitation**: Cannot change existing property types without migration

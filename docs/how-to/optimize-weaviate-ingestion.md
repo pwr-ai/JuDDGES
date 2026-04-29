@@ -107,6 +107,7 @@ def ingest_extracted_to_weaviate(
 ```
 
 The function now:
+
 - Uses batch API by default for maximum performance
 - Falls back to individual PATCH requests if needed (legacy mode)
 - Maintains backward compatibility
@@ -172,12 +173,14 @@ ingestion_stats = ingest_extracted_to_weaviate(
 ## Performance Comparison
 
 ### Before Optimizations
+
 - **Write throughput**: ~10-20 documents/second
 - **Weaviate responsiveness**: Completely blocked during ingestion
 - **Batch time (100 docs)**: ~100-200 seconds
 - **Other queries**: Timeout errors
 
 ### After Optimizations
+
 - **Write throughput**: ~500-1000+ documents/second (50-100x improvement)
 - **Weaviate responsiveness**: Available for read queries during ingestion
 - **Batch time (100 docs)**: ~2-5 seconds
@@ -202,6 +205,7 @@ When `ASYNC_INDEXING=true`, monitor the indexing queue:
 ```
 
 Check metrics endpoint for `vectorQueueLength`:
+
 ```bash
 curl http://localhost:8084/v1/nodes
 ```
@@ -217,6 +221,7 @@ docker compose up -d
 ```
 
 Monitor logs:
+
 ```bash
 docker compose logs -f weaviate
 ```
@@ -256,16 +261,19 @@ docker compose logs -f weaviate
 ### Weaviate Still Unresponsive
 
 1. Check if `ASYNC_INDEXING=true` is set:
+
    ```bash
    docker compose exec weaviate env | grep ASYNC
    ```
 
 2. Verify batch API is being used (check logs):
+
    ```bash
    grep "Batch API" extraction_ip_box.log
    ```
 
 3. Reduce batch size and parallel workers:
+
    ```bash
    --batch-size 25 --max-workers 1
    ```
@@ -273,11 +281,13 @@ docker compose logs -f weaviate
 ### Timeout Errors
 
 1. Increase batch timeout in docker-compose.yaml:
+
    ```yaml
    - BATCH_UPDATE_TIMEOUT=15m
    ```
 
 2. Reduce ingestion batch size:
+
    ```bash
    --ingest-batch-size 25
    ```
@@ -285,6 +295,7 @@ docker compose logs -f weaviate
 ### High Memory Usage
 
 1. Check Weaviate metrics:
+
    ```bash
    curl http://localhost:8084/v1/nodes
    ```
@@ -292,6 +303,7 @@ docker compose logs -f weaviate
 2. Reduce `vectorCacheMaxObjects` in collection config (if applicable)
 
 3. Reduce parallel workers:
+
    ```bash
    --max-workers 1
    ```

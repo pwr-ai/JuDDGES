@@ -27,13 +27,13 @@ The embedding generation script (`scripts/embed/embed_text.py`) converts raw tex
 
 ### Running Embedding Generation
 
-* Full configuration of embedding generation is defined in file `configs/embedding.yaml`.
-* To run the embedding simply run command with proper dataset and embedding model with following command.
-  * It overrides hydra config, so for embedding model use names of configs present in `configs/embedding_model`, and for dataset simply use name from huggingface hub.
-* The output will be two dirs with chunk and aggregated embeddings:
-  * `data/embeddings/<dataset_name>/<embedding_model>/chunk_embeddings`
-  * `data/embeddings/<dataset_name>/<embedding_model>/agg_embeddings`
-* The script can work with multiple GPUs at once (by default it uses all available GPUs, so specify them with `CUDA_VISIBLE_DEVICES`).
+- Full configuration of embedding generation is defined in file `configs/embedding.yaml`.
+- To run the embedding simply run command with proper dataset and embedding model with following command.
+  - It overrides hydra config, so for embedding model use names of configs present in `configs/embedding_model`, and for dataset simply use name from huggingface hub.
+- The output will be two dirs with chunk and aggregated embeddings:
+  - `data/embeddings/<dataset_name>/<embedding_model>/chunk_embeddings`
+  - `data/embeddings/<dataset_name>/<embedding_model>/agg_embeddings`
+- The script can work with multiple GPUs at once (by default it uses all available GPUs, so specify them with `CUDA_VISIBLE_DEVICES`).
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 PYTHONPATH="$PWD:$PYTHONPATH" python scripts/embed/embed_text.py \
@@ -44,8 +44,8 @@ CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 PYTHONPATH="$PWD:$PYTHONPATH" python scripts/
 
 Embedding generation can be run with DVC, by running command specified below, which will run embedding for dataset (unless already present) and embedding model specified in `dvc.yaml`:
 
-* `JuDDGES/pl-court-raw`
-* `JuDDGES/en-court-raw`
+- `JuDDGES/pl-court-raw`
+- `JuDDGES/en-court-raw`
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro embed
@@ -53,10 +53,10 @@ CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro embed
 
 ## Step 2: Ingest embeddings to Weaviate
 
-* To upload the embeddings created in the previous step to a Weaviate database, one needs to run the following command with parameters similar to the previous one.
-* The upload will be done in two steps:
-  * Upload chunks with their embeddings
-  * Upload judgments with their aggregated embeddings (full dataset with aggregated embeddings will be ingested)
+- To upload the embeddings created in the previous step to a Weaviate database, one needs to run the following command with parameters similar to the previous one.
+- The upload will be done in two steps:
+  - Upload chunks with their embeddings
+  - Upload judgments with their aggregated embeddings (full dataset with aggregated embeddings will be ingested)
 
 ```bash
 PROCESSING_PROC=10 INGEST_PROC=5 PYTHONPATH="$PWD:$PYTHONPATH" python scripts/embed/ingest_to_weaviate.py \
@@ -77,7 +77,7 @@ python scripts/embed/test_weaviate_ingestion.py
 
 ## Notes
 
-* The embedding model used locally should match the one configured in the Weaviate database
-* For large datasets, consider adjusting the batch size and number of processors
-* The chunking process can be customized through the configuration to suit your specific document characteristics
-* The code were adjusted to be memory efficient (uses hf datasets and polars lazyframe)
+- The embedding model used locally should match the one configured in the Weaviate database
+- For large datasets, consider adjusting the batch size and number of processors
+- The chunking process can be customized through the configuration to suit your specific document characteristics
+- The code were adjusted to be memory efficient (uses hf datasets and polars lazyframe)

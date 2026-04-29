@@ -91,19 +91,26 @@ If the Docker volume is lost and you need to start from scratch:
 
 1. Ensure `/mnt/readynas` is mounted and backups are accessible
 2. Recreate the Docker volume:
+
    ```bash
    docker volume create legal_ai_weaviate_prod
    ```
+
 3. Start Weaviate:
+
    ```bash
    cd weaviate/
    docker compose up -d weaviate t2v-transformers-base
    ```
+
 4. Wait for Weaviate to be ready:
+
    ```bash
    curl -s http://localhost:8084/v1/.well-known/ready
    ```
+
 5. Restore:
+
    ```bash
    python backup_native.py --restore backup-20260324-120000
    ```
@@ -117,12 +124,14 @@ If the Docker volume is lost and you need to start from scratch:
 | **Docker volume snapshot** | Everything (byte-level) | Minutes | Fast rollback before upgrades |
 
 Recommended schedule:
+
 - **Native backup**: Weekly or before any Weaviate version upgrade
 - **Parquet dump**: Monthly or before schema changes (version-independent format)
 
 ## Troubleshooting
 
 **"backup-filesystem module not enabled"**: Restart Weaviate after adding the module to `.env`:
+
 ```bash
 docker compose restart weaviate
 ```
@@ -132,6 +141,7 @@ docker compose restart weaviate
 **Restore fails with "collection already exists"**: Delete the existing collections first (see "Restore After Data Loss" above).
 
 **NAS not mounted**: Verify the mount is available:
+
 ```bash
 ls /mnt/readynas/datasets/legal-ai-weaviate/native-backups/
 ```

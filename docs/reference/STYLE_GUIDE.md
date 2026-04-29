@@ -159,7 +159,7 @@ nested:
 ### Emphasis
 
 - **Bold** for important terms: `**term**`
-- *Italic* for emphasis: `*emphasis*`
+- _Italic_ for emphasis: `*emphasis*`
 - `Code` for inline code: `` `code` ``
 - Avoid CAPS except for acronyms
 

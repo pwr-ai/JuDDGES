@@ -33,6 +33,7 @@ setup.bat
 ```
 
 This script will:
+
 - Create a virtual environment
 - Install all dependencies
 - Set up pre-commit hooks
@@ -196,6 +197,7 @@ streamlit run juddges/dashboards/search_judgments.py
 ```
 
 Features:
+
 - Semantic and keyword search
 - Document filtering by court, date, type
 - Information extraction interface
@@ -218,8 +220,8 @@ Features:
 ### 3. Understand the Architecture
 
 - [Project Overview](../explanation/architecture/PROJECT_OVERVIEW.md)
-- [Executive Summary](../explanation/EXECUTIVE_SUMMARY.md)
-- [Impact Assessment](../explanation/achievements/IMPACT_ASSESSMENT.md)
+- [System Architecture](../explanation/architecture/SYSTEM_ARCHITECTURE.md)
+- [Data Flow Pipeline](../explanation/architecture/DATA_FLOW_PIPELINE.md)
 
 ### 4. Contribute
 
@@ -232,6 +234,7 @@ Features:
 ### Issue: "API key not found"
 
 **Solution**: Ensure your `.env` file contains:
+
 ```bash
 GOOGLE_API_KEY=your-actual-api-key
 ```
@@ -239,6 +242,7 @@ GOOGLE_API_KEY=your-actual-api-key
 ### Issue: "Weaviate connection failed"
 
 **Solution**: Check if Weaviate is running:
+
 ```bash
 docker ps | grep weaviate
 # If not running:
@@ -248,6 +252,7 @@ cd weaviate && docker compose up -d
 ### Issue: "Out of memory during extraction"
 
 **Solution**: Use batch processing with smaller chunks:
+
 ```python
 # Process in smaller batches
 texts = [text1, text2, text3, ...]
@@ -283,6 +288,7 @@ With JuDDGES, you can:
 ## Ready to Go Deeper?
 
 Congratulations! You've successfully:
+
 - ✅ Installed JuDDGES
 - ✅ Extracted information from legal documents
 - ✅ Performed semantic search
@@ -290,13 +296,13 @@ Congratulations! You've successfully:
 - ✅ Explored the dashboard
 
 Continue your journey:
+
 - 📚 Read the [Project Overview](../explanation/architecture/PROJECT_OVERVIEW.md) for the big picture
-- 🔬 Explore [Research Publications](../explanation/research/RESEARCH_PUBLICATIONS.md) for academic insights
-- 🛠️ Check [Technical Documentation](../README.md#technical-documentation) for detailed guides
-- 🚀 See [Milestones & Achievements](../explanation/achievements/MILESTONES_AND_ACHIEVEMENTS.md) for capabilities
+- 🛠️ Check [Technical Documentation](../README.md) for detailed guides
+- 🏗️ See [System Architecture](../explanation/architecture/SYSTEM_ARCHITECTURE.md) for capabilities
 
 ---
 
 **Welcome to the JuDDGES community!** 🎉
 
-*Last updated: 2025-10-11 | Version: 1.0*
+_Last updated: 2025-10-11 | Version: 1.0_
