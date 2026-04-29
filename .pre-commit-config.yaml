@@ -15,7 +15,8 @@ repos:
         name: Check toml
       - id: check-yaml
         name: Check yaml
-        args: [--allow-multiple-documents, --unsafe]
+        args: [--allow-multiple-documents]
+        exclude: ^mkdocs\.yml$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.10

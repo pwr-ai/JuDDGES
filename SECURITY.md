@@ -71,9 +71,9 @@ The packages below carry open CVEs for which **no patched version exists upstrea
 
 ---
 
-## DVC remote endpoint disclosure
+## DVC remote configuration
 
-`.dvc/config` references an internal e-Science Cloud MinIO endpoint (`https://s3min.e-science.pl`, bucket `s3min-tkajdanowicz-1724771116`). No credentials are stored in this file; AWS access keys belong in `.dvc/config.local` which is covered by `.gitignore`. The endpoint is authentication-walled. This disclosure is accepted as a configuration-topology leak with no direct exploitability; it will be moved to `.dvc/config.local` in a follow-up cleanup PR.
+The DVC remote endpoint and bucket are configured per-environment in `.dvc/config.local`, which is covered by `.gitignore`. No remote URL or credential ever lives in version control. Contributors who need access should obtain the endpoint and credentials out of band.
 
 ## CVE upgrade history
 
