@@ -6,7 +6,7 @@ of the repository.
 ## 1. Building the dataset
 
 Dataset was downloaded from open API of [Polish Court Judgements](https://orzeczenia.ms.gov.pl/).
-The following procedure will download data and store it in `MongoDB`. Whenever script interacts with outside environment (storing data in `mongodb` or pushing files to `huggingface-hub`) it is run outisde `dvc`.
+The following procedure will download data and store it in `MongoDB`. Whenever script interacts with outside environment (storing data in `mongodb` or pushing files to `huggingface-hub`) it is run outside `dvc`.
 Prior to downloading, make sure you have proper environment variable set in `.env` file:
 
 ```dotenv
@@ -105,7 +105,7 @@ MONGO_DB_NAME="datasets"
 
 ### Graph dataset
 
-13. Embed judgments with pre-trained lanuage model (documents arechunked and embeddings are computed per chunk)
+13. Embed judgments with pre-trained language model (documents are chunked and embeddings are computed per chunk)
 
     ```shell
     CUDA_VISIBLE_DEVICES=<device_number> dvc repro embed
@@ -120,7 +120,7 @@ MONGO_DB_NAME="datasets"
 15. Eventually ingest data to `mongodb` (e.g. for vector search)
 
     ```shell
-    PYTHONPATH=. python scripts/embed/ingest.py --embeddings-file <embeddgings>
+    PYTHONPATH=. python scripts/embed/ingest.py --embeddings-file <embeddings>
     ```
 
 16. Generate graph dataset
