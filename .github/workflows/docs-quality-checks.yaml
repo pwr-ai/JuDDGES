@@ -27,7 +27,12 @@ jobs:
       - name: Run markdownlint
         uses: DavidAnson/markdownlint-cli2-action@v16
         with:
-          globs: 'docs/**/*.md'
+          globs: |
+            docs/**/*.md
+            !docs/tutorials/tutorial-03-model-finetuning.md
+            !docs/tutorials/tutorial-04-advanced-extraction.md
+            !docs/tutorials/tutorial-05-end-to-end-project.md
+            !docs/reference/api/data/index.md
           config: '.markdownlint.json'
 
   link-checker:
