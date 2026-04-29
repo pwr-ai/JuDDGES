@@ -192,3 +192,6 @@ dumps/
 
 # Enriched datasets (generated from extraction results)
 data/enriched_datasets/
+
+# DVC local config (contains internal endpoints & per-user credentials)
+.dvc/config.local
