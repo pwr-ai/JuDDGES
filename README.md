@@ -1,5 +1,6 @@
 # JuDDGES
 
+[![DOI](https://zenodo.org/badge/761820962.svg)](https://doi.org/10.5281/zenodo.19911970)
 ![python-3.11](https://img.shields.io/badge/Python-3.11-blue)
 [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://pwr-ai.github.io/JuDDGES/)
 [![Documentation Build](https://github.com/pwr-ai/JuDDGES/actions/workflows/docs-build-deploy.yaml/badge.svg)](https://github.com/pwr-ai/JuDDGES/actions/workflows/docs-build-deploy.yaml)
@@ -167,29 +168,6 @@ To contribute, see [Contributing to Documentation](docs/how-to/documentation/CON
 - understanding the CI/CD pipeline.
 
 The documentation site is built with MkDocs Material and deployed automatically to GitHub Pages whenever changes land on `main`.
-
-## Documentation
-
-Comprehensive documentation is available at [https://laugustyniak.github.io/JuDDGES/](https://laugustyniak.github.io/JuDDGES/)
-
-The documentation includes:
-
-- **Getting Started**: Installation and quickstart guides
-- **Tutorials**: Step-by-step learning guides for common workflows
-- **How-To Guides**: Task-oriented instructions for specific problems
-- **API Reference**: Complete API documentation auto-generated from code
-- **Explanation**: Architectural overviews and research context
-
-### Contributing to Documentation
-
-To contribute to the documentation, see [Contributing to Documentation](docs/how-to/documentation/CONTRIBUTING_TO_DOCS.md) for detailed instructions on:
-
-- Setting up your local documentation environment
-- Writing and formatting documentation
-- Running quality checks locally
-- Understanding the CI/CD pipeline
-
-The documentation is built using MkDocs Material and automatically deployed to GitHub Pages when changes are merged to the main branch.
 
 ## Project details
 
