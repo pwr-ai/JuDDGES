@@ -14,13 +14,26 @@ By tackling the language, format, and access barriers that have historically hel
 
 ![baner](https://raw.githubusercontent.com/pwr-ai/JuDDGES/bffb1d75ba7c78f101fc94bd9086499886b2c128/nbs/images/baner.png)
 
-## What you can do with JuDDGES
+## About this repository
 
-- **Build legal datasets** from raw court records (Polish and English) using the ingestion and preprocessing pipelines.
-- **Run information extraction** with open LLMs (Bielik, Llama, Mistral, Phi) to pull structured fields out of judgments.
-- **Fine-tune and evaluate** models on legal extraction tasks using DVC-tracked, reproducible pipelines.
-- **Search semantically** across legal documents through Weaviate-backed vector indexes built on multilingual legal embeddings.
-- **Reuse open data and models** published on the [JuDDGES Hugging Face organization](https://huggingface.co/JuDDGES).
+This repository contains the JuDDGES codebase for:
+
+- Accessing the Polish Court API and fetching data from it
+- Storing data in a vector search database for further retrieval
+- Analysing gathered data
+- Fine-tuning and evaluating Large Language Models (LLMs) on datasets prepared with the HITL tool
+- HITL annotation toolkit
+- Exporting annotations as structured datasets
+
+The repository was created to handle data collection from the Polish Court API and the National Administrative Court. The gathered data forms the complete set of datasets shared within the JuDDGES project. To ensure data quality and provide additional statistics when sharing the datasets, the repository includes code for automatically generating analyses.
+
+It also enables quantitative data extraction according to a user-defined schema by running Large Language Model (LLM) inference over the collected data. When annotated data is available (e.g., using our HITL tool), the repository supports fine-tuning an LLM on such data and computing accuracy metrics for the extraction process.
+
+The repository can be reused by anyone interested in reproducing our data collection workflow, updating the datasets with newly published judgments, extracting structured information based on a chosen schema, or fine-tuning an LLM for a specific schema.
+
+The repository also includes a generic, extensible **Human-in-the-Loop (HITL) annotation toolkit** built on Label Studio. Annotation tasks are defined as Pydantic schemas combined with annotation form templates. The toolkit automates LLM preannotation (generating first-pass structured predictions from raw text), uploading tasks and predictions to the annotation platform, human review and correction in the annotation UI, and exporting the human-corrected annotations as structured datasets (`dataset.json` + `schema.yaml`). Three built-in examples — Swiss Franc loan cases, personal rights, and English appeal court — ship as references.
+
+You can also use JuDDGES to **reuse open data and models** published on the [JuDDGES Hugging Face organisation](https://huggingface.co/JuDDGES).
 
 ## Installation
 
