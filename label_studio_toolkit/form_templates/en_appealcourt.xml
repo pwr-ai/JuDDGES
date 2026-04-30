@@ -1,0 +1,520 @@
+<View>
+  <Style>
+    .root {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      gap: 20px;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .column:first-child {
+      flex: 7;
+    }
+
+    .column:last-child {
+      flex: 3;
+    }
+
+    .document {
+      border: 1px solid rgb(75, 114, 98);
+      padding: 10px;
+      border-radius: 5px;
+      background-color:rgb(224, 230, 227);
+      overflow-y: auto;
+      flex: 1;
+      margin-bottom: 10px;
+    }
+
+    .questions {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #f8f9fa;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .section {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 5px;
+      background-color: #ffffff;
+    }
+
+    .section-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #495057;
+    }
+
+    .header-case {
+      color: #6A5ACD;
+    }
+
+    .header-conviction {
+      color: #2E8B57;
+    }
+
+    .header-sentence {
+      color: #FF4500;
+    }
+
+    .header-defendant {
+      color: #DC143C;
+    }
+
+    .header-victim {
+      color: #4B0082;
+    }
+
+    .header-evidence {
+      color: #008080;
+    }
+
+    .header-sentencing-factors {
+      color: #8B008B;
+    }
+
+    .header-appeal {
+      color: #1E90FF;
+    }
+
+    .header-outcome {
+      color: #FF6347;
+    }
+
+    .section-case {
+      border: 2px solid #6A5ACD;
+      background-color: #EDEDFD;
+    }
+
+    .section-conviction {
+      border: 2px solid #2E8B57;
+      background-color: #F0FFF0;
+    }
+
+    .section-sentence {
+      border: 2px solid #FF4500;
+      background-color: #FFF4EC;
+    }
+
+    .section-defendant {
+      border: 2px solid #DC143C;
+      background-color: #FDECEC;
+    }
+
+    .section-victim {
+      border: 2px solid #4B0082;
+      background-color:rgb(243, 234, 253);
+    }
+
+    .section-evidence {
+      border: 2px solid #008080;
+      background-color:rgb(240, 255, 255);
+    }
+
+    .section-sentencing-factors {
+      border: 2px solid #8B008B;
+      background-color: #F8F0FF;
+    }
+
+    .section-appeal {
+      border: 2px solid #1E90FF;
+      background-color: #F0F8FF;
+    }
+
+    .section-outcome {
+      border: 2px solid #FF6347;
+      background-color: #FFF5EE;
+    }
+  </Style>
+
+  <View className="root">
+    <Header value="English Appeal Court Annotation" />
+    <View className="container">
+      <!-- Left Column - Document -->
+      <View className="column">
+        <View className="document">
+          <Header value="Judgment" />
+          <Text name="context" value="$context"/>
+        </View>
+      </View>
+
+      <!-- Right Column - Questions -->
+      <View className="column">
+        <View className="questions">
+          <Header value="Appeal Court Analysis" />
+          <Collapse>
+            <!-- Case Identification Section -->
+            <Panel value="Case Identification" className="section-header header-case">
+              <View className="section section-case">
+                <!-- ConvCourtName -->
+                <Header value="Conviction Court Name" />
+                <Text name="ConvCourtName_desc" value="Name(s) of the court where the defendant was convicted or pleaded guilty (one per line)." />
+                <TextArea name="ConvCourtName" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. Crown Court at Southwark" />
+
+                <!-- ConvictPleaDate -->
+                <Header value="Conviction / Plea Date" />
+                <Text name="ConvictPleaDate_desc" value="Date(s) on which the defendant was convicted or pleaded guilty (YYYY-MM-DD, one per line)." />
+                <TextArea name="ConvictPleaDate" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. 2003-01-22" />
+
+                <!-- SentCourtName -->
+                <Header value="Sentencing Court Name" />
+                <Text name="SentCourtName_desc" value="Name(s) of the court where the defendant was sentenced (one per line)." />
+                <TextArea name="SentCourtName" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. Crown Court at Canterbury" />
+              </View>
+            </Panel>
+
+            <!-- Conviction Section -->
+            <Panel value="Conviction" className="section-header header-conviction">
+              <View className="section section-conviction">
+                <!-- ConvictOffence -->
+                <Header value="Conviction Offence(s)" />
+                <Text name="ConvictOffence_desc" value="Offence(s) of which the defendant was convicted (one per line)." />
+                <TextArea name="ConvictOffence" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. Aggravated burglary" />
+
+                <!-- AcquitOffence -->
+                <Header value="Acquittal Offence(s)" />
+                <Text name="AcquitOffence_desc" value="Offence(s) of which the defendant was acquitted (one per line)." />
+                <TextArea name="AcquitOffence" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. Theft" />
+
+                <!-- ConfessPleadGuilty -->
+                <Header value="Confess / Plead Guilty" />
+                <Text name="ConfessPleadGuilty_desc" value="Did the defendant confess or plead guilty?" />
+                <Choices name="ConfessPleadGuilty" toName="context" choice="multiple">
+                  <Choice value="Yes" />
+                  <Choice value="No" />
+                </Choices>
+
+                <!-- PleaPoint -->
+                <Header value="Plea Point" />
+                <Text name="PleaPoint_desc" value="Stage at which the plea was entered (one per line)." />
+                <TextArea name="PleaPoint" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. at first court appearance" />
+
+                <!-- RemandDecision -->
+                <Header value="Remand Decision" />
+                <Text name="RemandDecision_desc" value="Remand decision post-conviction." />
+                <Choices name="RemandDecision" toName="context" choice="multiple">
+                  <Choice value="Remanded into custody" />
+                  <Choice value="Unconditional Bail" />
+                  <Choice value="Conditional Bail" />
+                  <Choice value="No" />
+                </Choices>
+
+                <!-- RemandCustodyTime -->
+                <Header value="Remand Custody Time (days)" />
+                <Text name="RemandCustodyTime_desc" value="Duration in days of any remand in custody (integer values, one per line if multiple)." />
+                <TextArea name="RemandCustodyTime" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. 4" />
+              </View>
+            </Panel>
+
+            <!-- Sentencing Section -->
+            <Panel value="Sentencing" className="section-header header-sentence">
+              <View className="section section-sentence">
+                <!-- Sentence -->
+                <Header value="Sentence" />
+                <Text name="Sentence_desc" value="Sentence(s) imposed (one per line)." />
+                <TextArea name="Sentence" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. 2 years imprisonment" />
+
+                <!-- SentServe -->
+                <Header value="Sentence Service" />
+                <Text name="SentServe_desc" value="How sentences run." />
+                <Choices name="SentServe" toName="context" choice="multiple">
+                  <Choice value="Concurrent" />
+                  <Choice value="Concurrently" />
+                  <Choice value="Combination" />
+                  <Choice value="Consecutive" />
+                  <Choice value="Consecutively" />
+                  <Choice value="Single" />
+                </Choices>
+
+                <!-- WhatAncillary -->
+                <Header value="Ancillary Orders" />
+                <Text name="WhatAncillary_desc" value="Ancillary orders applied by the court (one per line)." />
+                <TextArea name="WhatAncillary" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. Restraining order" />
+
+                <!-- SentGuideWhich -->
+                <Header value="Sentencing Guidelines Cited" />
+                <Text name="SentGuideWhich_desc" value="Sentencing guidelines or statutes cited (one per line)." />
+                <TextArea name="SentGuideWhich" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. section 25(1)(a) of the Identity Cards Act 2006" />
+              </View>
+            </Panel>
+
+            <!-- Defendant Section -->
+            <Panel value="Defendant" className="section-header header-defendant">
+              <View className="section section-defendant">
+                <!-- OffSex -->
+                <Header value="Defendant Sex" />
+                <Text name="OffSex_desc" value="Gender(s) of the defendant(s)." />
+                <Choices name="OffSex" toName="context" choice="multiple">
+                  <Choice value="All Female" />
+                  <Choice value="All Male" />
+                  <Choice value="Mixed" />
+                </Choices>
+
+                <!-- OffAgeOffence -->
+                <Header value="Defendant Age at Offence" />
+                <Text name="OffAgeOffence_desc" value="Age of defendant at offence (integer values, one per line if multiple)." />
+                <TextArea name="OffAgeOffence" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. 21" />
+
+                <!-- OffJobOffence -->
+                <Header value="Defendant Employment Status" />
+                <Text name="OffJobOffence_desc" value="Employment status at offence." />
+                <Choices name="OffJobOffence" toName="context" choice="multiple">
+                  <Choice value="Employed" />
+                  <Choice value="Unemployed" />
+                  <Choice value="Student" />
+                  <Choice value="Child" />
+                  <Choice value="Retired" />
+                  <Choice value="Other" />
+                </Choices>
+
+                <!-- OffHomeOffence -->
+                <Header value="Defendant Accommodation Status" />
+                <Text name="OffHomeOffence_desc" value="Accommodation status at offence." />
+                <Choices name="OffHomeOffence" toName="context" choice="multiple">
+                  <Choice value="Fixed Address" />
+                  <Choice value="Temporary Accommodation" />
+                  <Choice value="Homeless" />
+                  <Choice value="Sectioned" />
+                </Choices>
+
+                <!-- OffMentalOffence -->
+                <Header value="Defendant Mental / Learning Status" />
+                <Text name="OffMentalOffence_desc" value="Learning/developmental or mental-health issues noted." />
+                <Choices name="OffMentalOffence" toName="context" choice="multiple">
+                  <Choice value="Had mental health problems" />
+                  <Choice value="Learning/developmental" />
+                  <Choice value="Has learning difficulties" />
+                  <Choice value="Other" />
+                </Choices>
+
+                <!-- OffIntoxOffence -->
+                <Header value="Defendant Intoxication Status" />
+                <Text name="OffIntoxOffence_desc" value="Intoxication status." />
+                <Choices name="OffIntoxOffence" toName="context" choice="multiple">
+                  <Choice value="Yes-drinking" />
+                  <Choice value="Yes-drinking&amp;drugs" />
+                  <Choice value="Yes-drugs" />
+                  <Choice value="No" />
+                </Choices>
+
+                <!-- OffVicRelation -->
+                <Header value="Defendant-Victim Relationship" />
+                <Text name="OffVicRelation_desc" value="Relationship defendant -> victim." />
+                <Choices name="OffVicRelation" toName="context" choice="multiple">
+                  <Choice value="Acquaintance" />
+                  <Choice value="Stranger" />
+                  <Choice value="Relative" />
+                </Choices>
+
+                <!-- CoDefAccNum -->
+                <Header value="Number of Co-defendants" />
+                <Text name="CoDefAccNum_desc" value="Number of co-defendants/co-accused (integer values, one per line if multiple)." />
+                <TextArea name="CoDefAccNum" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. 2" />
+              </View>
+            </Panel>
+
+            <!-- Victim Section -->
+            <Panel value="Victim" className="section-header header-victim">
+              <View className="section section-victim">
+                <!-- VictimType -->
+                <Header value="Victim Type" />
+                <Text name="VictimType_desc" value="Type of victim." />
+                <Choices name="VictimType" toName="context" choice="multiple">
+                  <Choice value="Individual person" />
+                  <Choice value="Individuals" />
+                  <Choice value="Company" />
+                  <Choice value="Organisation" />
+                </Choices>
+
+                <!-- VicNum -->
+                <Header value="Number of Victims" />
+                <Text name="VicNum_desc" value="Number of victims or ratio (one per line if multiple)." />
+                <TextArea name="VicNum" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. two of 36" />
+
+                <!-- VicSex -->
+                <Header value="Victim Sex" />
+                <Text name="VicSex_desc" value="Gender(s) of victim(s)." />
+                <Choices name="VicSex" toName="context" choice="multiple">
+                  <Choice value="All Female" />
+                  <Choice value="All Male" />
+                  <Choice value="Mixed" />
+                </Choices>
+
+                <!-- VicAgeOffence -->
+                <Header value="Victim Age at Offence" />
+                <Text name="VicAgeOffence_desc" value="Age of victim(s) at offence (integer values, one per line if multiple)." />
+                <TextArea name="VicAgeOffence" toName="context" rows="1" maxSubmissions="20" placeholder="e.g. 31" />
+
+                <!-- VicJobOffence -->
+                <Header value="Victim Employment Status" />
+                <Text name="VicJobOffence_desc" value="Employment status of victim(s)." />
+                <Choices name="VicJobOffence" toName="context" choice="multiple">
+                  <Choice value="Employed" />
+                  <Choice value="Unemployed" />
+                  <Choice value="Student" />
+                  <Choice value="Retired" />
+                  <Choice value="Child" />
+                  <Choice value="Other" />
+                </Choices>
+
+                <!-- VicHomeOffence -->
+                <Header value="Victim Accommodation Status" />
+                <Text name="VicHomeOffence_desc" value="Accommodation status of victim(s)." />
+                <Choices name="VicHomeOffence" toName="context" choice="multiple">
+                  <Choice value="Homeless" />
+                  <Choice value="Fixed Address" />
+                  <Choice value="Temporary Accommodation" />
+                  <Choice value="Sectioned" />
+                </Choices>
+
+                <!-- VicMentalOffence -->
+                <Header value="Victim Mental / Learning Status" />
+                <Text name="VicMentalOffence_desc" value="Learning/developmental or mental-health issues for victim(s)." />
+                <Choices name="VicMentalOffence" toName="context" choice="multiple">
+                  <Choice value="Had mental health problems" />
+                  <Choice value="Learning/developmental" />
+                  <Choice value="Has learning difficulties" />
+                  <Choice value="Other" />
+                </Choices>
+
+                <!-- VicIntoxOffence -->
+                <Header value="Victim Intoxication Status" />
+                <Text name="VicIntoxOffence_desc" value="Victim's intoxication status." />
+                <Choices name="VicIntoxOffence" toName="context" choice="multiple">
+                  <Choice value="Yes-drinking" />
+                  <Choice value="Yes-drinking&amp;drugs" />
+                  <Choice value="Yes-drugs" />
+                  <Choice value="No" />
+                </Choices>
+
+                <!-- VicImpactStatement -->
+                <Header value="Victim Impact Statement" />
+                <Text name="VicImpactStatement_desc" value="Was a victim impact statement provided?" />
+                <Choices name="VicImpactStatement" toName="context" choice="multiple">
+                  <Choice value="Yes" />
+                  <Choice value="No" />
+                </Choices>
+              </View>
+            </Panel>
+
+            <!-- Evidence Section -->
+            <Panel value="Evidence" className="section-header header-evidence">
+              <View className="section section-evidence">
+                <!-- ProsEvidTypeTrial -->
+                <Header value="Prosecution Evidence Types" />
+                <Text name="ProsEvidTypeTrial_desc" value="Evidence types by prosecution (one per line)." />
+                <TextArea name="ProsEvidTypeTrial" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. CCTV" />
+
+                <!-- DefEvidTypeTrial -->
+                <Header value="Defence Evidence Types" />
+                <Text name="DefEvidTypeTrial_desc" value="Evidence types by defence (one per line)." />
+                <TextArea name="DefEvidTypeTrial" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. Alibi claim" />
+              </View>
+            </Panel>
+
+            <!-- Sentencing Factors Section -->
+            <Panel value="Sentencing Factors" className="section-header header-sentencing-factors">
+              <View className="section section-sentencing-factors">
+                <!-- PreSentReport -->
+                <Header value="Pre-Sentence Report Risk" />
+                <Text name="PreSentReport_desc" value="Risk level from pre-sentence report." />
+                <Choices name="PreSentReport" toName="context" choice="multiple">
+                  <Choice value="High risk of harm" />
+                  <Choice value="Low risk of reoffending" />
+                  <Choice value="High risk of reoffending" />
+                  <Choice value="Medium risk of reoffending" />
+                  <Choice value="Medium risk of harm" />
+                  <Choice value="Low risk of harm" />
+                </Choices>
+
+                <!-- AggFactSent -->
+                <Header value="Aggravating Factors" />
+                <Text name="AggFactSent_desc" value="Aggravating factors at sentencing (one per line)." />
+                <TextArea name="AggFactSent" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. offence committed while on bail" />
+
+                <!-- MitFactSent -->
+                <Header value="Mitigating Factors" />
+                <Text name="MitFactSent_desc" value="Mitigating factors at sentencing (one per line)." />
+                <TextArea name="MitFactSent" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. offender showed genuine remorse" />
+              </View>
+            </Panel>
+
+            <!-- Appeal Section -->
+            <Panel value="Appeal" className="section-header header-appeal">
+              <View className="section section-appeal">
+                <!-- Appellant -->
+                <Header value="Appellant" />
+                <Text name="Appellant_desc" value="Who brings the appeal." />
+                <Choices name="Appellant" toName="context" choice="multiple">
+                  <Choice value="Offender" />
+                  <Choice value="Attorney General" />
+                  <Choice value="Appellant" />
+                  <Choice value="Other" />
+                </Choices>
+
+                <!-- AppealAgainst -->
+                <Header value="Appeal Against" />
+                <Text name="AppealAgainst_desc" value="Ground(s) for appeal (one per line)." />
+                <TextArea name="AppealAgainst" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. Conviction is unsafe" />
+
+                <!-- AppealGround -->
+                <Header value="Appeal Ground" />
+                <Text name="AppealGround_desc" value="Specific legal grounds of appeal (one per line)." />
+                <TextArea name="AppealGround" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. trial judge misdirected jury" />
+              </View>
+            </Panel>
+
+            <!-- Outcome Section -->
+            <Panel value="Outcome" className="section-header header-outcome">
+              <View className="section section-outcome">
+                <!-- AppealOutcome -->
+                <Header value="Appeal Outcome" />
+                <Text name="AppealOutcome_desc" value="Outcome of the appeal (one per line)." />
+                <TextArea name="AppealOutcome" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. Dismissed" />
+
+                <!-- ReasonQuashConv -->
+                <Header value="Reasons for Quashing Conviction" />
+                <Text name="ReasonQuashConv_desc" value="Reasons for quashing conviction (one per line)." />
+                <TextArea name="ReasonQuashConv" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. procedural irregularity" />
+
+                <!-- ReasonSentExcessNotLenient -->
+                <Header value="Reasons Sentence Was Excessive" />
+                <Text name="ReasonSentExcessNotLenient_desc" value="Reasons why sentence was unduly excessive (one per line)." />
+                <TextArea name="ReasonSentExcessNotLenient" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. lack of consideration for personal mitigation" />
+
+                <!-- ReasonSentLenientNotExcess -->
+                <Header value="Reasons Sentence Was Lenient" />
+                <Text name="ReasonSentLenientNotExcess_desc" value="Reasons why sentence was unduly lenient (one per line)." />
+                <TextArea name="ReasonSentLenientNotExcess" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. judge did not refer to relevant guideline" />
+
+                <!-- ReasonDismiss -->
+                <Header value="Reasons for Dismissal" />
+                <Text name="ReasonDismiss_desc" value="Reasons for dismissal of the appeal (one per line)." />
+                <TextArea name="ReasonDismiss" toName="context" rows="2" maxSubmissions="30" placeholder="e.g. no ground for appeal" />
+              </View>
+            </Panel>
+          </Collapse>
+        </View>
+      </View>
+    </View>
+  </View>
+</View>

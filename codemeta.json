@@ -1,0 +1,154 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "JuDDGES — Polish Legal Document Analysis with LLMs",
+  "description": "End-to-end codebase for acquiring, embedding, fine-tuning LLMs on, annotating (Human-in-the-Loop via Label Studio), and evaluating Polish legal-judgment data.",
+  "license": "https://spdx.org/licenses/Apache-2.0",
+  "identifier": [
+    "https://doi.org/10.5281/zenodo.19911970",
+    "https://doi.org/10.5281/zenodo.19911971"
+  ],
+  "codeRepository": "https://github.com/pwr-ai/JuDDGES",
+  "issueTracker": "https://github.com/pwr-ai/JuDDGES/issues",
+  "programmingLanguage": ["Python"],
+  "runtimePlatform": "Python 3.10+",
+  "operatingSystem": ["Linux", "macOS", "Windows"],
+  "softwareRequirements": "CUDA 12.4 (for GPU-accelerated training and inference)",
+  "version": "0.1.0",
+  "datePublished": "2026-04-30",
+  "developmentStatus": "active",
+  "keywords": [
+    "legal-nlp",
+    "polish-courts",
+    "llm-fine-tuning",
+    "information-extraction",
+    "label-studio",
+    "weaviate",
+    "hitl-annotation",
+    "judges",
+    "court-judgments"
+  ],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Łukasz",
+      "familyName": "Augustyniak",
+      "email": "aisolutions@lukaszaugustyniak.com",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Wrocław University of Science and Technology"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Jakub",
+      "familyName": "Binkowski",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Wrocław University of Science and Technology"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Albert",
+      "familyName": "Sawczyn",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Wrocław University of Science and Technology"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Michał",
+      "familyName": "Bernaczyk",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "University of Wrocław"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Krzysztof",
+      "familyName": "Kamiński",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Court of Appeal, Wrocław"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Santosh",
+      "familyName": "Tirunagari",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Middlesex University"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "David",
+      "familyName": "Windridge",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Middlesex University"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Mandeep K.",
+      "familyName": "Dhami",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Middlesex University"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Chérifa",
+      "familyName": "Boukacem-Zeghmouri",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Université Claude Bernard Lyon 1"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Candice",
+      "familyName": "Fillaud",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Université Claude Bernard Lyon 1"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Tomasz",
+      "familyName": "Kajdanowicz",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Wrocław University of Science and Technology"
+      }
+    }
+  ],
+  "maintainer": {
+    "@type": "Person",
+    "givenName": "Łukasz",
+    "familyName": "Augustyniak",
+    "email": "aisolutions@lukaszaugustyniak.com",
+    "affiliation": {
+      "@type": "Organization",
+      "name": "Wrocław University of Science and Technology"
+    }
+  },
+  "referencePublication": {
+    "@type": "ScholarlyArticle",
+    "name": "Bridging AI and Law: A Scalable Multi-Agent Platform for Quantitative Legal Analytics Across Millions of Documents",
+    "datePublished": "2026",
+    "pagination": "207-214",
+    "url": "https://openreview.net/forum?id=hWjsyTSWrY",
+    "isPartOf": {
+      "@type": "PublicationVolume",
+      "name": "Bridge between Artificial Intelligence and Law"
+    }
+  }
+}

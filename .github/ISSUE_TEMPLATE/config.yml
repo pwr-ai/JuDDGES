@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question / discussion
+    url: https://github.com/pwr-ai/JuDDGES/discussions
+    about: For usage questions, design discussions, or general project questions, please use GitHub Discussions instead of opening an issue.
+  - name: Security vulnerability
+    url: https://github.com/pwr-ai/JuDDGES/security/advisories/new
+    about: Do NOT file a public issue. Use GitHub Private Vulnerability Reporting — see SECURITY.md for details.

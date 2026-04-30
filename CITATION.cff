@@ -1,0 +1,105 @@
+cff-version: "1.2.0"
+message: "If you use JuDDGES in academic work, please cite both the software and the BAIL 2026 paper using the metadata below."
+title: "JuDDGES — Polish Legal Document Analysis with LLMs"
+type: software
+version: "0.1.0"
+date-released: "2026-04-30"
+repository-code: "https://github.com/pwr-ai/JuDDGES"
+url: "https://github.com/pwr-ai/JuDDGES"
+license: Apache-2.0
+doi: "10.5281/zenodo.19911970"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.19911970"
+    description: "Concept DOI — always resolves to the latest archived version of JuDDGES on Zenodo."
+  - type: doi
+    value: "10.5281/zenodo.19911971"
+    description: "Version DOI for the v0.1.0 archived snapshot on Zenodo."
+keywords:
+  - legal-nlp
+  - polish-courts
+  - llm-fine-tuning
+  - information-extraction
+  - label-studio
+  - weaviate
+  - hitl-annotation
+  - judges
+  - court-judgments
+authors:
+  - family-names: Augustyniak
+    given-names: Łukasz
+    affiliation: "Wrocław University of Science and Technology"
+    email: aisolutions@lukaszaugustyniak.com
+  - family-names: Binkowski
+    given-names: Jakub
+    affiliation: "Wrocław University of Science and Technology"
+  - family-names: Sawczyn
+    given-names: Albert
+    affiliation: "Wrocław University of Science and Technology"
+  - family-names: Bernaczyk
+    given-names: Michał
+    affiliation: "University of Wrocław"
+  - family-names: Kamiński
+    given-names: Krzysztof
+    affiliation: "Court of Appeal, Wrocław"
+  - family-names: Tirunagari
+    given-names: Santosh
+    affiliation: "Middlesex University"
+  - family-names: Windridge
+    given-names: David
+    affiliation: "Middlesex University"
+  - family-names: Dhami
+    given-names: "Mandeep K."
+    affiliation: "Middlesex University"
+  - family-names: Boukacem-Zeghmouri
+    given-names: Chérifa
+    affiliation: "Université Claude Bernard Lyon 1"
+  - family-names: Fillaud
+    given-names: Candice
+    affiliation: "Université Claude Bernard Lyon 1"
+  - family-names: Kajdanowicz
+    given-names: Tomasz
+    affiliation: "Wrocław University of Science and Technology"
+preferred-citation:
+  type: conference-paper
+  title: "Bridging AI and Law: A Scalable Multi-Agent Platform for Quantitative Legal Analytics Across Millions of Documents"
+  collection-title: "Bridge between Artificial Intelligence and Law"
+  collection-type: proceedings
+  year: 2026
+  start: 207
+  end: 214
+  url: "https://openreview.net/forum?id=hWjsyTSWrY"
+  authors:
+    - family-names: Augustyniak
+      given-names: Lukasz
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Binkowski
+      given-names: Jakub
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Sawczyn
+      given-names: Albert
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Tagowski
+      given-names: Kamil
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Janiak
+      given-names: Denis
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Bystroński
+      given-names: Mateusz
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Piotrowski
+      given-names: Grzegorz
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Bernaczyk
+      given-names: Michal
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Kamiński
+      given-names: Krzysztof
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Szymczak
+      given-names: Adrian
+      affiliation: "Wrocław University of Science and Technology"
+    - family-names: Kajdanowicz
+      given-names: Tomasz Jan
+      affiliation: "Wrocław University of Science and Technology"

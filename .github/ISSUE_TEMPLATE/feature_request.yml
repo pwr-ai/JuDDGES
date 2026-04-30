@@ -1,0 +1,52 @@
+name: Feature request
+description: Suggest an enhancement or new capability for JuDDGES
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an enhancement to JuDDGES!
+
+        Before submitting, please check [existing issues](https://github.com/pwr-ai/JuDDGES/issues) and [discussions](https://github.com/pwr-ai/JuDDGES/discussions) to see if your idea has already been raised.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Which part of the JuDDGES codebase would this feature affect?
+      options:
+        - "Data acquisition (scripts/nsa, scripts/dataset)"
+        - "Embeddings & Weaviate"
+        - "LLM extraction / inference"
+        - "LLM fine-tuning (SFT)"
+        - "Evaluation (n-gram, LLM-as-judge)"
+        - "Annotation toolkit (label_studio_toolkit)"
+        - "DVC pipeline (dvc.yaml)"
+        - "Documentation"
+        - "Other"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the use case, pain point, or limitation you have run into.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you would like to happen and how it could work.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any alternative solutions or workarounds you have considered.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context, links, references
+      description: Add any other context, references to papers, related projects, screenshots, or links that may help.

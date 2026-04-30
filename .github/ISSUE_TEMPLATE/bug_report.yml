@@ -1,0 +1,84 @@
+name: Bug report
+description: Report a bug or unexpected behaviour in JuDDGES
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report for JuDDGES!
+
+        Before submitting, please **search [existing issues](https://github.com/pwr-ai/JuDDGES/issues)** to make sure this bug has not already been reported.
+
+        **Do NOT use this template for security issues.** If you have discovered a security vulnerability, please review [SECURITY.md](https://github.com/pwr-ai/JuDDGES/blob/master/SECURITY.md) and use GitHub's Private Vulnerability Reporting instead of opening a public issue.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Which part of the JuDDGES codebase is affected?
+      options:
+        - "Data acquisition (scripts/nsa, scripts/dataset)"
+        - "Embeddings & Weaviate"
+        - "LLM extraction / inference"
+        - "LLM fine-tuning (SFT)"
+        - "Evaluation (n-gram, LLM-as-judge)"
+        - "Annotation toolkit (label_studio_toolkit)"
+        - "DVC pipeline (dvc.yaml)"
+        - "Documentation"
+        - "Other"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version (commit SHA, tag, or release)
+      description: Provide the exact commit SHA, git tag, or release identifier where the bug occurs.
+      placeholder: "e.g. 1761f2e or v0.3.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: Describe the behaviour you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction steps
+      description: Provide the smallest set of steps needed to reproduce the bug.
+      placeholder: |
+        1. Clone the repo and check out commit <SHA>
+        2. Run: `uv pip install -e .`
+        3. Run: `CUDA_VISIBLE_DEVICES=0 NUM_PROC=10 dvc repro predict`
+        4. Observe the error in the logs
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Please provide details about your environment.
+      placeholder: |
+        - OS (e.g. Ubuntu 22.04):
+        - Python version (e.g. 3.11.6):
+        - CUDA version (e.g. 12.4):
+        - GPU model (e.g. NVIDIA A100 40GB):
+        - Output of `uv pip list | head -20`:
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / error trace
+      description: Paste any relevant log output, stack traces, or error messages.
+      render: shell

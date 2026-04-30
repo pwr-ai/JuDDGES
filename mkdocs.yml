@@ -181,6 +181,7 @@ nav:
     - Overview: explanation/index.md
     - Architecture: explanation/architecture.md
     - Research: explanation/research.md
+  - Open Science: open-science/index.md
 
 extra:
   social:

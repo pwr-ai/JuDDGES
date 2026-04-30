@@ -1,0 +1,45 @@
+name: Documentation issue
+description: Report a docs problem or suggest a docs improvement
+title: "[Docs]: "
+labels: ["documentation", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the JuDDGES documentation!
+
+        Documentation in this repository follows the [Diátaxis](https://diataxis.fr/) framework (tutorials, how-to guides, reference, explanation). Please help us route your issue by selecting the relevant area below.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Documentation area
+      description: Which part of the documentation does this issue concern?
+      options:
+        - "Tutorials"
+        - "How-to guides"
+        - "Reference / API docs"
+        - "Explanation"
+        - "Open Science"
+        - "Annotation toolkit docs (label_studio_toolkit/docs)"
+        - "Install / Quick-start"
+        - "Other"
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page URL or file path
+      description: Link to the rendered page or path to the source file (e.g. `docs/how-to/fine-tune.md`).
+      placeholder: "docs/reference/API_DOCUMENTATION_GUIDE.md"
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong or unclear?
+      description: Describe the problem, inaccuracy, missing information, or area that is confusing.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested change
+      description: If you have a concrete proposal for how to fix or improve the documentation, please describe it here.
