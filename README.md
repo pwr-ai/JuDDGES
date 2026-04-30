@@ -204,6 +204,10 @@ Implements the call's open-science policy and engages early-career researchers (
 
 Each WP defines specific tasks pursued collaboratively across project partners in service of the wider JuDDGES mission.
 
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow (setup with [`uv`](https://github.com/astral-sh/uv), pre-commit conventions, PR review process, and where Label Studio toolkit contributions should land). The project follows the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md). For coordinated vulnerability disclosure, see [SECURITY.md](SECURITY.md).
+
 ## Acknowledgements
 
 JuDDGES is a collaboration between:

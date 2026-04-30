@@ -151,7 +151,7 @@ Recommended path uses **[`uv`](https://github.com/astral-sh/uv)** (`uv venv .ven
 
 ## 3. Open-science checklist — current status
 
-The verifications above against the repository as of **2026-04-30** identified twelve open-science items beyond the FAIR4RS / EOSC software-sustainability baseline. **9 of 12 are now in place** (including a Zenodo-minted persistent DOI); two require off-repo actions on accounts the project owner controls (Software Heritage, OpenSSF Best Practices); one is intentionally deferred.
+The verifications above against the repository as of **2026-04-30** identified twelve open-science items beyond the FAIR4RS / EOSC software-sustainability baseline. **10 of 12 are now in place** (including a Zenodo-minted persistent DOI and the Contributor Covenant Code of Conduct); the remaining two require off-repo actions on accounts the project owner controls (Software Heritage, OpenSSF Best Practices).
 
 | # | Item | Principle | Status | Where it lives |
 |---|---|---|---|---|
@@ -159,7 +159,7 @@ The verifications above against the repository as of **2026-04-30** identified t
 | 2 | `codemeta.json` (CodeMeta v3.0 JSON-LD) | FAIR4RS R1.2 — cross-platform research-software metadata | ✅ **Done** | [`codemeta.json`](https://github.com/pwr-ai/JuDDGES/blob/master/codemeta.json) |
 | 3 | GitHub Release + Zenodo DOI | FAIR4RS F1 — globally unique persistent identifier | ✅ **Done** | Concept DOI [`10.5281/zenodo.19911970`](https://doi.org/10.5281/zenodo.19911970); version DOI [`10.5281/zenodo.19911971`](https://doi.org/10.5281/zenodo.19911971); badge in [`docs/index.md`](https://github.com/pwr-ai/JuDDGES/blob/master/docs/index.md) |
 | 4 | `CONTRIBUTING.md` | EOSC sustainability — contributor onboarding | ✅ **Done** | [`CONTRIBUTING.md`](https://github.com/pwr-ai/JuDDGES/blob/master/CONTRIBUTING.md) |
-| 5 | `CODE_OF_CONDUCT.md` | EOSC community-health | ⏭ **Intentionally deferred** | n/a — to be revisited by project owner |
+| 5 | `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1) | EOSC community-health | ✅ **Done** | [`CODE_OF_CONDUCT.md`](https://github.com/pwr-ai/JuDDGES/blob/master/CODE_OF_CONDUCT.md) |
 | 6 | `SECURITY.md` | EOSC sustainability — coordinated vulnerability disclosure | ✅ **Done** | [`SECURITY.md`](https://github.com/pwr-ai/JuDDGES/blob/master/SECURITY.md) |
 | 7 | `.github/ISSUE_TEMPLATE/` (4 files) | EOSC sustainability — triage hygiene | ✅ **Done** | [`bug_report.yml`](https://github.com/pwr-ai/JuDDGES/blob/master/.github/ISSUE_TEMPLATE/bug_report.yml), [`feature_request.yml`](https://github.com/pwr-ai/JuDDGES/blob/master/.github/ISSUE_TEMPLATE/feature_request.yml), [`documentation.yml`](https://github.com/pwr-ai/JuDDGES/blob/master/.github/ISSUE_TEMPLATE/documentation.yml), [`config.yml`](https://github.com/pwr-ai/JuDDGES/blob/master/.github/ISSUE_TEMPLATE/config.yml) |
 | 8 | `.github/PULL_REQUEST_TEMPLATE.md` | EOSC sustainability — PR review hygiene | ✅ **Done** | [`PULL_REQUEST_TEMPLATE.md`](https://github.com/pwr-ai/JuDDGES/blob/master/.github/PULL_REQUEST_TEMPLATE.md) |
