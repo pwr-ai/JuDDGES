@@ -79,6 +79,7 @@ docs/
 ### Configuration
 
 **mkdocs.yml** defines:
+
 - Site metadata
 - Navigation structure
 - Theme configuration
@@ -134,7 +135,7 @@ def extract_information(
 
 Each module should have a markdown page:
 
-```markdown
+````markdown
 # Module Name
 
 Brief description (1-2 sentences).
@@ -187,7 +188,7 @@ Explain configuration options.
 ## Common Patterns
 
 Show typical usage patterns.
-```
+````
 
 ### mkdocstrings Syntax
 
@@ -457,12 +458,14 @@ Show multiple examples:
 ### Build Errors
 
 **Error: Module not found**
+
 ```bash
 # Ensure juddges is installed
 uv pip install -e .
 ```
 
 **Error: Docstring parsing failed**
+
 ```bash
 # Check docstring syntax
 python -m pydoc juddges.module.Class
@@ -471,6 +474,7 @@ python -m pydoc juddges.module.Class
 ### Display Issues
 
 **Signature not showing**
+
 ```yaml
 # Enable in mkdocs.yml
 handlers:
@@ -480,6 +484,7 @@ handlers:
 ```
 
 **Source code not visible**
+
 ```yaml
 options:
   show_source: true
