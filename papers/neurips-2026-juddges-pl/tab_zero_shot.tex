@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Zero-shot question-generation baseline on \textsc{GapQ-Verified} and \textsc{GapQ-Extended}. The generator receives only the factual state; the judge scores every generated--reference question pair along two binary dimensions, topic alignment and legal-area alignment. \emph{Topic} and \emph{Area} are pair-level Tak-rates; \emph{Coverage} is the per-pair share of matched dimensions (i.e.\ the mean of \emph{Topic} and \emph{Area} per pair); \emph{Emb.\ sim} is the average cosine similarity between paired embeddings; \emph{Cost} is the total OpenAI generation spend in USD. Bold marks the better model per metric within each split. \textit{(running)}: judge stage still executing at the time of writing.}
+\label{tab:zero-shot-qgen}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrr}
+\toprule
+Split & Model & $|Q_{\text{gen}}|$ & Topic $\uparrow$ & Area $\uparrow$ & Coverage $\uparrow$ & Emb.\ sim $\uparrow$ & Cost (\$) $\downarrow$ \\
+\midrule
+\textsc{GapQ-Verified} & \texttt{gpt-5-mini} & 10{,}346 & 34.8\% & 83.0\% & 59.0\% & 0.658 & 6.06 \\
+                       & \texttt{gpt-5.2}    & 15{,}298 & \textbf{49.5\%} & \textbf{89.7\%} & \textbf{69.5\%} & \textbf{0.705} & 17.76 \\
+\midrule
+\textsc{GapQ-Extended} & \texttt{gpt-5-mini} & 38{,}267 & \textit{(running)} & \textit{(running)} & \textit{(running)} & \textit{(running)} & 22.89 \\
+                       & \texttt{gpt-5.2}    & 58{,}249 & \textit{(running)} & \textit{(running)} & \textit{(running)} & \textit{(running)} & 68.14 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

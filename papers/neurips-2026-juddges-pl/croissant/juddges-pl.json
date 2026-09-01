@@ -1,0 +1,875 @@
+{
+  "@context": {
+    "@language": "en",
+    "@vocab": "https://schema.org/",
+    "arrayShape": "cr:arrayShape",
+    "citeAs": "cr:citeAs",
+    "column": "cr:column",
+    "conformsTo": "dct:conformsTo",
+    "containedIn": "cr:containedIn",
+    "cr": "http://mlcommons.org/croissant/",
+    "data": {
+      "@id": "cr:data",
+      "@type": "@json"
+    },
+    "dataType": {
+      "@id": "cr:dataType",
+      "@type": "@vocab"
+    },
+    "dct": "http://purl.org/dc/terms/",
+    "extract": "cr:extract",
+    "field": "cr:field",
+    "fileProperty": "cr:fileProperty",
+    "fileObject": "cr:fileObject",
+    "fileSet": "cr:fileSet",
+    "format": "cr:format",
+    "includes": "cr:includes",
+    "isArray": "cr:isArray",
+    "isLiveDataset": "cr:isLiveDataset",
+    "jsonPath": "cr:jsonPath",
+    "key": "cr:key",
+    "md5": "cr:md5",
+    "parentField": "cr:parentField",
+    "path": "cr:path",
+    "rai": "http://mlcommons.org/croissant/RAI/",
+    "annotationsPerItem": "rai:annotationsPerItem",
+    "annotatorDemographics": "rai:annotatorDemographics",
+    "dataAnnotationAnalysis": "rai:dataAnnotationAnalysis",
+    "dataAnnotationPlatform": "rai:dataAnnotationPlatform",
+    "dataAnnotationProtocol": "rai:dataAnnotationProtocol",
+    "dataBiases": "rai:dataBiases",
+    "dataCollection": "rai:dataCollection",
+    "dataCollectionRawData": "rai:dataCollectionRawData",
+    "dataCollectionTimeframe": {
+      "@id": "rai:dataCollectionTimeframe",
+      "@type": "sc:DateTime"
+    },
+    "dataCollectionType": "rai:dataCollectionType",
+    "dataLimitations": "rai:dataLimitations",
+    "dataPreprocessingProtocol": "rai:dataPreprocessingProtocol",
+    "dataReleaseMaintenancePlan": "rai:dataReleaseMaintenancePlan",
+    "dataSocialImpact": "rai:dataSocialImpact",
+    "dataUseCases": "rai:dataUseCases",
+    "machineAnnotationTools": "rai:machineAnnotationTools",
+    "personalSensitiveInformation": "rai:personalSensitiveInformation",
+    "recordSet": "cr:recordSet",
+    "references": "cr:references",
+    "regex": "cr:regex",
+    "repeated": "cr:repeated",
+    "replace": "cr:replace",
+    "sc": "https://schema.org/",
+    "separator": "cr:separator",
+    "source": "cr:source",
+    "subField": "cr:subField",
+    "transform": "cr:transform"
+  },
+  "@type": "sc:Dataset",
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "repo",
+      "name": "repo",
+      "description": "The Hugging Face git repository.",
+      "contentUrl": "https://huggingface.co/datasets/JuDDGES/juddges-pl/tree/refs%2Fconvert%2Fparquet",
+      "encodingFormat": "git+https",
+      "sha256": "https://github.com/mlcommons/croissant/issues/80"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "parquet-files-for-config-default",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/x-parquet",
+      "includes": "default/*/*.parquet"
+    }
+  ],
+  "recordSet": [
+    {
+      "@type": "cr:RecordSet",
+      "dataType": "cr:Split",
+      "key": {
+        "@id": "default_splits/split_name"
+      },
+      "@id": "default_splits",
+      "name": "default_splits",
+      "description": "Splits for the default config.",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "@id": "default_splits/split_name",
+          "dataType": "sc:Text"
+        }
+      ],
+      "data": [
+        {
+          "default_splits/split_name": "train"
+        }
+      ]
+    },
+    {
+      "@type": "cr:RecordSet",
+      "@id": "default",
+      "key": {
+        "@id": "default/judgment_id"
+      },
+      "description": "JuDDGES/juddges-pl - 'default' subset\n\nAdditional information:\n- 4 skipped columns: judgment_date, publication_date, submission_date, last_update",
+      "field": [
+        {
+          "@type": "cr:Field",
+          "@id": "default/split",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "fileProperty": "fullpath"
+            },
+            "transform": {
+              "regex": "default/(?:partial-)?(train)/.+parquet$"
+            }
+          },
+          "references": {
+            "field": {
+              "@id": "default_splits/split_name"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/source_dataset",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "source_dataset"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/source",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "source"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/judgment_id",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "judgment_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/docket_number",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "docket_number"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/country",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "country"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/court_type",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "court_type"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/court_name",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "court_name"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/court_id",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "court_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/department_id",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "department_id"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/department_name",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "department_name"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/judgment_type",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "judgment_type"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/finality",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "finality"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/presiding_judge",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "presiding_judge"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/judge_rapporteur",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "judge_rapporteur"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/judges",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "judges"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/publisher",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "publisher"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/recorder",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "recorder"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/reviser",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "reviser"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/case_type_description",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "case_type_description"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/keywords",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "keywords"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/challenged_authority",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "challenged_authority"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/decision",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "decision"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/legal_bases",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "legal_bases"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/references",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "references"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/related_docket_numbers",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "related_docket_numbers"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/excerpt",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "excerpt"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/xml_content",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "xml_content"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/full_text",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "full_text"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/sentence",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "sentence"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/reasons_for_judgment",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "reasons_for_judgment"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/dissenting_opinion",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "dissenting_opinion"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/thesis",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "thesis"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/official_collection",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "official_collection"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/glosa_information",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "glosa_information"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/num_pages",
+          "dataType": "cr:Int64",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "num_pages"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/volume_number",
+          "dataType": "cr:Int64",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "volume_number"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/volume_type",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "volume_type"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_legal_bases",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_legal_bases"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_summary",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_summary"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_thesis",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_thesis"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_factual_state",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_factual_state"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_legal_state",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_legal_state"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_keywords",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_keywords"
+            }
+          },
+          "isArray": true,
+          "arrayShape": "-1"
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_outcome",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_outcome"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_legal_references",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_legal_references"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_legal_concepts",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_legal_concepts"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_parties",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_parties"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_legal_analysis",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_legal_analysis"
+            }
+          }
+        },
+        {
+          "@type": "cr:Field",
+          "@id": "default/extracted_judgment_specific",
+          "dataType": "sc:Text",
+          "source": {
+            "fileSet": {
+              "@id": "parquet-files-for-config-default"
+            },
+            "extract": {
+              "column": "extracted_judgment_specific"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "conformsTo": [
+    "http://mlcommons.org/croissant/1.1",
+    "http://mlcommons.org/croissant/RAI/1.0"
+  ],
+  "name": "JuDDGES-pl: Enriched Polish Court Judgment Corpus for Civil-Law Legal NLP",
+  "description": "\n\t\n\t\t\n\t\tJuDDGES/juddges-pl — Unified Polish Court Judgments (Enriched)\n\t\n\nUnified merge of two source datasets from the JuDDGES project, with LLM-extracted fields harmonized into a single schema:\n\nJuDDGES/pl-nsa-enriched — Naczelny Sąd Administracyjny (Supreme Administrative Court of Poland)\nJuDDGES/pl-court-enriched — Polish common courts (orzeczenia.ms.gov.pl)\n\nTotal rows: 2,691,842 (pl-nsa: 2,254,392, pl-court: 437,450)\nColumns: 53\nStorage: ~43.1 GB (55 parquet shards, snappy compression)… See the full description on the dataset page: https://huggingface.co/datasets/JuDDGES/juddges-pl.",
+  "alternateName": [
+    "JuDDGES/juddges-pl",
+    "JuDDGES Polish Court Judgments (Unified, Enriched)"
+  ],
+  "creator": {
+    "@type": "Organization",
+    "name": "JuDDGES",
+    "url": "https://huggingface.co/JuDDGES"
+  },
+  "keywords": [
+    "text-classification",
+    "text-generation",
+    "summarization",
+    "text-retrieval",
+    "Polish",
+    "cc-by-4.0",
+    "1M - 10M",
+    "parquet",
+    "Tabular",
+    "Text",
+    "Datasets",
+    "Dask",
+    "Polars",
+    "Croissant",
+    "🇺🇸 Region: US",
+    "legal",
+    "polish-law",
+    "legal-nlp",
+    "court-decisions",
+    "llm-extracted",
+    "civil-law",
+    "NeurIPS-2026",
+    "JuDDGES-pl",
+    "evaluation-resource"
+  ],
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "url": "https://huggingface.co/datasets/JuDDGES/juddges-pl",
+  "citeAs": "@inproceedings{juddges-pl-2026,\n  title     = {JuDDGES-pl: Large-Scale Enriched Polish Court Judgment Corpora for Civil-Law Legal NLP},\n  author    = {Augustyniak, {\\L}ukasz and others},\n  booktitle = {NeurIPS 2026 Evaluations and Datasets Track},\n  year      = {2026}\n}",
+  "version": "1.0.0",
+  "datePublished": "2026-05-07",
+  "dateModified": "2026-05-07",
+  "inLanguage": "pl",
+  "isAccessibleForFree": true,
+  "publisher": {
+    "@type": "Organization",
+    "name": "Wrocław University of Science and Technology",
+    "url": "https://pwr.edu.pl"
+  },
+  "dataCollection": "Source judgments were obtained from official Polish court publication portals — the Common Courts judgment portal (orzeczenia.ms.gov.pl) for pl-court-raw-enriched, and the Central Database of Administrative Court Judgments (orzeczenia.nsa.gov.pl) for pl-nsa-enriched. Both portals publish judgments as public-domain legal acts (Art. 4 pkt 2 of the Polish Copyright Act, dokumenty urzędowe). Documents were retrieved with court-published anonymization in place; no additional crawling of non-public material was performed.",
+  "dataCollectionType": "Web scraping of official, public-domain judgment portals.",
+  "dataCollectionTimeframe": [
+    "2001-01-01T00:00:00",
+    "2026-05-07T00:00:00"
+  ],
+  "dataCollectionRawData": "Raw HTML and PDF judgment exports from the source portals, retained as intermediate artifacts and released as the upstream JuDDGES/pl-court-raw and JuDDGES/pl-nsa datasets.",
+  "dataPreprocessingProtocol": "Documents were converted from heterogeneous publication formats (HTML, PDF, RTF) to a uniform UTF-8 plain-text representation, with document-structure parsing (sentencja, uzasadnienie, signatures), metadata normalization (court hierarchy, chamber, dates, judgment type), and statute-citation extraction. Records with empty or unparsable content were removed.",
+  "dataAnnotationProtocol": "Beyond raw text and source metadata, the corpora include LLM-extracted analytical fields generated with Google Gemini 2.5 Pro: factual_state (a structured summary of the case facts), legal_state (the legal questions and statutory framework), extracted_summary, extracted_thesis, extracted_keywords, and extracted_legal_bases. Extraction prompts were applied uniformly across the corpus; no human re-annotation pass was performed at scale. These fields should be treated as model-generated and used accordingly.",
+  "dataAnnotationPlatform": "Custom batch-inference pipeline against the Google Gemini API.",
+  "dataAnnotationAnalysis": "LLM-extracted fields have not undergone systematic human validation at corpus scale. Users intending to evaluate downstream models on these fields should treat them as silver labels, not gold. A separate human-validated subset is available via the upstream JuDDGES family (e.g., JuDDGES/pl-swiss-franc-loans) for tasks requiring gold labels.",
+  "annotationsPerItem": "Each judgment carries the full set of extracted analytical fields; no inter-annotator agreement applies as labels are model-generated.",
+  "annotatorDemographics": "Not applicable: analytical fields are produced by Google Gemini 2.5 Pro rather than human annotators.",
+  "machineAnnotationTools": "Google Gemini 2.5 Pro accessed via the Google AI API. Prompts and extraction schemas are released alongside the paper.",
+  "dataUseCases": "Intended uses: (1) structured information extraction from legal text; (2) statute-grounded reasoning evaluation; (3) cross-branch generalization studies between common and administrative judiciary; (4) longitudinal analysis of judicial language; (5) civil-law-aware training and fine-tuning of legal language models. The corpora are designed to support — not replace — task-specific evaluation, which requires either gold-labeled subsets or human validation.",
+  "dataBiases": "Several biases are known and documented: (1) jurisdictional bias — data covers only Poland and reflects Polish civil-law procedure; (2) coverage bias — only judgments published by the source portals are included; not all Polish judgments are publicly published, and publication is uneven across courts and case types; (3) temporal bias — coverage is denser in recent years as digital publication expanded; (4) language bias — analytical extractions may reflect the training distribution of Google Gemini 2.5 Pro; (5) anonymization bias — court-applied pseudonymization removes named entities, which can affect identity- and entity-centered evaluations.",
+  "personalSensitiveInformation": "Source judgments are pseudonymized at the court level before publication: personal names of natural persons are replaced with initials or letter codes; sensitive personal details (addresses, PESEL, dates of birth) are redacted. Names of public officials, judges, courts, and corporate parties are typically retained. We performed no additional de-anonymization. Users must comply with GDPR (RODO) when re-releasing derivatives, and must not attempt re-identification of pseudonymized individuals.",
+  "dataLimitations": "(1) Only Poland is represented; cross-jurisdictional claims require additional resources. (2) LLM-extracted analytical fields are not human-validated at corpus scale and may contain extraction errors. (3) Court-applied pseudonymization is heterogeneous across courts and time, and may not satisfy modern privacy guarantees uniformly. (4) The corpora reflect published judgments only; case selection by publishers is non-random. (5) No machine translation is included; the resource is monolingual Polish.",
+  "dataReleaseMaintenancePlan": "The corpora are released openly on Hugging Face under the JuDDGES organization (https://huggingface.co/JuDDGES) and will be maintained with versioned snapshots. Errata, schema updates, and new releases will be published as new dataset versions; older versions remain accessible via the Hugging Face commit history. Issues can be filed on the dataset Community tab. The maintaining organization is Wrocław University of Science and Technology (WUST).",
+  "dataSocialImpact": "Positive: improves access to Polish legal information for citizens, non-profits, and researchers; reduces the common-law/Anglophone bias of legal NLP resources; enables civic-tech applications in a jurisdiction underrepresented in ML benchmarks. Risks: model-generated analytical fields may be miscited as authoritative legal summaries; users (especially non-experts) must not treat extracted fields as legal advice. The corpora are not intended for and must not be used as a basis for individual legal decision-making."
+}

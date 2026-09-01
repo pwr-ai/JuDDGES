@@ -1,0 +1,33 @@
+% appendix.tex
+% Appendices A-E. \appendix is invoked once in main.tex before this file.
+
+\section{Extraction prompts and field schemas}
+\label{sec:appendix:prompts}
+
+For each of \texttt{factual\_state}, \texttt{legal\_state}, \texttt{extracted\_summary}, \texttt{extracted\_thesis}, \texttt{extracted\_legal\_bases}, \texttt{extracted\_keywords}, \texttt{extracted\_title}, \texttt{extracted\_date\_issued}: full prompt text, few-shot examples (drawn from held-out development set), and parser/post-processor.
+
+% TODO: import content from appendix_extraction.tex once polished.
+
+\section{Datasheet for Datasets (full template)}
+\label{sec:appendix:datasheet}
+
+Following Gebru et al.~\citep{gebru2021datasheets}: motivation, composition, collection process, preprocessing/cleaning/labeling, uses, distribution, maintenance.
+
+% TODO: port the full datasheet questionnaire.
+
+\section{Sample records}
+\label{sec:appendix:samples}
+
+% TODO: include 2-3 fully-anonymized example records per config, showing
+% all fields side-by-side. Use the examplebox tcolorbox defined in main.tex.
+
+\section{Detailed statistics tables}
+\label{sec:appendix:stats}
+
+% TODO: full tables for the figures referenced in
+% Section~\ref{sec:characterization}.
+
+\section{NeurIPS 2026 Paper Checklist}
+\label{sec:appendix:checklist}
+
+The mandatory NeurIPS 2026 paper checklist is included separately at the end of the PDF (after this appendix). See \texttt{sections/checklist.tex}; the checklist file is invoked from \texttt{main.tex}.

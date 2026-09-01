@@ -1,0 +1,67 @@
+Source: https://blog.neurips.cc/2026/03/23/introducing-the-evaluations-datasets-track-at-neurips-2026/
+
+# Introducing the Evaluations & Datasets Track at NeurIPS 2026
+
+Date: March 23, 2026
+Author: Commun`ication Chairs 2026
+Category: 2026 Conference
+
+
+
+## Main Announcement
+
+NeurIPS has officially renamed the "Datasets & Benchmarks Track" to the "Evaluations & Datasets (ED) Track." The track maintains alignment with main conference requirements and timelines while introducing an expanded scope that explicitly positions "evaluation as a scientific object of study."
+
+## From "Datasets & Benchmarks" to "Evaluations & Datasets"
+
+The track's evolution reflects the field's maturation. As the post notes, "evaluation plays a central role in shaping scientific conclusions." The reframing acknowledges that what gets measured, under which conditions, and how results are interpreted often matter as much as model design. Concerns around reproducibility and comparability frequently stem from differences in evaluation design and reporting practices.
+
+## Defining Evaluation as a Scientific Object
+
+Evaluation encompasses:
+
+"Processes, practices, tools, and resources for making evaluative claims about AI/ML systems, including – but not limited to – datasets, benchmarks, user studies, simulators, auditing, red-teaming methods, interaction protocols, metrics, and experimental or qualitative study designs."
+
+Datasets qualify when accompanied by clear descriptions of scope, assumptions, and how systems using them should be assessed.
+
+## What This Means for Submissions
+
+- Expanded contributions: Work analyzing, critiquing, redesigning, or stress-testing evaluation practices is now fully in-scope.
+- Datasets remain central: They may be used anywhere in the AI/ML lifecycle. Submissions must clearly articulate relationships between datasets and evaluative claims, explaining how models should be assessed and what limitations apply.
+- No requirement for new models: Negative results, critical analyses, and use-case-inspired evaluations are welcome. The focus shifts from "beating baselines" to deepening understanding of evaluation practices.
+- Benchmarks included: Benchmarks represent one evaluation form and remain welcomed alongside analyses of their failures.
+
+## In-Scope Submissions
+
+The track welcomes work that:
+
+- Analyzes strengths, limitations, or failure modes of existing benchmarks
+- Studies benchmark saturation and overfitting impacts
+- Compares evaluation designs demonstrating how different assumptions yield different conclusions
+- Provides reproduction, auditing, and stress-testing of prior evaluations
+- Develops documentation methodologies improving evaluative claims
+- Refines existing evaluation setups
+- Proposes new evaluation protocols and methodologies
+- Conducts human- or interaction-centered evaluations
+- Introduces datasets with clearly explained scope, assumptions, limitations, and intended evaluative support
+- Contributes tools, analyses, or frameworks for constructing or interpreting evaluative claims
+- Presents negative results and critical analyses
+
+Data-centric and benchmarking work historically welcomed remains fully in-scope, including:
+
+- New datasets and collections
+- Data generators and reinforcement learning environments
+- Data-centric AI methods and tools
+- Advanced data collection and curation practices
+- Responsible dataset development frameworks
+- Dataset audits
+- Benchmarks on new or existing datasets
+- Systematic system analyses on novel datasets
+- In-depth machine learning challenge analyses
+- Competition papers from prior NeurIPS competitions
+
+## Community Feedback
+
+The ED Track chairs welcome input at evaluationsdatasets@neurips.cc.
+
+ED Track Chairs: Konstantina Palla, Jessica Schrouff, Alexandre Drouin, Lijun Wu, Joaquin Vanschoren

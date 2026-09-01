@@ -1,0 +1,31 @@
+% 07-limitations-intended-use.tex
+% This section is the silver-label commitment in operational form.
+% Reviewers and downstream users should read it before depending on
+% the resource.
+
+\section{Limitations and intended use}
+\label{sec:limitations}
+
+\begin{silverbox}{Reviewer and User Notice: Silver-Label Commitment in Operational Form}
+\textbf{Reviewer / user notice.} This section is the silver-label commitment in operational form. Reviewers and downstream users should read it before depending on the resource.
+\end{silverbox}
+
+\subsection{Limitations}
+\label{sec:limitations:limitations}
+
+\juddgespl{} is scoped to a single jurisdiction, namely Poland, and we make no cross-jurisdictional claims without the addition of further resources. The analytical fields produced by our extraction pipeline are silver labels rather than human-validated annotations: they are not verified at corpus scale, they are subject to model-version drift, and we therefore intentionally refrain from reporting an aggregate accuracy figure (see \S\ref{sec:pipeline:quality}). Court-applied pseudonymization is heterogeneous across courts and across time, and consequently does not amount to a uniform privacy guarantee for downstream users. Because only published judgments enter the corpus, and because publisher selection is non-random, the resulting sample carries publication bias that should be acknowledged in any descriptive analysis. Temporal coverage is denser in recent years and conspicuously sparser before 2000, which constrains long-horizon longitudinal studies. Finally, the corpus is monolingual in Polish, and we deliberately do not include machine translations into other languages.
+
+\subsection{Intended uses}
+\label{sec:limitations:uses}
+
+We envisage \juddgespl{} as a substrate for pretraining and weak-supervision pipelines, for retrieval indexing over Polish case law, and for descriptive analytics over the published judiciary record. The resource also supports fairness audits, broader civil-law NLP research, and civic-tech tooling, in each case under appropriate disclaimers regarding the silver-label nature of the analytical fields. These use cases align with the operational commitments stated in \S\ref{sec:limitations:limitations} and with the model-version disclosure requirement in \S\ref{sec:limitations:model-version}.
+
+\subsection{Out-of-scope uses}
+\label{sec:limitations:out-of-scope}
+
+Users should not benchmark systems against the LLM-derived analytical fields without first conducting their own independent validation against gold annotations on the slice of interest. Privacy-sensitive applications should not rely on the corpus without performing additional anonymization beyond what individual courts already apply. The resource is also not intended for individual legal advice, for regulatory decisions, or for any other high-stakes individual outcome, and downstream tooling should make this scope explicit to its end users.
+
+\subsection{Model-version disclosure}
+\label{sec:limitations:model-version}
+
+Because LLM outputs are model-specific, users analyzing the extracted fields should cite both the Gemini model version recorded in \S\ref{sec:pipeline:model} and the dataset version they consumed. This pairing is what makes results derived from the silver labels reproducible and comparable across studies.

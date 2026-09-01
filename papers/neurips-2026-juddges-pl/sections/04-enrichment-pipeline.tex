@@ -1,0 +1,64 @@
+% 04-enrichment-pipeline.tex
+% Goal: describe the LLM extraction pipeline rigorously enough that it
+% is reproducible, including version pinning of the model.
+% This is the methodological core of the paper.
+
+\section{Enrichment pipeline}
+\label{sec:pipeline}
+
+\subsection{Motivation: from raw text to analysis-ready}
+\label{sec:pipeline:motivation}
+
+Raw judgment text is difficult to evaluate over at scale: documents are long, structurally heterogeneous across courts and decades, and written in specialized legal language that resists straightforward parsing. The two prior strategies for converting such text into analysis-ready fields each have well-understood limitations. Human annotation produces high-fidelity labels but does not scale to the millions of judgments that constitute a national case-law corpus, while rule-based extraction is brittle across courts and time as templates, formatting conventions, and citation styles drift. LLM-based extraction with uniform prompting offers a different trade-off, exchanging guaranteed exactness for uniform coverage at corpus scale, with characteristic failure modes that we document rather than dismiss.
+
+\subsection{Model and prompting}
+\label{sec:pipeline:model}
+
+We perform enrichment with Google Gemini 2.5 Pro, accessed via the Google AI API, with the version pinned at [exact API version string] so that the released artefacts can be associated with a single model behaviour for reproducibility. Extraction is schema-conditioned, with one prompt per field family rather than a single monolithic call, and each prompt includes few-shot examples drawn from a held-out development set so that no example used to shape the prompts overlaps with released analytical fields. Inference is performed in batched calls with deterministic decoding (\texttt{temperature=0}) where the API supports it, and the full prompt texts are reproduced in Appendix~\ref{sec:appendix:prompts} so that downstream users can inspect, replicate, or critique each extraction step.
+
+\subsection{Extracted fields}
+\label{sec:pipeline:fields}
+
+Table~\ref{tab:fields} summarises the fields released in \juddgespl{} and their provenance. The release deliberately separates two tiers: silver-label fields produced by Gemini 2.5 Pro, which encode analytical content such as factual state, legal state, summary, thesis, legal bases, keywords, title, and issue date; and source-portal fields such as court name, judge panel, and signature, which are preserved verbatim from the originating portals. This split lets users decide per-field whether to treat the value as ground truth (for the preserved metadata) or as a model-generated annotation requiring downstream validation.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Source} \\
+\midrule
+\texttt{factual\_state} & string & LLM-extracted (Gemini 2.5 Pro) \\
+\texttt{legal\_state} & string & LLM-extracted \\
+\texttt{extracted\_summary} & string & LLM-extracted \\
+\texttt{extracted\_thesis} & string & LLM-extracted \\
+\texttt{extracted\_legal\_bases} & list of statute references & LLM-extracted, regex-validated \\
+\texttt{extracted\_keywords} & list of strings & LLM-extracted \\
+\texttt{extracted\_title} & string & LLM-extracted \\
+\texttt{extracted\_date\_issued} & date & LLM-extracted, parsed \\
+\texttt{court\_name}, \texttt{judges}, \texttt{signature}, \dots & various & preserved from source portal \\
+\bottomrule
+\end{tabular}
+\caption{Fields released in \juddgespl{}. LLM-extracted fields are silver labels; source-portal fields are preserved verbatim.}
+\label{tab:fields}
+\end{table}
+
+\subsection{Quality, cost, and runtime}
+\label{sec:pipeline:quality}
+
+Aggregate compute, monetary cost, and wall-clock runtime for the full extraction run are reported as [TODO] and [TODO], pending the final accounting tied to the pinned API version. To characterise extraction behaviour qualitatively, a Polish-speaking lawyer inspected a sample of [TODO: $N$] documents and identified recurring error modes, including truncated reasoning sections in long judgments, missed citations to repealed statutes, and over-summarization of short procedural judgments where the model compresses already-terse text. We deliberately do not report a corpus-level aggregate accuracy, and this choice is methodological rather than evasive: there is no validated gold reference at corpus scale against which such a number could be computed, and substituting LLM-vs-LLM agreement as a proxy would conflate fluency-correlation with construct validity while obscuring the silver-label nature of the resource. Reporting a single accuracy figure would, in our view, mislead downstream users more than the qualitative characterisation we provide here and the validated subset described below.
+
+\subsection{Silver labels: what this means in practice}
+\label{sec:pipeline:silver}
+
+The methodological choices above carry concrete operational consequences for users of \juddgespl{}. Because the analytical fields are produced uniformly by a single LLM rather than validated against human judgement at corpus scale, they should be treated as a structured layer of model-generated annotations whose utility depends on the downstream task. The callout below states the resulting commitment explicitly, separating uses that are well-supported by silver labels from uses that require gold-standard supervision.
+
+\begin{silverbox}{Silver-Label Commitment: Permitted and Prohibited Uses}
+\textbf{Silver-label commitment.} The analytical fields above are produced uniformly by a single LLM and have not been human-validated at corpus scale. Users:
+\begin{itemize}
+  \item \textbf{may} use them for exploratory analysis, descriptive statistics, model pretraining, weak supervision, retrieval indexing;
+  \item \textbf{must not} use them as gold labels for benchmarking, regulatory claims, or downstream legal decisions;
+  \item \textbf{must} cite the model version when reporting analyses, since LLM behavior shifts across model releases.
+\end{itemize}
+A separate validated subset (\texttt{JuDDGES/pl-swiss-franc-loans}) provides gold annotations for tasks requiring high-fidelity labels.
+\end{silverbox}

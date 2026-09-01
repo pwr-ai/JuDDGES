@@ -1,0 +1,83 @@
+% 05-corpus-characterization.tex
+% Goal: descriptive statistics that justify the claim
+% "evaluation-relevant" without running models.
+
+\section{Corpus characterization}
+\label{sec:characterization}
+
+\subsection{Coverage}
+\label{sec:characterization:coverage}
+
+\juddgespl{} comprises \textbf{2{,}691{,}842 judgments} merged from the two source subsets (Table~\ref{tab:corpus-overview}): the common-courts subset (\texttt{pl-court}, 437{,}450 judgments published on \url{orzeczenia.ms.gov.pl}) and the administrative-courts subset (\texttt{pl-nsa}, 2{,}254{,}392 judgments from \url{orzeczenia.nsa.gov.pl}). All rows are released as a single \texttt{train} split with a unified 53-column schema; the \texttt{source\_dataset} column distinguishes the two subsets.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Subset} & \textbf{Judgments} & \textbf{Schema columns} & \textbf{LLM-extracted columns} \\
+\midrule
+\texttt{pl-court} (common courts)         & 437{,}450    & 53 & 12 \\
+\texttt{pl-nsa} (administrative courts)   & 2{,}254{,}392 & 53 & 12 \\
+\midrule
+\textbf{\juddgespl{} (combined)}          & \textbf{2{,}691{,}842} & \textbf{53} & \textbf{12} \\
+\bottomrule
+\end{tabular}
+\caption{\juddgespl{} corpus overview. Both subsets are normalized to a single 53-column schema; 12 columns carry LLM-extracted silver-label content and the remainder are preserved from the source portals or are provenance fields. The \texttt{extracted\_tax\_specific} field present in the source datasets was dropped during the merge ($<\!0.2\%$ coverage).}
+\label{tab:corpus-overview}
+\end{table}
+
+To complement the aggregate counts in Table~\ref{tab:corpus-overview}, we report three breakdowns of the \juddgespl{} corpus in Appendix~\ref{sec:appendix:stats}: the distribution of judgments across court levels (Supreme Court, appellate, regional, and district within the common-courts subset; NSA and WSA within the administrative subset), a yearly timeline of judgment counts spanning the full coverage window of both source portals, and a breakdown by case type and procedural category. These distributions characterize how the corpus is concentrated across the Polish judiciary and provide the contextual axes against which all subsequent analyses in this section should be read.
+
+\subsection{Document structure}
+\label{sec:characterization:structure}
+
+We characterize the structural composition of \juddgespl{} along three axes that are reported in full in Appendix~\ref{sec:appendix:stats}. First, we provide length distributions in tokens and in number of structural sections, computed separately for the common and administrative subsets, since the two portals expose different rendering conventions for judgment text. Second, we report section-presence statistics for the four canonical components of a Polish judgment, namely the operative part (\emph{sentencja}), the reasoning (\emph{uzasadnienie}), dissenting opinions, and \emph{glosa} commentary, with each component tracked as a binary indicator over judgments. Third, we report the ratio of \emph{sentencja} length to \emph{uzasadnienie} length, which captures the balance between the operative and the explanatory portions of a judgment and varies systematically by court level.
+
+\subsection{Citation patterns}
+\label{sec:characterization:citations}
+
+We provide three citation-pattern analyses that characterize how judgments in \juddgespl{} reference legal authority. First, we release a statute-citation graph derived from the \texttt{extracted\_legal\_bases} field, together with a ranking of the most frequently cited statutes; this view reflects the Polish civil-law tradition in which statutory provisions are the dominant citation target. Second, we quantify case-citation patterns; case citations are intrinsically rare in a civil-law jurisdiction and we report their incidence as such, rather than treating them as a primary signal. Third, we report cross-branch citation behavior between the common and administrative subsets as a sanity check: administrative-court judgments rarely cite common-court judgments, and we quantify this rate to document the structural separation between the two branches rather than to motivate a downstream task. Numerical values for all three analyses are deferred to Appendix~\ref{sec:appendix:stats}.
+
+\subsection{Extraction-field statistics}
+\label{sec:characterization:extraction-stats}
+
+\paragraph{Coverage per LLM-extracted field.}
+Table~\ref{tab:extraction-coverage} reports the fraction of judgments for which each LLM-extracted field carries a non-empty value, computed across all 2{,}691{,}842 judgments in the released corpus. Coverage is bimodal: a single high-coverage field, \texttt{extracted\_legal\_bases}, is populated for 81.3\% of judgments because every judgment that cites at least one statute yields a non-empty list; in contrast, the free-text analytical fields (\texttt{extracted\_summary}, \texttt{extracted\_thesis}, \texttt{extracted\_factual\_state}, \dots) populate at 12--16\% combined coverage, reflecting the proportion of judgments for which the source-portal text contains a passage the extractor could ground its output on. Per-subset coverage is broadly similar, with the common-courts subset (\texttt{pl-court}) consistently 2--3 percentage points above the administrative subset for analytical fields, and 10 percentage points higher for \texttt{extracted\_legal\_bases}; we attribute this to richer reasoning-section content (\emph{uzasadnienie}) in common-court judgments. Two long-tail fields, \texttt{extracted\_legal\_analysis} and \texttt{extracted\_judgment\_specific}, drop to single-digit percentages on the administrative subset and are intended primarily for downstream filtering rather than as dense supervision signal.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Field} & \textbf{\texttt{pl-nsa}} & \textbf{\texttt{pl-court}} & \textbf{Combined} \\
+\midrule
+\texttt{extracted\_legal\_bases}        & 79.7\% & 89.6\% & \textbf{81.3\%} \\
+\texttt{extracted\_summary}             & 15.2\% & 17.6\% & 15.6\% \\
+\texttt{extracted\_factual\_state}      & 14.8\% & 17.0\% & 15.1\% \\
+\texttt{extracted\_thesis}              & 13.7\% & 16.6\% & 14.1\% \\
+\texttt{extracted\_legal\_state}        & 12.8\% & 15.9\% & 13.3\% \\
+\texttt{extracted\_outcome}             & 13.2\% & 13.0\% & 13.1\% \\
+\texttt{extracted\_parties}             & 12.7\% & 12.0\% & 12.6\% \\
+\texttt{extracted\_keywords}            & 12.4\% & 12.1\% & 12.4\% \\
+\texttt{extracted\_legal\_references}   & 12.2\% & 11.5\% & 12.1\% \\
+\texttt{extracted\_legal\_concepts}     & 12.1\% & 11.3\% & 12.0\% \\
+\texttt{extracted\_legal\_analysis}     &  8.5\% &  3.6\% &  7.7\% \\
+\texttt{extracted\_judgment\_specific}  &  7.3\% &  3.8\% &  6.8\% \\
+\bottomrule
+\end{tabular}
+\caption{Coverage of LLM-extracted fields in \juddgespl{}. Coverage is the fraction of judgments where the field is non-null and non-empty (for list-valued fields, contains at least one element). Computed exhaustively over all 2{,}691{,}842 judgments. The \texttt{extracted\_tax\_specific} field present in the source datasets was dropped during the merge ($<\!0.2\%$ coverage).}
+\label{tab:extraction-coverage}
+\end{table}
+
+Beyond coverage, we release per-field length distributions for each of the twelve LLM-extracted fields and deduplication-aware diversity metrics for \texttt{extracted\_keywords} that account for near-duplicate keyword surface forms across judgments. These analyses are released alongside the corpus and reported in Appendix~\ref{sec:appendix:stats}.
+
+\subsection{Pseudonymization fidelity}
+\label{sec:characterization:pseudonymization}
+
+We provide an empirical audit of pseudonymization fidelity in \juddgespl{} on a stratified sample of [TODO: $N$] judgments drawn proportionally across court level, year, and source subset. The audit measures the residual presence of personal-identifier patterns that should have been removed by the source portals before publication, including PESEL national-identification numbers detected by regular expression, postal-address patterns, and full personal names. We further report how the residual-identifier rate varies across courts and across years, since pseudonymization conventions on the source portals have evolved over time and differ between common and administrative courts. We emphasize that this audit is an empirical characterization of the released text and is explicitly not a privacy guarantee; users handling \juddgespl{} for downstream applications should perform their own risk assessment in accordance with the data-protection requirements of their jurisdiction.
+
+\subsection{Cross-branch comparison}
+\label{sec:characterization:cross-branch}
+
+To document how the common-courts and administrative-courts subsets relate to each other, we report descriptive cross-branch comparisons along three axes. We compute token-level vocabulary overlap between the two subsets, which characterizes lexical divergence between common and administrative judicial language. We compute statute-citation overlap from the \texttt{extracted\_legal\_bases} field, identifying the set of statutes cited in both subsets versus those cited exclusively in one. We further report topic coverage by case type, comparing the procedural categories that are well represented in each subset. These descriptive comparisons are intended to characterize the joint corpus rather than to assert any particular cross-branch transfer or generalization claim, and the corresponding tables are reported in Appendix~\ref{sec:appendix:stats}.

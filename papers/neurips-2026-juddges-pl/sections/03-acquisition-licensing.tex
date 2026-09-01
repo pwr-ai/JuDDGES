@@ -1,0 +1,26 @@
+% 03-acquisition-licensing.tex
+% Goal: describe data sources, copyright basis, GDPR / privacy posture,
+% and version pinning.
+
+\section{Acquisition and licensing}
+\label{sec:acquisition}
+
+\subsection{Source portals}
+\label{sec:acquisition:sources}
+
+\juddgespl{} draws on the two official Polish judgment portals that, between them, cover the common and administrative court systems. Common-court rulings are obtained from \url{orzeczenia.ms.gov.pl}, which exposes an official API returning XML payloads; the snapshot used in this release was acquired up to [DATE], with the oldest record dated [DATE]. Administrative-court rulings are obtained from \url{orzeczenia.nsa.gov.pl}, which provides no API and is therefore harvested via HTML scraping under respectful rate limits, together with a re-acquisition policy that revisits records the portal has retroactively edited. The full acquisition procedure, including parser details and incremental update logic, is described in \juddges{} 2024 \S3~\citep{augustyniak2024juddges} and is reused here without modification.
+
+\subsection{Copyright and licensing}
+\label{sec:acquisition:copyright}
+
+The authors interpret Art.~4 pkt 2 of the Polish \emph{Ustawa o prawie autorskim i prawach pokrewnych} as placing court judgments (\emph{orzeczenia s\k{a}d\'ow}) within the category of \emph{dokumenty urz\k{e}dowe} and therefore outside copyright protection. On this reading, the raw judgment text redistributed in \juddgespl{} is treated as public-domain material whose use does not require a licence from the issuing courts. The enrichment layer contributed by the authors --- LLM-extracted fields, structured metadata, and the accompanying Croissant descriptor --- is an independent creative and curatorial work and is released under \textbf{CC BY 4.0}. We note that this is the authors' reading of the statute rather than a settled court ruling, and downstream users are encouraged to consult their own counsel for jurisdiction-specific reuse questions.
+
+\subsection{Privacy and GDPR / RODO}
+\label{sec:acquisition:privacy}
+
+Pseudonymization is performed at source by the publishing courts before judgments are made available on the official portals: names of natural persons are replaced with initials or codes, and sensitive personal data is redacted in line with Polish judicial publication practice. Names of public officials, judges, and corporate parties are typically retained, as legally permitted in the context of public adjudication. The authors apply no additional de-anonymization step, do not attempt to recover redacted identities, and do not cross-reference judgments with external personal-data sources. Redistributors of \juddgespl{} or derivative artefacts are required to comply with RODO (the Polish implementation of the GDPR) and must refrain from re-identification attempts against the pseudonymized natural persons appearing in the corpus.
+
+\subsection{Versioning}
+\label{sec:acquisition:versioning}
+
+The corpus snapshot underlying this release is pinned to [DATE], and subsequent re-acquisitions are published as new snapshots rather than in-place edits. Hugging Face dataset versions correspond directly to commit hashes in the dataset repository, and the Croissant \texttt{version} field tracks these releases so that any cited result can be reproduced against an exact corpus state.

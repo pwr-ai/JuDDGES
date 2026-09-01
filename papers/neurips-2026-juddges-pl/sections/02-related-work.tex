@@ -1,0 +1,27 @@
+% 02-related-work.tex
+% Goal: position JuDDGES-pl against (a) existing legal NLP benchmarks
+% and corpora, (b) civil-law / non-English legal resources, (c) the
+% literature on LLM-as-annotator and silver labels.
+
+\section{Related work}
+\label{sec:related-work}
+
+\subsection{Legal NLP benchmarks and resources}
+\label{sec:related:benchmarks}
+
+Most established legal NLP benchmarks are dominated by English-language, common-law material. LegalBench~\citep{guhaLegalbenchCollaborativelyBuilt2023a} aggregates 162 collaboratively built tasks with a strong U.S. common-law focus, while LexGLUE~\citep{chalkidis-etal-2022-lexglue} bundles seven tasks drawn primarily from EU institutions and U.S./U.K. courts and offers only limited coverage of Polish material. Task-specific resources such as CaseHOLD~\citep{zheng2021does}, CUAD~\citep{hendrycks2021cuad}, and BillSum~\citep{kornilova2019billsum} have likewise advanced the field within a largely English-language scope. Multi-jurisdictional corpora, including MultiLegalPile~\citep{niklaus2024multilegalpile689gbmultilinguallegal}, Pile of Law~\citep{NEURIPS2022_bc218a0c}, and the LEXTREME benchmark~\citep{niklaus2023lextreme}, broaden coverage across many languages and legal systems but remain Polish-thin in both volume and task design. Against this backdrop, \juddgespl{} is intended not as a competing benchmark but as a Polish-only, structurally enriched complement that adds analytical fields on top of raw judgments.
+
+\subsection{Polish legal NLP}
+\label{sec:related:polish}
+
+Resources for Polish legal NLP have grown but remain comparatively sparse. The earlier \juddges{} release at NeurIPS 2024~\citep{augustyniak2024juddges} introduced a bilingual Polish/U.K. judgment dataset and serves as the direct precursor to the present work. Beyond that, the PolEval shared tasks~\citep{poleval2024} have shaped Polish NLP evaluation more generally, although their legal-domain coverage is limited. On the modelling side, Bielik~\citep{bielik2025arxiv} has emerged as an open Polish LLM with associated pre-training and instruction corpora, and the PLLuM consortium~\citep{pllum2025} has organised a national effort to release Polish-language corpora and instruction data. To our knowledge, none of these resources combines two judicial branches under a single uniform LLM-extracted analytical structure at multi-million-judgment scale, which is the gap \juddgespl{} aims to address.
+
+\subsection{LLM-as-annotator, weak supervision, silver labels}
+\label{sec:related:llm-annotator}
+
+A growing body of work reports that large language models can match or approach human inter-annotator agreement on many text-classification and annotation tasks~\citep{gilardi2023chatgpt,ziems2024can,pangakis2023automated,chiang2023llmhumaneval}, suggesting practical value for scaling annotation in low-resource domains. At the same time, careful replications and critiques have documented sensitivity to model version, prompt formulation, and distributional bias, urging caution in treating LLM outputs as ground truth~\citep{reiss2023testing,pangakis2023automated}. These methodological concerns sit alongside an older tradition of weak supervision and programmatic labelling, exemplified by Snorkel~\citep{ratner2017snorkel}, which has long argued for explicit treatment of label noise and provenance. Taken together, the positive findings and the documented critiques motivate our decision to frame the LLM-extracted fields in \juddgespl{} as silver labels rather than as gold annotations, and to expose model identity, prompts, and validation samples so that downstream users can reason about label quality.
+
+\subsection{Documentation standards for ML datasets}
+\label{sec:related:documentation}
+
+A set of complementary documentation standards has emerged to support responsible release of machine-learning datasets and models. Datasheets for Datasets~\citep{gebru2021datasheets} provide structured questions covering motivation, composition, collection, and recommended uses. Data Cards~\citep{pushkarna2022data} and Model Cards~\citep{mitchell2019model} further standardise human-readable summaries of datasets and trained models, including intended use and known limitations. The Croissant metadata format~\citep{akhtar2024croissant}, together with the NeurIPS Responsible AI extension, adds a machine-readable layer aligned with current submission requirements. \juddgespl{} follows all four of these standards.

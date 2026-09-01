@@ -1,0 +1,45 @@
+% 06-datasheet-evaluation-card.tex
+% Goal: condensed Datasheet [Gebru et al. 2021] + an Evaluation Card
+% declaring what evaluative claims this resource is designed to support.
+
+\section{Datasheet and Evaluation Card}
+\label{sec:datasheet}
+
+\subsection{Datasheet}
+\label{sec:datasheet:datasheet}
+
+We accompany \juddgespl{} with a condensed Datasheet following the template of \citet{gebru2021datasheets}, covering motivation, composition, collection, preprocessing, intended uses, distribution, and maintenance. The body of the paper has already addressed each of these dimensions in passing: motivation and composition are introduced in the corpus overview, collection and preprocessing are described alongside the silver-label pipeline, and distribution and maintenance are detailed in the release section. To keep this section short while remaining standards-compliant, the full Datasheet template, with one paragraph per question, is provided in Appendix~\ref{sec:appendix:datasheet}. Readers seeking question-by-question answers, including provenance, sensitive content, and known limitations, should consult that appendix.
+
+\subsection{Evaluation Card}
+\label{sec:datasheet:eval-card}
+
+Beyond the Datasheet, we provide an Evaluation Card (Table~\ref{tab:eval-card}) that explicitly declares which classes of evaluative claim \juddgespl{} is designed to support and which it is not. The purpose of such a card is to set expectations up front: a corpus built primarily with silver labels can legitimately ground some research uses while being inappropriate for others, and conflating the two is a recurring failure mode in legal NLP releases. We therefore enumerate seven claim types and mark each as either supported or unsupported, with a short justification, so that downstream users can match their research questions to the resource's evidentiary basis before running experiments.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcl}
+\toprule
+\textbf{Claim type} & \textbf{Supported?} & \textbf{Notes} \\
+\midrule
+Pretraining / continued pretraining of legal LMs in Polish & Yes & Silver labels acceptable; raw text high-fidelity. \\
+Weak-supervision training of extraction models & Yes & Silver labels are the intended use. \\
+Descriptive / longitudinal legal analytics & Yes & Acknowledge model-version drift. \\
+Cross-branch generalization studies & Yes & Two disjoint branches enable this. \\
+\textbf{Benchmarking} with held-out test sets on LLM-extracted fields & No & Use validated subsets instead. \\
+Privacy guarantees beyond court-applied pseudonymization & No & Document anonymization is heterogeneous. \\
+Individual legal decision-making & No & Out of scope; not legal advice. \\
+\bottomrule
+\end{tabular}
+\caption{Evaluation Card: claims this resource is designed to support.}
+\label{tab:eval-card}
+\end{table}
+
+The four supported uses follow directly from the corpus design. Pretraining and continued pretraining of Polish legal language models are core uses because the underlying judgment text is high-fidelity and silver labels are not on the loss path, so extraction noise does not propagate into the model. Weak-supervision training of extraction models is, by construction, the intended use: silver labels are produced at scale precisely so that downstream extractors can be trained or distilled from them, with the understanding that any reported held-out numbers must come from a validated subset rather than from the silver labels themselves. Descriptive and longitudinal legal analytics are likewise supported, provided that users report which model version produced the labels and acknowledge the model-version drift this introduces over time. Finally, the resource supports descriptive cross-branch comparison between common and administrative courts; cross-branch generalization claims, in the strict sense, would require gold-label validation we do not provide, and we encourage users to frame branch-level findings descriptively.
+
+The three unsupported uses are excluded for equally concrete reasons. Benchmarking with held-out test sets defined directly on LLM-extracted fields is not supported because there is no validated gold reference for those fields at corpus scale, so reported scores would conflate extractor agreement with task performance; users should benchmark on the validated subsets instead. We do not claim privacy guarantees beyond the pseudonymization already applied by the courts at publication time, since anonymization practice is heterogeneous across chambers and years and we do not re-anonymize. Individual legal decision-making is explicitly out of scope: \juddgespl{} is a research resource, not legal advice, and must not be used to determine outcomes for specific persons or cases.
+
+\subsection{Responsible AI metadata}
+\label{sec:datasheet:rai}
+
+All Croissant Responsible AI fields are populated for the release, including data-collection context, sensitive-content flags, intended and out-of-scope uses, and maintenance contact, in line with the Evaluation Card above. The full machine-readable metadata is shipped as \texttt{juddges-pl.json} alongside the corpus; see \S\ref{sec:release} for the distribution channels and the resolved file URL.

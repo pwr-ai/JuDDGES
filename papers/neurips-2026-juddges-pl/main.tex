@@ -1,0 +1,142 @@
+\documentclass{article}
+
+% NeurIPS 2026 Evaluations & Datasets Track --- single-blind opt-in
+% (allowed for dataset-centered submissions where the dataset organization
+%  and prior peer-reviewed work cannot be released anonymously without
+%  breaking provenance, e.g. JuDDGES on Hugging Face).
+\usepackage[eandd, nonanonymous]{neurips_2026}
+% TODO: After acceptance, switch to camera-ready by adding `final`:
+%   \usepackage[eandd, nonanonymous, final]{neurips_2026}
+% Preprint variant for arXiv:
+%   \usepackage[preprint]{neurips_2026}
+%
+% TODO(reviewer-facing): if NeurIPS 2026 publishes an updated style file,
+% replace neurips_2026.sty in this directory before submission.
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[main=english,polish]{babel} % Polish hyphenation for embedded Polish content
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage[most]{tcolorbox}
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+
+% Reusable styled boxes for sample judgment excerpts and extraction-prompt
+% listings in the appendix. Keep both variants: examplebox (non-breakable)
+% and promptbox (breakable across pages).
+\newtcolorbox{examplebox}[1]{%
+  enhanced,
+  colback=gray!4, colframe=black!55, boxrule=0.4pt, arc=2pt,
+  title={#1}, fonttitle=\sffamily\bfseries\small,
+  coltitle=white, colbacktitle=black!65,
+  left=4pt, right=4pt, top=3pt, bottom=3pt,
+  before skip=6pt, after skip=6pt,
+}
+\newtcolorbox{promptbox}[1]{%
+  enhanced, breakable,
+  colback=gray!4, colframe=black!55, boxrule=0.4pt, arc=2pt,
+  title={#1}, fonttitle=\sffamily\bfseries\small,
+  coltitle=white, colbacktitle=black!65,
+  left=4pt, right=4pt, top=3pt, bottom=3pt,
+  before skip=6pt, after skip=6pt,
+}
+% Silver-label callout used for sample silver-label excerpts in section
+% bodies. Visual tier between examplebox (judgment quotations) and
+% promptbox (extraction prompts) -- lighter frame to signal "machine
+% generated, not gold".
+\newtcolorbox{silverbox}[1]{%
+  enhanced, breakable,
+  colback=gray!2, colframe=black!40, boxrule=0.4pt, arc=2pt,
+  title={#1}, fonttitle=\sffamily\bfseries\small,
+  coltitle=white, colbacktitle=black!50,
+  left=4pt, right=4pt, top=3pt, bottom=3pt,
+  before skip=6pt, after skip=6pt,
+}
+
+% Convenience macros (mirrors shared/settings.tex from JuDDGES 2024)
+\newcommand{\juddges}{JuDDGES}
+\newcommand{\juddgespl}{JuDDGES-pl}
+
+\title{JuDDGES-pl: Hundreds of Thousands of Structurally Enriched Polish Judgments from Common and Administrative Courts}
+
+% Authors match the OpenReview submission (single-blind, allowed for
+% dataset-centered E&D submissions). Author list is final; the broader
+% JuDDGES contributor list in CITATION.cff is intentionally not used
+% for this submission, which is scoped to the four WUST authors who
+% led the corpus release described in this paper.
+\author{%
+  {\L}ukasz Augustyniak \\
+  Wroclaw University of \\ Science and Technology \\ (WUST) \\
+  \And
+  Jakub Binkowski \\
+  WUST \\
+  \And
+  Albert Sawczyn \\
+  WUST \\
+  \And
+  Tomasz Kajdanowicz \\
+  WUST \\
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Civil-law jurisdictions remain severely underrepresented in legal NLP resources, where existing corpora are dominated by English-language common-law data and rarely include analytical structure beyond raw text. We release \juddgespl{} (\url{https://huggingface.co/datasets/JuDDGES/juddges-pl}), a single large-scale, analytically enriched Polish court judgment corpus spanning the two disjoint branches of the Polish judiciary: a common-courts subset covering the Supreme Court, courts of appeal, regional and district courts, and an administrative-courts subset covering the Supreme Administrative Court and lower administrative courts. The corpus comprises 2{,}691{,}842 judgments spanning 1981--2025 (437{,}450 common-court judgments from 1994--2025 and 2{,}254{,}392 administrative-court judgments from 1981--2025), each augmented with sixteen LLM-extracted analytical fields --- including structured factual state, legal state, summaries, theses, statutory bases, legal concepts, parties, outcomes, and keywords --- generated through a uniform Google Gemini 2.5 Pro extraction pipeline, alongside court-hierarchy, chamber, and procedural metadata preserved from the source portals.
+
+Our contribution is curatorial and infrastructural. We describe the acquisition, normalization, and large-scale LLM-based enrichment pipeline that converts heterogeneous court-publication formats into a uniform, analysis-ready resource; we characterize the corpus through descriptive analyses of coverage, document structure, citation patterns, court hierarchy, extraction-field statistics, and pseudonymization fidelity; and we document the resource using Croissant metadata with Responsible AI fields and an accompanying evaluation card. \textbf{We treat LLM-extracted fields explicitly as silver labels} --- useful for analysis, model pretraining, and weak-supervision pipelines, but \textbf{not as gold annotations for benchmarking} --- and document this distinction throughout.
+
+\juddgespl{} is designed to enable downstream evaluation of civil-law legal NLP --- including structured information extraction, statute-grounded reasoning, cross-branch generalization between common and administrative courts, longitudinal analysis of judicial language, and fairness audits in jurisdictions outside the Anglophone common-law mainstream --- without itself proposing new tasks or model comparisons. The corpus is openly released on Hugging Face under CC BY 4.0, alongside the reproducible enrichment pipeline (Apache 2.0) and validated Croissant metadata.
+\end{abstract}
+
+% Introduction
+\input{sections/01-introduction}
+
+% Related work
+\input{sections/02-related-work}
+
+% Acquisition & licensing
+\input{sections/03-acquisition-licensing}
+
+% Enrichment pipeline (methodological core)
+\input{sections/04-enrichment-pipeline}
+
+% Corpus characterization
+\input{sections/05-corpus-characterization}
+
+% Datasheet and Evaluation Card
+\input{sections/06-datasheet-evaluation-card}
+
+% Limitations and intended use
+\input{sections/07-limitations-intended-use}
+
+% Release and infrastructure
+\input{sections/08-release-infrastructure}
+
+% Conclusion
+\input{sections/09-conclusion}
+
+% Bibliography
+\bibliography{bib}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+\input{sections/appendix}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+% Mandatory NeurIPS 2026 paper checklist --- desk reject if missing.
+\input{sections/checklist}
+
+\end{document}

@@ -195,3 +195,17 @@ data/enriched_datasets/
 
 # DVC local config (contains internal endpoints & per-user credentials)
 .dvc/config.local
+
+# LaTeX build artifacts (papers/) — sources are tracked, builds are not
+papers/**/*.pdf
+papers/**/*.aux
+papers/**/*.log
+papers/**/*.out
+papers/**/*.toc
+papers/**/*.bbl
+papers/**/*.blg
+papers/**/*.fls
+papers/**/*.fdb_latexmk
+papers/**/*.synctex.gz
+.kangentic/
+kangentic.local.json

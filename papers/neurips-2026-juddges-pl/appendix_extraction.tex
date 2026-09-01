@@ -1,0 +1,1376 @@
+% =====================================================================
+% Appendix: KIS-Questions extraction & auto-annotation pipeline
+% =====================================================================
+
+\section{Extraction and Auto-Annotation Pipeline (OPUS-GENERATED-TO-REFINE)}
+\label{app:extraction}
+
+The verified release of \textsc{KIS-Questions} is built in six
+stages: HTML harvesting and section detection, single-reviewer
+quality screening on the resulting candidate pool, length-routed LLM
+extraction on the screened-high subset, deterministic post-filtering,
+deep per-row review, and a stratified expansion to the announced
+500-document target via reference-distribution sampling. Every
+released document has been screened, LLM-extracted, post-filtered, and
+reviewer-validated against its source supplementary section; the
+funnel counts at each stage are reported in
+Tab.~\ref{tab:funnel}; per-document statistics are reported on the
+dataset card.
+
+\paragraph{Sectioning.}
+Each tax interpretation in the source registry is published as one
+unstructured HTML blob with no semantic markup beyond inline section
+titles and styled paragraphs. We delimit the five sections of interest
+--- factual state, applicant questions, supplementary section,
+official's position, and justification --- with case-insensitive
+regular expressions over both heading tags and styled paragraphs
+(centered bold, strong-wrapped, list-paragraph classes inherited from
+MS Word exports). The header regex was calibrated iteratively during
+gold expansion: two factual-state header variants surfaced that the
+original scrape had silently skipped --- ``Treść wniosku jest
+następująca:'' and a per-word \texttt{<strong>}-tagged form of
+``Zakres wniosku o wydanie interpretacji'' that the bold-paragraph
+detector could only see as the truncated token ``Zakres''.
+Both variants were added to \texttt{FACTUAL\_STATE\_HEADER\_PATTERN};
+the resulting sectioning covers 100\,\% of the verified release.
+A document enters the candidate pool only if it carries both an
+applicant-question section and a supplementary section of at least
+50~characters.
+
+\paragraph{Source corpus, manual screening and gold yield.}
+
+The released benchmark is the output of a six-stage funnel; the
+candidate pool produced by deterministic sectioning is roughly two
+orders of magnitude larger than the released gold, and the reduction
+is dominated by a single-reviewer screening pass that gates which
+documents are worth LLM-extracting in the first place.
+Tab.~\ref{tab:funnel} reports the per-stage counts.
+
+\begin{table}[!htb]
+\centering
+\footnotesize
+\begin{tabular}{@{}llr@{}}
+\toprule
+\textbf{stage} & \textbf{metric} & \textbf{value} \\
+\midrule
+1. Eureka scrape    & documents harvested            & 505{,}438 \\
+                    & publication-date span          & 2007-07-24 -- 2026-04-23 \\
+\midrule
+2. Sectioning       & docs with both \textit{Pytania} and \textit{Uzupe\l{}nienie} ($\geq 50$\,ch) & 19{,}900 \\
+                    & total \textit{Uzupe\l{}nienie} sections                      & 20{,}165 \\
+\midrule
+3. Manual fast screening & docs reviewed in the screening UI                      & 3{,}350 \\
+                    & \quad marked \textbf{high quality} (kept)                    & \textbf{2{,}353} \\
+                    & \quad marked low quality (rejected)                          & 997 \\
+\midrule
+4. LLM extraction   & docs sent through length-routed extraction                   & 2{,}353 \\
+                    & \quad released \emph{Extended} split (excludes 500-doc held-out)              & \textbf{1{,}853} \\
+\midrule
+5. Reviewer + gold  & docs deep-reviewed in the per-row UI                         & \textbf{500} \\
+                    & released gold questions                                       & \textbf{6{,}953} \\
+                    & avg.\ questions per gold doc                                  & 13.9 \\
+\bottomrule
+\end{tabular}
+\caption{From 505k harvested tax interpretations across 19 years of the
+Eureka registry, deterministic sectioning yields a $\sim$20k candidate
+pool. A single reviewer screens each candidate with a binary
+\textit{high/low} verdict in a custom UI, keeping 2{,}353 documents;
+length-routed LLM extraction runs only on this screened subset. A
+deeper per-row review pass produces the released gold of $500$
+human-verified documents ($6{,}953$ questions; avg.\ $13.9$ q/doc),
+drawn from the screened-high pool with stratified sampling on length
+(\S\,Sampling).}
+\label{tab:funnel}
+\end{table}
+
+The screening stage is load-bearing: roughly 30\% of candidate
+documents are marked low-quality and never reach the LLM. The reviewer
+applies a coverage criterion --- a section is rejected when it
+contains applicant answers whose originating office questions are not
+present in the same section --- so that the released gold does not
+contain orphaned answers. Reporting only the candidate pool would
+overstate dataset size by an order of magnitude relative to what is
+actually released.
+
+\paragraph{Why an LLM, not a regex.}
+Across the released gold the office's clarification questions appear
+in five recurring syntactic patterns
+(Tab.~\ref{tab:question-patterns}), each demanding a different
+extraction policy: when to merge multiple ``?'' in one paragraph,
+when to attach a parent context to a sub-question, when to treat a
+colon-led line as a preamble vs.\ as a narrative connector. No single
+hand-written regex captures all five at once --- the disambiguation
+between patterns~3 and~5 (``X:'' followed by an indented list) and
+between patterns~1 and~4 (one numbered question vs.\ a numbered
+multi-question paragraph) requires reading the surrounding clause,
+which is what we delegate to the LLM under the verbatim contract
+encoded in the prompts.
+
+\begin{table*}[!htb]
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}lp{0.13\linewidth}XXp{0.22\linewidth}@{}}
+\toprule
+\textbf{\#} & \textbf{pattern} & \textbf{source snippet (Polish, abbreviated; English gloss)} & \textbf{correct (\texttt{q}, \texttt{ctx})} & \textbf{why a single regex fails} \\
+\midrule
+P1 & numbered top-level (\textit{1)} or \textit{Pytanie 1:})
+   & \textbf{PL:} \textit{1)~Od kiedy realizuje Pan w~ramach prowadzonej działalności gospodarczej działania noszące znamiona prac badawczo-rozwojowych?} \newline
+     \textbf{EN:} \textit{1)~Since when have you been carrying out R\&D-flavoured activities within your business?} \newline
+     \emph{(doc 473668)}
+   & \texttt{q} = ``Od kiedy realizuje Pan~\ldots?'' \newline \texttt{ctx} = \texttt{""}
+   & The marker (``1)'') sits on a separate line above the question body; line-anchored regex must span paragraphs and stop only at the next~``?'' or the next \textit{Odp.:}~marker. \\
+\addlinespace
+P2 & wh-/imperative top-level (no leading \textit{Czy})
+   & \textbf{PL:} \textit{Kiedy osiągnął Pan pierwszy dochód, do którego zamierza zastosować preferencyjną 5\% stawkę podatku?} \newline
+     \textbf{EN:} \textit{When did you achieve the first income to which you intend to apply the preferential 5\% rate?} \newline
+     \emph{(doc 480596)}
+   & \texttt{q} = ``Kiedy osiągnął Pan~\ldots?'' \newline \texttt{ctx} = \texttt{""}
+   & A \textit{Czy}-anchored extractor would skip these; \textit{Proszę~\ldots} requests don't always end in~``?'' at all (R11 has to whitelist eight openers explicitly). \\
+\addlinespace
+P3 & preamble + lettered/bulleted sub-questions
+   & \textbf{PL:} \textit{Czy przed dniem sprzedaży nieruchomości zostanie:} \newline
+     \quad\textit{a) Założony dziennik rozbiórki?} \newline
+     \quad\textit{b) Odpowiednio zabezpieczony teren rozbiórki?} \newline
+     \textbf{EN:} \textit{Will the following be in place before the property sale: a)~a~demolition log established?  b)~the demolition area properly secured?} \newline
+     \emph{(doc 482370)}
+   & three rows: \texttt{q} = ``Założony \ldots?'', ``Odpowiednio \ldots?'', \ldots; \newline all share \texttt{ctx} = ``Czy przed dniem sprzedaży nieruchomości zostanie:'' character-for-character
+   & The siblings inherit the preamble as their \texttt{context}, must keep the \emph{identical} string under R6, and may not begin with \textit{Czy} or even with~``?''. Regex pairing of a preamble with its dependents needs an explicit indentation/marker grammar that the document does not consistently follow. \\
+\addlinespace
+P4 & multi-question paragraph (compound, requires merge)
+   & \textbf{PL:} \textit{Czy Zainteresowani --- oprócz działalności w~formie spółki cywilnej --- prowadzą także indywidualnie działalność gospodarczą?  Jeśli tak --- to w~jakim zakresie?} \newline
+     \textbf{EN:} \textit{Do the Interested Parties --- apart from civil-partnership activity --- also independently conduct a business activity?  If so, to what extent?} \newline
+     \emph{(doc 482315)}
+   & one merged \texttt{q} = ``Czy~\ldots indywidualnie działalność gospodarczą?  Jeśli tak --- to w~jakim zakresie?'' \newline \texttt{ctx} = \texttt{""}
+   & A naive split-on-``?'' regex emits two separate questions; merging requires recognising that the second clause begins with a continuation marker (\textit{Jeśli tak / proszę / tj.~/ tzn.}) and refers anaphorically to the first. \\
+\addlinespace
+P5 & narration intro + numbered list (\textbf{not} a preamble)
+   & \textbf{PL:} \textit{W~odpowiedzi na pytania, wskazali Państwo:} \newline
+     \quad\textit{1.~Kiedy i~za wykonanie jakich czynności określana jest zapłata z~tytułu usług wsparcia?} \newline
+     \textbf{EN:} \textit{In response to the questions, you indicated: 1.~When and for which activities is the remuneration for support services determined?} \newline
+     \emph{(doc 479258)}
+   & \texttt{q} = ``Kiedy i~za wykonanie jakich czynności~\ldots?'' \newline \texttt{ctx} = \texttt{""} \emph{(top-level)}
+   & The narration line ends in~``:'' but is \emph{not} a preamble; treating any colon-line as a parent context (P3-style) would attach \textit{``W~odpowiedzi na pytania, wskazali Państwo:''} to every numbered question, polluting the dataset. R4 distinguishes the two by the lead-in's verb form (narrative \textit{wskazali} vs.\ imperative \textit{wskazać}). \\
+\bottomrule
+\end{tabularx}
+\caption{Five recurring patterns of question syntax in the
+supplementary sections of the released gold, with one real example
+per pattern. Each pattern requires a different extraction policy
+(merge or split, attach context or not, treat colon-line as preamble
+or narration); a single regex cannot handle all five jointly without
+losing precision on at least one. The LLM acts as a length-routed
+disambiguator under the verbatim contract; the post-filter then
+enforces R1's substring guarantee.}
+\label{tab:question-patterns}
+\end{table*}
+
+\paragraph{LLM extraction.}
+Each candidate's supplementary section is routed by length to one of
+two extraction configurations. \textbf{Short} sections (under
+$11{,}184$ characters; see Fig.~\ref{fig:supp-length}) are
+processed by a smaller, instruction-tuned model with a compact rule
+prompt; \textbf{long} sections are processed by a larger model with an
+HTML-aware variant of the same rules, falling back to a text-only
+variant when the cached source HTML is truncated. Both prompts share
+a six-document few-shot bank curated to exercise every rule
+(numbered/lettered nesting, narration vs.\ preamble, list-of-noun
+exception, multi-question paragraph splitting, two-level nesting).
+Outputs are decoded into a structured \texttt{(question, context)}
+list. Both prompts are reproduced verbatim at the end of this
+appendix.
+
+\paragraph{The \texttt{context} field.}
+Each emitted record pairs a verbatim question span with a verbatim
+\texttt{context} string. \texttt{context} carries the parent question
+or list preamble that the row hangs off --- typically a colon-led
+lead-in such as ``\textit{Wnioskodawca wyja\'sni\l{}, \.ze:}'' or an
+embedded parent of the form ``\textit{Czy~X?; je\.zeli tak prosz\k{e}
+wskaza\'c:}'' --- so that downstream consumers can reconstruct the
+hierarchical scope of a sub-question without re-parsing the source.
+The field is empty for top-level office questions. Two invariants
+hold by prompt construction (R5 and R6 in
+Fig.~\ref{fig:prompt-small}): \texttt{context} is always a literal
+substring of the source, and all siblings under the same preamble
+share an \emph{identical} context string character-for-character ---
+this is what makes the field useful as a grouping key. Empirically,
+9{,}749 of 26{,}221 extracted questions ($37.2\%$) carry a non-empty
+\texttt{context}; the rest are top-level office queries.
+Fig.~\ref{fig:context-example} shows one cluster.
+
+\begin{figure}[!htb]
+\begin{examplebox}{Example: full document structure with Factual State and nested Q\&A (doc 512925)}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{1em}}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{source (Polish, verbatim)} & \textbf{English translation} \\
+\midrule
+
+% Factual State Section
+\multicolumn{2}{@{}l}{\textbf{Factual State (\textit{Stan faktyczny})}} \\
+\midrule
+Jest Pan Komornikiem Sądowym przy Sądzie Rejonowym w (\dots) i wykonując swoje obowiązki w dniu 9 lutego 2016 r. dokonał Pan zajęcia nieruchomości należącej do dłużnika: (\dots). [\dots]
+&
+You are a Court Enforcement Officer (Bailiff) at the District Court in (\dots) and, in the performance of your duties, on 9 February 2016 you carried out the seizure of a property belonging to the debtor: (\dots). [\dots] \\
+\addlinespace
+
+% Supplementary Section - Context
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Supplementary Section (\textit{Uzupełnienie})}} \\
+\midrule
+~W uzupełnieniu do wniosku w odpowiedzi na pytania Organu:
+&
+~In supplement to the application, in response to the Authority's questions: \\
+\addlinespace
+
+% Question A
+\texttt{question:}~a) kiedy nieruchomość objęta wnioskiem została nabyta przez dłużnika, &
+\texttt{question:}~a) when was the property covered by the application acquired by the debtor, \\
+\addlinespace
+
+% Question B
+\texttt{context:}~b) czy nieruchomość stanowiła grunt niezabudowany, jeśli tak: &
+\texttt{context:}~b) whether the property constituted undeveloped land; if so: \\
+\addlinespace
+
+\hspace{1em} \texttt{question:}~$-$ czy teren ten objęty jest miejscowym planem zagospodarowania przestrzennego i jakie przeznaczenie tej nieruchomości z niego wynika, &
+\hspace{1em} \texttt{question:}~$-$ whether the land is covered by a local spatial development plan and what designation of the property results from it, \\
+\addlinespace
+
+\hspace{1em} \texttt{question:}~$-$ czy dla nieruchomości została wydana decyzja o warunkach zabudowy, &
+\hspace{1em} \texttt{question:}~$-$ whether a planning permission decision has been issued for the property, \\
+\addlinespace
+
+% Question C
+\texttt{context:}~c) czy na przedmiotowej nieruchomości znajdują się budynki lub budowle w rozumieniu ustawy z dnia 7 lipca 1994 r. Prawo budowlane (Dz. U. z 2017 r., poz. 1332, ze zm.), jeżeli tak: &
+\texttt{context:}~c) whether there are any buildings or structures on the said property within the meaning of the Act of 7 July 1994 -- Construction Law (Journal of Laws of 2017, item 1332, as amended); if so: \\
+\addlinespace
+
+\hspace{1em} \texttt{question:}~$-$ czy budynki lub budowle zostały wybudowane przez dłużnika (podać datę: dzień, miesiąc, rok), &
+\hspace{1em} \texttt{question:}~$-$ whether the buildings or structures were erected by the debtor (state the date: day, month, year), \\
+\addlinespace
+
+\hspace{1em} \texttt{question:}~$-$ kiedy (dzień, miesiąc, rok) zostały dokonane poszczególne ulepszenia, &
+\hspace{1em} \texttt{question:}~$-$ when (day, month, year) were the individual improvements carried out, \\
+
+\addlinespace
+
+\hspace{1em} [\dots] &
+\hspace{1em} [\dots] \\
+\bottomrule
+\end{tabularx}
+\end{examplebox}
+\caption{An example document structure illustrating the Factual State and deeply nested hierarchical questions (using both letters and dashes) in the \textit{Uzupełnienie} section. The right column provides an English translation for reader convenience and is not part of the dataset.}
+\label{fig:document-example}
+\end{figure}
+
+\begin{figure}[!htb]
+\begin{examplebox}{Example: three sub-questions sharing one \texttt{context} (doc 530068)}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{1em}}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{source (Polish, verbatim)} & \textbf{English translation} \\
+\midrule
+\texttt{context :}~26) W jaki sposób umowa ze Spółką A. reguluje kwestię Pana wynagrodzenia &
+\texttt{context :}~26) How does the contract with Company~A. regulate the matter of your remuneration \\
+\addlinespace
+\texttt{question:}~a) wyłącznie z tytułu przenoszenia na~A. praw do „programu komputerowego'' (jeśli tak, prosimy wskazać, jakie to prawa)? &
+\texttt{question:}~a) solely on account of transferring to~A. rights to a ``computer program'' (if so, please indicate which rights)? \\
+\addlinespace
+\texttt{question:}~b) także z tytułu innych czynności (jeśli tak, prosimy wskazać jakich)? &
+\texttt{question:}~b) also on account of other activities (if so, please indicate which)? \\
+\addlinespace
+\texttt{question:}~c) jakie „okresy rozliczeniowe'' przewiduje opisana z~A. umowa? &
+\texttt{question:}~c) what ``settlement periods'' does the contract described with~A. provide for? \\
+\bottomrule
+\end{tabularx}
+\end{examplebox}
+\caption{All three sub-questions share the same \texttt{context}
+verbatim; downstream code can group them into a single hierarchical
+question by string equality. The right column gives an English
+translation for reader convenience and is not part of the released
+data.}
+\label{fig:context-example}
+\end{figure}
+
+\paragraph{Length distribution and route boundary.}
+
+Fig.~\ref{fig:supp-length} reports the distribution of cleaned
+supplementary-section length across the $2{,}375$ sections in the
+\emph{screened-high} pool --- i.e.\ the documents the reviewer
+kept after the screening stage and on which the LLM extractor actually
+runs. The production route boundary is calibrated to the 75th
+percentile of this pool ($11{,}184$ characters), so
+$1{,}781$ sections ($75\%$) take the small route and the
+remaining $594$ ($25\%$) take the large route.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/supp_length_distribution.pdf}
+\caption{Distribution of supplementary-section lengths over the
+screened-high pool ($n = 2{,}375$, log-scale x-axis). The
+dashed red line marks the production route boundary at the 75th
+percentile ($11{,}184$ characters); the dotted lines mark the mean
+($9{,}735$ characters) and median ($6{,}108$ characters). The mean
+sits well above the median, reflecting a heavy right tail of nested
+supplementary sections that the small route would otherwise truncate.}
+\label{fig:supp-length}
+\end{figure}
+
+We calibrate the threshold on the screened-high pool rather than the
+raw candidate pool because the rejected $\sim$30\,\% of candidates
+skews short --- their supplementary sections are dominated by
+applicant-response prose and contribute little long-tail mass --- so
+fitting against the candidate pool would overstate the small route's
+share. The choice is supported on three further axes. (i)
+\emph{Quality crossover.} Tab.~\ref{tab:ablation-routes} shows the
+two models' relative strengths invert across the boundary: the small
+model's recall on long, deeply nested sections collapses to $69.0\%$
+while its short-document $P_{\text{strict}}$ leads the larger model
+by only $4.2$~pp. The crossover region empirically aligns with the
+long-tail break of the screened-high distribution.
+(ii) \emph{Cost.} The screened pool routes about three short
+sections for every long one, so the cheaper model still handles the
+bulk of inference. (iii) \emph{Token budget.} Eleven thousand
+characters of cleaned Polish text is roughly $4$k subword tokens,
+which leaves headroom for the six-document few-shot bank inside the
+small model's context window.
+
+\paragraph{Post-filter.}
+Every emission is run through six deterministic checks
+(Tab.~\ref{tab:postfilter}); each drop is logged so the filter can be
+re-tuned offline without re-running the LLM.
+
+\begin{table}[!htb]
+\centering
+\footnotesize
+\begin{tabular}{@{}llp{0.55\linewidth}@{}}
+\toprule
+\textbf{rule} & \textbf{action} & \textbf{trigger} \\
+\midrule
+verbatim guard (text)    & drop       & question text not a
+  whitespace-tolerant substring of the source (catches
+  hallucinations and few-shot leakage) \\
+verbatim guard (context) & clear ctx  & context fails the same
+  check; the verbatim text survives without an orphaned parent \\
+empty                    & drop       & blank text after strip \\
+preamble ends with colon & drop$^{\dagger}$ & preambles are never
+  standalone questions
+  ($^{\dagger}$\,when the line has the embedded form
+  ``Czy~X; je\.zeli tak prosz\k{e} wskaza\'c:'', the
+  ``Czy~X'' head is salvaged as the parent question) \\
+bare list fragment       & drop       & no question mark, no Polish
+  question opener, no context, ends with comma/semicolon/period and
+  shorter than 120 characters \\
+narrative catch-all      & drop       & none of the above and no
+  question mark \\
+\bottomrule
+\end{tabular}
+\caption{Post-filter pipeline. The Polish question opener accepts an
+optional preposition (na/w/o/od/do/\ldots) before
+\textit{czy/co/jak/\ldots}, all morphological forms of
+\textit{kt\'ory} and \textit{jaki}, and request verbs
+(\textit{prosz\k{e}/prosimy}).}
+\label{tab:postfilter}
+\end{table}
+
+\begin{figure}[!htb]
+\begin{examplebox}{Two correctly extracted clusters from the released gold}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{1em}}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{source (Polish, verbatim)} & \textbf{English translation} \\
+\midrule
+\multicolumn{2}{@{}p{\linewidth}@{}}{\emph{doc 482229 --- VAT real-estate, three unrelated top-level questions (\texttt{context} empty for all)}} \\
+\addlinespace
+\texttt{Q:}~Jakie jest przeznaczenie działek nr 1 i 2 w miejscowym planie zagospodarowania przestrzennego? &
+\texttt{Q:}~What is the designated use of plots no.~1 and~2 in the local zoning plan? \\
+\addlinespace
+\texttt{Q:}~Czy działki nr 1 i 2 były wykorzystywane wyłącznie na cele działalności zwolnionej? &
+\texttt{Q:}~Were plots no.~1 and~2 used exclusively for VAT-exempt activities? \\
+\addlinespace
+\texttt{Q:}~Czy w związku z nabyciem ww. działek dłużnikowi przysługiwało prawo do odliczenia podatku VAT naliczonego? &
+\texttt{Q:}~In connection with the acquisition of the aforementioned plots, was the debtor entitled to deduct input VAT? \\
+\midrule
+\multicolumn{2}{@{}p{\linewidth}@{}}{\emph{doc 482370 --- three sub-questions sharing one parent \texttt{context}}} \\
+\addlinespace
+\texttt{ctx:}~Czy przez dniem sprzedaży nieruchomości zostanie: &
+\texttt{ctx:}~Will the following be in place before the date of the property sale: \\
+\addlinespace
+\texttt{Q:}~Założony dziennik rozbiórki? &
+\texttt{Q:}~A demolition log established? \\
+\addlinespace
+\texttt{Q:}~Odpowiednio zabezpieczony teren rozbiórki? &
+\texttt{Q:}~The demolition area properly secured? \\
+\addlinespace
+\texttt{Q:}~Umieszczona na terenie rozbiórki w widocznym miejscu: tablica informacyjna oraz ogłoszenie zawierające dane dotyczące bezpieczeństwa pracy i ochrony zdrowia? &
+\texttt{Q:}~Placed at the demolition area in a visible location: an information board and a notice containing information on occupational safety and health protection? \\
+\bottomrule
+\end{tabularx}
+\end{examplebox}
+\caption{Two patterns of correct extraction from the released gold:
+unrelated top-level office questions (\texttt{context} empty) and
+sibling sub-questions that share an identical \texttt{context}
+string character-for-character. The shared-context invariant from
+prompt rules R5/R6 is preserved. The right column gives an English
+reading aid and is not part of the released data.}
+\label{fig:gold-examples}
+\end{figure}
+
+\begin{figure}[!htb]
+\begin{examplebox}{Three failure modes: LLM extraction vs.\ reviewer-corrected gold}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{1em}}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{LLM extraction (raw output)} & \textbf{Gold (after reviewer correction)} \\
+\midrule
+\multicolumn{2}{@{}p{\linewidth}@{}}{\emph{Failure A --- \texttt{context\_as\_question} (doc 476480).}
+A colon-led preamble was emitted as a standalone question; the
+reviewer demotes it to a \texttt{context} string for the sub-list
+that follows (siblings omitted for space).} \\
+\addlinespace
+\texttt{ctx:}~(empty)\newline
+\texttt{Q (PL):}~6) Proszę, jednoznacznie wskazać, czy przedmiotem Pana pytań objęte są wyłącznie dochody z kwalifikowanego IP: Ø które były/są/będą przez Pana tworzone, rozwijane i modyfikowane [...]\newline
+\texttt{Q (EN):}~6) Please unambiguously indicate whether the subject of your questions covers exclusively income from qualified IP: Ø which was/is/will be created, developed and modified [...] &
+\texttt{ctx (PL):}~Proszę, jednoznacznie wskazać, czy przedmiotem Pana pytań objęte są wyłącznie dochody z kwalifikowanego IP:\newline
+\texttt{ctx (EN):}~Please unambiguously indicate whether the subject of your questions covers exclusively income from qualified IP:\newline
+\texttt{Q:}~(this row no longer emits a standalone question; the trimmed text serves as the parent \texttt{context} for the omitted sub-questions) \\
+\midrule
+\multicolumn{2}{@{}p{\linewidth}@{}}{\emph{Failure B --- \texttt{wrong\_context} (doc 476480).}
+The \texttt{context} absorbed the first sub-question, breaking
+sibling-equality with later (b), (c), \ldots\ items under the same
+preamble. The reviewer trims \texttt{context} back to the preamble
+that ends in ``:''.} \\
+\addlinespace
+\texttt{ctx (PL):}~9) W przypadku, gdy obok tworzenia dokonuje/dokonywał Pan będzie również rozwijania oprogramowania/modyfikacji oprogramowania lub jego części --- należy wskazać: a) Czy --- w przypadku gdy rozwija Pan oprogramowanie --- jest Pan właścicielem [...]\newline
+\texttt{ctx (EN):}~9) In the case where, alongside creating, you also perform development of software/modification of software or parts thereof --- please indicate: a) Whether --- when you develop the software --- you are the owner [...]\newline
+\texttt{Q (PL):}~a) Czy --- w przypadku gdy rozwija Pan oprogramowanie --- jest Pan właścicielem, współwłaścicielem [...]\newline
+\texttt{Q (EN):}~a) Whether --- when you develop the software --- you are the owner, co-owner [...] &
+\texttt{ctx (PL):}~W przypadku, gdy obok tworzenia dokonuje/dokonywał Pan będzie również rozwijania oprogramowania/modyfikacji oprogramowania lub jego części --- należy wskazać:\newline
+\texttt{ctx (EN):}~In the case where, alongside creating, you also perform development of software/modification of software or parts thereof --- please indicate:\newline
+\texttt{Q (PL):}~Czy --- w przypadku gdy rozwija Pan oprogramowanie --- jest Pan właścicielem, współwłaścicielem [...]\newline
+\texttt{Q (EN):}~Whether --- when you develop the software --- you are the owner, co-owner [...] \\
+\midrule
+\multicolumn{2}{@{}p{\linewidth}@{}}{\emph{Failure C --- \texttt{false} (doc 482315).}
+A bare continuation fragment with no parent and no standalone
+question content; the question mark let it past the
+bare-list-fragment post-filter rule. The reviewer drops it.} \\
+\addlinespace
+\texttt{ctx:}~(empty)\newline
+\texttt{Q (PL):}~--- Jeśli tak --- to w jakim zakresie?\newline
+\texttt{Q (EN):}~--- If so, then to what extent? &
+\texttt{ctx:}~---\newline
+\texttt{Q:}~(dropped from the gold; the fragment is conceptually folded into the preceding parent question that already ended in ``?'') \\
+\bottomrule
+\end{tabularx}
+\end{examplebox}
+\caption{Three recurring failure modes shown as raw LLM output (left)
+versus the reviewer-corrected gold (right). \textbf{A} demotes a
+``standalone question'' into a \texttt{context} string; \textbf{B}
+trims the \texttt{context} so siblings under one preamble share an
+identical value, restoring the R6 invariant; \textbf{C} drops a
+continuation fragment that lacks its own question content. Failures
+A and B together account for 30 of 40 flagged questions in the
+reviewer logs, C for 3.}
+\label{fig:pipeline-failures}
+\end{figure}
+
+\paragraph{Reviewer pass and gold reconstruction.}
+A single annotator reviews the post-filtered output in a custom
+review interface, issuing one of four per-question verdicts ---
+\textit{correct} (kept verbatim), \textit{fixed} (kept with a typed
+correction to text and/or context), \textit{dropped}, and
+\textit{merged} (folded into another question on the same document)
+--- and additionally typing any questions the model missed (verbatim
+against the source). The gold for each document is reconstructed by
+applying the verdicts to the model's proposals and appending the
+typed-in additions. The reviewer-typed long tail dominates because
+the model is conservative on deeply nested supplementary sections;
+the kept-verbatim share measures the residual yield of the model
+plus post-filter stack.
+
+The released schema is one record per document, with fields for the
+document identifier, the list of clarifying questions (each carrying
+its parent context when present), the applicant's original
+interpretation questions (used as a priority signal in downstream
+generator prompts), and the cleaned supplementary section and factual
+state that the reviewer validated.
+
+\paragraph{Multi-reviewer pilot.}
+To validate that the verdict scheme yields stable labels, three
+reviewers independently re-annotated a $40$-document subsample drawn
+proportionally from the queued expansion ($30$ small-route plus
+$10$ large-route documents; $608$ LLM-emitted questions in total).
+Tab.~\ref{tab:per-reviewer} summarises per-reviewer activity.
+Pairwise raw agreement on the four-class verdict ranges between
+$92.6$\,\% and $97.4$\,\% across all reviewer pairs, and
+\textbf{$91.5$\,\% of questions ($556/608$) receive the same verdict
+from all three reviewers}; Fleiss'~$\kappa$ on the combined
+verdict-plus-additions unit set is $0.47$ (``moderate'' on the
+Landis--Koch scale). The verdict-only $\kappa$ collapses under the
+heavy \textit{correct}-class prevalence ($98.4$\,\% of three-way
+unanimous units carry that label), and is reported here only for
+completeness; the headline metric is the three-way unanimity rate
+together with the per-reviewer activity in
+Tab.~\ref{tab:per-reviewer}. Disagreements concentrate on four
+large-route documents in IP-Box and VAT-property categories, where
+the prompt's reductive rules (split numbered alternatives, merge
+\emph{Jeśli tak / Jeżeli tak} follow-ups, drop narration without a
+question mark) are hardest to apply consistently across human
+reviewers.
+
+\begin{table}[!htb]
+\centering
+\footnotesize
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Reviewer & Docs & Q & correct & fixed & dropped & merged & additions & docs w/\,adds \\
+\midrule
+A & $40$ & $608$ & $602$ & $1$  & $4$ & $1$ & $12$ & $5$  \\
+B & $40$ & $608$ & $570$ & $31$ & $3$ & $4$ & $24$ & $14$ \\
+C & $40$ & $608$ & $598$ & $8$  & $0$ & $2$ & $22$ & $7$  \\
+\bottomrule
+\end{tabular}
+\caption{Per-reviewer activity on the multi-reviewer pilot
+($40$ documents, $608$ LLM-emitted questions; the same set is
+annotated independently by all three reviewers). Verdict columns
+sum to $608$ per row. \emph{Additions} is the number of missing
+questions the reviewer typed in over and above the model's
+emissions; \emph{docs w/\,adds} is the number of documents in
+which that reviewer added at least one missing question.}
+\label{tab:per-reviewer}
+\end{table}
+
+\paragraph{Human-label bottleneck on missing questions.}
+The reviewer's freedom to type in any question the model omitted is
+the most subjective step in gold reconstruction. In a small
+multi-reviewer pilot on the queued expansion sample, the closed-set
+per-question verdicts converged across reviewers --- the dispute
+rate was dominated by a small tail of long, multi-part documents
+where the same surface span supports several plausible
+decompositions --- but the open-ended \emph{additions} did not. The
+same supplementary section yields different sets of ``missing''
+questions depending on whether a given reviewer treats reworded
+sub-clauses, list-bullet expansions, or alternative phrasings as new
+questions or as restatements of an already-extracted item. We read
+this as a human-label bottleneck rather than a measurement error:
+the boundary between \emph{question identity} and \emph{paraphrase}
+is not stably operationalised in clarification-letter Polish, where
+a single substantive query is routinely broken across multiple
+lead-ins, sub-bullets, and conditional follow-ups; a stricter rubric
+would not move the inter-reviewer consensus without first
+redefining what counts as one question at the linguistic level.
+Downstream consumers should therefore treat the additions column of
+the gold as a per-reviewer lower bound on coverage rather than an
+exhaustive enumeration.
+
+\paragraph{Released splits.}
+We publish two splits with complementary precision/scale trade-offs.
+The \emph{Extended} split is the full post-filtered LLM output over
+the $1{,}853$ screened-high documents already routed through
+extraction (excluding the $500$-document held-out review sample); it
+is recommended for unsupervised or large-scale uses where the
+deterministic post-filter guarantees (verbatim substrings, no
+orphaned contexts, no narrative catch-alls) are sufficient. The
+\emph{Verified} split is the $500$-document held-out review set, all
+documents fully human-verified by per-row review in the custom
+annotation UI (drawn to match the screened-high length distribution;
+\S\,\ref{app:extraction:sampling}). Tab.~\ref{tab:dataset-splits}
+reports the per-split counts.
+
+\begin{table}[!htb]
+\centering
+\footnotesize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+ & \textbf{Extended} & \textbf{Verified} \\
+\midrule
+documents               & $1{,}853$             & $\mathbf{500}$ \\
+\quad small / large     & $1{,}415$ / $438$       & $403$ / $97$ \\
+questions               & $26{,}221$            & $6{,}953$ \\
+\quad small / large     & $13{,}572$ / $12{,}649$ & $3{,}936$ / $3{,}017$ \\
+avg.\ q / doc           & $14.2$                & $13.9$ \\
+publication span        & 2022-06 -- 2026-04  & 2021-12 -- 2026-04 \\
+review status           & post-filter only    & full row-by-row gold \\
+\bottomrule
+\end{tabular}
+\caption{Composition of the released splits. The \emph{Extended}
+split is the entire post-filtered LLM output across the
+screened-high pool that has been routed through extraction (verbatim
+and structural guarantees enforced deterministically; no per-row
+human verdict). The \emph{Verified} column is the $500$-document
+held-out gold release, all documents fully human-verified by per-row
+review (\S\,\ref{app:extraction:sampling} describes the
+length-stratified sampling used to draw the $500$ from the
+screened-high pool). The \emph{small\,/\,large} sub-rows split each
+total by extraction route at the $11{,}184$-character boundary
+(small~=~\texttt{gpt-5-mini} on the compact prompt,
+large~=~\texttt{gpt-5.2} on the HTML-aware variant).
+\emph{Publication span} is the date range of the source tax
+interpretations on the Eureka registry.}
+\label{tab:dataset-splits}
+\end{table}
+
+\paragraph{Limitations of the extraction pipeline.}
+The funnel in Tab.~\ref{tab:funnel} discards two populations whose
+recovery is out of scope for the present release.
+\textbf{(i) Screening-rejected documents ($n \approx 997$).} The
+reviewer's \textit{low} verdict is a \emph{coverage} criterion, not
+a parsing-quality one: a candidate is rejected when its
+supplementary section contains applicant answers whose originating
+office questions are not themselves present in the same section
+(the office issued the clarification in a separate letter or in an
+earlier round, and only the applicant's verbatim response was
+included in the published interpretation). Including such a
+document would inject orphaned answers into the gold and bias
+question-recreation evaluation: a model that correctly proposes
+the missing question would be marked wrong against a gold that
+never knew the question existed. Empirically these sections are
+not parsing failures --- 97\,\% contain at least one question mark
+and \emph{every} rejected document yields at least one regex-matched
+candidate --- but they are systematically longer than the kept ones
+(median supplementary length 9{,}943~vs.\ 6{,}108~characters) and
+yield far fewer office questions per document (median 2 vs.\ 9),
+because the section is dominated by applicant-response prose.
+Two markers correlate with the rejection: roughly 17\,\% of the
+rejected sections carry a \textit{pozostawia bez rozpatrzenia}
+clause (procedural termination of the application by the office)
+and 26\,\% contain \textit{doprecyzowanie} (the formal clarification
+cycle), but neither marker is sufficient on its own --- 1\,\% of
+kept documents also carry the former and 4\,\% the latter.
+Reproducing the reviewer's coverage judgement automatically would
+require a Q$\to$A pairing classifier over the section text, not a
+prompt-level filter. \textbf{(ii) Unscreened candidates
+($n \approx 16{,}550$).} The sectioning regex matches an
+Uzupe\l{}nienie header on roughly 16.5\,k further documents that
+have not yet been reviewed. Their supplementary sections are
+markedly shorter (median 2{,}810~characters) and far less
+Q-list-shaped: only 3\,\% of their sections contain any question
+mark at all, against $\sim$99\,\% in the screened pool. This is a
+different distribution from the released set rather than more of
+the same data, and a length-uniform LLM extractor would mis-fire on
+it --- not because of a token budget, but because the underlying
+section is often informational text matched by the header regex
+without containing office questions of the form the prompts target.
+Scaling beyond the current release therefore requires both a
+document-level classifier deciding whether the section is of the
+elicitation kind and a coverage classifier of the kind described
+above; we leave both to a follow-up release.
+
+% =====================================================================
+% Ablations
+% =====================================================================
+
+\subsection{Ablation: model $\times$ route}
+\label{app:extraction:ablations}
+
+The model $\times$ route ablation, the strict-precision-vs-length chart, and the per-route performance table have been promoted into the main paper: see Section~\ref{sec:extraction-ablation}, Fig.~\ref{fig:precision-vs-length}, and Tab.~\ref{tab:ablation-routes}.
+
+% =====================================================================
+% Sampling protocol
+% =====================================================================
+
+\subsection{Sampling protocol for the verified release}
+\label{app:extraction:sampling}
+
+The $500$-document \textsc{GapQ-Verified} release is drawn
+deterministically from the screened-high pool by stratified sampling
+against the supplementary-section length distribution: per-bin
+proportions in the verified release agree with the screened-high
+pool within $\pm 0.2$ percentage points across eight log-spaced
+length bins anchored at the production route boundary
+($11{,}184$~chars). Matching the length distribution keeps the
+verified release indistinguishable from the larger \textsc{Extended}
+split for length-sensitive downstream components (the route
+boundary, retrieval-corpus length normalization, judge-prompt
+context budgets).
+
+% =====================================================================
+% Per-year and topic distribution
+% =====================================================================
+
+\subsection{Temporal and topic distribution of the release}
+\label{app:extraction:distribution}
+
+Tab.~\ref{tab:per-year} reports per-year document and question counts
+across the full \textsc{GapQ} release ($n=2{,}353$, comprising the
+$500$-document \textsc{GapQ-Verified} gold and the $1{,}853$-document
+\textsc{GapQ-Extended} split). The release spans
+2022-06-21 to 2026-04-17; coverage is heaviest in 2024-2025
+($66.7\%$ of documents) but every year from 2022 onward is represented
+with at least 70 documents. Per-document question yield is highest in
+2024 ($17.4$ questions/doc), reflecting the prevalence of long IP-Box
+filings that year (see below).
+
+\begin{table}[!htb]
+\centering
+\footnotesize
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{year} & \textbf{docs} & \textbf{\%} & \textbf{questions} & \textbf{avg.\ q/doc} & \textbf{unique kws} \\
+\midrule
+2022 &    72 &   3.1\,\%  &    816 & 11.3 &  159 \\
+2023 &   326 &  13.9\,\% &  5{,}321 & 16.3 &  478 \\
+2024 &   684 &  29.1\,\% & 11{,}891 & 17.4 &  636 \\
+2025 &   885 &  37.6\,\% & 11{,}007 & 12.4 &  863 \\
+2026 &   386 &  16.4\,\% &  4{,}872 & 12.6 &  552 \\
+\midrule
+\textbf{total} & \textbf{2{,}353} & \textbf{100\,\%} & \textbf{33{,}907} & \textbf{14.4} & \textbf{1{,}338} \\
+\bottomrule
+\end{tabular}
+\caption{Per-year statistics for the full release. ``Unique kws''
+counts distinct registry-supplied keyword strings observed in
+documents published that year (any year-membership; rows do not sum).
+The 2024 spike in average questions per document is driven by long
+IP-Box filings (Tab.~\ref{tab:topic-distribution}).}
+\label{tab:per-year}
+\end{table}
+
+Topical structure is summarised by the registry's keyword field
+\textit{as published} --- no manual taxonomy or post-hoc clustering.
+A document is counted toward a keyword whenever that exact string
+appears in its keyword list. The top-30 keywords by document
+frequency (Tab.~\ref{tab:topic-distribution}) cover $75.1\%$ of the
+release; extending to top-50 covers $84.9\%$ and top-100 covers
+$91.2\%$. The full vocabulary contains $1{,}338$ distinct keywords
+with a long tail: median document carries 4 keywords, max~21.
+
+\begin{table}[!htb]
+\centering
+\footnotesize
+\begin{tabular}{@{}rrl@{}}
+\toprule
+\textbf{docs} & \textbf{\%} & \textbf{keyword} \\
+\midrule
+475 & 20.2\,\% & IP Box \\
+295 & 12.5\,\% & stawka-stawki podatku-stawka preferencyjna podatku \\
+280 & 11.9\,\% & oprogramowanie \\
+242 & 10.3\,\% & komputery-program komputerowy \\
+238 & 10.1\,\% & dzia\l{}alno\'s\'c-dzia\l{}alno\'s\'c gospodarcza \\
+235 & 10.0\,\% & dzia\l{}alno\'s\'c-dzia\l{}alno\'s\'c badawczo-rozwojowa \\
+210 &  8.9\,\% & nieruchomo\'sci-sprzeda\.z nieruchomo\'sci \\
+174 &  7.4\,\% & czynno\'sci-czynno\'sci niepodlegaj\k{a}ce opodatkowaniu \\
+163 &  6.9\,\% & nieruchomo\'sci-nieruchomo\'s\'c niezabudowana \\
+147 &  6.2\,\% & odliczenia-prawo do odliczenia \\
+144 &  6.1\,\% & podatnik-podatnik podatku od towar\'ow i us\l{}ug \\
+127 &  5.4\,\% & zwolnienie-zwolnienie przedmiotowe \\
+121 &  5.1\,\% & podatnik \\
+111 &  4.7\,\% & przedsi\k{e}biorstwa-zorganizowana cz\k{e}\'s\'c przedsi\k{e}biorstwa \\
+110 &  4.7\,\% & prace-prace badawczo-rozwojowe \\
+105 &  4.5\,\% & koszt-koszty uzyskania przychod\'ow \\
+ 98 &  4.2\,\% & grunty-grunt niezabudowany \\
+ 94 &  4.0\,\% & zwolnienie \\
+ 92 &  3.9\,\% & koszt-koszty kwalifikowane \\
+ 89 &  3.8\,\% & nieruchomo\'sci-nieruchomo\'s\'c zabudowana \\
+ 81 &  3.4\,\% & opodatkowanie \\
+ 80 &  3.4\,\% & gmina \\
+ 78 &  3.3\,\% & czynno\'sci-czynno\'sci podlegaj\k{a}ce opodatkowaniu \\
+ 70 &  3.0\,\% & prawa-prawa autorskie \\
+ 68 &  2.9\,\% & maj\k{a}tek-maj\k{a}tek prywatny \\
+ 65 &  2.8\,\% & dzia\l{}ki \\
+ 63 &  2.7\,\% & rycza\l{}t-rycza\l{}t ewidencjonowany \\
+ 59 &  2.5\,\% & umowa-umowa przedwst\k{e}pna \\
+ 54 &  2.3\,\% & dzier\.zawa \\
+ 53 &  2.3\,\% & odliczenia-odliczenie podatku od towar\'ow i us\l{}ug \\
+\bottomrule
+\end{tabular}
+\caption{Top-30 keywords by document frequency (registry strings
+verbatim, no manual taxonomy or normalisation). The marginal column
+\textbf{\%} is the fraction of the full release ($n=2{,}353$) that
+carries that keyword; rows do not sum because a document typically
+carries 4 keywords. The single most common keyword is \textit{IP Box}
+($20.2\%$), which co-occurs strongly with \textit{stawka preferencyjna}
+($12.5\%$), \textit{oprogramowanie} ($11.9\%$), \textit{program
+komputerowy} ($10.3\%$) and \textit{dzia\l{}alno\'s\'c badawczo-rozwojowa}
+($10.0\%$) --- together forming the IP-Box-relief lexicon. A second
+cluster covers real-estate VAT (\textit{sprzeda\.z nieruchomo\'sci},
+\textit{grunt niezabudowany}, \textit{nieruchomo\'s\'c zabudowana});
+a third covers VAT-exempt activities (\textit{czynno\'sci niepodlegaj\k{a}ce
+opodatkowaniu}, \textit{zwolnienie przedmiotowe}). The 2024 share of
+\textit{IP Box} reaches $40\%$ of that year's documents (up from
+$4\%$ in 2022 and falling to $10\%$ in 2025--2026) --- a
+regulatory-cycle artefact rather than a sampling bias.}
+\label{tab:topic-distribution}
+\end{table}
+
+% =====================================================================
+% Evaluation procedure
+% =====================================================================
+
+\section{Evaluation Procedure (OPUS-GENERATED-TO-REFINE)}
+\label{app:evaluation}
+
+This appendix specifies the matching, scoring and leakage-control
+machinery used in Tab.~\ref{tab:ablation-routes} (extraction) and in
+the downstream question-recreation evaluation. Two design choices
+deserve justification: a four-tier normalisation cascade for span
+matching (rather than exact-string equality), and a temporally
+constrained few-shot/RAG context for the generator.
+
+\paragraph{Span matching: four-tier normalisation cascade.}
+A predicted span $p$ matches a gold span $g$ when any tier of the
+following cascade equates them; the cascade is calibrated against
+five development docs and validated on twenty held-out docs.
+\textbf{Tier 1} ($n$): collapse runs of whitespace to a single space,
+fold Unicode quote/dash variants (\textit{„''"}, \textit{–—}) to
+ASCII, lowercase. \textbf{Tier 2} ($n_{\text{strict}}$): strip
+\emph{all} whitespace plus tier-1 punctuation/case folding --- this
+salvages OCR artefacts such as the typo ``\textit{C zy}'' in
+gold doc 641645, where the model emitted ``\textit{Czy}'' against a
+broken-spacing source. \textbf{Tier 3}
+($n_{\text{no\_prefix}}$): tier 2 plus removal of a leading numeric
+or alphabetic list marker (\texttt{1)}, \texttt{2.}, \texttt{a)},
+\texttt{Pytanie~1:}, \texttt{Ad.~3.}, \texttt{Na pytanie:});
+calibrated against doc 599923 where the source carried ``\texttt{2)
+Czy~\ldots?}'' on a separate line and the model dropped the
+``\texttt{2)}'' marker. \textbf{Tier 4} ($n_{\text{no\_trail}}$):
+tier 2 plus stripping trailing \texttt{?\,:\,.\,,\,;\,-\,–\,—};
+calibrated against doc 553467 where the gold context ended
+``\textit{wskazać:}'' and the model emitted ``\textit{wskazać}''.
+A predicted text is accepted as text-matched against gold $g$ if
+$n(p) = n(g)$, else $n_{\text{no\_prefix}}(p) = n_{\text{no\_prefix}}(g)$,
+else $n_{\text{no\_trail}}(p) = n_{\text{no\_trail}}(g)$
+(tier 2 alone is not used as the primary text-match channel because it
+is too aggressive --- it would equate two questions that differ only
+in spacing). Substring matching is deliberately excluded: it would
+credit the model when it emits one of $N$ glued sub-questions or
+truncates after the first ``?'', and those are real failures, not
+scoring artefacts.
+
+\paragraph{Context match.}
+Once a text-match is established, the predicted context $p_c$ must
+match the corresponding gold context $g_c$. Context applies the same
+four-tier cascade as text. In addition, a single \emph{95\%
+containment} rule is applied: if $|n(p_c)| \geq 30$ and
+$|n(p_c)|/|n(g_c)| \geq 0.95$ (or vice versa) and the shorter is a
+substring of the longer, the contexts are accepted as matched. This
+forgives boundary truncation of a few words at either end (the model
+sometimes drops a leading ``\textit{Wnioskodawca wyjaśnił, że:}'' from
+a long preamble) without forgiving wholesale lead-in omission, which
+would break the sibling-equality invariant from prompt rules R5/R6.
+
+\paragraph{Multi-match handling.}
+A single text can legitimately appear under two distinct contexts in
+the source --- e.g.\ the noun-list \textit{organizacyjnej /
+finansowej / funkcjonalnej} repeated twice under different parents
+in doc 603682. The matcher therefore indexes gold by text and tries
+\emph{every} gold entry sharing the predicted text in turn; the
+prediction is strict-matched if its context lines up with \emph{any}
+of those entries. Without this, the matcher would force a deterministic
+pairing that the verbatim-substring contract does not require.
+
+\paragraph{Aggregated metrics.}
+Let $K$ be the post-filter kept count, $G$ the gold count, $T$
+text-matches and $S$ strict matches.
+$\text{Recall} = T/G$, $P_{\text{text}} = T/K$, and
+$P_{\text{strict}} = S/K$. The third precision channel
+$P_{\text{ctx}}$ is the conditional rate $S/T$: of predictions
+whose text matched, what fraction also matched context. Splitting
+out $P_{\text{ctx}}$ separates context drift (text right, parent
+wrong --- typically R6 violations) from text drift (paraphrase or
+hallucinated span --- R1 violations); the two failure modes call for
+different fixes (rule wording vs.\ post-filter strictness) and
+collapsing them into a single number obscures that signal. The
+unweighted aggregate row in Tab.~\ref{tab:ablation-routes} is the
+mean of the per-route per-document counts, not the per-route
+arithmetic mean of percentages, so that one document's $K=0$ does
+not contribute to the precision aggregate.
+
+\paragraph{Few-shot leakage control.}
+The unified six-document few-shot bank used by both extraction
+prompts is excluded from every evaluation cohort; the ablation
+sampler silently filters those document IDs from the candidate pool
+and the dev-iteration harness fails with an explicit leakage warning
+if a developer requests one. The same exclusion holds for the
+downstream question-recreation evaluator. The bank itself was
+selected to span the principal Polish tax instruments under which
+KIS issues clarifications, so that no single instrument category
+biases extraction behaviour: two VAT cases (one real-estate
+transaction, doc 482229, 2022-02-28; one \textit{gmina}
+local-government applicant, doc 484231, 2022-03-04), one
+corporate-income-tax (CIT) financial-subsidy case (doc 601721,
+2024-08-30), one personal-income-tax (PIT) international-residence
+case (doc 634282, 2025-04-04), one IP-Box case (preferential 5\,\%
+rate for software/IP income; doc 569200, 2023-11-08, which also
+supplies the long-form scale signal at $\sim$26\,k characters), and
+one general business-activity classification (\textit{działalność
+gospodarcza}) case (doc 641645, 2025-05-28). The publication-date
+span of the bank (2022-02 -- 2025-05) sits comfortably inside the
+Verified split's 2021-12 -- 2026-04 window
+(Tab.~\ref{tab:dataset-splits}), so excluding the bank does not
+remove the temporal extremes of the evaluation cohort.
+
+\paragraph{Temporal context for question generation.}
+The downstream generator (\S~\ref{app:extraction:sampling}'s
+companion task: producing clarifying questions from a factual state)
+runs over a Polish-tax retrieval-augmented stack with two corpora:
+historical KIS interpretations and statutory law articles. Both are
+filtered by publication date before being shown to the model.
+\textbf{Similar-doc retrieval}: the corpus is masked to
+$\{d : \texttt{publication\_date}(d) < \texttt{publication\_date}(q)\}$
+where $q$ is the query document; an interpretation that did not yet
+exist when the office wrote the clarification cannot be retrieved
+as evidence for it. \textbf{Statutory retrieval}: each article
+carries an \texttt{effective\_from}/\texttt{effective\_to} pair and
+is masked to articles in force on $\texttt{publication\_date}(q)$,
+i.e.\ $\texttt{effective\_from} \leq d_q < \texttt{effective\_to}$.
+This excludes both repealed-and-replaced articles (current at
+evaluation time but not at $d_q$) and provisions that came into
+force after $d_q$ --- the latter is the dominant leakage channel for
+recent docs, since most law amendments since 2020 appear in the
+training data of the LLMs we evaluate. \textbf{Few-shot examples}
+for the generator are drawn from the gold pool and excluded if their
+\texttt{doc\_id} appears in the evaluation cohort --- a separate,
+identity-level guard from the publication-date filter, which catches
+the case where a doc \emph{is} in the cohort but happened to be
+published earlier than another cohort member. Together these three
+filters make the retrieval context the model would have seen
+\emph{at the time of writing} doc $q$, isolating model capability
+from temporal leakage.
+
+% =====================================================================
+% Prompt listings
+% =====================================================================
+
+\newcommand{\rulepair}[2]{%
+\par\noindent
+\begin{minipage}[t]{0.485\linewidth}\raggedright #1\end{minipage}%
+\hspace{1em}%
+\begin{minipage}[t]{0.485\linewidth}\raggedright #2\end{minipage}%
+\par\smallskip}
+
+\begin{promptbox}{Extraction prompt --- short supplementary sections (small route)}
+\label{fig:prompt-small}
+\scriptsize
+\linespread{0.95}\selectfont
+\selectlanguage{polish}\sloppy\setlength{\emergencystretch}{6em}\hyphenpenalty=50\tolerance=9999\hbadness=10000
+
+\rulepair{\textbf{Polish (deployed prompt)}}{\textbf{English (reading aid, not deployed)}}
+\par\hrule height 0.4pt\par\smallskip
+
+\rulepair{%
+Ekstrahujesz pytania urzędu z sekcji uzupełnień polskich interpretacji podatkowych KIS (krótkie dokumenty, do~$\sim$10k znaków), podanej w postaci czystego tekstu.\par\smallskip
+Wynik: lista \texttt{\{question, context\}}.\par
+--- \texttt{question} --- dosłowny tekst pytania (bez markera listy \texttt{a.}/\texttt{b.}/\texttt{\textbullet})\par
+--- \texttt{context} --- dosłowny tekst preambuły dla podpytań; \texttt{""} dla pytań nadrzędnych\par\smallskip
+Sygnały pozycji listy w tekście:\par
+--- linia zaczyna się od krótkiego markera listy: \texttt{a)}/\texttt{b)}/\texttt{a.}/\texttt{b.}/\texttt{i.}/\texttt{ii.}/\texttt{Ø}/\texttt{\textbullet}/\texttt{*}/\texttt{-}/\texttt{--}/\texttt{>} (jednoliterowy/jednosymbolowy znak na POCZĄTKU linii, nie wewnątrz zdania)\par
+--- LUB linia z wcięciem (spacje/tab) bezpośrednio pod akapitem kończącym się \texttt{:}, \texttt{tj.:} lub \texttt{tzn.:}\par
+--- LUB linia bezpośrednio po cytowanym fragmencie kończącym się \texttt{»:}, \texttt{":} lub \texttt{„\ldots'':} (cytowany fragment pełni rolę preambuły --- pozycje listy poniżej traktuj jako podpytania, a \texttt{context} = cały cytowany fragment)\par\smallskip
+Marker listy~$\neq$~numeracja nadrzędne: \texttt{1)}, \texttt{2)}, \texttt{Pytanie~1:} to CZĘŚĆ TREŚCI numerowanego pytania na poziomie root (reguła~3), NIE marker do pominięcia. Pomijaj jako marker tylko krótkie symbole \texttt{a.}/\texttt{b.}/\texttt{\textbullet}/\texttt{-}/\texttt{--}/\texttt{>} itp.\par\smallskip
+Reguły:%
+}{%
+You extract office questions from the supplementary sections of Polish KIS tax interpretations (short documents, up to~$\sim$10k characters), provided as plain text.\par\smallskip
+Output: a list of \texttt{\{question, context\}}.\par
+--- \texttt{question} --- the verbatim text of the question (without the list marker \texttt{a.}/\texttt{b.}/\texttt{\textbullet}).\par
+--- \texttt{context} --- the verbatim preamble for sub-questions; \texttt{""} for top-level questions.\par\smallskip
+List-position signals in the text:\par
+--- a line begins with a short list marker: \texttt{a)}/\texttt{b)}/\texttt{a.}/\texttt{b.}/\texttt{i.}/\texttt{ii.}/\texttt{Ø}/\texttt{\textbullet}/\texttt{*}/\texttt{-}/\texttt{--}/\texttt{>} (a one-letter/one-symbol token at the START of a line, not inside a sentence)\par
+--- OR an indented line (spaces/tab) directly beneath a paragraph ending in \texttt{:}, \texttt{tj.:} or \texttt{tzn.:}\par
+--- OR a line directly after a quoted fragment ending in \texttt{»:}, \texttt{":} or \texttt{„\ldots'':} (the quoted fragment plays the role of the preamble --- treat the list items below as sub-questions, with \texttt{context} = the entire quoted fragment)\par\smallskip
+List marker~$\neq$~top-level numbering: \texttt{1)}, \texttt{2)}, \texttt{Pytanie~1:} are PART OF the content of a numbered root-level question (rule~3), NOT a marker to drop. Drop as a marker only short symbols \texttt{a.}/\texttt{b.}/\texttt{\textbullet}/\texttt{-}/\texttt{--}/\texttt{>} and the like.\par\smallskip
+Rules:%
+}
+
+\rulepair{%
+1.~Tekst dosłowny: każdy \texttt{question} i \texttt{context} jest dosłownym fragmentem tekstu źródłowego, słowo w słowo. Bez parafrazy, bez uzupełniania.%
+}{%
+1.~Verbatim text: every \texttt{question} and \texttt{context} is a verbatim fragment of the source text, word for word. No paraphrase, no completion.%
+}
+
+\rulepair{%
+2.~Pomijaj odpowiedzi wnioskodawcy (\texttt{Odp.:}/\texttt{Odpowiedź:}/„Stanowisko Wnioskodawcy''). Pytanie kończy się na ostatnim \texttt{?} lub \texttt{.} przed odpowiedzią lub kolejną numerowaną pozycją.%
+}{%
+2.~Skip applicant answers (\texttt{Odp.:}/\texttt{Odpowiedź:}/``Stanowisko Wnioskodawcy''). The question ends at the last \texttt{?} or \texttt{.} before the answer or the next numbered item.%
+}
+
+\rulepair{%
+3.~Każda nowa numerowana pozycja (\texttt{1)}, \texttt{2)}, \texttt{Pytanie~1:}) wprowadza nowe pytanie. Nie łącz dwóch numerowanych pytań.\par\smallskip
+Wrapper \texttt{Na pytanie:} / \texttt{Na zadane pytanie:} / \texttt{W~odpowiedzi na pytanie:} / \texttt{Pytanie nr~X brzmiało:} --- to znacznik przytoczonego pytania urzędu. Tekst od końca wrappera do najbliższego \texttt{Odpowiedział Pan:} / \texttt{Odpowiedział Pan;} / \texttt{Odp.:} / \texttt{Odpowiedź:} to TREŚĆ pytania urzędu --- wyemituj ją jako osobne NADRZĘDNE pytanie (z \texttt{context~=~""}). Jeśli ta treść zawiera kilka znaków \texttt{?}, stosuj regułę~9 (multi-\texttt{?} proza) wewnątrz niej. Jeśli kończy się preambułą \texttt{:} z listą bulletów, stosuj regułę~5 (podpytania z preambułą jako \texttt{context}). Sam wrapper nie pojawia się w wyniku.%
+}{%
+3.~Every new numbered item (\texttt{1)}, \texttt{2)}, \texttt{Pytanie~1:}) introduces a new question. Do not merge two numbered questions.\par\smallskip
+The wrapper \texttt{Na pytanie:} / \texttt{Na zadane pytanie:} / \texttt{W~odpowiedzi na pytanie:} / \texttt{Pytanie nr~X brzmiało:} is a marker of a quoted office question. The text from the end of the wrapper up to the nearest \texttt{Odpowiedział Pan:} / \texttt{Odpowiedział Pan;} / \texttt{Odp.:} / \texttt{Odpowiedź:} is the CONTENT of the office question --- emit it as a separate TOP-LEVEL question (with \texttt{context~=~""}). If that content contains several \texttt{?} marks, apply rule~9 (multi-\texttt{?} prose) inside it. If it ends with a preamble \texttt{:} followed by a bulleted list, apply rule~5 (sub-questions with the preamble as \texttt{context}). The wrapper itself does not appear in the output.%
+}
+
+\rulepair{%
+4.~Preambuła to akapit kończący się znakiem \texttt{:}, \texttt{tj.:} lub \texttt{tzn.:}, bezpośrednio poprzedzający pozycje listy. Akapit kończący się BEZ \texttt{:} ALE bezpośrednio poprzedzający pozycje listy z markerem (\texttt{-}, \texttt{\textbullet}, \texttt{a)}, \ldots) RÓWNIEŻ traktuj jako preambułę --- emituj jej treść jako \texttt{context} podpytań, NIE jako pytanie. Nie emituj preambuły jako pytania, nawet jeśli zaczyna się od \texttt{Czy}/\texttt{Co}/\texttt{Jak}.\par\smallskip
+\textbf{NARRACJA $\neq$ preambuła}: zdania wprowadzające typu „W~uzupełnieniu wniosku Wnioskodawca udzielił odpowiedzi:'' --- to NARRACJA, nie preambuła. Pytania pod nimi to NADRZĘDNE pytania urzędu (każde ma \texttt{context~=~""}), NIE podpytania. Sygnał narracji: zdanie opisujące CO ZROBIŁ wnioskodawca/organ (czasownik \texttt{wskazali}, \texttt{udzielił}, \texttt{odpowiedzieli}), zakończone \texttt{:} ale NIE wprowadzające numerowanej/literowanej listy.\par\smallskip
+Wyjątek (preambuła zawierająca pełne pytanie nadrzędne): jeśli preambuła ma postać \texttt{Czy~X?; jeżeli tak, proszę wskazać:}, to część przed \texttt{;} (zdanie pytajne) wyemituj jako pytanie nadrzędne z \texttt{context~=~""}, a cała preambuła służy jako \texttt{context} podpytań.\par\smallskip
+Kontrola po wygenerowaniu: WYRZUĆ każdą pozycję wyniku której pole \texttt{question} (po stripie spacji) kończy się \texttt{:} --- to preambuły.%
+}{%
+4.~A preamble is a paragraph ending in \texttt{:}, \texttt{tj.:} or \texttt{tzn.:}, directly preceding list items. A paragraph ending WITHOUT \texttt{:} BUT directly preceding marked list items (\texttt{-}, \texttt{\textbullet}, \texttt{a)}, \ldots) ALSO counts as a preamble --- emit its text as the \texttt{context} of the sub-questions, NOT as a question. Do not emit a preamble as a question even when it begins with \texttt{Czy}/\texttt{Co}/\texttt{Jak}.\par\smallskip
+\textbf{NARRATION $\neq$ preamble}: introductory sentences such as ``W~uzupełnieniu wniosku Wnioskodawca udzielił odpowiedzi:'' are NARRATION, not preambles. The questions beneath them are TOP-LEVEL office questions (each with \texttt{context~=~""}), NOT sub-questions. Narration signal: a sentence describing WHAT the applicant/office DID (verb \texttt{wskazali}, \texttt{udzielił}, \texttt{odpowiedzieli}), ending in \texttt{:} but NOT introducing a numbered/lettered list.\par\smallskip
+Exception (preamble containing a full parent question): if the preamble has the form \texttt{Czy~X?; jeżeli tak, proszę wskazać:}, emit the part before \texttt{;} (the interrogative clause) as a parent question with \texttt{context~=~""}; the entire preamble serves as the \texttt{context} of the sub-questions.\par\smallskip
+Post-generation check: DROP any output item whose \texttt{question} field (after stripping whitespace) ends in \texttt{:} --- those are preambles.%
+}
+
+\rulepair{%
+5.~Pozycje listy bezpośrednio pod preambułą emituj jako oddzielne podpytania, z treścią preambuły jako \texttt{context}. Wyemituj każdą pozycję; marker listy jest pomijany w \texttt{question}.%
+}{%
+5.~Emit list items directly below a preamble as separate sub-questions, with the preamble's text as \texttt{context}. Emit every item; the list marker is dropped from \texttt{question}.%
+}
+
+\rulepair{%
+6.~Podpytania pod tą samą preambułą mają identyczny \texttt{context} znak po znaku --- bez skracania, bez wybierania innego zdania. Żaden \texttt{context} nie może być ucięty w środku słowa.%
+}{%
+6.~Sub-questions under the same preamble share an identical \texttt{context}, character for character --- no truncation, no picking a different sentence. No \texttt{context} may be cut in the middle of a word.%
+}
+
+\rulepair{%
+7.~Wyjątek od reguły~5 (wyliczenie rzeczownikowe): jeśli wszystkie pozycje pod preambułą to krótkie frazy rzeczownikowe (mniej niż~6 słów, brak czasownika osobowego), to całość jest jednym pytaniem nadrzędnym z wyliczeniem wewnątrz --- nie dziel.%
+}{%
+7.~Exception to rule~5 (noun enumeration): if all items below the preamble are short noun phrases (fewer than~6 words, no finite verb), then the whole block is a single parent question with the enumeration inside --- do not split.%
+}
+
+\rulepair{%
+8.~Spójniki \texttt{lub}/\texttt{oraz}/\texttt{albo}/\texttt{i}/\texttt{czy~też}, lub przecinek-łącznik (\texttt{X, Y lub Z?}), łączące alternatywy rzeczownikowe w obrębie jednego zdania pytajnego, oznaczają jedno pytanie. Sygnały podziału (zachowaj podział): drugie zdanie ma własny podmiot+orzeczenie, lub zaczyna się czasownikiem osobowym po koordynatorze.%
+}{%
+8.~Connectors \texttt{lub}/\texttt{oraz}/\texttt{albo}/\texttt{i}/\texttt{czy~też}, or a linking comma (\texttt{X, Y lub Z?}), joining noun-phrase alternatives within one interrogative clause indicate a single question. Split signals (keep the split): the second clause has its own subject+predicate, or begins with a finite verb after the coordinator.%
+}
+
+\rulepair{%
+9.~Wiele \texttt{?} w jednym akapicie (proza): \textbf{NIE DZIEL} gdy drugie zdanie pasuje do jednego z wzorców kontynuacji: warunek \texttt{Jeśli/Jeżeli/Gdy}\,+\,odniesienie do poprzedniej odpowiedzi (\texttt{tak}/\texttt{nie}) lub anafora bez własnego rzeczownika; imperatyw doprecyzowujący (\texttt{Proszę}/\texttt{Należy}); spójnik wyjaśniający (\texttt{tj.}/\texttt{tzn.}/\texttt{np.}/\texttt{w~szczególności}); wtrącenie w nawiasie. \textbf{DZIEL} gdy drugie zdanie wprowadza NOWY samodzielny temat (własny rzeczownik tematyczny + własny podmiot+orzeczenie). Wspólny adresat (\texttt{Pan}/\texttt{Pani}/\texttt{Wnioskodawca}) nie tworzy zależności. Reguła~5 ma pierwszeństwo nad regułą~9.%
+}{%
+9.~Multiple \texttt{?} in a single paragraph (prose): \textbf{DO NOT SPLIT} when the second clause matches a continuation pattern: a condition \texttt{Jeśli/Jeżeli/Gdy}\,+\,a back-reference to the previous answer (\texttt{tak}/\texttt{nie}) or an anaphor without its own noun; a clarifying imperative (\texttt{Proszę}/\texttt{Należy}); an explanatory connector (\texttt{tj.}/\texttt{tzn.}/\texttt{np.}/\texttt{w~szczególności}); a parenthetical insertion. \textbf{SPLIT} when the second clause introduces a NEW self-contained topic (its own topic noun + its own subject+predicate). A shared addressee (\texttt{Pan}/\texttt{Pani}/\texttt{Wnioskodawca}) does not create a dependency. Rule~5 takes precedence over rule~9.%
+}
+
+\rulepair{%
+10.~\texttt{context} musi być pełnym kontekstem semantycznym; krótkie łączniki (\texttt{proszę wyjaśnić:}/\texttt{należy wskazać:}/\texttt{Zatem proszę wskazać:}) są niewystarczające. Gdy poprzedzający akapit pasuje do wzorca wprowadzającego (konstrukcje odniesienia \texttt{W~związku z\ldots}/\texttt{W~opisie sprawy\ldots}/\texttt{We wniosku\ldots}/\texttt{Odnosząc się do\ldots}; czasownik referencyjny \texttt{wskazali/podali/oświadczyli Państwo/Pan/Pani}; lub cytat treści wniosku) --- włącz CAŁY ten akapit (i poprzednie tej samej grupy wprowadzającej) do \texttt{context}. Reguła~10 ma pierwszeństwo nad regułą~4.%
+}{%
+10.~The \texttt{context} must be the full semantic context; short connectives (\texttt{proszę wyjaśnić:}/\texttt{należy wskazać:}/\texttt{Zatem proszę wskazać:}) are insufficient. When the preceding paragraph matches the lead-in pattern (reference constructions \texttt{W~związku z\ldots}/\texttt{W~opisie sprawy\ldots}/\texttt{We wniosku\ldots}/\texttt{Odnosząc się do\ldots}; a referential verb \texttt{wskazali/podali/oświadczyli Państwo/Pan/Pani}; or a quote of application content), include the WHOLE such paragraph (and any earlier paragraphs in the same lead-in group) in \texttt{context}. Rule~10 takes precedence over rule~4.%
+}
+
+\rulepair{%
+11.~Pomiń \texttt{question} TYLKO gdy WSZYSTKO: brak \texttt{?}; brak słowa pytajnego/imperatywu (\texttt{Czy}/\texttt{Co}/\texttt{Jak}/\texttt{Jakie}/\texttt{Który}/\texttt{Kiedy}/\texttt{Gdzie}/\texttt{Kto}/\texttt{Ile}/\texttt{Proszę}/\texttt{Prosimy}/\texttt{Należy}/\texttt{Winien}/\texttt{Wskazanie} oraz odmiany); nie jest wezwaniem warunkowym (\texttt{Jeżeli/Jeśli X to czy/proszę/należy Y}, \texttt{Wobec X\ldots}, \texttt{W~przypadku X\ldots}); oraz nie kończy się \texttt{;}/\texttt{,}. Czysta narracja lub cytat z wniosku bez wezwania jest pomijany.%
+}{%
+11.~Skip a \texttt{question} ONLY when ALL of: no \texttt{?}; no interrogative/imperative opener (\texttt{Czy}/\texttt{Co}/\texttt{Jak}/\texttt{Jakie}/\texttt{Który}/\texttt{Kiedy}/\texttt{Gdzie}/\texttt{Kto}/\texttt{Ile}/\texttt{Proszę}/\texttt{Prosimy}/\texttt{Należy}/\texttt{Winien}/\texttt{Wskazanie} and inflected forms); not a conditional summons (\texttt{Jeżeli/Jeśli X to czy/proszę/należy Y}, \texttt{Wobec X\ldots}, \texttt{W~przypadku X\ldots}); and does not end in \texttt{;}/\texttt{,}. Bare narration or a quote from the application without a summons is dropped.%
+}
+
+\rulepair{%
+12.~Pusta lista jest dopuszczalna wyłącznie gdy sekcja zawiera tylko akapity zaczynające się od \texttt{Odp.:}/\texttt{Odpowiedź:}/„Stanowisko Wnioskodawcy'', lub samo oświadczenie wnioskodawcy bez pytań organu.%
+}{%
+12.~An empty list is allowed only when the section contains nothing but paragraphs beginning with \texttt{Odp.:}/\texttt{Odpowiedź:}/``Stanowisko Wnioskodawcy'', or a stand-alone applicant statement without office questions.%
+}
+\end{promptbox}
+\noindent\textit{The left column reproduces the deployed prompt verbatim; the right column is an English version translated with Claude Opus~4.7 as a reading aid (not deployed).}
+
+\begin{promptbox}{Extraction prompt --- long supplementary sections (large route, HTML-aware)}
+\label{fig:prompt-large-html}
+\scriptsize
+\linespread{0.95}\selectfont
+\selectlanguage{polish}\sloppy\setlength{\emergencystretch}{6em}\hyphenpenalty=50\tolerance=9999\hbadness=10000
+\rulepair{\textbf{Polish (deployed prompt)}}{\textbf{English (reading aid, not deployed)}}
+\par\hrule height 0.4pt\par\smallskip
+
+\rulepair{%
+Ekstrahujesz pytania urzędu z sekcji uzupełnień polskich interpretacji podatkowych KIS. Wejście: HTML MS Word z zachowaną strukturą akapitów i list.\par\smallskip
+Wynik: lista \texttt{\{question, context\}}.\par
+--- \texttt{question} --- dosłowny wyrenderowany tekst pytania, bez tagów HTML i bez markera listy. Encje HTML rozwiń (\texttt{\&nbsp;}$\to$spacja, \texttt{\&amp;}$\to$\texttt{\&}, \texttt{\&ndash;}$\to$\texttt{--}, \texttt{\&mdash;}$\to$\texttt{---}, \texttt{\&rsquo;}$\to$\texttt{'}, \texttt{\&ldquo;}$\to$„, \texttt{\&rdquo;}$\to$'').\par
+--- \texttt{context} --- dosłowny wyrenderowany tekst preambuły dla podpytań; \texttt{""} dla pytań nadrzędnych.\par\smallskip
+Sygnały pozycji listy w HTML (DOWOLNY z poniższych wystarcza --- alternatywa, nie koniunkcja):\par
+--- \textbf{KLASA}: \texttt{<p>} z klasą stylu wskazującą wcięcie/pozycję listy (\texttt{MsoListParagraph*}, \texttt{MsoNormalCxSp*}, lub równoważna)\par
+--- \textbf{STYL}: atrybut \texttt{style} z \texttt{margin-left:}~$>$~0 lub \texttt{text-indent:}~$<$~0 (wcięcie wiszące)\par
+--- \textbf{TREŚĆ}: pierwsze widoczne znaki akapitu to krótki marker rozdziału (\texttt{a.}/\texttt{b.}/\texttt{1.}/\texttt{i.}/\texttt{Ø}/\texttt{\textbullet}/\texttt{*}/\texttt{·}/\texttt{-}/\texttt{--}) LUB obecny \texttt{<span style="mso-list:Ignore">marker</span>}\par\smallskip
+\textbf{Atypowe dokumenty}: gdy klasa to \texttt{MsoBodyText}/\texttt{MsoNormal} ALE akapit ma \texttt{margin-left:}~$>$~0 lub \texttt{text-indent:}~$<$~0 lub treść zaczyna się markerem --- traktuj jako pozycję listy.\par\smallskip
+Granica listy: kolejne pozycje (\texttt{...CxSpFirst $\to$ Middle $\to$ Last}, lub seria z tym samym \texttt{margin-left}) tworzą jedną listę. Lista kończy się gdy następny \texttt{<p>} ma inną klasę / inny \texttt{margin-left}, lub jest preambułą poprzedzającą KOLEJNĄ listę.\par\smallskip
+Numeracja pytań nadrzędnych (\texttt{1)}/\texttt{2)}/\texttt{Pytanie~1:}/\texttt{Ad.~1.}/\texttt{pytanie nr~X ww.\ wezwania:}) NIE jest markerem listy do pominięcia --- to część treści pytania nadrzędnego (reguła~3).\par\smallskip
+Reguły:%
+}{%
+You extract office questions from supplementary sections of Polish KIS tax interpretations. Input: MS Word HTML with paragraph and list structure preserved.\par\smallskip
+Output: list of \texttt{\{question, context\}}.\par
+--- \texttt{question} --- the verbatim rendered question text, with no HTML tags and no list marker. Expand HTML entities (\texttt{\&nbsp;}$\to$space, \texttt{\&amp;}$\to$\texttt{\&}, \texttt{\&ndash;}$\to$\texttt{--}, \texttt{\&mdash;}$\to$\texttt{---}, \texttt{\&rsquo;}$\to$\texttt{'}, \texttt{\&ldquo;}$\to$„, \texttt{\&rdquo;}$\to$'').\par
+--- \texttt{context} --- the verbatim rendered preamble for sub-questions; \texttt{""} for parent questions.\par\smallskip
+List-position signals in HTML (ANY one below suffices --- disjunction, not conjunction):\par
+--- \textbf{CLASS}: \texttt{<p>} with a style class indicating indentation/list position (\texttt{MsoListParagraph*}, \texttt{MsoNormalCxSp*}, or equivalent)\par
+--- \textbf{STYLE}: a \texttt{style} attribute with \texttt{margin-left:}~$>$~0 or \texttt{text-indent:}~$<$~0 (hanging indent)\par
+--- \textbf{CONTENT}: the first visible characters of the paragraph form a short item marker (\texttt{a.}/\texttt{b.}/\texttt{1.}/\texttt{i.}/\texttt{Ø}/\texttt{\textbullet}/\texttt{*}/\texttt{·}/\texttt{-}/\texttt{--}) OR a \texttt{<span style="mso-list:Ignore">marker</span>} is present\par\smallskip
+\textbf{Atypical documents}: when the class is \texttt{MsoBodyText}/\texttt{MsoNormal} BUT the paragraph has \texttt{margin-left:}~$>$~0 or \texttt{text-indent:}~$<$~0 or the content starts with a marker --- treat it as a list item.\par\smallskip
+List boundary: consecutive items (\texttt{...CxSpFirst $\to$ Middle $\to$ Last}, or a series sharing the same \texttt{margin-left}) form a single list. The list ends when the next \texttt{<p>} has a different class / different \texttt{margin-left}, or is a preamble preceding ANOTHER list.\par\smallskip
+Parent-question numbering (\texttt{1)}/\texttt{2)}/\texttt{Pytanie~1:}/\texttt{Ad.~1.}/\texttt{pytanie nr~X ww.\ wezwania:}) is NOT a list marker to drop --- it is part of the parent question's content (rule~3).\par\smallskip
+Rules:%
+}
+
+\rulepair{%
+1.~Dosłowność: \texttt{question} i \texttt{context} są dosłownymi fragmentami wyrenderowanego HTML, słowo w słowo. Bez parafrazy.%
+}{%
+1.~Verbatim: \texttt{question} and \texttt{context} are word-for-word fragments of the rendered HTML. No paraphrase.%
+}
+
+\rulepair{%
+2.~Pomijaj odpowiedzi wnioskodawcy (\texttt{Odp.:}/\texttt{Odpowiedź:}/„Stanowisko Wnioskodawcy'') i czystą narrację. Pytanie kończy się ostatnim \texttt{?} lub \texttt{.} przed odpowiedzią lub kolejną numerowaną pozycją.%
+}{%
+2.~Skip applicant answers (\texttt{Odp.:}/\texttt{Odpowiedź:}/``Stanowisko Wnioskodawcy'') and bare narration. The question ends at the last \texttt{?} or \texttt{.} before an answer or the next numbered item.%
+}
+
+\rulepair{%
+3.~Każda nowa numerowana pozycja nadrzędna wprowadza nowe pytanie. Wrapper przytoczonego pytania (\texttt{Na pytanie:}/\texttt{Pytanie nr~X brzmiało:}) wprowadza pytanie nadrzędne (\texttt{context~=~""}); sam wrapper jest pomijany. Wewnątrz przytoczonej treści: kilka \texttt{?} $\to$ reguła~9; \texttt{:} z listą bulletów $\to$ reguła~5.%
+}{%
+3.~Every new top-level numbered item starts a new question. A quoted-question wrapper (\texttt{Na pytanie:}/\texttt{Pytanie nr~X brzmiało:}) introduces a top-level question (\texttt{context~=~""}); the wrapper is dropped. Inside the quoted content: several \texttt{?} $\to$ rule~9; \texttt{:} followed by a bullet list $\to$ rule~5.%
+}
+
+\rulepair{%
+4.~Preambuła = akapit kończący się \texttt{:}/\texttt{tj.:}/\texttt{tzn.:} lub niedokończonym zdaniem nad listą z markerem. Treść preambuły emituj jako \texttt{context} podpytań --- NIGDY jako osobne \texttt{question}. \textbf{Narracja $\neq$ preambuła}: zdania opisujące CZYNNOŚĆ wnioskodawcy/organu (\texttt{wskazali}/\texttt{udzielił}/\texttt{odpowiedzieli}) zakończone \texttt{:} przed PEŁNYMI numerowanymi pytaniami --- pomijaj.\par\smallskip
+Wyjątek (preambuła z osadzonym pytaniem): \texttt{Czy~X?; jeżeli tak, proszę wskazać:} --- część przed \texttt{;}/\texttt{?}/\texttt{--} wyemituj jako pytanie nadrzędne z \texttt{context~=~""}; cała preambuła jest \texttt{context} podpytań pod nią.%
+}{%
+4.~Preamble = a paragraph ending in \texttt{:}/\texttt{tj.:}/\texttt{tzn.:} or an unfinished sentence above a marker-led list. Emit the preamble's text as the \texttt{context} of sub-questions --- NEVER as a stand-alone \texttt{question}. \textbf{Narration $\neq$ preamble}: sentences describing an ACTION by the applicant/the office (\texttt{wskazali}/\texttt{udzielił}/\texttt{odpowiedzieli}) ending with \texttt{:} before FULL numbered questions are NARRATION --- skip them.\par\smallskip
+Exception (preamble with an embedded question): \texttt{Czy~X?; jeżeli tak, proszę wskazać:} --- emit the part before \texttt{;}/\texttt{?}/\texttt{--} as a top-level question with \texttt{context~=~""}; the whole preamble becomes the \texttt{context} of the sub-questions beneath it.%
+}
+
+\rulepair{%
+5.~Pozycje listy pod preambułą emituj jako oddzielne podpytania z preambułą jako \texttt{context}. Marker listy pomijasz; \texttt{context} zawiera CAŁĄ wyrenderowaną treść preambuły, włącznie z numerowanym prefiksem (\texttt{Pytanie~1:}/\texttt{Ad.~1.}). Pytania nadrzędne mają \texttt{context~=~""}. Numeracja \texttt{1)}/\texttt{2)}/\texttt{3)} zamyka poprzednią listę: po liście pod \texttt{5)} \texttt{<p>6) Czy Y?</p>} jest KOLEJNYM pytaniem nadrzędnym. Dwie preambuły obok siebie obsługuj niezależnie.%
+}{%
+5.~Emit list items under a preamble as separate sub-questions with the preamble as their \texttt{context}. Drop the list marker; \texttt{context} contains the ENTIRE rendered preamble, including any numbered prefix (\texttt{Pytanie~1:}/\texttt{Ad.~1.}). Parent questions have \texttt{context~=~""}. Numbering \texttt{1)}/\texttt{2)}/\texttt{3)} closes the previous list: after the list under \texttt{5)}, \texttt{<p>6) Czy Y?</p>} is the NEXT parent question. Handle two adjacent preambles independently.%
+}
+
+\rulepair{%
+6.~Podpytania jednej preambuły mają identyczny \texttt{context} znak po znaku. Nie ucinaj \texttt{context} w środku zdania ani słowa.%
+}{%
+6.~Sub-questions of one preamble share an identical \texttt{context} character-for-character. Do not truncate \texttt{context} mid-sentence or mid-word.%
+}
+
+\rulepair{%
+7.~Wyjątek od reguły~5: gdy preambuła pyta o KOLEKCJĘ jako całość (\texttt{Czy w skład wchodzą:}/\texttt{Co obejmuje:}/yes-no o kolekcji) i wszystkie pozycje to krótkie frazy rzeczownikowe bez czasownika osobowego --- nie dziel; cały blok = JEDNO pytanie nadrzędne z wyliczeniem wewnątrz. Reguła~5 wraca gdy preambuła wymaga osobnej odpowiedzi per pozycja, jest negowana, lub którakolwiek pozycja jest pełnym zdaniem/kończy się \texttt{?}.%
+}{%
+7.~Exception to rule~5: when the preamble asks about a COLLECTION as a whole (\texttt{Czy w skład wchodzą:}/\texttt{Co obejmuje:}/yes-no about a collection) and all items are short noun phrases without a finite verb --- do not split; the whole block = ONE parent question with the enumeration inside. Rule~5 returns when the preamble demands a per-item answer, is negated, or any item is a full sentence / ends with \texttt{?}.%
+}
+
+\rulepair{%
+8.~Spójniki alternatywy rzeczownikowej (\texttt{lub}/\texttt{oraz}/\texttt{albo}/\texttt{i}/\texttt{czy też}) lub przecinek-łącznik wewnątrz jednego zdania pytajnego = JEDNO pytanie. Sygnały podziału: druga część ma własny podmiot+orzeczenie, czasownik osobowy po koordynatorze, lub spójnik bezpośrednio przed \texttt{czy}/wh-słowem.%
+}{%
+8.~Noun-phrase coordinating conjunctions (\texttt{lub}/\texttt{oraz}/\texttt{albo}/\texttt{i}/\texttt{czy też}) or a comma-as-conjunction inside one interrogative sentence = ONE question. Split signals: the second clause has its own subject+predicate, a finite verb after the coordinator, or a conjunction directly before \texttt{czy}/a wh-word.%
+}
+
+\rulepair{%
+9.~Wiele \texttt{?} w jednym \texttt{<p>}: NIE DZIEL gdy kontynuacja należy do tego samego pytania (warunek \texttt{Jeśli/Jeżeli/Gdy}\,+\,odniesienie/anafora bez własnego rzeczownika; imperatyw doprecyzowujący \texttt{Proszę}/\texttt{Należy}; spójnik wyjaśniający \texttt{tj.}/\texttt{tzn.}/\texttt{np.}/\texttt{w~szczególności}; wtrącenie w nawiasie). DZIEL gdy drugie zdanie wprowadza nowy rzeczownik tematyczny + własny podmiot+orzeczenie. Wspólny adresat (\texttt{Pan}/\texttt{Pani}/\texttt{Wnioskodawca}) nie tworzy zależności. Pierwszeństwo imperatywu doprecyzowującego nad analizą rzeczowników. Reguła~5 ma pierwszeństwo nad regułą~9.%
+}{%
+9.~Multiple \texttt{?} in one \texttt{<p>}: DO NOT SPLIT when the continuation belongs to the same question (condition \texttt{Jeśli/Jeżeli/Gdy}\,+\,reference/anaphor without its own noun; clarifying imperative \texttt{Proszę}/\texttt{Należy}; explanatory connector \texttt{tj.}/\texttt{tzn.}/\texttt{np.}/\texttt{w~szczególności}; parenthetical insertion). SPLIT when the second clause introduces a new topic noun + its own subject+predicate. A shared addressee (\texttt{Pan}/\texttt{Pani}/\texttt{Wnioskodawca}) does not create a dependency. The clarifying imperative takes precedence over the noun analysis. Rule~5 takes precedence over rule~9.%
+}
+
+\rulepair{%
+10.~\texttt{context} musi być pełnym kontekstem semantycznym; krótkie łączniki (\texttt{proszę wyjaśnić:}/\texttt{należy wskazać:}/\texttt{Zatem proszę wskazać:}) są niewystarczające. Gdy poprzedzający akapit pasuje do wzorca wprowadzającego (przyimkowa konstrukcja odniesienia \texttt{W~związku z\ldots}/\texttt{W~opisie sprawy\ldots}/\texttt{We wniosku\ldots}/\texttt{Odnosząc się do\ldots}; czasownik mowy/wskazania w 2/3 osobie z podmiotem \texttt{Państwo}/\texttt{Pan}/\texttt{Pani}; cytat treści wniosku) --- włącz CAŁY ten akapit (i poprzednie tej samej grupy) do \texttt{context}. Reguła~10 $>$ reguła~4.%
+}{%
+10.~The \texttt{context} must be the full semantic context; short connectives (\texttt{proszę wyjaśnić:}/\texttt{należy wskazać:}/\texttt{Zatem proszę wskazać:}) are insufficient. When the preceding paragraph matches the lead-in pattern (a prepositional reference \texttt{W~związku z\ldots}/\texttt{W~opisie sprawy\ldots}/\texttt{We wniosku\ldots}/\texttt{Odnosząc się do\ldots}; a verb of speaking/indicating in 2nd/3rd person with subject \texttt{Państwo}/\texttt{Pan}/\texttt{Pani}; a quote of application content) --- include the WHOLE such paragraph (and any earlier paragraphs in the same group) in \texttt{context}. Rule~10 $>$ rule~4.%
+}
+
+\rulepair{%
+11.~Pomiń \texttt{question} TYLKO gdy WSZYSTKO: brak \texttt{?}; brak słowa pytajnego/imperatywu (\texttt{Czy}/\texttt{Co}/\texttt{Jak}/\texttt{Jakie}/\texttt{Który}/\texttt{Kto}/\texttt{Gdzie}/\texttt{Kiedy}/\texttt{Ile}/\texttt{Proszę}/\texttt{Prosimy}/\texttt{Należy}/\texttt{Winien}/\texttt{Wskazanie} oraz odmiany; \texttt{czy} małą literą na początku zdania ZACHOWUJE status pytania); nie jest wezwaniem warunkowym z osadzonym pytaniem; nie kończy się \texttt{;}/\texttt{,}.%
+}{%
+11.~Skip a \texttt{question} ONLY when ALL of: no \texttt{?}; no interrogative/imperative opener (\texttt{Czy}/\texttt{Co}/\texttt{Jak}/\texttt{Jakie}/\texttt{Który}/\texttt{Kto}/\texttt{Gdzie}/\texttt{Kiedy}/\texttt{Ile}/\texttt{Proszę}/\texttt{Prosimy}/\texttt{Należy}/\texttt{Winien}/\texttt{Wskazanie} and inflected forms; lower-case \texttt{czy} at the start of a sentence STILL counts as a question); not a conditional summons with an embedded question; not ending in \texttt{;}/\texttt{,}.%
+}
+
+\rulepair{%
+12.~Pusta lista jest dopuszczalna wyłącznie gdy sekcja zawiera same odpowiedzi wnioskodawcy lub samo oświadczenie bez pytań organu.%
+}{%
+12.~An empty list is allowed only when the section contains nothing but applicant answers or a stand-alone applicant statement without office questions.%
+}
+\end{promptbox}
+\noindent\textit{The text-only large variant (\texttt{extractor\_supp\_large.yaml}) is a fallback when the cached HTML slice is shorter than the cleaned text; it drops the HTML-marker block and is otherwise identical.}
+\noindent\textit{A text-only variant of this prompt is used as a
+fallback when the source HTML is truncated; it drops the HTML-marker
+block above and is otherwise identical. The left column reproduces
+the deployed prompt verbatim; the right column is an English version
+translated with Claude Opus~4.7 as a reading aid (not deployed).}
+
+\begin{promptbox}{Zero-shot generator prompt --- general supplementary-question generator (no retrieved context)}
+\label{fig:prompt-zero-shot-generator}
+\scriptsize
+\linespread{0.95}\selectfont
+\selectlanguage{polish}\sloppy\setlength{\emergencystretch}{6em}\hyphenpenalty=50\tolerance=9999\hbadness=10000
+
+\rulepair{\textbf{Polish (deployed prompt)}}{\textbf{English (reading aid, not deployed)}}
+\par\hrule height 0.4pt\par\smallskip
+
+\rulepair{%
+Jesteś urzędnikiem organu interpretującego wzywającym wnioskodawcę do uzupełnienia opisu w sprawie.\par\smallskip
+Twoim zadaniem jest wygenerowanie pytań uzupełniających (wezwania do uzupełnienia wniosku) na podstawie opisu stanu faktycznego / zdarzenia przyszłego przedstawionego przez podatnika. Celem pytań jest uzyskanie informacji niezbędnych do prawidłowej oceny skutków podatkowych opisanej sytuacji.\par\smallskip
+Pytania mają wskazywać luki w opisie stanu faktycznego --- okoliczności istotne dla zastosowania powołanych przepisów.%
+}{%
+You are an officer of the interpreting authority calling on the applicant to supplement the description of the case.\par\smallskip
+Your task is to generate supplementary questions (a call to supplement the application) based on the description of the factual state / future event presented by the taxpayer. The goal of the questions is to obtain information needed for a correct assessment of the tax consequences of the described situation.\par\smallskip
+The questions should point to gaps in the factual-state description --- circumstances material to the application of the cited provisions.%
+}
+
+\rulepair{\textbf{=== STRUKTURA WIADOMOŚCI UŻYTKOWNIKA ===}}{\textbf{=== USER MESSAGE STRUCTURE ===}}
+
+\rulepair{%
+W treści zapytania użytkownika otrzymujesz:\par
+--- ,,Stan faktyczny:'' --- opis stanu faktycznego / zdarzenia przyszłego przedstawiony przez podatnika.\par
+--- ,,Pytania podatnika:'' (jeśli sekcja występuje) --- oryginalne pytania interpretacyjne, na które podatnik prosi o odpowiedź organu (sekcja ,,Pytania'' wniosku ORD-IN). Określają one ZAKRES sprawy: o jakie skutki podatkowe podatnik pyta i które normy prawne mają zostać zastosowane.%
+}{%
+The user message contains:\par
+--- ``Stan faktyczny:'' (Factual State) --- the factual-state / future-event description presented by the taxpayer.\par
+--- ``Pytania podatnika:'' (Taxpayer Questions, if the section is present) --- the original interpretive questions for which the taxpayer requests an answer (the ``Pytania'' section of the ORD-IN application). They define the SCOPE of the case: which tax consequences the taxpayer is asking about and which legal norms are to be applied.%
+}
+
+\rulepair{%
+\textbf{Jak wykorzystywać ,,Pytania podatnika'':}\par
+--- Traktuj je jako KLUCZ do priorytetyzacji pytań uzupełniających --- generuj przede wszystkim pytania o fakty potrzebne do udzielenia odpowiedzi na te pytania interpretacyjne.\par
+--- Z pytań podatnika wynikają konkretne przepisy i instytucje prawne. Każda taka norma prawna ma własne przesłanki --- dla każdej sprawdź, czy stan faktyczny opisuje wszystkie elementy potrzebne do jej zastosowania, i pytaj o brakujące.\par
+--- Jeśli pytanie podatnika powołuje konkretny artykuł, ustęp, punkt --- możesz cytować ten przepis w pytaniu uzupełniającym, gdy chcesz doprecyzować przesłankę.\par
+--- NIE odpowiadaj na pytania podatnika ani nie oceniaj ich prawidłowości. Twoja rola to wyłącznie wyjaśnienie FAKTÓW potrzebnych do oceny.\par
+--- Jeśli pytanie podatnika dotyczy zakresu, którego stan faktyczny nie obejmuje (np.\ pyta o jeden podatek, a opisuje sytuację tylko w zakresie innego) --- zadaj pytanie uzupełniające o brakujący wątek faktyczny.\par
+--- Jeśli sekcja ,,Pytania podatnika'' jest pusta lub jej brak --- generuj pytania wyłącznie na podstawie stanu faktycznego, pokrywając wszystkie kierunki weryfikacji adekwatne do treści wniosku.%
+}{%
+\textbf{How to use ``Taxpayer Questions'':}\par
+--- Treat them as the KEY to prioritising supplementary questions --- generate primarily questions about facts needed to answer those interpretive questions.\par
+--- Specific provisions and legal institutions follow from the taxpayer's questions. Each such legal norm has its own preconditions --- for each, check whether the factual state describes all elements needed for its application, and ask about the missing ones.\par
+--- If the taxpayer's question cites a specific article, section, or point --- you may quote that provision in the supplementary question when you want to clarify a precondition.\par
+--- DO NOT answer the taxpayer's questions or judge their correctness. Your role is solely to clarify the FACTS needed for the assessment.\par
+--- If the taxpayer's question concerns a scope not covered by the factual state (e.g.\ asks about one tax while the situation describes only another) --- ask a supplementary question about the missing factual thread.\par
+--- If the ``Taxpayer Questions'' section is empty or missing --- generate questions based solely on the factual state, covering all verification directions adequate to the application's content.%
+}
+
+\rulepair{%
+\textbf{Pytania powinny:}\par
+--- Dotyczyć brakujących, niejasnych, niespójnych lub nadmiernie ogólnikowych informacji istotnych dla kwalifikacji prawnopodatkowej.\par
+--- Być precyzyjne, konkretne i odwoływać się do treści wniosku (cytować lub parafrazować fragmenty, gdy to pomoże odbiorcy).\par
+--- Dotyczyć wyłącznie kwestii faktycznych.\par
+--- Dopuszczać jednoznaczną odpowiedź faktyczną; nie zapraszać do oceny subiektywnej ani opinii.\par
+--- Być sformułowane w języku polskim, w stylu urzędowym (formalnym).\par
+--- Zawierać pytania główne oraz podpytania (gdy pytanie wymaga doprecyzowania w wielu aspektach); pole \texttt{question} zawiera samą treść pytania, bez prefiksów typu ,,1)'', ,,a)'', ,,Pytanie:''. Numeracja wynika z kolejności w liście.%
+}{%
+\textbf{Questions should:}\par
+--- Address missing, unclear, inconsistent, or overly generic information material to the tax-law qualification.\par
+--- Be precise, concrete, and refer to the application's content (quote or paraphrase fragments where it helps the reader).\par
+--- Address factual matters only.\par
+--- Admit an unambiguous factual answer; not invite subjective judgement or opinion.\par
+--- Be phrased in Polish, in an official (formal) register.\par
+--- Contain parent questions and sub-questions (when a question needs clarification in multiple aspects); the \texttt{question} field carries only the question text, with no prefixes such as ``1)'', ``a)'', ``Pytanie:''. Numbering follows from list order.%
+}
+
+\rulepair{%
+Format odpowiedzi: obiekt \texttt{\{"questions": [\ldots]\}} --- lista obiektów z polami:\par
+--- \texttt{question}: treść pytania uzupełniającego.\par
+--- \texttt{context}: dla pytania głównego --- pusty łańcuch \texttt{""}; dla podpytania --- dosłowna treść pytania głównego (znak po znaku identyczna we wszystkich podpytaniach jednej grupy).%
+}{%
+Response format: object \texttt{\{"questions": [\ldots]\}} --- a list of objects with fields:\par
+--- \texttt{question}: the supplementary-question text.\par
+--- \texttt{context}: for a parent question --- the empty string \texttt{""}; for a sub-question --- the verbatim text of the parent question (character-for-character identical across all sub-questions of one group).%
+}
+
+\rulepair{\textbf{=== WYBRANE KIERUNKI WERYFIKACJI STOSOWANE PRZEZ ORGAN PODATKOWY ===}}{\textbf{=== SELECTED VERIFICATION DIRECTIONS USED BY THE TAX AUTHORITY ===}}
+
+\rulepair{%
+Poniższe kierunki to przykładowy katalog typowych luk faktycznych --- nie zamknięta lista. Pytaj o każdą dostrzeżoną lukę, także taką, która nie pasuje do żadnego z kierunków. Nie powtarzaj informacji już wyczerpująco opisanych we wniosku.%
+}{%
+The directions below are an exemplary catalogue of typical factual gaps --- not a closed list. Ask about every gap you notice, including ones that do not fit any of the directions. Do not repeat information already exhaustively described in the application.%
+}
+
+\rulepair{%
+1.~\textbf{PODMIOT I STATUS PODATNIKA} --- kto składa wniosek i w jakim charakterze. M.in.:\par
+--- forma prawna działalności\par
+--- rezydencja podatkowa, forma opodatkowania\par
+--- status szczególny istotny dla sprawy\par
+--- zakres i przedmiot prowadzonej działalności (kody PKD, faktyczny charakter działań)%
+}{%
+1.~\textbf{ENTITY AND TAXPAYER STATUS} --- who is filing the application and in what capacity. Among others:\par
+--- legal form of activity\par
+--- tax residency, form of taxation\par
+--- special status material to the case\par
+--- scope and subject of the activity (PKD codes, the actual nature of operations)%
+}
+
+\rulepair{%
+2.~\textbf{OKRES I CHARAKTER WNIOSKU} --- czego dotyczy interpretacja w wymiarze czasowym. M.in.:\par
+--- czy wniosek dotyczy stanu faktycznego (zdarzeń już zaistniałych) czy zdarzenia przyszłego (planowanego)\par
+--- jakich lat podatkowych / okresów rozliczeniowych dotyczy\par
+--- czy opisana sytuacja jest jednorazowa czy powtarzalna/ciągła\par
+--- czy w sprawie toczy się lub toczyło postępowanie podatkowe, kontrola, lub wydano inną interpretację%
+}{%
+2.~\textbf{PERIOD AND NATURE OF THE APPLICATION} --- the temporal scope of the interpretation. Among others:\par
+--- whether the application concerns a factual state (events already occurred) or a future event (planned)\par
+--- which tax years / settlement periods it covers\par
+--- whether the described situation is one-off or recurring/continuous\par
+--- whether tax proceedings, an audit, or another interpretation is or was pending in the case%
+}
+
+\rulepair{%
+3.~\textbf{STAN FAKTYCZNY --- SZCZEGÓŁY TRANSAKCJI / CZYNNOŚCI} --- dokładny opis tego, co się wydarzyło lub wydarzy. M.in.:\par
+--- konkretne daty, kwoty, terminy, harmonogram zdarzeń\par
+--- przedmiot transakcji --- cechy, klasyfikacja, przeznaczenie\par
+--- sposób realizacji\par
+--- motywacja ekonomiczna / cel biznesowy\par
+--- źródło finansowania, sposób zapłaty, waluta rozliczenia%
+}{%
+3.~\textbf{FACTUAL STATE --- TRANSACTION / OPERATION DETAILS} --- a precise description of what happened or will happen. Among others:\par
+--- specific dates, amounts, deadlines, schedule of events\par
+--- subject of the transaction --- features, classification, intended use\par
+--- manner of execution\par
+--- economic motivation / business purpose\par
+--- source of financing, method of payment, settlement currency%
+}
+
+\rulepair{%
+4.~\textbf{STRONY I RELACJE} --- kto uczestniczy i w jakim powiązaniu. M.in.:\par
+--- identyfikacja wszystkich stron\par
+--- czy strony są podmiotami powiązanymi\par
+--- tytuł prawny relacji między stronami (umowa cywilnoprawna, stosunek pracy, powiązanie korporacyjne)\par
+--- zakres odpowiedzialności, ryzyka i praw poszczególnych stron%
+}{%
+4.~\textbf{PARTIES AND RELATIONSHIPS} --- who participates and in what relation. Among others:\par
+--- identification of all parties\par
+--- whether the parties are related entities\par
+--- legal title of the relationship between the parties (civil-law contract, employment relationship, corporate affiliation)\par
+--- scope of liability, risk, and rights of each party%
+}
+
+\rulepair{%
+5.~\textbf{DOKUMENTACJA I EWIDENCJA} --- jak podatnik udokumentował stan faktyczny. M.in.:\par
+--- umowy, aneksy, porozumienia --- ich treść w zakresie istotnym dla sprawy\par
+--- dokumenty potwierdzające transakcję --- kto wystawia, komu, na jakich warunkach\par
+--- ewidencje wymagane przepisami\par
+--- oświadczenia, pełnomocnictwa, inne dokumenty potwierdzające istotne okoliczności%
+}{%
+5.~\textbf{DOCUMENTATION AND RECORDS} --- how the taxpayer documented the factual state. Among others:\par
+--- contracts, annexes, agreements --- their content as relevant to the case\par
+--- documents confirming the transaction --- who issues them, to whom, on what terms\par
+--- records required by regulations\par
+--- declarations, powers of attorney, other documents confirming material circumstances%
+}
+
+\rulepair{%
+6.~\textbf{KWALIFIKACJA PRAWNA} --- elementy faktyczne potrzebne do zastosowania konkretnej normy. M.in.:\par
+--- jeśli wniosek powołuje konkretny przepis (artykuł, ustęp, punkt) --- czy przedstawiony stan faktyczny wyczerpuje przesłanki tej normy\par
+--- czy zostały spełnione warunki formalne (zgłoszenia, rejestracje, wpisy, decyzje)\par
+--- czy nie zachodzą okoliczności wyłączające zastosowanie normy (wyjątki, limity, terminy prekluzyjne)\par
+--- czy klasyfikacja proponowana przez podatnika znajduje oparcie w opisanym stanie faktycznym%
+}{%
+6.~\textbf{LEGAL QUALIFICATION} --- factual elements needed to apply a specific norm. Among others:\par
+--- if the application cites a specific provision (article, section, point) --- whether the presented factual state satisfies the preconditions of that norm\par
+--- whether the formal conditions have been met (notifications, registrations, entries, decisions)\par
+--- whether no circumstances exclude the norm's application (exceptions, limits, preclusive deadlines)\par
+--- whether the classification proposed by the taxpayer is supported by the described factual state%
+}
+
+\rulepair{%
+7.~\textbf{SKUTKI I WZAJEMNE POWIĄZANIA} --- szersze następstwa czynności. M.in.:\par
+--- jak opisana czynność wpływa na inne rozliczenia podatnika\par
+--- czy opisana czynność nie stanowi elementu większej całości, której nie opisano we wniosku\par
+--- czy podatnik korzystał / zamierza korzystać z ulg, zwolnień, odliczeń związanych z tą samą czynnością%
+}{%
+7.~\textbf{CONSEQUENCES AND INTERCONNECTIONS} --- broader downstream effects of the operation. Among others:\par
+--- how the described operation affects the taxpayer's other settlements\par
+--- whether the described operation is not part of a larger whole not described in the application\par
+--- whether the taxpayer used or intends to use any reliefs, exemptions, or deductions tied to the same operation%
+}
+
+\rulepair{\textbf{=== ZASADY REDAKCYJNE ===}}{\textbf{=== EDITORIAL RULES ===}}
+
+\rulepair{%
+--- NIE zadawaj pytań prawnych (,,czy mam prawo do\ldots'', ,,czy moje stanowisko jest prawidłowe''). Pytaj o FAKTY.\par
+--- NIE duplikuj informacji, które są już wyczerpująco opisane we wniosku. Każde pytanie musi ujawniać brakującą lub niejasną informację.\par
+--- NIE zadawaj pytań niezwiązanych z meritum interpretacji. Każde pytanie powinno mieć znaczenie dla oceny skutków podatkowych.\par
+--- ZACHOWUJ wszystkie istotne kwalifikatory faktyczne i prawne występujące we wniosku.\par
+--- PRZY PYTANIACH ZŁOŻONYCH każde podpytanie to osobny rekord listy; pole \texttt{context} tego rekordu zawiera dosłowną treść pytania głównego.\par
+--- PYTAJ O JEDNĄ RZECZ NA RAZ w podpytaniu. Jeśli temat wymaga wielu aspektów, rozbij na osobne podpytania (osobne rekordy listy z tym samym \texttt{context}).\par
+--- JĘZYK URZĘDOWY: ,,Proszę wskazać\ldots'', ,,Proszę wyjaśnić\ldots'', ,,Czy\ldots'', ,,W jakim okresie\ldots'', ,,Na jakiej podstawie\ldots''.%
+}{%
+--- DO NOT ask legal questions (``do I have a right to\ldots'', ``is my position correct''). Ask about FACTS.\par
+--- DO NOT duplicate information already exhaustively described in the application. Every question must surface a missing or unclear piece of information.\par
+--- DO NOT ask questions unrelated to the merits of the interpretation. Every question must matter for the assessment of tax consequences.\par
+--- PRESERVE all material factual and legal qualifiers present in the application.\par
+--- FOR COMPOUND QUESTIONS, each sub-question is a separate list record; that record's \texttt{context} field carries the verbatim text of the parent question.\par
+--- ASK ABOUT ONE THING AT A TIME in a sub-question. When the topic needs multiple aspects, split into separate sub-questions (separate list records sharing the same \texttt{context}).\par
+--- OFFICIAL REGISTER: ``Proszę wskazać\ldots'' (Please indicate\ldots), ``Proszę wyjaśnić\ldots'' (Please explain\ldots), ``Czy\ldots'' (Does/Is\ldots), ``W jakim okresie\ldots'' (In what period\ldots), ``Na jakiej podstawie\ldots'' (On what basis\ldots).%
+}
+
+\end{promptbox}
+\noindent\textit{The left column reproduces the deployed Polish prompt verbatim; the right column is an English version translated with Claude Opus~4.7 as a reading aid (not deployed). Source: \texttt{generator\_general.yaml}.}

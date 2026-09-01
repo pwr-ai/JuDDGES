@@ -1,0 +1,233 @@
+\documentclass{article}
+
+% NeurIPS 2026 Evaluations & Datasets Track — single-blind opt-in
+% (allowed for dataset-centered submissions where the dataset organization
+%  and prior peer-reviewed work cannot be released anonymously without
+%  breaking provenance, e.g. JuDDGES on Hugging Face).
+\usepackage[eandd, nonanonymous]{neurips_2026}
+% After acceptance, switch to camera-ready:
+% \usepackage[eandd, nonanonymous, final]{neurips_2026}
+% Preprint variant for arXiv:
+% \usepackage[preprint]{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[main=english,polish]{babel} % Polish hyphenation for embedded Polish content (statute names, sample fields)
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage[most]{tcolorbox}
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+
+% Reusable styled boxes for sample judgment excerpts and extraction-prompt
+% listings in the appendix. Keep both variants: examplebox (non-breakable)
+% and promptbox (breakable across pages).
+\newtcolorbox{examplebox}[1]{%
+  enhanced,
+  colback=gray!4, colframe=black!55, boxrule=0.4pt, arc=2pt,
+  title={#1}, fonttitle=\sffamily\bfseries\small,
+  coltitle=white, colbacktitle=black!65,
+  left=4pt, right=4pt, top=3pt, bottom=3pt,
+  before skip=6pt, after skip=6pt,
+}
+\newtcolorbox{promptbox}[1]{%
+  enhanced, breakable,
+  colback=gray!4, colframe=black!55, boxrule=0.4pt, arc=2pt,
+  title={#1}, fonttitle=\sffamily\bfseries\small,
+  coltitle=white, colbacktitle=black!65,
+  left=4pt, right=4pt, top=3pt, bottom=3pt,
+  before skip=6pt, after skip=6pt,
+}
+
+\title{JuDDGES-pl: Hundreds of Thousands of Structurally Enriched Polish Judgments from Common and Administrative Courts}
+
+% Authors match the OpenReview submission (single-blind, allowed for
+% dataset-centered E&D submissions). Co-authors from collaborating
+% institutions to be added before camera-ready; current list is the
+% subset registered on OpenReview.
+\author{%
+  {\L}ukasz Augustyniak \\
+  Wroclaw University of \\ Science and Technology \\ (WUST) \\
+  \And
+  Jakub Binkowski \\
+  WUST \\
+  \And
+  Albert Sawczyn \\
+  WUST \\
+  \And
+  Tomasz Kajdanowicz \\
+  WUST \\
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Civil-law jurisdictions remain severely underrepresented in legal NLP resources, where existing corpora are dominated by English-language common-law data and rarely include analytical structure beyond raw text. We release JuDDGES-pl (\url{https://huggingface.co/datasets/JuDDGES/juddges-pl}), a large-scale, analytically enriched Polish court judgment corpus spanning the two disjoint branches of the Polish judiciary: a common-courts subset covering courts of appeal, regional, and district courts, and an administrative-courts subset covering the Supreme Administrative Court (NSA) and the Voivodeship Administrative Courts (WSA). The corpus comprises 2.69 million judgments published between 1981 and 2025, of which over 2.1 million are enriched with normalized statutory-base citations and several hundred thousand additionally carry full narrative-field silver-label annotations --- structured factual state, legal state, summary, theses, and keywords --- generated through a uniform Google Gemini 2.5 Pro extraction pipeline, alongside court-hierarchy, chamber, and procedural metadata preserved from the source portals.
+
+Our contribution is curatorial and infrastructural. We describe the acquisition, normalization, and large-scale LLM-based enrichment pipeline that converts heterogeneous court-publication formats into a uniform, analysis-ready resource; we characterize the corpora through descriptive analyses of coverage, document structure, citation patterns, court hierarchy, extraction-field statistics, and pseudonymization fidelity; and we document the resource using Croissant metadata with Responsible AI fields and an accompanying evaluation card. We treat LLM-extracted fields explicitly as silver labels --- useful for analysis, model pretraining, and weak-supervision pipelines, but not as gold annotations for benchmarking --- and document this distinction throughout.
+
+JuDDGES-pl is designed to enable downstream evaluation of civil-law legal NLP --- including structured information extraction, statute-grounded reasoning, cross-branch generalization between common and administrative courts, longitudinal analysis of judicial language, and fairness audits in jurisdictions outside the Anglophone common-law mainstream --- without itself proposing new tasks or model comparisons. The corpora are openly released on Hugging Face under a permissive license, alongside the reproducible enrichment pipeline and validated Croissant metadata.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Legal NLP resources are overwhelmingly English-language and common-law-centric. Public benchmarks such as LexGLUE \citep{chalkidis-etal-2022-lexglue} and LegalBench \citep{guhaLegalbenchCollaborativelyBuilt2023a} draw the bulk of their tasks from U.S.\ and U.K.\ case law, and the largest open legal pretraining corpora --- e.g., MultiLegalPile \citep{niklaus2024multilegalpile689gbmultilinguallegal} --- under-cover the Slavic civil-law family despite its scale and procedural distinctness. As a result, evaluation of legal language models in civil-law jurisdictions still typically proceeds either by translating common-law tasks or by relying on small, single-task national datasets. Neither route exercises the structural features that make civil-law adjudication distinctive: codified statutory bases as primary authority, the formal separation of \emph{stan faktyczny} (factual state) and \emph{stan prawny} (legal state) inside the judgment, and parallel branches of judiciary --- common and administrative --- that decide structurally different questions over partially overlapping subject matter.
+
+This paper releases JuDDGES-pl, a large-scale, analytically enriched Polish court judgment corpus that covers both branches of the Polish judiciary inside a single resource. The common-courts subset (\texttt{pl-court}, 437{,}450 judgments) spans courts of appeal, regional, and district courts as published on the Ministry of Justice portal; the administrative-courts subset (\texttt{pl-nsa}, 2{,}254{,}392 judgments) spans the Supreme Administrative Court (Naczelny Sąd Administracyjny, NSA) and the lower Voivodeship Administrative Courts (WSA). Rulings of the Supreme Court (Sąd Najwyższy) are published on a separate portal and are not part of this release. Together the two configs form a 2.69-million-judgment corpus published between 1981 and 2025. Each judgment ships with the original published text and court-hierarchy and procedural metadata preserved from the source portals; in addition, two layers of silver-label enrichment are produced by a uniform Google Gemini 2.5 Pro pipeline. The first layer --- normalized statutory-base citations (\texttt{extracted\_legal\_bases}) --- covers $81.3\%$ of the corpus, i.e.\ over 2.1 million judgments, and is the workhorse field for statute-grounded retrieval and citation analysis. The second layer --- five narrative-style analytical fields (factual state, legal state, summary, thesis, keywords) --- is intentionally sparser, populated for $12$--$17\%$ of the corpus (several hundred thousand judgments per field), and targets summarisation, structured-extraction, and weak-supervision use cases. The corpus extends our earlier multilingual JuDDGES release \citep{augustyniak2024juddges} by providing the first Polish-only resource that unifies common and administrative branches and that ships analytical structure beyond raw text.
+
+We position JuDDGES-pl explicitly as a \textbf{curatorial and infrastructural} contribution rather than a new benchmark. The LLM-extracted fields are \emph{silver labels}: useful for analysis, weak supervision, and pretraining, but not gold annotations against which models should be ranked. We therefore neither propose new tasks nor report model comparisons. Instead, we describe the acquisition, normalization, and enrichment pipeline; characterize the corpus through descriptive analyses; and document the resource using Croissant metadata with the full set of Responsible AI fields required by the NeurIPS 2026 Evaluations \& Datasets Track.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+    \item \textbf{Unified Polish judiciary corpus.} A single resource containing 2.69 million judgments from both the common-courts and administrative-courts branches, with consistent schema and uniform analytical enrichment.
+    \item \textbf{Reproducible Gemini 2.5 Pro enrichment pipeline.} Per-field prompts and schemas for factual state, legal state, summary, theses, statutory bases, and keywords, applied uniformly across branches and released alongside the corpus.
+    \item \textbf{Descriptive characterization.} Coverage by court level and year, document-structure statistics, citation patterns, extraction-field completeness, and pseudonymization fidelity, together with a Datasheet-style and evaluation-card-style write-up.
+    \item \textbf{NeurIPS-compliant documentation.} Validated Croissant metadata with all sixteen Responsible AI fields, plus an explicit silver-vs-gold disclaimer to prevent misuse of the LLM-generated fields as benchmark gold standards.
+\end{enumerate}
+
+\section{Related Work}
+\label{sec:related-work}
+
+\paragraph{English common-law corpora.} Most public legal NLP resources draw on English-language common-law material. Legal-BERT \citep{chalkidis2020legal} pretrained on a mixed English legal corpus and seeded a generation of domain-adapted encoders. LexGLUE \citep{chalkidis-etal-2022-lexglue} consolidated six classification and entailment tasks over EU and U.S.\ texts, and LegalBench \citep{guhaLegalbenchCollaborativelyBuilt2023a} expanded to a collaboratively-built suite of more than 160 reasoning tasks --- almost entirely English. Task-specific resources such as the SARA tax-law dataset \citep{holzenberger_dataset_2020} and the COLIEE statutory and case-law tasks \citep{rabelo_overview_2022} broaden the typology but remain English- or Japanese-centered. JuDDGES-pl is complementary: it neither proposes tasks nor curates labels for benchmarking, but provides the underlying civil-law corpus on which downstream Polish-language analogues of these benchmarks can be built.
+
+\paragraph{Multilingual and non-English legal corpora.} A recent line of work has begun to broaden language coverage. LEXTREME \citep{niklaus2023lextreme} aggregates classification tasks across 24 European languages, MultiLegalPile \citep{niklaus2024multilegalpile689gbmultilinguallegal} provides 689\,GB of multilingual legal text for pretraining, and Swiss judgment prediction \citep{niklaus2023automatic} covers German, French, and Italian. Polish appears in these resources but with limited per-task volume and without the dual-branch (common + administrative) split. FairLex \citep{chalkidis2022fairlex} highlighted fairness gaps in cross-lingual legal benchmarks. Our prior work, JuDDGES \citep{augustyniak2024juddges}, took a multilingual unification approach across several jurisdictions; JuDDGES-pl is the first single-jurisdiction follow-up that prioritizes \emph{depth} of analytical structure over breadth of language coverage.
+
+\paragraph{LLM-based enrichment of legal text.} Using large language models to add structure to legal documents --- summaries, issue lists, statutory tagging --- has become standard practice, but recent work has documented serious failure modes: \citet{magesh2024hallucinationlegalai} report substantial hallucination rates even from retrieval-augmented commercial legal-AI tools. JuDDGES-pl treats these findings as a hard constraint: we generate analytical fields with Google Gemini 2.5 Pro under uniform prompts, but explicitly mark them as silver labels rather than gold and do not benchmark models against them.
+
+\paragraph{Dataset documentation standards.} The Datasheets for Datasets framework \citep{gebru2021datasheets} and the MLCommons Croissant specification have become the dominant vehicles for structured dataset metadata; the NeurIPS 2026 Evaluations \& Datasets Track requires the Responsible AI extension of Croissant. We follow this requirement and ship the validated JSON-LD alongside the corpus.
+
+\section{Data Acquisition and Licensing}
+\label{sec:acquisition}
+
+\paragraph{Source portals.} JuDDGES-pl is sourced from the two official Polish judgment-publication portals. Common-court judgments are obtained from the public portal of the Polish Ministry of Justice, \url{https://orzeczenia.ms.gov.pl}, which aggregates rulings from the Supreme Court, courts of appeal, regional courts (\emph{sądy okręgowe}), and district courts (\emph{sądy rejonowe}). Administrative-court judgments are obtained from the Central Database of Administrative Court Judgments (CBOSA), \url{https://orzeczenia.nsa.gov.pl}, covering the Supreme Administrative Court (NSA) and the Voivodeship Administrative Courts (\emph{wojewódzkie sądy administracyjne}, WSA). Both portals publish judgments with court-applied pseudonymization already in place; we performed no additional crawling of non-public material and no re-identification.
+
+\paragraph{Retrieval protocol.} We retrieved judgments through each portal's documented public interface, recording the source URL, retrieval timestamp, and portal-published metadata (court, chamber, signature, date, judgment type, statutory citations) alongside the document text. Records with empty or unparsable bodies were dropped at the parsing stage. Heterogeneous source formats (HTML, PDF) were normalized to UTF-8 plain text with structural parsing of the canonical sections of a Polish judgment --- \emph{sentencja} (operative part), \emph{uzasadnienie} (reasoning), and signatures --- to support downstream field-level analyses. The full per-judgment provenance is preserved in the released metadata.
+
+\paragraph{Copyright and licensing.} Polish court judgments are public-domain legal acts. Article~4(2) of the Polish Copyright Act of 4~February 1994 explicitly excludes \emph{dokumenty urzędowe} (official documents) --- a category that covers court judgments and their reasoning --- from copyright protection. The source texts can therefore be redistributed without further licensing constraints, subject only to the privacy obligations described below. The \emph{enrichment layer} --- the analytical fields produced by the Gemini 2.5 Pro pipeline --- is the authors' contribution and is released under \textbf{CC~BY~4.0}. We chose CC~BY~4.0 to match the prevailing license of comparable legal-NLP resources \citep{niklaus2024multilegalpile689gbmultilinguallegal,augustyniak2024juddges} and to maximise downstream re-use, including for commercial civic-tech applications.
+
+\paragraph{Privacy and pseudonymization.} The source portals apply pseudonymization to natural-person identifiers prior to publication: personal names are replaced by initials or letter codes, and sensitive identifiers (PESEL, addresses, dates of birth) are redacted. Names of public officials --- judges, prosecutors --- and corporate parties are typically retained, as is standard practice for Polish judgment publication. We do not re-identify pseudonymized subjects and do not publish any auxiliary identifying information. Section~\ref{sec:limitations} discusses residual privacy risks and re-use obligations under GDPR / RODO.
+
+\section{Enrichment Pipeline}
+\label{sec:pipeline}
+
+The enrichment layer attaches a uniform set of structured analytical fields to every judgment in the corpus. We use a single model --- Google Gemini 2.5 Pro --- with one prompt per analytical field, applied identically across both branches of the judiciary. This deliberate uniformity simplifies cross-branch analysis at the cost of giving up branch-specific prompt tuning; we discuss the trade-off in Section~\ref{sec:limitations}.
+
+\paragraph{Analytical fields.} For each judgment we produce six analytical fields:
+\begin{itemize}
+    \item \texttt{extracted\_factual\_state} --- a structured summary of the case facts that drove the dispute, in the spirit of \emph{stan faktyczny};
+    \item \texttt{extracted\_legal\_state} --- the legal questions raised by the facts and the statutory framework that the court invokes to resolve them;
+    \item \texttt{extracted\_summary} --- a free-form abstractive summary of the judgment for human readers;
+    \item \texttt{extracted\_thesis} --- the principal legal proposition(s) the judgment stands for, in the style of \emph{teza} entries published in legal commentary;
+    \item \texttt{extracted\_legal\_bases} --- a normalized list of statutory bases cited in the judgment, with article and act references;
+    \item \texttt{extracted\_keywords} --- a small set of topical keywords for indexing and coverage analysis.
+\end{itemize}
+Source-portal metadata --- court, chamber, signature, date of judgment, judgment type, panel composition where published --- is preserved verbatim and exposed alongside the analytical fields.
+
+\paragraph{Extraction protocol.} Each judgment is processed once per field with a deterministic prompt template; we record the model version, the exact prompt, and the raw JSON response together with the parsed value. The prompts are released alongside the corpus (Appendix). Outputs that fail JSON parsing or schema validation are flagged and excluded from the analytical-field columns but the underlying raw text is retained, so the corpus remains usable as a plain-text resource even where extraction failed. We do not re-prompt or self-consistency-vote: the goal is a single, reproducible silver layer rather than a high-effort gold one.
+
+\paragraph{Pseudonymization fidelity.} A risk specific to LLM-based enrichment of legal text is that the model re-introduces redacted entities by guessing their full forms from context (e.g., expanding initials in the factual state). We perform post-extraction string-level checks that compare entity surface forms in the analytical fields against a denylist seeded from the source-document redaction tokens, and report fidelity statistics in Section~\ref{sec:characterization}. Records exhibiting suspected re-identification are flagged in the released metadata.
+
+\paragraph{Silver-label discipline.} The analytical fields are intentionally not human-validated at corpus scale. We do not present them as benchmark gold standards; users who need gold labels for a specific task should derive them from a sampled, manually-validated subset and report inter-annotator agreement in their own work. This discipline is reflected in the field naming (every analytical column carries the \texttt{extracted\_} prefix) and in the released documentation.
+
+\section{Corpus Characterization}
+\label{sec:characterization}
+
+JuDDGES-pl comprises 2{,}691{,}842 Polish court judgments split across two configs: \texttt{pl-court} (common-court branch, 437{,}450 judgments) and \texttt{pl-nsa} (administrative-court branch, 2{,}254{,}392 judgments). Both configs share the same 52-column schema --- raw text plus the six analytical fields and source-portal metadata --- so that downstream analyses can either treat the corpus as a unified resource or restrict to a single branch.\footnote{Column names are unified across the two branches, but the JSON object schema \emph{inside} \texttt{extracted\_legal\_bases} differs: \texttt{pl-court} uses keys \{\texttt{address}, \texttt{art}, \texttt{isap\_id}, \texttt{text}, \texttt{title}\} (act name under \texttt{title}), while \texttt{pl-nsa} uses \{\texttt{link}, \texttt{article}, \texttt{journal}, \texttt{law}\} (act name under \texttt{law}). Downstream consumers parsing the legal-base structure must branch on key name; we provide a parsing helper in the released pipeline.} Table~\ref{tab:corpus-overview} summarises the high-level composition.
+
+\begin{table}[!htb]
+\centering
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+ & \textbf{pl-court} & \textbf{pl-nsa} & \textbf{JuDDGES-pl (combined)} \\
+\midrule
+judgments                       & 437\,450               & 2\,254\,392          & 2\,691\,842 \\
+\quad year coverage             & 1994--2025             & 1981--2025           & 1981--2025 \\
+\quad court levels              & CoA / regional / district & NSA / WSA         & both branches \\
+mean doc length (chars)         & 22\,185                & 13\,763              & 15\,132 \\
+median doc length (chars)       & 16\,574                & 7\,934               & --- \\
+\texttt{extracted\_legal\_bases} coverage & 89.6\%       & 79.7\%               & 81.3\% \\
+\texttt{extracted\_summary} coverage & 17.6\%            & 15.2\%               & 15.6\% \\
+\texttt{extracted\_factual\_state} / \texttt{legal\_state} & 17.0 / 15.9\% & 14.8 / 12.8\% & 15.1 / 13.3\% \\
+\texttt{extracted\_thesis} / \texttt{keywords} & 16.6 / 12.1\% & 13.7 / 12.4\% & 14.1 / 12.4\% \\
+total statute citations         & 1\,211\,186            & 2\,705\,600          & 3\,916\,786 \\
+\bottomrule
+\end{tabular}
+\caption{Corpus composition of JuDDGES-pl. Document length is computed over \texttt{full\_text}; coverage is the share of rows where the analytical field is non-null and non-empty. Statute-citation totals sum every cited act across the six-field extraction.}
+\label{tab:corpus-overview}
+\end{table}
+
+\paragraph{Coverage.} The two branches are non-overlapping by jurisdiction. Within \texttt{pl-court}, the dominant level is \emph{regional courts} (224{,}667; $51\%$), followed by \emph{district} (127{,}867; $29\%$) and \emph{courts of appeal} (83{,}425; $19\%$); the common-courts portal does not host Supreme Court rulings, which are published on a separate portal and are not included in this release. Within \texttt{pl-nsa}, \emph{Voivodeship Administrative Courts (WSA)} contribute 1{,}833{,}462 judgments ($81\%$) and the \emph{Supreme Administrative Court (NSA)} the remaining 418{,}041 ($19\%$). Coverage is denser in recent years as digital publication has expanded; per-court-level and per-year cell counts are provided in Appendix~\ref{app:coverage} to support coverage-aware sampling.
+
+\paragraph{Document structure.} Common-court reasonings are roughly twice as long as administrative-court rulings on average: mean / median / p95 / max character length is $22{,}185 / 16{,}574 / 61{,}200 / 1{,}906{,}036$ for \texttt{pl-court} and $13{,}763 / 7{,}934 / 42{,}813 / 478{,}929$ for \texttt{pl-nsa}. Downstream users should size training and evaluation context windows accordingly. The dominant judgment types are \emph{sentence with reasoning} ($\sim$251k records) for \texttt{pl-court}, and \emph{Wyrok WSA w~Warszawie} ($\sim$319k) and \emph{Wyrok NSA} ($\sim$244k) for \texttt{pl-nsa}.
+
+\paragraph{Citation patterns.} The corpus contains 3{,}916{,}786 statute citations in total --- 1.21\,M in \texttt{pl-court} and 2.71\,M in \texttt{pl-nsa} --- over 8{,}875 raw act-title strings, an overcount driven by inconsistent \emph{tekst jednolity} suffixes in the source XML; the distinct-act count after normalisation is approximately three thousand. The common-court branch is dominated by \emph{Kodeks postępowania cywilnego} (294{,}627 citations), \emph{Kodeks cywilny} (198{,}302), \emph{Kodeks karny} (92{,}654), \emph{Kodeks postępowania karnego} (83{,}857), and \emph{Kodeks pracy} (28{,}507) --- broad coverage across civil, criminal, and labour codes. The administrative branch is dominated by \emph{Prawo o postępowaniu przed sądami administracyjnymi} ($\sim$1.21\,M citations across textual variants) and \emph{Kodeks postępowania administracyjnego} ($\sim$250k); \emph{Ordynacja podatkowa} (Tax Code) appears from rank~8 downward despite the strong tax-litigation footprint of the administrative branch. Top-50 per-act tables are in Appendix~\ref{app:statute-freq}.
+
+\paragraph{Extraction-field completeness.} The six analytical fields are sparse by design --- the Gemini 2.5 Pro pipeline emits a value only when the source content supports one. Combined coverage rates are: \texttt{extracted\_legal\_bases} $81.3\%$, \texttt{extracted\_summary} $15.6\%$, \texttt{extracted\_factual\_state} $15.1\%$, \texttt{extracted\_thesis} $14.1\%$, \texttt{extracted\_legal\_state} $13.3\%$, \texttt{extracted\_keywords} $12.4\%$. The \texttt{pl-court} branch shows uniformly higher rates than \texttt{pl-nsa} (e.g., $89.6\%$ vs $79.7\%$ on \texttt{extracted\_legal\_bases}; $17.6\%$ vs $15.2\%$ on \texttt{extracted\_summary}), consistent with the longer, more narrative reasonings characteristic of common-court rulings yielding more extractable content.
+
+\paragraph{Pseudonymization fidelity.} We compute, per branch, the fraction of judgments where the analytical fields re-introduce a redaction token's surface form that does not appear in the source text --- a proxy for LLM-driven re-identification. Suspected cases are flagged in the released metadata; full methodology and per-branch fidelity rates are in Appendix~\ref{app:pseudonymization}.
+
+\section{Documentation and Release}
+\label{sec:documentation}
+
+\paragraph{Release artefacts.} The corpus is released openly on Hugging Face under the JuDDGES organisation:
+\begin{itemize}
+    \item \textbf{Unified release:} \url{https://huggingface.co/datasets/JuDDGES/juddges-pl} --- a single dataset with two named configs, \texttt{pl-court} and \texttt{pl-nsa}, sharing one schema.
+    \item \textbf{Component releases:} \url{https://huggingface.co/datasets/JuDDGES/pl-court-raw-enriched} and \url{https://huggingface.co/datasets/JuDDGES/pl-nsa-enriched} --- the per-branch snapshots from which the unified release is derived. We retain these for users who only need one branch and to support deterministic re-builds.
+    \item \textbf{Pipeline:} the enrichment pipeline source, prompt templates, and per-field schemas are released alongside the paper.
+\end{itemize}
+
+\paragraph{Croissant metadata.} We ship validated Croissant 1.0 JSON-LD for the unified release and for each component release. The metadata includes the Responsible AI extension required by the NeurIPS 2026 Evaluations \& Datasets Track, covering the full set of sixteen RAI fields: \emph{dataCollection}, \emph{dataCollectionType}, \emph{dataCollectionRawData}, \emph{dataPreprocessingProtocol}, \emph{dataAnnotationProtocol}, \emph{dataAnnotationPlatform}, \emph{dataAnnotationAnalysis}, \emph{annotationsPerItem}, \emph{annotatorDemographics}, \emph{machineAnnotationTools}, \emph{dataUseCases}, \emph{dataBiases}, \emph{personalSensitiveInformation}, \emph{dataLimitations}, \emph{dataReleaseMaintenancePlan}, and \emph{dataSocialImpact}. The Croissant files validate cleanly under the \texttt{mlcroissant} reference validator at metadata level.
+
+\paragraph{Evaluation card.} Alongside the Croissant metadata we release an evaluation card that states, for each analytical field, (i)~what it can be used for, (ii)~what assumptions are required for that use to be sound, and (iii)~what known failure modes apply. The card is designed to be readable by non-ML legal-domain users (e.g., empirical legal scholars and civic-tech practitioners) who may treat dataset README files as authoritative.
+
+\paragraph{Maintenance plan.} JuDDGES-pl will be maintained by Wrocław University of Science and Technology with versioned snapshots; errata, schema updates, and new releases will appear as new dataset versions on Hugging Face, with older versions retained via the platform's commit history. Issues can be filed on the dataset Community tab.
+
+\section{Limitations and Intended Use}
+\label{sec:limitations}
+
+\paragraph{Silver labels, not gold.} The six analytical fields are produced by Google Gemini 2.5 Pro under uniform prompts and have not been human-validated at corpus scale. Recent work has documented substantial hallucination rates in legal-AI systems even with retrieval augmentation \citep{magesh2024hallucinationlegalai}; we have no reason to assume our pipeline is exempt. Users \textbf{must not} treat these fields as benchmark gold and should derive task-specific gold labels from sampled, manually-validated subsets before publishing model rankings against them.
+
+\paragraph{Coverage and selection bias.} The corpus reflects judgments \emph{published} by the source portals, not all Polish judgments. Publication is not random: case-selection criteria differ across courts, and digital coverage thins out in earlier years. Cross-court and cross-time comparisons must therefore control for coverage bias, and headline counts (``X\,judgments from court Y'') should be read as portal coverage, not as a sample of all rulings.
+
+\paragraph{Pseudonymization caveats.} Court-applied pseudonymization is heterogeneous across courts, judges, and time, and may not satisfy modern privacy guarantees uniformly. We perform string-level fidelity checks (Section~\ref{sec:pipeline}) but cannot rule out residual identifiability, particularly for high-profile cases where context alone permits re-identification. Re-users in the European Union must comply with GDPR / RODO, and \emph{must not} attempt re-identification of pseudonymized natural persons.
+
+\paragraph{Jurisdiction and language scope.} The corpus is monolingual Polish and covers a single jurisdiction. Cross-jurisdictional claims --- e.g., civil-law generalisation beyond Poland --- require additional resources. Users should also note that Polish administrative procedure differs structurally from common-law judicial review, and that conclusions drawn from \texttt{pl-nsa} do not transfer mechanically to administrative-court systems elsewhere.
+
+\paragraph{Pipeline uniformity.} We deliberately use a single model (Gemini 2.5 Pro) and a single prompt per field across both branches. This buys cross-branch comparability at the cost of per-branch precision. Users with branch-specific evaluation needs (e.g., tax-law-specific extractions from \texttt{pl-nsa}) may benefit from re-running the pipeline with a tailored prompt or alternative model; we release the prompts and schemas to make this straightforward.
+
+\paragraph{Out-of-scope uses.} JuDDGES-pl is intended as a research and analytical resource. It is \textbf{not} a substitute for legal advice, \textbf{not} a basis for individual legal decision-making, and \textbf{not} fit for direct deployment in automated legal-decision systems. Tools that consume the analytical fields must surface their silver-label status to end users.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We released JuDDGES-pl, a unified, analytically enriched Polish court judgment corpus that covers both the common and administrative branches of the Polish judiciary inside a single resource. The corpus comprises 2.69 million judgments published between 1981 and 2025, with court-portal metadata preserved verbatim and two layers of LLM-extracted silver-label enrichment produced by Google Gemini 2.5 Pro: normalized statutory-base citations on over 2.1 million judgments, plus five narrative analytical fields --- factual state, legal state, summary, thesis, keywords --- populated for several hundred thousand judgments each. We documented the resource using Croissant metadata with the full Responsible AI extension and explicitly framed the LLM-extracted fields as silver labels rather than benchmark gold.
+
+JuDDGES-pl is designed to enable, not to perform, downstream evaluation of civil-law legal NLP. Concrete next steps that the corpus unlocks include: (i)~Polish-language analogues of LegalBench-style task suites; (ii)~statute-grounded reasoning evaluation that exploits the structured \texttt{extracted\_legal\_bases} field; (iii)~cross-branch generalisation studies between common and administrative judicature; (iv)~longitudinal analysis of judicial language across the post-2015 reform period; and (v)~fairness audits of legal language models in a jurisdiction outside the Anglophone common-law mainstream. We hope the resource helps shift legal-NLP evaluation away from its current English-and-common-law default and toward a more representative coverage of the world's legal systems.
+
+\bibliography{bib}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+
+\input{appendix_juddges.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+% Mandatory NeurIPS 2026 paper checklist -- desk reject if missing.
+\input{checklist.tex}
+
+\end{document}

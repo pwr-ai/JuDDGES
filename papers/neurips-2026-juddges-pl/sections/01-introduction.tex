@@ -1,0 +1,44 @@
+% 01-introduction.tex
+% Goal: establish (i) the civil-law gap, (ii) what JuDDGES-pl is,
+% (iii) what counts as our contribution, (iv) the silver-label framing
+% as an explicit design commitment.
+
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The civil-law gap in legal NLP}
+\label{sec:intro:gap}
+
+Contemporary evaluation in legal NLP is dominated by suites such as LegalBench~\citep{guhaLegalbenchCollaborativelyBuilt2023a}, LexGLUE~\citep{chalkidis-etal-2022-lexglue}, and CaseHOLD~\citep{zheng2021does}, all of which are English-language and constructed almost exclusively from common-law sources. Civil-law systems, however, differ from their common-law counterparts in ways that are not merely stylistic: judgments cite codified statutes rather than precedential cases, document structure follows a fixed two-part form (\emph{sentencja} and \emph{uzasadnienie}), and the courts themselves are organized into separate hierarchies---common and administrative---governed by disjoint procedural codes. These structural features shape what models must learn in order to reason about civil-law texts, and they are largely absent from the resources on which legal language models are currently trained and evaluated. Polish legal NLP has produced valuable building blocks, including PolEval campaigns, the Bielik training corpora, and the original JuDDGES release at NeurIPS 2024~\citep{augustyniak2024juddges}, but no existing resource simultaneously covers two judicial branches in a unified release, supplies an LLM-derived analytical layer at scale, and is documented to the standards expected of a NeurIPS Datasets \& Benchmarks contribution. The result is a persistent gap between the empirical centre of legal NLP and the legal systems that govern most of continental Europe. \juddgespl{} is designed to narrow that gap for Polish, while making the methodology transparent enough to be reused for other civil-law jurisdictions.
+
+\subsection{What we release}
+\label{sec:intro:release}
+
+\juddgespl{} is a unified Hugging Face dataset, distributed under the identifier \texttt{JuDDGES/juddges-pl}, that consolidates two complementary configurations: \texttt{pl-court}, covering Polish common courts, and \texttt{pl-nsa}, covering the administrative court branch. The release contains hundreds of thousands of judgments spanning multiple years of jurisprudence, and the underlying texts are preserved verbatim, with the anonymization applied by the publishing courts left intact rather than re-processed. This design choice keeps the corpus faithful to the documents that practitioners and researchers actually encounter, and it ensures that any subsequent analysis of pseudonymization fidelity is performed on the same surface form that downstream users will see.
+
+Layered on top of these documents is an LLM-extracted analytical layer produced uniformly with Google Gemini 2.5 Pro under a single, version-pinned prompting protocol. For every judgment we extract a factual state, a legal state, summaries, theses, statutory bases, and keywords, providing a structured view of the case alongside the raw text. The release is accompanied by validated Croissant metadata with full Responsible AI fields, and the entire extraction pipeline---prompts, schemas, model version, and post-processing---is shipped in reproducible form so that the analytical layer can be regenerated, audited, or extended without recourse to undocumented tooling.
+
+\subsection{Contributions}
+\label{sec:intro:contributions}
+
+\begin{enumerate}
+  \item We release a \textbf{unified civil-law corpus} that spans two disjoint branches of the Polish judiciary in a single coherent package, addressing the strong English-language and common-law tilt of legal-NLP resources.
+  \item We provide \textbf{large-scale LLM-based enrichment} of every judgment, with documented prompts, schemas, model version, and per-field statistics, enabling both downstream use and methodological scrutiny.
+  \item We treat \textbf{silver-label framing as an explicit design commitment} rather than a post hoc disclaimer, as elaborated in \S\ref{sec:intro:silver}.
+  \item We supply a complete \textbf{documentation infrastructure}, including a Datasheet, an Evaluation Card, Croissant and Responsible AI metadata, and reproducibility artifacts that accompany the data release.
+  \item We provide a \textbf{descriptive characterization} of the corpora in terms of coverage, structure, citation patterns, and pseudonymization fidelity, enabling cross-branch descriptive comparison between common and administrative courts.
+\end{enumerate}
+
+\subsection{Silver labels by design --- not by accident}
+\label{sec:intro:silver}
+
+\begin{silverbox}{Design Commitment: Silver Labels by Design}
+\textbf{Design commitment.} The analytical fields released with \juddgespl{} are \textbf{silver labels}: produced by a single LLM under uniform prompting, without per-document human review. We make this commitment explicit because the alternative --- calling LLM outputs ``annotations'' without qualification --- has produced a wave of resources whose quality is silently overstated and whose downstream benchmark numbers are not reproducible across model versions.
+\end{silverbox}
+
+We adopt this framing as a positive methodological stance rather than a hedge. The analytical fields in \juddgespl{} are described as silver labels throughout the release---never as \emph{annotations} without qualification---and the corpus is offered as a structurally enriched resource rather than as a benchmark with held-out test sets, since meaningful benchmarking would require validated ground truth that we deliberately do not claim to provide. To support informed downstream use we document the error modes that callers should anticipate (\S\ref{sec:pipeline:quality}, \S\ref{sec:limitations:limitations}) and we point to gold-label subsets within the broader JuDDGES family, such as \texttt{pl-swiss-franc-loans}, for tasks that require human-validated labels. Taken together, these choices position \juddgespl{} as a transparent, large-scale silver-label corpus whose intended uses and known limitations are part of the release rather than caveats appended to it.
+
+\subsection{Roadmap}
+\label{sec:intro:roadmap}
+
+\S\ref{sec:related-work} reviews related resources; \S\ref{sec:acquisition} describes acquisition and licensing; \S\ref{sec:pipeline} details the enrichment pipeline; \S\ref{sec:characterization} characterizes the corpora; \S\ref{sec:datasheet} presents the Datasheet and Evaluation Card; \S\ref{sec:limitations} enumerates limitations and intended use; \S\ref{sec:release} covers release and infrastructure.

@@ -1,0 +1,124 @@
+% Appendix for JuDDGES-pl. Placeholders for the user to drop in
+% extraction prompts, schemas, sample enriched judgments, datasheet
+% entries, and Croissant validation log.
+
+\section{Per-field Extraction Prompts}
+\label{app:prompts}
+
+This appendix lists the exact prompts used by the Gemini 2.5 Pro extraction pipeline for each of the six analytical fields released with JuDDGES-pl. Prompts are reproduced verbatim, including system role and few-shot exemplars where applicable. The same prompt is applied uniformly across both branches (\texttt{pl-court} and \texttt{pl-nsa}); branch-specific tuning is left to downstream users (Section~\ref{sec:limitations}).
+
+\subsection{\texttt{extracted\_factual\_state}}
+\label{app:prompt-factual-state}
+
+\begin{promptbox}{Prompt: extracted\_factual\_state}
+% TODO: paste prompt here
+\end{promptbox}
+
+\subsection{\texttt{extracted\_legal\_state}}
+\label{app:prompt-legal-state}
+
+\begin{promptbox}{Prompt: extracted\_legal\_state}
+% TODO: paste prompt here
+\end{promptbox}
+
+\subsection{\texttt{extracted\_summary}}
+\label{app:prompt-summary}
+
+\begin{promptbox}{Prompt: extracted\_summary}
+% TODO: paste prompt here
+\end{promptbox}
+
+\subsection{\texttt{extracted\_thesis}}
+\label{app:prompt-thesis}
+
+\begin{promptbox}{Prompt: extracted\_thesis}
+% TODO: paste prompt here
+\end{promptbox}
+
+\subsection{\texttt{extracted\_legal\_bases}}
+\label{app:prompt-legal-bases}
+
+\begin{promptbox}{Prompt: extracted\_legal\_bases}
+% TODO: paste prompt here
+\end{promptbox}
+
+\subsection{\texttt{extracted\_keywords}}
+\label{app:prompt-keywords}
+
+\begin{promptbox}{Prompt: extracted\_keywords}
+% TODO: paste prompt here
+\end{promptbox}
+
+\section{Field Schemas}
+\label{app:schemas}
+
+% TODO: JSON Schema (or pydantic-style) definitions for each
+% extracted_* field. Suggested layout: one verbatim listing per
+% field, each in a small examplebox. Include enums where applicable
+% (e.g., judgment-type enum) so reviewers can verify the schema
+% matches the Croissant recordSet definitions.
+
+\section{Sample Enriched Judgments}
+\label{app:samples}
+
+% TODO: 2-3 anonymized example records, one per branch (plus one
+% full cross-branch comparison if useful). Each example should show:
+%   (i)   source-portal metadata,
+%   (ii)  raw text excerpt (truncated),
+%   (iii) the six extracted_* fields populated,
+%   (iv)  any failure modes worth flagging.
+% Use the examplebox environment so the rendering matches Section
+% \ref{app:prompts}.
+
+\section{Per-court-level and Per-year Coverage Tables}
+\label{app:coverage}
+
+% TODO: detailed breakdown tables to support the headline numbers
+% in Table~\ref{tab:corpus-overview}. One table per branch with rows
+% = court level (SC / CoA / regional / district for pl-court;
+% NSA / WSA for pl-nsa) and columns = year buckets.
+
+\section{Statutory-base Citation Frequencies}
+\label{app:statute-freq}
+
+% TODO: top-50 most-cited acts per branch, with citation counts and
+% per-judgment-mean. Useful for downstream task designers selecting
+% statute-grounded evaluation targets.
+
+\section{Pseudonymization Fidelity Audit}
+\label{app:pseudonymization}
+
+% TODO: methodology and results of the LLM-driven re-identification
+% audit referenced in Section~\ref{sec:pipeline}. Include the
+% denylist construction, the surface-form-mismatch metric, and the
+% per-branch fidelity rate. Flag any cases where Gemini 2.5 Pro
+% expanded redacted initials.
+
+\section{Datasheet for JuDDGES-pl}
+\label{app:datasheet}
+
+% TODO: complete datasheet \citep{gebru2021datasheets} questionnaire.
+% Suggested section headers (one paragraph each):
+%   - Motivation (purpose, who funded, who created)
+%   - Composition (what does each instance represent, are there
+%     labels, splits, recommended uses)
+%   - Collection process (how data was acquired, who was involved,
+%     timeframe)
+%   - Preprocessing/cleaning/labeling (what was done, raw data
+%     availability)
+%   - Uses (other tasks, dataset cards, restrictions)
+%   - Distribution (how distributed, license, IP, regulatory
+%     restrictions)
+%   - Maintenance (who hosts, contact, error correction, versioning,
+%     contributions)
+
+\section{Croissant Validation Log}
+\label{app:croissant-log}
+
+% TODO: paste output of:
+%   python -c "import mlcroissant as m; m.Dataset(jsonld='juddges-pl.json')"
+% for each of the three released Croissant files. The log should
+% show 0 errors at metadata level. Mention the @context warning
+% (HF auto-generated context contains 'examples', 'equivalentProperty',
+% 'rai', 'samplingRate' as non-standard keys) and explain why it is
+% benign.
