@@ -7,7 +7,7 @@ chunk_strategy: recursive
 column_mapping:  # Mapping of dataset fields to Weaviate properties
   id: document_id
   title: title
-  docker_number: document_number
+  docket_number: document_number
   publication_date: publication_date
   keywords: keywords
   regulations: legal_bases
