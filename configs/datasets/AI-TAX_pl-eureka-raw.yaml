@@ -13,7 +13,7 @@ column_mapping:  # Mapping of dataset fields to Weaviate properties
   regulations: legal_bases
   html_content: raw_content
   introduction: summary
-  html_content: full_text
+  full_text: full_text
   author: issuing_body
   question: thesis
 date_fields:
