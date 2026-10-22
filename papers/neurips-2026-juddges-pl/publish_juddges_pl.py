@@ -2,11 +2,12 @@
 Create the unified `JuDDGES/juddges-pl` dataset on Hugging Face for the
 NeurIPS 2026 E&D submission.
 
-Strategy: rather than duplicating ~10s of GB of parquet, we publish a
-README whose YAML frontmatter declares two configs (`pl-court` and
-`pl-nsa`) whose `data_files` point to the explicit list of auto-converted
-parquet files of the upstream JuDDGES/pl-court-raw-enriched and
-JuDDGES/pl-nsa-enriched datasets via cross-repo `resolve/...` URLs.
+Strategy: the parquet shards live in this repo itself under `data/`
+(`data/court-*.parquet`, `data/nsa-*.parquet`). We publish a README whose
+YAML frontmatter declares two configs (`pl-court` and `pl-nsa`) whose
+`data_files` are repo-relative globs over those shards. Nothing is
+referenced from the upstream JuDDGES/pl-court-raw-enriched and
+JuDDGES/pl-nsa-enriched datasets.
 
 Run:
     python publish_juddges_pl.py            # build README + create/update repo + validate
@@ -17,35 +18,17 @@ Run:
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import textwrap
-import urllib.request
 from pathlib import Path
 
 REPO_ID = "JuDDGES/juddges-pl"
 HERE = Path(__file__).parent
 
-UPSTREAM = {
-    "pl-court": "JuDDGES/pl-court-raw-enriched",
-    "pl-nsa":   "JuDDGES/pl-nsa-enriched",
+DATA_GLOBS = {
+    "pl-court": "data/court-*.parquet",
+    "pl-nsa":   "data/nsa-*.parquet",
 }
-
-
-def list_upstream_parquet(hf_id: str) -> list[str]:
-    """Enumerate the auto-converted parquet files for an upstream dataset."""
-    api_url = f"https://huggingface.co/api/datasets/{hf_id}/tree/refs%2Fconvert%2Fparquet/default/train"
-    with urllib.request.urlopen(api_url, timeout=60) as resp:
-        items = json.loads(resp.read().decode("utf-8"))
-    paths = sorted(
-        x["path"]
-        for x in items
-        if x.get("type") == "file" and x.get("path", "").endswith(".parquet")
-    )
-    return [
-        f"https://huggingface.co/datasets/{hf_id}/resolve/refs%2Fconvert%2Fparquet/{p}"
-        for p in paths
-    ]
 
 
 BODY = textwrap.dedent(
@@ -140,16 +123,11 @@ BODY = textwrap.dedent(
 
 def build_readme() -> str:
     yaml_lines: list[str] = []
-    for cfg, upstream in UPSTREAM.items():
-        print(f"  Listing parquet files for {upstream} ...")
-        urls = list_upstream_parquet(upstream)
-        print(f"    {cfg}: {len(urls)} files")
+    for cfg, glob in DATA_GLOBS.items():
         yaml_lines.append(f"- config_name: {cfg}")
         yaml_lines.append(f"  data_files:")
         yaml_lines.append(f"  - split: train")
-        yaml_lines.append(f"    path:")
-        for u in urls:
-            yaml_lines.append(f"    - \"{u}\"")
+        yaml_lines.append(f"    path: \"{glob}\"")
     configs_yaml = "\n".join(yaml_lines)
 
     frontmatter = (
@@ -196,7 +174,7 @@ def create_or_update(readme_text: str) -> None:
         path_in_repo="README.md",
         repo_id=REPO_ID,
         repo_type="dataset",
-        commit_message="Add JuDDGES-pl dataset card with cross-repo configs (NeurIPS 2026 E&D)",
+        commit_message="Add JuDDGES-pl dataset card with data/ configs (NeurIPS 2026 E&D)",
     )
     print(f"Uploaded README to https://huggingface.co/datasets/{REPO_ID}")
 
@@ -204,7 +182,7 @@ def create_or_update(readme_text: str) -> None:
 def validate() -> None:
     from datasets import load_dataset
 
-    for cfg in UPSTREAM:
+    for cfg in DATA_GLOBS:
         print(f"\nLoading {REPO_ID} :: {cfg} (streaming) ...")
         try:
             ds = load_dataset(REPO_ID, cfg, split="train", streaming=True)
@@ -213,8 +191,7 @@ def validate() -> None:
             print(f"  OK — first-row keys (first 8 of {len(row)}): {keys}")
         except Exception as exc:  # noqa: BLE001
             print(f"  FAILED: {type(exc).__name__}: {exc}")
-            print("  ↳ Cross-repo data_files URLs may not be supported here.")
-            print("    Fallback: use a loading script (juddges-pl.py) or copy parquet files.")
+            print("  ↳ Check that data/ parquet shards exist in the repo and match DATA_GLOBS.")
             sys.exit(1)
 
 
