@@ -137,6 +137,9 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     generate_kwargs: dict[str, Any] = Field(default_factory=dict)
     random_seed: int
     parallel: Literal["tensor", "pipeline"] | None = None
+    guided_json: bool = False  # constrain decoding to the JSON schema built from ie_schema
+    quantization: str | None = None  # vLLM in-flight quantization, e.g. "bitsandbytes"
+    gpu_memory_utilization: float = 0.9  # vLLM default
 
     @property
     def predictions_file(self) -> Path:

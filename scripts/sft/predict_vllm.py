@@ -1,6 +1,8 @@
 import json
 import os
 import sys
+import time
+from pathlib import Path
 from pprint import pformat
 
 import hydra
@@ -10,6 +12,7 @@ from loguru import logger
 from omegaconf import DictConfig
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
+from vllm.sampling_params import GuidedDecodingParams
 
 from juddges.config import PredictInfoExtractionConfig
 from juddges.data.dataset_factory import get_dataset
@@ -17,7 +20,9 @@ from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.formatters import ConversationFormatter
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
+from juddges.utils.json_schema import ie_schema_to_json_schema
 from juddges.utils.misc import save_yaml
+from juddges.utils.run_record import write_run_record
 
 torch.set_float32_matmul_precision("high")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -31,6 +36,7 @@ logger.info(f"NUM_GPUS: {NUM_GPUS}, CUDA_VISIBLE_DEVICES: {os.getenv('CUDA_VISIB
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict_vllm.yaml")
 @torch.inference_mode()
 def main(cfg: DictConfig) -> None:
+    start_time = time.time()
     config = PredictInfoExtractionConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
@@ -45,7 +51,12 @@ def main(cfg: DictConfig) -> None:
     ds = get_dataset(config.dataset.name, config.split)
 
     assert config.generate_kwargs.keys()
-    params = SamplingParams(**config.generate_kwargs)
+    guided_decoding = (
+        GuidedDecodingParams(json=ie_schema_to_json_schema(config.ie_schema))
+        if config.guided_json
+        else None
+    )
+    params = SamplingParams(**config.generate_kwargs, guided_decoding=guided_decoding)
 
     llm = LLM(
         model=config.llm.name,
@@ -57,6 +68,8 @@ def main(cfg: DictConfig) -> None:
         seed=config.random_seed,
         enable_prefix_caching=True,
         max_model_len=config.max_model_len,
+        quantization=config.quantization,
+        gpu_memory_utilization=config.gpu_memory_utilization,
     )
 
     if config.llm.should_load_adapter:
@@ -74,8 +87,6 @@ def main(cfg: DictConfig) -> None:
         config=config,
         llm=llm,
     )
-    assert config.generate_kwargs.pop("do_sample")
-    assert not config.generate_kwargs
 
     outputs = llm.chat(
         messages=ds[ConversationFormatter.MESSAGES_FIELD],
@@ -101,6 +112,15 @@ def main(cfg: DictConfig) -> None:
     logger.info(f"Saving results to {config.predictions_file}")
     with open(config.predictions_file, "w") as f:
         json.dump(results, f, indent="\t", ensure_ascii=False)
+
+    write_run_record(
+        output_dir=config.output_dir,
+        config=config.model_dump(),
+        seed=config.random_seed,
+        model_name=config.llm.name,
+        split_files={config.split: Path(config.dataset.name) / f"{config.split}.json"},
+        start_time=start_time,
+    )
 
 
 def prepare_and_save_dataset_for_prediction(
