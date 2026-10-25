@@ -97,9 +97,7 @@ def test_summarize_run_counts_parse_errors_and_exact_matches(tmp_path):
     predictions = [
         {"answer": gold, "gold": gold, "finish_reason": "stop"},
         {
-            "answer": json.dumps(
-                {"decision": "Nie", "judgment_date": "2020-1-2", "summary": "s"}
-            ),
+            "answer": json.dumps({"decision": "Nie", "judgment_date": "2020-1-2", "summary": "s"}),
             "gold": gold,
             "finish_reason": "stop",
         },
@@ -120,3 +118,19 @@ def test_summarize_run_counts_parse_errors_and_exact_matches(tmp_path):
     assert result["exact_match_date"] == 2 / 3  # "2020-1-2" parses to the same date
     assert result["exact_match_categorical"] == 1 / 3
     assert result["judge_average"] == 0.5
+
+
+def test_summarize_run_scores_missing_keys_as_zero(tmp_path):
+    module = _summarize_module()
+    ie_schema = {k: IE_SCHEMA[k] for k in ["decision", "judgment_date"]}
+    (tmp_path / "config.yaml").write_text(yaml.dump({"ie_schema": ie_schema}))
+    gold = json.dumps({"decision": None, "judgment_date": None})
+    # truncated answer: langchain parses it partially, so it is not a parsing error
+    truncated = {"answer": '{"decision": "Tak", "judgm', "gold": gold, "finish_reason": "length"}
+    (tmp_path / "predictions.json").write_text(json.dumps([truncated]))
+
+    result = module.summarize_run(tmp_path)
+
+    assert result["parsing_errors"] == 0
+    assert result["finish_reason_length"] == 1
+    assert result["per_field_exact_match"] == {"judgment_date": 0.0, "decision": 0.0}

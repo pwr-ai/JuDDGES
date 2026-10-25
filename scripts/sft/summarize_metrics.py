@@ -120,7 +120,7 @@ def summarize_run(run_dir: Path) -> dict[str, Any]:
     for idx in range(len(predictions)):
         pred, gold = parsed.predictions.get(idx), parsed.gold.get(idx)
         for field in scores:
-            if pred is None:
+            if pred is None or field not in pred:  # parsing error or missing key (as in evaluator)
                 scores[field].append(0)
             elif field in date_fields:
                 scores[field].append(evaluate_date(pred.get(field), gold.get(field))["match"])
