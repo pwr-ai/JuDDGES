@@ -104,11 +104,14 @@ def main(
             num_parsing_errors += 1
 
     judge = LLMJudge(structured_llm, max_concurrent_calls=max_concurrent_calls)
-    results = asyncio.run(
-        judge.evaluate_batch(
-            schema,
-            outputs,
-            reference_outputs,
+    # keep the zero scores of documents with parsing errors (results is not overwritten)
+    results.update(
+        asyncio.run(
+            judge.evaluate_batch(
+                schema,
+                outputs,
+                reference_outputs,
+            )
         )
     )
 
