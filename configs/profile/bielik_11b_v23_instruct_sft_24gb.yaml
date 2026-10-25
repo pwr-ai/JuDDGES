@@ -1,0 +1,18 @@
+# @package _global_
+# QLoRA SFT on one 24 GB GPU (RTX 3090, ~3 GB taken by the desktop). Usage: +profile=<this file name>
+# Differs from configs/peft_fine_tuning.yaml: 4-bit NF4 base, r=16/alpha=32 (was r=8/alpha=16),
+# packing off + context truncation on (packing would split a judgment away from its target JSON),
+# per-seed output_dir/run_name (the base config would let the three seeds overwrite each other).
+llm:
+  use_4bit: true
+  use_unsloth: false # fine_tune_deepspeed.py does not support unsloth
+# prompt + context + target JSON; the truncator shortens the context only, never the target
+max_context_size: 8192
+truncate_context: true
+training_args:
+  packing: false
+peft_args:
+  r: 16
+  lora_alpha: 32
+output_dir: data/experiments/peft-fine-tune/${hydra:runtime.choices.llm}/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.prompt}/${hydra:runtime.choices.ie_schema}/seed_${training_args.seed}
+run_name: ${hydra:runtime.choices.llm}_${hydra:runtime.choices.dataset}_${hydra:runtime.choices.prompt}_${hydra:runtime.choices.ie_schema}_seed_${training_args.seed}_fine_tune
