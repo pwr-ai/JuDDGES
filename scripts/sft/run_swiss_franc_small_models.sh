@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # Swiss-franc loans extraction with small models on one 24 GB GPU (issue #78):
 # zero-shot predict (guided JSON) -> QLoRA fine-tune -> predict fine-tuned (guided JSON)
-# -> evaluate -> summarize, for every model and seed. Finished steps are skipped.
+# -> evaluate -> summarize, for every model and seed. Finished steps are skipped; a finished
+# prediction is skipped only when its run_record.json has the current seed, guided_json,
+# max_model_len and max_docs, otherwise the old output dir is moved aside and the run repeated.
 #
 # Usage:  scripts/sft/run_swiss_franc_small_models.sh
 # Env:    DRY_RUN=1          only print the commands
+#         SMOKE=1            1 document, 1 fine-tuning step, separate OUT_ROOT (<OUT_ROOT>_smoke):
+#                            quick check of guided decoding + bitsandbytes + LoRA
+#         MAX_MODEL_LEN      vLLM context length, same for all runs (default 8192)
 #         JUDGE_MODEL=<name> run scripts/sft/llm_as_judge.py with this judge (needs OPENAI_API_KEY),
 #                            skipped when empty
 #         MODELS, SEEDS      space-separated lists (configs/llm/<name>.yaml, seeds)
@@ -16,6 +21,15 @@ SEEDS="${SEEDS:-42 997 7312}"
 OUT_ROOT="${OUT_ROOT:-data/experiments/swiss_franc_small_models}"
 JUDGE_MODEL="${JUDGE_MODEL:-}"
 DRY_RUN="${DRY_RUN:-0}"
+SMOKE="${SMOKE:-0}"
+MAX_MODEL_LEN="${MAX_MODEL_LEN:-8192}"
+MAX_DOCS=0 # 0 = all documents
+SFT_SMOKE_ARGS=()
+if [[ "$SMOKE" == "1" ]]; then
+    MAX_DOCS=1
+    OUT_ROOT="${OUT_ROOT}_smoke"
+    SFT_SMOKE_ARGS=(+training_args.max_steps=1)
+fi
 
 DATASET=pl_court_swiss_franc_loans
 PROMPT=info_extraction_annotated_json
@@ -38,13 +52,22 @@ predict() { # <mode> <model> <seed> <out_dir> [hydra overrides...]
     local mode=$1 model=$2 seed=$3 out_dir=$4
     shift 4
     if [[ -f "$out_dir/predictions.json" ]]; then
-        echo "# skip predict ($mode, $model, seed $seed): $out_dir/predictions.json exists"
-        return
+        if python scripts/sft/check_run_record.py "$out_dir" --seed "$seed" --guided-json \
+            --max-model-len "$MAX_MODEL_LEN" --max-docs "$MAX_DOCS" >/dev/null; then
+            echo "# skip predict ($mode, $model, seed $seed): $out_dir/predictions.json matches the config"
+            return
+        fi
+        echo "# stale predict ($mode, $model, seed $seed): run_record.json missing or differs, rerunning"
+        run mv "$out_dir" "$out_dir.stale-$(date +%s)"
+    fi
+    local max_docs_arg=()
+    if [[ "$MAX_DOCS" != "0" ]]; then
+        max_docs_arg=(max_docs="$MAX_DOCS")
     fi
     run python scripts/sft/predict_vllm.py \
         dataset=$DATASET llm="$model" prompt=$PROMPT ie_schema=$IE_SCHEMA split=$SPLIT \
-        +profile="${model}_predict_24gb" guided_json=true \
-        random_seed="$seed" output_dir="$out_dir" "$@"
+        +profile="${model}_predict_24gb" guided_json=true max_model_len="$MAX_MODEL_LEN" \
+        random_seed="$seed" output_dir="$out_dir" "${max_docs_arg[@]}" "$@"
 }
 
 evaluate() { # <out_dir>
@@ -81,7 +104,7 @@ for model in $MODELS; do
             run python scripts/sft/fine_tune_deepspeed.py \
                 dataset=$DATASET llm="$model" prompt=$PROMPT ie_schema=$IE_SCHEMA \
                 +profile="${model}_sft_24gb" \
-                training_args.seed="$seed" output_dir="$adapter_dir"
+                training_args.seed="$seed" output_dir="$adapter_dir" "${SFT_SMOKE_ARGS[@]}"
         fi
 
         predict fine_tuned "$model" "$seed" "$fine_tuned_dir" llm.adapter_path="$adapter_dir"
@@ -91,5 +114,6 @@ for model in $MODELS; do
 done
 
 for mode in raw_vllm fine_tuned_vllm; do
-    run python scripts/sft/summarize_metrics.py --root-dir "$OUT_ROOT/$mode/$SUB"
+    run python scripts/sft/summarize_metrics.py --root-dir "$OUT_ROOT/$mode/$SUB" \
+        ${JUDGE_MODEL:+--judge-model "$JUDGE_MODEL"}
 done

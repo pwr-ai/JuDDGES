@@ -124,6 +124,8 @@ def main(
             "total_docs": len(data),
             "num_parsing_errors": num_parsing_errors,
         },
+        # older files averaged over parsed documents only; summarize_metrics refuses them
+        "parse_errors_scored_as_zero": True,
         "aggregated_results": aggregated_results,
         "all_results": results,
     }

@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import subprocess
 import time
 from datetime import datetime, timezone
@@ -8,7 +9,16 @@ from pathlib import Path
 from typing import Any
 
 RUN_RECORD_FILE = "run_record.json"
-TRACKED_LIBRARIES = ["torch", "vllm", "transformers", "peft", "trl"]
+TRACKED_LIBRARIES = [
+    "torch",
+    "vllm",
+    "transformers",
+    "peft",
+    "trl",
+    "bitsandbytes",
+    "accelerate",
+    "xgrammar",
+]
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -77,10 +87,14 @@ def write_run_record(
     model_name: str,
     split_files: dict[str, Path],
     start_time: float,
+    adapter_path: Path | None = None,
+    extra: dict[str, Any] | None = None,
 ) -> Path:
     """Writes `run_record.json` with everything needed to reproduce and compare a run.
 
     Unknown values are written as null. `start_time` is a `time.time()` taken at script start.
+    `adapter_path` is the resolved adapter directory of a fine-tuned run; `extra` is merged in as-is
+    (e.g. the guided decoding backend).
     """
     record = {
         "config": config,
@@ -88,12 +102,42 @@ def write_run_record(
         "git": git_state(),
         "model": {"name": model_name, "revision": model_revision(model_name)},
         "split_files_sha256": {name: file_sha256(Path(p)) for name, p in split_files.items()},
+        "adapter": None
+        if adapter_path is None
+        else {
+            "path": str(Path(adapter_path).resolve()),
+            "sha256": file_sha256(Path(adapter_path) / "adapter_model.safetensors"),
+        },
         "library_versions": library_versions(),
         "gpu_name": gpu_name(),
         "started_at": datetime.fromtimestamp(start_time, tz=timezone.utc).isoformat(),
         "wall_clock_seconds": round(time.time() - start_time, 1),
+        **(extra or {}),
     }
     path = Path(output_dir) / RUN_RECORD_FILE
     with path.open("w") as f:
         json.dump(record, f, indent="\t", ensure_ascii=False, default=str)
     return path
+
+
+def run_record_matches(output_dir: Path, seed: int, **expected_config: Any) -> bool:
+    """True when `output_dir` has a run record of the same seed and the same config values."""
+    path = Path(output_dir) / RUN_RECORD_FILE
+    if not path.is_file():
+        return False
+    try:
+        record = json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return False
+    config = record.get("config", {})
+    return record.get("seed") == seed and all(
+        config.get(key) == value for key, value in expected_config.items()
+    )
+
+
+def write_json_atomic(data: Any, path: Path, **kwargs: Any) -> None:
+    """Writes JSON to a temp file and renames it, so `path` is never half-written."""
+    tmp_path = path.with_name(path.name + ".tmp")
+    with tmp_path.open("w") as f:
+        json.dump(data, f, **kwargs)
+    os.replace(tmp_path, path)

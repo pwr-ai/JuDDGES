@@ -4,9 +4,10 @@ from typing import Any
 def ie_schema_to_json_schema(ie_schema: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Converts an information extraction schema (configs/ie_schema) to a JSON schema.
 
-    Every key is required so that the model cannot drop fields. Fields with `required: false`
-    (or without the `required` property, as in `validate_output_structure`) accept null,
-    which is the "not found" value requested by the prompts.
+    Every key is required so that the model cannot drop fields. Only fields with `required: true`
+    must have a value; fields with `required: false` or without the `required` property (as in
+    `validate_output_structure`) accept null, which is the "not found" value requested by the
+    prompts.
     """
     properties = {name: _field_schema(spec) for name, spec in ie_schema.items()}
     return {
@@ -19,7 +20,7 @@ def ie_schema_to_json_schema(ie_schema: dict[str, dict[str, Any]]) -> dict[str, 
 
 def _field_schema(spec: dict[str, Any]) -> dict[str, Any]:
     schema = _non_null_schema(spec)
-    if spec.get("required", True):
+    if spec.get("required", False):
         return schema
     if "enum" in schema:
         return {"enum": [*schema["enum"], None]}

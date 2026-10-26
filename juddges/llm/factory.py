@@ -100,8 +100,7 @@ def get_llm_tokenizer(
     else:
         if llm_config.use_4bit:
             kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",  # QLoRA default, matches vLLM in-flight bitsandbytes
+                **llm_config.bnb_4bit_kwargs,
                 bnb_4bit_compute_dtype=torch.bfloat16,
             )
         if torch.cuda.is_available():

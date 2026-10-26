@@ -5,6 +5,7 @@
 # per-seed output_dir/run_name (the base config would let the three seeds overwrite each other).
 llm:
   use_4bit: true
+  bnb_4bit_quant_type: nf4 # matches vLLM in-flight bitsandbytes
   use_unsloth: false # fine_tune_deepspeed.py does not support unsloth
 # prompt + context + target JSON; the truncator shortens the context only, never the target
 max_context_size: 8192

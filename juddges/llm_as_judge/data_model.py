@@ -133,7 +133,12 @@ class PredictionLoader:
             # we assume gold should always parse without errors
             gold_pred = parse_json_markdown(pred_item["gold"])
             try:
-                parsed_preds[idx] = parse_json_markdown(pred_item["answer"])
+                answer = parse_json_markdown(pred_item["answer"])
+                if not isinstance(answer, dict):
+                    raise json.JSONDecodeError(
+                        f"answer is a JSON {type(answer).__name__}, not an object", "", 0
+                    )
+                parsed_preds[idx] = answer
                 parsed_gold[idx] = gold_pred
                 missing_keys[idx] = sorted(list(set(schema.keys()) - set(parsed_preds[idx].keys())))
                 extra_keys[idx] = sorted(list(set(parsed_preds[idx].keys()) - set(schema.keys())))

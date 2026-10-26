@@ -1,4 +1,5 @@
 import json
+import re
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Literal
@@ -33,6 +34,8 @@ class LLMConfig(BaseModel, extra="forbid"):
     padding: str | bool
     batch_size: int
     use_4bit: bool
+    # None keeps the bitsandbytes default (fp4); the 24gb profiles set "nf4" (QLoRA, vLLM in-flight)
+    bnb_4bit_quant_type: str | None = None
     use_unsloth: bool = False
     chat_template_kwargs: dict[str, Any] = Field(default_factory=dict)
 
@@ -47,22 +50,29 @@ class LLMConfig(BaseModel, extra="forbid"):
         if (self.adapter_path / "adapter_model.safetensors").exists():
             return self.adapter_path
 
-        checkpoints = list(self.adapter_path.glob("checkpoint-*"))
+        checkpoints = {
+            int(match.group(1)): path
+            for path in self.adapter_path.glob("checkpoint-*")
+            if (match := re.fullmatch(r"checkpoint-(\d+)", path.name))
+        }
         if not checkpoints:
             raise ValueError(
                 f"No adapter_model.safetensors or checkpoint dir found in {self.adapter_path}"
             )
 
-        first_checkpoint_adapter_path, *_ = sorted(
-            checkpoints,
-            key=lambda x: int(x.stem.split("-")[-1]),
-            reverse=False,
-        )
+        last_checkpoint_adapter_path = checkpoints[max(checkpoints)]
         logger.warning(
-            "adapter_path was set to checkpoints dir, using FIRST checkpoint "
-            f"(set specific checkpoint path as adapter_path to use other checkpoint): {first_checkpoint_adapter_path}"
+            "adapter_path was set to checkpoints dir, using LAST checkpoint "
+            f"(set specific checkpoint path as adapter_path to use other checkpoint): {last_checkpoint_adapter_path}"
         )
-        return first_checkpoint_adapter_path
+        return last_checkpoint_adapter_path
+
+    @property
+    def bnb_4bit_kwargs(self) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {"load_in_4bit": True}
+        if self.bnb_4bit_quant_type is not None:
+            kwargs["bnb_4bit_quant_type"] = self.bnb_4bit_quant_type
+        return kwargs
 
 
 class EmbeddingModelConfig(BaseModel, extra="forbid"):
@@ -140,6 +150,8 @@ class PredictInfoExtractionConfig(BaseModel, extra="forbid"):
     guided_json: bool = False  # constrain decoding to the JSON schema built from ie_schema
     quantization: str | None = None  # vLLM in-flight quantization, e.g. "bitsandbytes"
     gpu_memory_utilization: float = 0.9  # vLLM default
+    max_lora_rank: int = 16  # vLLM default is 16; must be >= peft r of the adapter
+    max_docs: int | None = None  # use only the first max_docs documents (smoke tests)
 
     @property
     def predictions_file(self) -> Path:
