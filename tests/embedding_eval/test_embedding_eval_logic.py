@@ -84,3 +84,33 @@ def test_registry_and_env_override(monkeypatch):
     monkeypatch.setenv("EVAL_BLOCK_SIZE", "7")
     cfg = env_override(EmbedConfig(), "EVAL_")
     assert cfg.models == ("bgem3", "qwen06") and cfg.block_size == 7
+
+
+def test_qwen4b_uses_tei_backend_with_same_prompt():
+    spec = REGISTRY["qwen4b"]
+    assert spec.backend == "tei" and spec.tei_url
+    assert spec.query_prompt == REGISTRY["qwen06"].query_prompt and spec.passage_prompt == ""
+    assert REGISTRY["qwen06"].backend == "st"
+
+
+def test_encode_tei_restores_order_and_prepends_prefix(monkeypatch):
+    from scripts.embedding_eval import embed
+
+    seen: list[str] = []
+
+    async def fake_block(url, block, batch_size):
+        seen.extend(block)
+        return np.array([[float(len(t)), 1.0] for t in block], dtype=np.float32)
+
+    class Tok:
+        def __call__(self, block):
+            return {"input_ids": [[0] * len(t) for t in block]}
+
+    monkeypatch.setattr(embed, "_tei_block", fake_block)
+    texts = ["aa", "a", "aaaa", "aaa"]
+    vecs, n_tok = embed.encode_tei("http://x", Tok(), texts, "P:", 2, 3)
+    assert n_tok == sum(len(t) + 2 for t in texts)
+    assert all(t.startswith("P:") for t in seen)
+    np.testing.assert_allclose(np.linalg.norm(vecs, axis=1), 1.0, rtol=1e-6)
+    ratio = vecs[:, 0] / vecs[:, 1]  # = len(prefix+text), in input order
+    np.testing.assert_allclose(ratio, [4, 3, 6, 5], rtol=1e-5)

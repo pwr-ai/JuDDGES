@@ -31,3 +31,35 @@ services:
               device_ids: ["0"]
               capabilities: [gpu]
     network_mode: host
+
+  # TEI server for qwen4b (sentence-transformers is too slow for it). Runs on GPU1 (RTX 3090),
+  # which another container already uses at ~11 GB, hence the modest batch budget.
+  #   docker compose -f scripts/embedding_eval/docker-compose.yaml --profile tei up -d tei-qwen4b
+  tei-qwen4b:
+    profiles: ["tei"]
+    image: ghcr.io/huggingface/text-embeddings-inference:86-1.9.4
+    container_name: embedding_eval-tei-qwen4b
+    command:
+      - --model-id=Qwen/Qwen3-Embedding-4B
+      - --dtype=float16
+      - --max-batch-tokens=32768
+      - --max-client-batch-size=64
+      - --auto-truncate
+      - --port=8112
+      - --hostname=127.0.0.1
+    environment:
+      HF_HOME: /mnt/ai/cache/huggingface
+      HUGGINGFACE_HUB_CACHE: /mnt/ai/cache/huggingface/hub
+    env_file:
+      - path: ../../.env.embedding_eval
+        required: false
+    volumes:
+      - /mnt/ai:/mnt/ai
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]

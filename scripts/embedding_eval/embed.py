@@ -13,6 +13,7 @@ Load with `scripts.embedding_eval.embed.load_embeddings`.
 Run: python -m scripts.embedding_eval.embed   (configure with EVAL_* env vars)
 """
 
+import asyncio
 import gc
 import json
 import time
@@ -44,6 +45,9 @@ class ModelSpec:
     passage_prompt: str = ""
     optional: bool = False
     batch_size: int = 64  # for c512; c2048 batches are 4x smaller
+    # "st" = sentence-transformers in-process, "tei" = text-embeddings-inference over HTTP
+    backend: str = "st"
+    tei_url: str = ""
 
 
 # Prompts verified against the model cards. qwen4b is the slowest, so it goes last.
@@ -70,8 +74,16 @@ REGISTRY: dict[str, ModelSpec] = {
             "title: none | text: ",
             optional=True,
         ),
+        # sentence-transformers manages only ~8 chunks/s here, so qwen4b goes through a TEI container
         ModelSpec(
-            "qwen4b", "Qwen/Qwen3-Embedding-4B", 2560, ("c512",), QWEN_QUERY_PROMPT, batch_size=32
+            "qwen4b",
+            "Qwen/Qwen3-Embedding-4B",
+            2560,
+            ("c512",),
+            QWEN_QUERY_PROMPT,
+            batch_size=32,
+            backend="tei",
+            tei_url="http://127.0.0.1:8112",
         ),
     ]
 }
@@ -155,21 +167,89 @@ def encode(
     return restore_order(np.concatenate(parts), order), n_tokens
 
 
+TEI_CONCURRENCY = 16
+
+
+async def _tei_post(client, url: str, batch: list[str], retries: int = 6) -> np.ndarray:
+    for attempt in range(retries):
+        try:
+            r = await client.post(
+                f"{url}/embed", json={"inputs": batch, "normalize": True, "truncate": True}
+            )
+            if r.status_code in (413, 429, 503) or r.status_code >= 500:
+                raise RuntimeError(f"TEI HTTP {r.status_code}: {r.text[:200]}")
+            r.raise_for_status()
+            return np.asarray(r.json(), dtype=np.float32)
+        except Exception as e:
+            if attempt == retries - 1:
+                raise
+            logger.warning("TEI request failed ({!r}), retry {}", e, attempt + 1)
+            await asyncio.sleep(2**attempt)
+    raise AssertionError("unreachable")
+
+
+async def _tei_block(url: str, block: list[str], batch_size: int) -> np.ndarray:
+    import httpx
+
+    sem = asyncio.Semaphore(TEI_CONCURRENCY)
+    async with httpx.AsyncClient(timeout=600) as client:
+
+        async def one(b: list[str]) -> np.ndarray:
+            async with sem:
+                return await _tei_post(client, url, b)
+
+        parts = await asyncio.gather(
+            *(one(block[i : i + batch_size]) for i in range(0, len(block), batch_size))
+        )
+    return np.concatenate(parts)
+
+
+def encode_tei(
+    url: str, tokenizer, texts: list[str], prefix: str, batch_size: int, block_size: int
+) -> tuple[np.ndarray, int]:
+    """Like `encode`, but sends concurrent batches to TEI `/embed` (normalize + truncate server-side)."""
+    order = length_order(texts)
+    ordered = [prefix + texts[i] for i in order]
+    parts, n_tokens = [], 0
+    for s in range(0, len(ordered), block_size):
+        block = ordered[s : s + block_size]
+        n_tokens += sum(len(x) for x in tokenizer(block)["input_ids"])
+        parts.append(l2_normalise(asyncio.run(_tei_block(url, block, batch_size))))
+        logger.info("  encoded {}/{}", min(s + block_size, len(ordered)), len(ordered))
+    return restore_order(np.concatenate(parts), order), n_tokens
+
+
 def embed_model(
     spec: ModelSpec, cfg: EmbedConfig, queries: pd.DataFrame, chunks: dict[str, pd.DataFrame]
 ) -> dict:
-    import torch
-    from sentence_transformers import SentenceTransformer
+    tei = spec.backend == "tei"
+    if tei:
+        from transformers import AutoTokenizer
 
-    model = SentenceTransformer(spec.model_id, device="cuda", model_kwargs={"dtype": torch.float16})
-    model.eval()
-    torch.cuda.reset_peak_memory_stats()
+        tokenizer = AutoTokenizer.from_pretrained(spec.model_id)
+        model = None
+    else:
+        import torch
+        from sentence_transformers import SentenceTransformer
+
+        model = SentenceTransformer(
+            spec.model_id, device="cuda", model_kwargs={"dtype": torch.float16}
+        )
+        model.eval()
+        torch.cuda.reset_peak_memory_stats()
+
+    def run_encode(texts: list[str], prefix: str, bs: int) -> tuple[np.ndarray, int]:
+        if tei:
+            return encode_tei(spec.tei_url, tokenizer, texts, prefix, bs, cfg.block_size)
+        return encode(model, texts, prefix, bs, cfg.block_size)
+
     d = out_dir(f"{cfg.data_dir}/embeddings/{spec.key}")
     meta: dict = {
         "key": spec.key,
         "model_id": spec.model_id,
         "dim": spec.dim,
         "dtype": "float16",
+        "backend": spec.backend,
         "prompts": {"query": spec.query_prompt, "passage": spec.passage_prompt},
         "normalised": True,
         "chunkings": {},
@@ -177,11 +257,10 @@ def embed_model(
         "sanity_cosine": {},
     }
 
-    model.max_seq_length = MAX_SEQ_LEN["c512"]
+    if model is not None:
+        model.max_seq_length = MAX_SEQ_LEN["c512"]
     t0 = time.perf_counter()
-    qv, q_tok = encode(
-        model, queries["text"].tolist(), spec.query_prompt, spec.batch_size, cfg.block_size
-    )
+    qv, q_tok = run_encode(queries["text"].tolist(), spec.query_prompt, spec.batch_size)
     q_dt = time.perf_counter() - t0
     if qv.shape[1] != spec.dim:
         raise ValueError(f"{spec.key}: expected dim {spec.dim}, got {qv.shape[1]}")
@@ -193,6 +272,7 @@ def embed_model(
         "qid": queries["qid"].tolist(),
     }
     meta["throughput"]["queries"] = {
+        "backend": spec.backend,
         "n": len(qv),
         "seconds": q_dt,
         "texts_per_s": len(qv) / q_dt,
@@ -201,11 +281,12 @@ def embed_model(
 
     for name in spec.chunkings:
         df = chunks[name]
-        model.max_seq_length = MAX_SEQ_LEN[name]
+        if model is not None:
+            model.max_seq_length = MAX_SEQ_LEN[name]
         bs = spec.batch_size if name == "c512" else max(spec.batch_size // 4, 1)
         logger.info("{} {}: {} chunks, batch {}", spec.key, name, len(df), bs)
         t0 = time.perf_counter()
-        cv, n_tok = encode(model, df["text"].tolist(), spec.passage_prompt, bs, cfg.block_size)
+        cv, n_tok = run_encode(df["text"].tolist(), spec.passage_prompt, bs)
         dt = time.perf_counter() - t0
         np.save(d / f"chunks_{name}.npy", cv)
         norms = np.linalg.norm(cv, axis=1)
@@ -221,6 +302,7 @@ def embed_model(
             "chunk_uid": df["chunk_uid"].tolist(),
         }
         meta["throughput"][name] = {
+            "backend": spec.backend,  # "tei" = HTTP throughput incl. client overhead, not in-process ST
             "n": len(cv),
             "seconds": dt,
             "chunks_per_s": len(cv) / dt,
@@ -237,12 +319,14 @@ def embed_model(
             len(cv) / dt,
             meta["sanity_cosine"][name],
         )
-    meta["peak_gpu_mem_gb"] = torch.cuda.max_memory_allocated() / 1e9
+    # TEI runs in another container; its GPU memory is not visible here
+    meta["peak_gpu_mem_gb"] = None if tei else torch.cuda.max_memory_allocated() / 1e9
     (d / "meta.json").write_text(json.dumps(meta))  # written last = done marker
 
-    del model
-    gc.collect()
-    torch.cuda.empty_cache()
+    if not tei:
+        del model
+        gc.collect()
+        torch.cuda.empty_cache()
     return meta
 
 
