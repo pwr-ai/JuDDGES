@@ -1,10 +1,17 @@
 """T1: build the eval set (queries, judgments, chunks) from JuDDGES/pl-court-raw.
 
 Run: python -m scripts.embedding_eval.build_dataset   (configure with EVAL_* env vars)
+
+Iterative scaling: `EVAL_ITER=k` (k = 1..5) builds only the delta over iteration k-1 into
+`<out_dir>/iter_k/`. Iteration 0 is the original set at the flat paths. Sampling for iteration
+k is replayed in memory from the metadata (seed 42+j for iteration j, never repeating a
+judgment), so iterations can be built in parallel and independently of each other.
 """
 
 import glob
+import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -16,6 +23,7 @@ from rich.console import Console
 from rich.table import Table
 
 from scripts.embedding_eval.common import DEFAULT_OUT_DIR, HF_COURT_RAW_GLOB, env_override, out_dir
+from scripts.embedding_eval.iterations import data_dir, git_sha
 
 console = Console()
 
@@ -28,7 +36,8 @@ class DatasetConfig:
     n_distractors: int = 19000
     thesis_min_chars: int = 50
     thesis_max_chars: int = 1500
-    seed: int = 42
+    seed: int = 42  # base seed; iteration k samples with seed + k
+    iter: int = 0  # EVAL_ITER: 0 = original set, k >= 1 = delta over iteration k-1
     tokenizer: str = "BAAI/bge-m3"
 
 
@@ -46,13 +55,21 @@ def tag_kind(thesis: str, full_text: str) -> str:
     return "verbatim" if normalise(thesis) in normalise(full_text) else "abstractive"
 
 
-def sample_ids(meta: pd.DataFrame, cfg: DatasetConfig) -> tuple[list[str], list[str]]:
+def sample_ids(
+    meta: pd.DataFrame,
+    cfg: DatasetConfig,
+    seed: int | None = None,
+    exclude: frozenset[str] | set[str] = frozenset(),
+) -> tuple[list[str], list[str]]:
     """Pick query ids and distractor ids from a metadata frame.
 
-    `meta` needs columns judgment_id, thesis_len, text_len. Returns (query_ids, distractor_ids),
-    disjoint, both in a deterministic (seeded) order.
+    `meta` needs columns judgment_id, thesis_len, text_len. Judgments in `exclude` are never
+    picked. Returns (query_ids, distractor_ids), disjoint, both in a deterministic (seeded)
+    order. With the defaults this is the original iteration-0 sampling.
     """
-    rng = np.random.default_rng(cfg.seed)
+    rng = np.random.default_rng(cfg.seed if seed is None else seed)
+    if exclude:
+        meta = meta[~meta["judgment_id"].isin(exclude)]
     has_text = meta["text_len"] > 0
     cand = meta[has_text & meta["thesis_len"].between(cfg.thesis_min_chars, cfg.thesis_max_chars)][
         "judgment_id"
@@ -66,6 +83,51 @@ def sample_ids(meta: pd.DataFrame, cfg: DatasetConfig) -> tuple[list[str], list[
         raise ValueError(f"only {len(rest)} distractor candidates, need {cfg.n_distractors}")
     distractor_ids = rng.choice(rest, size=cfg.n_distractors, replace=False)
     return list(map(str, query_ids)), list(map(str, distractor_ids))
+
+
+def plan_iterations(
+    meta: pd.DataFrame, cfg: DatasetConfig, upto: int
+) -> list[tuple[list[str], list[str]]]:
+    """(query_ids, distractor_ids) deltas for iterations 0..upto, replayed from the metadata.
+
+    Iteration j uses seed `cfg.seed + j` and excludes every judgment used by iterations < j,
+    so the sets are nested and never repeat a judgment.
+    """
+    used: set[str] = set()
+    plan = []
+    for j in range(upto + 1):
+        q, d = sample_ids(meta, cfg, seed=cfg.seed + j, exclude=used)
+        used |= set(q) | set(d)
+        plan.append((q, d))
+    return plan
+
+
+def assemble(
+    selected: pd.DataFrame, query_ids: list[str], distractor_ids: list[str], k: int, n_queries: int
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Order judgments (queries first, then distractors) and build the queries frame.
+
+    qids are global across iterations: iteration k numbers its queries from k * n_queries.
+    """
+    order = {j: i for i, j in enumerate(query_ids + distractor_ids)}
+    judgments = (
+        selected.assign(_o=selected["judgment_id"].map(order)).sort_values("_o").drop(columns="_o")
+    )
+    judgments = judgments.reset_index(drop=True)
+    judgments["is_query"] = judgments["judgment_id"].isin(set(query_ids))
+
+    q = judgments[judgments["is_query"]].reset_index(drop=True)
+    queries = pd.DataFrame(
+        {
+            "qid": [f"q{k * n_queries + i:04d}" for i in range(len(q))],
+            "judgment_id": q["judgment_id"],
+            "text": q["thesis"],
+            "kind": [tag_kind(t, f) for t, f in zip(q["thesis"], q["full_text"])],
+        }
+    )
+    missing = set(queries["judgment_id"]) - set(judgments["judgment_id"])
+    assert not missing, f"query judgments missing from corpus: {len(missing)}"
+    return judgments, queries
 
 
 def chunk_rows(judgment_id: str, pieces: list[str], n_tokens: list[int]) -> list[dict]:
@@ -151,28 +213,18 @@ def run(cfg: DatasetConfig | None = None) -> None:
         int((meta["thesis_len"] > 0).sum()),
         int((meta["text_len"] > 0).sum()),
     )
-    query_ids, distractor_ids = sample_ids(meta, cfg)
+    k = cfg.iter
+    plan = plan_iterations(meta, cfg, k)
+    query_ids, distractor_ids = plan[k]
+    base_j = data_dir(cfg.out_dir, 0) / "judgments.parquet"
+    if k > 0 and base_j.exists():
+        built0 = set(pq.read_table(base_j, columns=["judgment_id"])["judgment_id"].to_pylist())
+        if built0 != set(plan[0][0]) | set(plan[0][1]):
+            raise RuntimeError("replayed iteration 0 differs from the built iteration-0 set")
+    out = out_dir(str(data_dir(cfg.out_dir, k)))
+    logger.info("iteration {}: writing to {}", k, out)
     selected = load_selected(files, set(query_ids) | set(distractor_ids))
-
-    # keep a deterministic order: queries first, then distractors
-    order = {j: i for i, j in enumerate(query_ids + distractor_ids)}
-    judgments = (
-        selected.assign(_o=selected["judgment_id"].map(order)).sort_values("_o").drop(columns="_o")
-    )
-    judgments = judgments.reset_index(drop=True)
-    judgments["is_query"] = judgments["judgment_id"].isin(set(query_ids))
-
-    q = judgments[judgments["is_query"]].reset_index(drop=True)
-    queries = pd.DataFrame(
-        {
-            "qid": [f"q{i:04d}" for i in range(len(q))],
-            "judgment_id": q["judgment_id"],
-            "text": q["thesis"],
-            "kind": [tag_kind(t, f) for t, f in zip(q["thesis"], q["full_text"])],
-        }
-    )
-    missing = set(queries["judgment_id"]) - set(judgments["judgment_id"])
-    assert not missing, f"query judgments missing from corpus: {len(missing)}"
+    judgments, queries = assemble(selected, query_ids, distractor_ids, k, cfg.n_queries)
     queries.to_parquet(out / "queries.parquet", index=False)
     judgments.to_parquet(out / "judgments.parquet", index=False)
 
@@ -203,10 +255,21 @@ def run(cfg: DatasetConfig | None = None) -> None:
         "max",
     ]:
         stats.add_column(c, justify="right")
+    counts: dict = {
+        "iteration": k,
+        "seed": cfg.seed + k,
+        "git_sha": git_sha(),
+        "built_at": datetime.now(timezone.utc).isoformat(),
+        "n_queries": len(queries),
+        "queries_by_kind": {str(a): int(b) for a, b in queries["kind"].value_counts().items()},
+        "n_judgments": len(judgments),
+        "chunks": {},
+    }
     for name, (size, overlap) in CHUNKINGS.items():
         chunks = build_chunks(judgments, tok, size, overlap)
         chunks.to_parquet(out / f"chunks_{name}.parquet", index=False)
         n = chunks["n_tokens"]
+        counts["chunks"][name] = len(chunks)
         stats.add_row(
             name,
             str(len(chunks)),
@@ -221,6 +284,8 @@ def run(cfg: DatasetConfig | None = None) -> None:
         )
         logger.info("wrote chunks_{}.parquet ({} chunks)", name, len(chunks))
     console.print(stats)
+    counts["tokenizer"] = cfg.tokenizer
+    (out / "build_meta.json").write_text(json.dumps(counts, indent=2))
 
 
 if __name__ == "__main__":
