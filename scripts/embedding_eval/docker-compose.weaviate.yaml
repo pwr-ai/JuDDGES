@@ -1,0 +1,20 @@
+# CPU-only runner for evaluate_weaviate.py (host network reaches the v2 Weaviate on :8110/:50061).
+# Run from the repo root:
+#   EVAL_WEAVIATE_API_KEY=$(grep ^AUTHENTICATION_APIKEY_ALLOWED_KEYS= \
+#       ../JuDDGES-weaviate-v2/weaviate/v2/.env | cut -d= -f2 | cut -d, -f1 | tr -d "'\"") \
+#   docker compose -f scripts/embedding_eval/docker-compose.weaviate.yaml run --rm eval-weaviate
+services:
+  eval-weaviate:
+    image: juddges-embedding-eval:latest
+    user: "1000:1000"
+    working_dir: /workspace
+    network_mode: host
+    command: python -m scripts.embedding_eval.evaluate_weaviate
+    environment:
+      HOME: /tmp
+      EVAL_WEAVIATE_API_KEY: ${EVAL_WEAVIATE_API_KEY:?set EVAL_WEAVIATE_API_KEY}
+      EVAL_ITER: ${EVAL_ITER:-0}
+      EVAL_WEAVIATE_MODELS: ${EVAL_WEAVIATE_MODELS:-}
+      EVAL_KEEP_COLLECTIONS: ${EVAL_KEEP_COLLECTIONS:-0}
+    volumes:
+      - ../..:/workspace
