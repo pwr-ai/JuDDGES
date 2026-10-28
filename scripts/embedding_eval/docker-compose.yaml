@@ -1,0 +1,33 @@
+# Shared GPU service for the embedding eval scripts.
+# Run from the repo root, e.g.:
+#   docker compose -f scripts/embedding_eval/docker-compose.yaml run --rm eval \
+#       python -m scripts.embedding_eval.build_dataset
+services:
+  eval:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: juddges-embedding-eval:latest
+    user: "1000:1000"
+    working_dir: /workspace
+    environment:
+      HF_HOME: /mnt/ai/cache/huggingface
+      HOME: /tmp
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      NVIDIA_VISIBLE_DEVICES: "0"
+    env_file:
+      - path: ../../.env.embedding_eval
+        required: false
+    volumes:
+      # whole /mnt/ai tree: mounting a subdirectory of this FUSE mount shows up empty
+      - /mnt/ai:/mnt/ai
+      - ../..:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    network_mode: host
