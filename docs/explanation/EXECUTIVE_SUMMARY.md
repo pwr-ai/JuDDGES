@@ -65,8 +65,7 @@ Democratize access to legal knowledge by overcoming barriers related to resource
 **Achievement**: Fully automated, fault-tolerant data acquisition system
 
 **Key Features**:
-- Prefect-orchestrated workflows with retry logic
-- MongoDB storage with efficient sharding
+- Prefect-orchestrated workflows with retry logic (this pipeline and its MongoDB intermediate storage have since been retired)
 - HuggingFace Hub integration
 - 500,000+ documents collected and processed
 
@@ -170,7 +169,7 @@ Democratize access to legal knowledge by overcoming barriers related to resource
 **Achievement**: User-friendly interfaces for legal research
 
 **Key Features**:
-- Judgment search with semantic and keyword modes
+- Judgment search with semantic and keyword modes (since removed)
 - Information extraction UI with schema selection
 - Case law trend analysis ("linie orzecznicze")
 - Project information and documentation viewer
@@ -422,8 +421,8 @@ Democratize access to legal knowledge by overcoming barriers related to resource
 
 ### Infrastructure
 - **Vector Database**: Weaviate for semantic search
-- **Orchestration**: DVC for ML pipelines, Prefect for data workflows
-- **Storage**: MongoDB intermediate storage, Parquet for datasets
+- **Orchestration**: DVC for ML pipelines
+- **Storage**: Parquet for datasets
 - **Containers**: Docker for reproducible deployment
 - **Version Control**: Git + DVC + Git LFS
 

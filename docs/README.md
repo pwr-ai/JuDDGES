@@ -49,7 +49,6 @@ Task-oriented recipes for common problems. See the [full how-to index](how-to/).
 **Data acquisition**:
 
 - [Polish court data acquisition](how-to/data-acquisition/data_acquisition_pl_court.md)
-- [NSA (Supreme Administrative Court) data acquisition](how-to/data-acquisition/data_acquisition_nsa.md)
 
 **Embeddings & Weaviate**:
 
@@ -143,14 +142,11 @@ Background and design rationale.
 # 1. Set up environment
 ./setup.sh                # or setup.bat on Windows
 
-# 2. Acquire data
-python scripts/data_acquisition/pl_court_data_pipeline.py
-
-# 3. Generate embeddings and ingest to Weaviate
+# 2. Generate embeddings and ingest to Weaviate
 dvc repro embed
 python scripts/embed/ingest_to_weaviate.py
 
-# 4. Fine-tune and evaluate
+# 3. Fine-tune and evaluate
 dvc repro sft
 dvc repro predict
 dvc repro evaluate

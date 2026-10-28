@@ -17,7 +17,7 @@ They were never imported into the `docs/` tree because the published documentati
 
 Two notebook-derived artefacts are NOT just parked content — they are referenced by live code and pipelines. If you delete or move either of these, update the corresponding Python and DVC references first:
 
-- `nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb` is loaded by `scripts/dataset/push_raw_dataset.py` and `scripts/dataset/pl_court_data_pipeline.py`, and consumed by the `raw_dataset_readme` stage in `dvc.yaml`.
+- `nbs/Dataset Cards/01_Dataset_Description_Raw.ipynb` is loaded by `scripts/dataset/push_raw_dataset.py` and consumed by the `raw_dataset_readme` stage in `dvc.yaml`.
 - `nbs/images/baner.png` is referenced from the project `README.md` and from the Streamlit dashboard at `juddges/dashboards/project_info.py`.
 
 Everything else under `nbs/` is inert from the codebase's point of view.

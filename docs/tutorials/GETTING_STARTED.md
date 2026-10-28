@@ -191,14 +191,13 @@ Launch the Streamlit dashboard for visual exploration:
 
 ```bash
 # Start the dashboard
-streamlit run juddges/dashboards/search_judgments.py
+streamlit run juddges/dashboards/app.py
 
 # Open browser at http://localhost:8501
 ```
 
 Features:
 
-- Semantic and keyword search
 - Document filtering by court, date, type
 - Information extraction interface
 - Case law trend analysis
@@ -214,7 +213,6 @@ Features:
 ### 2. Deep Dive into Features
 
 - [Polish Court Data Acquisition](../how-to/data-acquisition/data_acquisition_pl_court.md)
-- [NSA Data Acquisition](../how-to/data-acquisition/data_acquisition_nsa.md)
 - [Embeddings and Weaviate](../how-to/embeddings/embeddings_embed_and_ingest_weaviate.md)
 
 ### 3. Understand the Architecture

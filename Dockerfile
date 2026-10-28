@@ -63,7 +63,6 @@ RUN pip install uv && \
         "openpyxl>=3.1.2" \
         "peft>=0.14.0" \
         "pyarrow>=15.0.0" \
-        "pymongo>=4.3.3" \
         "pytz>=2024.1" \
         "PyYAML>=6.0.1" \
         "scikit-learn>=1.5.0" \

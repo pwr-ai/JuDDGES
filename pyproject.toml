@@ -70,7 +70,6 @@ full = [
     "openpyxl>=3.1.2",
     "peft>=0.14.0",
     "pyarrow>=15.0.0",
-    "pymongo>=4.3.3",
     "pytz>=2024.1",
     "PyYAML>=6.0.1",
     "ray>=2.55.1",
@@ -100,7 +99,6 @@ select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.mypy]
 python_version = "3.11"
-untyped_calls_exclude = ["pymongo"]
 plugins = "numpy.typing.mypy_plugin"
 
 [[tool.mypy.overrides]]
