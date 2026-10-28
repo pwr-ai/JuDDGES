@@ -10,6 +10,13 @@ Output layout (one directory per model key under `<data_dir>/embeddings/`):
 `meta.json` is written last; its presence marks the model as done (resume skips it).
 Load with `scripts.embedding_eval.embed.load_embeddings`.
 
+Iterative scaling (`EVAL_ITER=k`, k >= 1): embeds only the delta `iter_k/queries.parquet` and
+`iter_k/chunks_<chunking>.parquet` into `<key>/iter_k/`. Which model+chunking units to embed comes
+from `results/iter_{k-1}/decisions.json` (`embed_needed`), or from `EVAL_UNITS="bgem3_c512,..."`
+(speculative runs). Chunkings already present in an existing `iter_k/meta.json` are kept and only
+the missing ones are embedded. A `meta.json` whose `status` starts with `in_progress` is a placeholder
+and never counts as done.
+
 Run: python -m scripts.embedding_eval.embed   (configure with EVAL_* env vars)
 """
 
@@ -27,6 +34,13 @@ from rich.console import Console
 from rich.table import Table
 
 from scripts.embedding_eval.common import DEFAULT_OUT_DIR, env_override, out_dir
+from scripts.embedding_eval.iterations import (
+    data_dir,
+    emb_dir,
+    embed_needed,
+    parse_units,
+    read_done_meta,
+)
 
 console = Console()
 
@@ -100,6 +114,10 @@ class EmbedConfig:
     force: bool = False
     requery: bool = False  # re-embed only the queries of already finished models (prompt changed)
     sanity_n: int = 200
+    iter: int = 0  # EVAL_ITER: 0 = original set, k >= 1 = delta k
+    units: tuple[
+        str, ...
+    ] = ()  # EVAL_UNITS="bgem3_c512,qwen06_c2048": overrides embed_needed (k >= 1)
 
 
 def length_order(texts: list[str]) -> np.ndarray:
@@ -219,8 +237,35 @@ def encode_tei(
     return restore_order(np.concatenate(parts), order), n_tokens
 
 
+def plan_work(cfg: EmbedConfig, base: Path | None = None) -> dict[str, list[str]]:
+    """Model key -> chunkings to embed for `cfg.iter`, restricted to `cfg.models` and each model's chunkings."""
+    base = base or Path(cfg.data_dir)
+    if cfg.iter == 0:
+        wanted = {k: list(REGISTRY[k].chunkings) for k in cfg.models}
+    else:
+        wanted = parse_units(cfg.units) if cfg.units else embed_needed(base, cfg.iter)
+    plan: dict[str, list[str]] = {}
+    for key in cfg.models:
+        chs = [c for c in wanted.get(key, []) if c in REGISTRY[key].chunkings]
+        if chs:
+            plan[key] = chs
+    return plan
+
+
+def missing_chunkings(meta: dict | None, wanted: list[str], d: Path) -> list[str]:
+    """Wanted chunkings that a finished `meta` does not (yet) cover with an existing vector file."""
+    if meta is None or not (d / "queries.npy").exists():
+        return list(wanted)
+    have = meta.get("chunkings", {})
+    return [c for c in wanted if c not in have or not (d / f"chunks_{c}.npy").exists()]
+
+
 def embed_model(
-    spec: ModelSpec, cfg: EmbedConfig, queries: pd.DataFrame, chunks: dict[str, pd.DataFrame]
+    spec: ModelSpec,
+    cfg: EmbedConfig,
+    queries: pd.DataFrame,
+    chunks: dict[str, pd.DataFrame],
+    wanted: list[str] | None = None,
 ) -> dict:
     tei = spec.backend == "tei"
     if tei:
@@ -243,7 +288,9 @@ def embed_model(
             return encode_tei(spec.tei_url, tokenizer, texts, prefix, bs, cfg.block_size)
         return encode(model, texts, prefix, bs, cfg.block_size)
 
-    d = out_dir(f"{cfg.data_dir}/embeddings/{spec.key}")
+    wanted = list(wanted if wanted is not None else spec.chunkings)
+    d = out_dir(emb_dir(cfg.data_dir, spec.key, cfg.iter))
+    prev = read_done_meta(d / "meta.json") if cfg.iter > 0 and not cfg.force else None
     meta: dict = {
         "key": spec.key,
         "model_id": spec.model_id,
@@ -257,29 +304,41 @@ def embed_model(
         "sanity_cosine": {},
     }
 
-    if model is not None:
-        model.max_seq_length = MAX_SEQ_LEN["c512"]
-    t0 = time.perf_counter()
-    qv, q_tok = run_encode(queries["text"].tolist(), spec.query_prompt, spec.batch_size)
-    q_dt = time.perf_counter() - t0
-    if qv.shape[1] != spec.dim:
-        raise ValueError(f"{spec.key}: expected dim {spec.dim}, got {qv.shape[1]}")
-    np.save(d / "queries.npy", qv)
-    meta["queries"] = {
-        "file": "queries.npy",
-        "rows": "queries.parquet",
-        "n": len(qv),
-        "qid": queries["qid"].tolist(),
-    }
-    meta["throughput"]["queries"] = {
-        "backend": spec.backend,
-        "n": len(qv),
-        "seconds": q_dt,
-        "texts_per_s": len(qv) / q_dt,
-        "tokens_per_s": q_tok / q_dt,
-    }
+    if prev is not None and (d / "queries.npy").exists():
+        # extend a partial delta: keep its queries and the chunkings already embedded
+        meta = {**meta, **prev}
+        qv = np.load(d / "queries.npy")
+        logger.info(
+            "{} iter {}: reusing existing queries, have {}",
+            spec.key,
+            cfg.iter,
+            list(prev["chunkings"]),
+        )
+    else:
+        if model is not None:
+            model.max_seq_length = MAX_SEQ_LEN["c512"]
+        t0 = time.perf_counter()
+        qv, q_tok = run_encode(queries["text"].tolist(), spec.query_prompt, spec.batch_size)
+        q_dt = time.perf_counter() - t0
+        if qv.shape[1] != spec.dim:
+            raise ValueError(f"{spec.key}: expected dim {spec.dim}, got {qv.shape[1]}")
+        np.save(d / "queries.npy", qv)
+        meta["queries"] = {
+            "file": "queries.npy",
+            "rows": "queries.parquet",
+            "n": len(qv),
+            "qid": queries["qid"].tolist(),
+        }
+        meta["throughput"]["queries"] = {
+            "backend": spec.backend,
+            "n": len(qv),
+            "seconds": q_dt,
+            "texts_per_s": len(qv) / q_dt,
+            "tokens_per_s": q_tok / q_dt,
+        }
+    meta["iter"] = cfg.iter
 
-    for name in spec.chunkings:
+    for name in missing_chunkings(prev, wanted, d) if prev is not None else wanted:
         df = chunks[name]
         if model is not None:
             model.max_seq_length = MAX_SEQ_LEN[name]
@@ -321,6 +380,7 @@ def embed_model(
         )
     # TEI runs in another container; its GPU memory is not visible here
     meta["peak_gpu_mem_gb"] = None if tei else torch.cuda.max_memory_allocated() / 1e9
+    meta.pop("status", None)
     (d / "meta.json").write_text(json.dumps(meta))  # written last = done marker
 
     if not tei:
@@ -387,28 +447,49 @@ def update_throughput(base: Path, meta: dict) -> None:
 def run(cfg: EmbedConfig | None = None) -> None:
     cfg = env_override(cfg or EmbedConfig(), "EVAL_")
     base = Path(cfg.data_dir)
-    queries = pd.read_parquet(base / "queries.parquet")
+    k = cfg.iter
+    ddir = data_dir(base, k)
+    if cfg.requery and k != 0:
+        raise ValueError("EVAL_REQUERY only supports iteration 0")
+    plan = plan_work(cfg, base)
+    logger.info("iteration {}: plan {}", k, plan)
+    queries = pd.read_parquet(ddir / "queries.parquet")
+    needed_ch = {c for chs in plan.values() for c in chs} if not cfg.requery else set(MAX_SEQ_LEN)
     chunks = {
         n: pd.read_parquet(
-            base / f"chunks_{n}.parquet", columns=["chunk_uid", "judgment_id", "text"]
+            ddir / f"chunks_{n}.parquet", columns=["chunk_uid", "judgment_id", "text"]
         )
         for n in MAX_SEQ_LEN
+        if n in needed_ch
     }
     summary: list[tuple[str, str, str]] = []
     for key in cfg.models:
         spec = REGISTRY[key]
+        d = emb_dir(base, key, k)
+        meta = read_done_meta(d / "meta.json")
         if cfg.requery:
-            if (base / "embeddings" / key / "meta.json").exists():
+            if meta is not None:
                 update_throughput(base, requery_model(spec, cfg, queries))
                 summary.append((key, "requeried", ""))
             continue
-        if (base / "embeddings" / key / "meta.json").exists() and not cfg.force:
+        if key not in plan:
+            logger.info("{}: nothing to embed for iteration {}", key, k)
+            summary.append((key, "not needed", ""))
+            continue
+        if meta is None and (d / "meta.json").exists() and not cfg.force:
+            logger.warning("{}: in-progress placeholder meta.json, another run owns it", key)
+            summary.append((key, "in progress elsewhere", ""))
+            continue
+        todo = plan[key] if cfg.force else missing_chunkings(meta, plan[key], d)
+        if not todo and meta is not None:
             logger.info("{}: already done, skipping", key)
             summary.append((key, "skipped (exists)", ""))
             continue
         try:
-            logger.info("=== {} ({})", key, spec.model_id)
-            update_throughput(base, embed_model(spec, cfg, queries, chunks))
+            logger.info("=== {} ({}) iter {} chunkings {}", key, spec.model_id, k, plan[key])
+            meta = embed_model(spec, cfg, queries, chunks, plan[key])
+            if k == 0:
+                update_throughput(base, meta)
             summary.append((key, "ok", ""))
         except Exception as e:  # keep going with the other models
             (

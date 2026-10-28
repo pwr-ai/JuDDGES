@@ -33,7 +33,13 @@ from rich.console import Console
 from rich.table import Table
 
 from scripts.embedding_eval.common import DEFAULT_OUT_DIR, env_override
-from scripts.embedding_eval.iterations import data_dir, emb_dir, git_sha, results_dir
+from scripts.embedding_eval.iterations import (
+    data_dir,
+    emb_dir,
+    git_sha,
+    read_done_meta,
+    results_dir,
+)
 
 console = Console(width=max(Console().width, 200))
 
@@ -346,9 +352,9 @@ def run(cfg: ExactConfig | None = None) -> pd.DataFrame:
     for key in cfg.models:
         metas, missing = [], []
         for j in range(k + 1):
-            mp = emb_dir(base, key, j) / "meta.json"
-            if mp.exists():
-                metas.append(_read_meta(mp))
+            meta = read_done_meta(emb_dir(base, key, j) / "meta.json")  # ignores placeholders
+            if meta is not None:
+                metas.append(meta)
             else:
                 missing.append(j)
         if missing:
