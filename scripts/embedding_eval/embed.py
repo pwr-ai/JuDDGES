@@ -30,7 +30,7 @@ from scripts.embedding_eval.common import DEFAULT_OUT_DIR, env_override, out_dir
 console = Console()
 
 QWEN_QUERY_PROMPT = (
-    "Instruct: Given a legal thesis, retrieve the court judgment passages that support it\nQuery: "
+    "Instruct: Given a legal thesis, retrieve the court judgment passages that support it\nQuery:"
 )
 
 
@@ -86,6 +86,7 @@ class EmbedConfig:
     models: tuple[str, ...] = tuple(REGISTRY)
     block_size: int = 4096  # texts encoded per block (sorted by length)
     force: bool = False
+    requery: bool = False  # re-embed only the queries of already finished models (prompt changed)
     sanity_n: int = 200
 
 
@@ -245,6 +246,49 @@ def embed_model(
     return meta
 
 
+def requery_model(spec: ModelSpec, cfg: EmbedConfig, queries: pd.DataFrame) -> dict:
+    """Re-embed only the queries of a finished model (e.g. after a prompt fix); chunk vectors stay untouched."""
+    import torch
+    from sentence_transformers import SentenceTransformer
+
+    d = Path(cfg.data_dir) / "embeddings" / spec.key
+    meta = json.loads((d / "meta.json").read_text())
+    model = SentenceTransformer(spec.model_id, device="cuda", model_kwargs={"dtype": torch.float16})
+    model.eval()
+    model.max_seq_length = MAX_SEQ_LEN["c512"]
+    t0 = time.perf_counter()
+    qv, q_tok = encode(
+        model, queries["text"].tolist(), spec.query_prompt, spec.batch_size, cfg.block_size
+    )
+    q_dt = time.perf_counter() - t0
+    np.save(d / "queries.npy", qv)
+    meta["prompts"] = {"query": spec.query_prompt, "passage": spec.passage_prompt}
+    meta["throughput"]["queries"] = {
+        "n": len(qv),
+        "seconds": q_dt,
+        "texts_per_s": len(qv) / q_dt,
+        "tokens_per_s": q_tok / q_dt,
+    }
+    for name in meta["chunkings"]:
+        cv = np.load(d / f"chunks_{name}.npy", mmap_mode="r")
+        chunk_df = pd.read_parquet(
+            Path(cfg.data_dir) / f"chunks_{name}.parquet", columns=["judgment_id"]
+        )
+        meta["sanity_cosine"][name] = sanity_cosine(
+            qv,
+            np.asarray(cv),
+            queries["judgment_id"].tolist(),
+            chunk_df["judgment_id"].tolist(),
+            cfg.sanity_n,
+        )
+        logger.info("{} {}: requeried, sanity {}", spec.key, name, meta["sanity_cosine"][name])
+    (d / "meta.json").write_text(json.dumps(meta))
+    del model
+    gc.collect()
+    torch.cuda.empty_cache()
+    return meta
+
+
 def update_throughput(base: Path, meta: dict) -> None:
     path = base / "throughput.json"
     all_tp = json.loads(path.read_text()) if path.exists() else {}
@@ -269,6 +313,11 @@ def run(cfg: EmbedConfig | None = None) -> None:
     summary: list[tuple[str, str, str]] = []
     for key in cfg.models:
         spec = REGISTRY[key]
+        if cfg.requery:
+            if (base / "embeddings" / key / "meta.json").exists():
+                update_throughput(base, requery_model(spec, cfg, queries))
+                summary.append((key, "requeried", ""))
+            continue
         if (base / "embeddings" / key / "meta.json").exists() and not cfg.force:
             logger.info("{}: already done, skipping", key)
             summary.append((key, "skipped (exists)", ""))
