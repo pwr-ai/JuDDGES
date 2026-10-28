@@ -68,10 +68,7 @@ class OrchConfig:
     image: str = "juddges-embedding-eval:latest"
     max_iter: int = 5
     required_models: tuple[str, ...] = ("qwen06", "bgem3", "mmlw_e5", "mmlw_rob2", "qwen4b")
-    progress_logs: tuple[str, ...] = (
-        "/tmp/claude-1000/t2c.log",
-        "/tmp/claude-1000/t2_qwen4b_tei.log",
-    )
+    progress_logs: tuple[str, ...] = ()  # extra log files with `encoded x/y` lines
     poll_s: int = 300
     speculative: bool = True  # embed iteration-1 deltas while iteration-0 models are still running
     st_gpu: int = 0
@@ -295,6 +292,7 @@ class Orchestrator:
         self.log_dir = Path(cfg.log_dir) if cfg.log_dir else self.base / "logs"
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.sha = git_sha()
+        self._iter0_error: BaseException | None = None
 
     # ---- containers
 
@@ -408,6 +406,10 @@ class Orchestrator:
             time.sleep(10)
         raise TimeoutError(f"{TEI_CONTAINER} not healthy after {self.cfg.tei_health_timeout_s}s")
 
+    def tei_unneeded(self) -> bool:
+        """The TEI server may only go once the iteration-0 qwen4b embedding has really finished."""
+        return read_done_meta(emb_dir(self.base, TEI_MODEL, 0) / "meta.json") is not None
+
     def tei_down(self) -> None:
         if container_state(TEI_CONTAINER) == "running":
             logger.info("stopping {} (qwen4b no longer needed)", TEI_CONTAINER)
@@ -430,9 +432,14 @@ class Orchestrator:
         if tei:
             self.tei_up()
         elif self.cfg.use_extra_gpu and st:
-            self.tei_down()
+            if self.tei_unneeded():
+                self.tei_down()
             free = gpu_free_mb(self.cfg.extra_gpu)
-            if free is not None and free >= self.cfg.extra_gpu_min_free_mb:
+            if (
+                container_state(TEI_CONTAINER) != "running"
+                and free is not None
+                and free >= self.cfg.extra_gpu_min_free_mb
+            ):
                 gpus.append(self.cfg.extra_gpu)
             else:
                 logger.info("GPU{} has {} MiB free, no second ST worker", self.cfg.extra_gpu, free)
@@ -440,6 +447,8 @@ class Orchestrator:
 
         def work(job: EmbedJob, gpu: int | None) -> None:
             env = {"EVAL_ITER": str(job.iter), "EVAL_MODELS": job.key, "EVAL_UNITS": job.units}
+            if job.iter == 0:
+                env["EVAL_FORCE"] = "1"  # replaces the in-progress placeholder meta.json
             self.run_container(
                 f"embed-{job.key}-k{job.iter}", "scripts.embedding_eval.embed", env, gpu
             )
@@ -519,7 +528,10 @@ class Orchestrator:
     def wait_iter0(self) -> None:
         """Phase A: poll until every required model is embedded; speculate on iteration 1 meanwhile."""
         speculated = False
+        self.start_iter0_embeds()
         while True:
+            if self._iter0_error:
+                raise self._iter0_error
             missing = iter0_ready(self.base, self.cfg.required_models)
             if not missing:
                 logger.info("all iteration-0 models are done")
@@ -535,9 +547,28 @@ class Orchestrator:
             logger.info("waiting for iteration-0 models {}: {}", missing, self.progress_summary())
             time.sleep(self.cfg.poll_s)
 
+    def start_iter0_embeds(self) -> None:
+        """Embed required iteration-0 models that are missing (the TEI client died or never ran).
+        A client container that is still running is re-attached to instead of restarted."""
+        needed = {
+            k: list(REGISTRY[k].chunkings) for k in iter0_ready(self.base, self.cfg.required_models)
+        }
+        jobs = plan_embed_jobs(self.base, 0, needed)
+        if not jobs:
+            return
+
+        def go() -> None:
+            try:
+                self.embed_jobs(jobs)
+            except BaseException as e:
+                self._iter0_error = e
+
+        threading.Thread(target=go, daemon=True).start()
+
     def progress_summary(self) -> str:
         out = []
-        for p in self.cfg.progress_logs:
+        extra = sorted(self.log_dir.glob("embed-*.log"), key=lambda p: p.stat().st_mtime)[-3:]
+        for p in (*self.cfg.progress_logs, *extra):
             path = Path(p)
             if not path.exists():
                 continue
@@ -573,7 +604,7 @@ class Orchestrator:
         inputs = exact_inputs(self.base, k, tuple(REGISTRY))
         if k > 0:
             needed = embed_needed(self.base, k)
-            if TEI_MODEL not in needed:
+            if TEI_MODEL not in needed and self.tei_unneeded():
                 self.tei_down()
             run_step(
                 log,

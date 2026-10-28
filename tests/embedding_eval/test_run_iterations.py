@@ -174,3 +174,15 @@ def test_progress_eta_from_log_lines():
     s = progress_eta(lines)
     assert s.startswith("8192/40960") and "eta 8.0 h" in s
     assert progress_eta(["nothing"]) is None
+
+
+def test_tei_server_is_kept_until_qwen4b_iteration0_is_really_done(tmp_path):
+    from scripts.embedding_eval.run_iterations import OrchConfig, Orchestrator
+
+    orch = Orchestrator(OrchConfig(data_dir=str(tmp_path)))
+    d = tmp_path / "embeddings" / "qwen4b"
+    d.mkdir(parents=True)
+    (d / "meta.json").write_text(json.dumps({"status": "in_progress_tei_placeholder"}))
+    assert not orch.tei_unneeded()
+    write_meta(d)
+    assert orch.tei_unneeded()
