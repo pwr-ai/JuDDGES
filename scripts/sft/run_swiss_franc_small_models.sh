@@ -10,6 +10,7 @@
 #         SMOKE=1            1 document, 1 fine-tuning step, separate OUT_ROOT (<OUT_ROOT>_smoke):
 #                            quick check of guided decoding + bitsandbytes + LoRA
 #         MAX_MODEL_LEN      vLLM context length, same for all runs (default 8192)
+#         GPU_UTIL           overrides gpu_memory_utilization of the profile (shared GPU)
 #         JUDGE_MODEL=<name> run scripts/sft/llm_as_judge.py with this judge (needs OPENAI_API_KEY),
 #                            skipped when empty
 #         MODELS, SEEDS      space-separated lists (configs/llm/<name>.yaml, seeds)
@@ -64,10 +65,14 @@ predict() { # <mode> <model> <seed> <out_dir> [hydra overrides...]
     if [[ "$MAX_DOCS" != "0" ]]; then
         max_docs_arg=(max_docs="$MAX_DOCS")
     fi
+    local gpu_util_arg=()
+    if [[ -n "${GPU_UTIL:-}" ]]; then
+        gpu_util_arg=(gpu_memory_utilization="$GPU_UTIL")
+    fi
     run python scripts/sft/predict_vllm.py \
         dataset=$DATASET llm="$model" prompt=$PROMPT ie_schema=$IE_SCHEMA split=$SPLIT \
         +profile="${model}_predict_24gb" guided_json=true max_model_len="$MAX_MODEL_LEN" \
-        random_seed="$seed" output_dir="$out_dir" "${max_docs_arg[@]}" "$@"
+        random_seed="$seed" output_dir="$out_dir" "${max_docs_arg[@]}" "${gpu_util_arg[@]}" "$@"
 }
 
 evaluate() { # <out_dir>
