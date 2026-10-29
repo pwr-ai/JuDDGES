@@ -33,6 +33,8 @@ def _non_null_schema(spec: dict[str, Any]) -> dict[str, Any]:
         return {"enum": list(spec["choices"])}
     if field_type in ("string", "date"):
         return {"type": "string"}
+    if field_type == "boolean":
+        return {"type": "boolean"}
     if field_type in ("int", "integer"):
         return {"type": "integer"}
     if field_type == "number":

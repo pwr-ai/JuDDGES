@@ -12,6 +12,7 @@
 #         MAX_MODEL_LEN      vLLM context length, same for all runs (default 8192)
 #         HW_PROFILE         24gb (default, RTX 3090, 4-bit) or gb10 (ASUS Ascent GX10, bf16; set MAX_MODEL_LEN=16384)
 #         TRAIN_PYTHON       interpreter for fine-tuning only (needs trl 0.16 / transformers 4.51; vLLM needs newer)
+#         IE_SCHEMA          ie_schema config (use swiss_franc_loans_2024 for the sprawy_frankowe data)
 #         GPU_UTIL           overrides gpu_memory_utilization of the profile (shared GPU)
 #         JUDGE_MODEL=<name> run scripts/sft/llm_as_judge.py with this judge (needs OPENAI_API_KEY),
 #                            skipped when empty
@@ -37,7 +38,7 @@ fi
 
 DATASET=pl_court_swiss_franc_loans
 PROMPT=info_extraction_annotated_json
-IE_SCHEMA=swiss_franc_loans
+IE_SCHEMA="${IE_SCHEMA:-swiss_franc_loans}"
 SPLIT="${SPLIT:-annotated}"
 SCHEMA_FILE=configs/ie_schema/${IE_SCHEMA}.yaml
 
