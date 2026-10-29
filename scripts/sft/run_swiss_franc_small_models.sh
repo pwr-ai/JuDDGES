@@ -15,6 +15,7 @@
 #         IE_SCHEMA          ie_schema config (use swiss_franc_loans_2024 for the sprawy_frankowe data)
 #         ZERO_SHOT_ONLY=1   skip fine-tuning and fine-tuned prediction
 #         SFT_MAX_TRAIN=N    fine-tune on the first N training documents for SFT_EPOCHS (default 1) epochs
+#         MAX_DOCS=N         predict and evaluate on the first N documents of the split only
 #         GPU_UTIL           overrides gpu_memory_utilization of the profile (shared GPU)
 #         JUDGE_MODEL=<name> run scripts/sft/llm_as_judge.py with this judge (needs OPENAI_API_KEY),
 #                            skipped when empty
@@ -30,7 +31,7 @@ DRY_RUN="${DRY_RUN:-0}"
 SMOKE="${SMOKE:-0}"
 HW_PROFILE="${HW_PROFILE:-24gb}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-8192}"
-MAX_DOCS=0 # 0 = all documents
+MAX_DOCS="${MAX_DOCS:-0}" # 0 = all documents; N = first N documents of the split
 SFT_SMOKE_ARGS=()
 ZERO_SHOT_ONLY="${ZERO_SHOT_ONLY:-0}"
 if [[ -n "${SFT_MAX_TRAIN:-}" ]]; then
