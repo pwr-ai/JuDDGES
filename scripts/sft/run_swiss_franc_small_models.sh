@@ -11,6 +11,7 @@
 #                            quick check of guided decoding + bitsandbytes + LoRA
 #         MAX_MODEL_LEN      vLLM context length, same for all runs (default 8192)
 #         HW_PROFILE         24gb (default, RTX 3090, 4-bit) or gb10 (ASUS Ascent GX10, bf16; set MAX_MODEL_LEN=16384)
+#         TRAIN_PYTHON       interpreter for fine-tuning only (needs trl 0.16 / transformers 4.51; vLLM needs newer)
 #         GPU_UTIL           overrides gpu_memory_utilization of the profile (shared GPU)
 #         JUDGE_MODEL=<name> run scripts/sft/llm_as_judge.py with this judge (needs OPENAI_API_KEY),
 #                            skipped when empty
@@ -108,7 +109,7 @@ for model in $MODELS; do
         if [[ -f "$adapter_dir/adapter_model.safetensors" ]]; then
             echo "# skip fine-tune: $adapter_dir/adapter_model.safetensors exists"
         else
-            run python scripts/sft/fine_tune_deepspeed.py \
+            run "${TRAIN_PYTHON:-python}" scripts/sft/fine_tune_deepspeed.py \
                 dataset=$DATASET llm="$model" prompt=$PROMPT ie_schema=$IE_SCHEMA \
                 +profile="${model}_sft_${HW_PROFILE}" \
                 training_args.seed="$seed" output_dir="$adapter_dir" "${SFT_SMOKE_ARGS[@]}"
