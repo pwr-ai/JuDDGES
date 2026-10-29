@@ -35,7 +35,7 @@ MAX_DOCS="${MAX_DOCS:-0}" # 0 = all documents; N = first N documents of the spli
 SFT_SMOKE_ARGS=()
 ZERO_SHOT_ONLY="${ZERO_SHOT_ONLY:-0}"
 if [[ -n "${SFT_MAX_TRAIN:-}" ]]; then
-    SFT_SMOKE_ARGS+=(max_train_docs="$SFT_MAX_TRAIN" training_args.num_train_epochs="${SFT_EPOCHS:-1}")
+    SFT_SMOKE_ARGS+=(+max_train_docs="$SFT_MAX_TRAIN" training_args.num_train_epochs="${SFT_EPOCHS:-1}")
 fi
 if [[ "$SMOKE" == "1" ]]; then
     MAX_DOCS=1
