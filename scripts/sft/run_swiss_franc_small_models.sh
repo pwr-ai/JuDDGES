@@ -34,7 +34,7 @@ fi
 DATASET=pl_court_swiss_franc_loans
 PROMPT=info_extraction_annotated_json
 IE_SCHEMA=swiss_franc_loans
-SPLIT=annotated
+SPLIT="${SPLIT:-annotated}"
 SCHEMA_FILE=configs/ie_schema/${IE_SCHEMA}.yaml
 
 export PYTHONPATH=.

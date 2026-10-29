@@ -8,7 +8,7 @@ def get_dataset(dataset_name_or_path: str | Path, split: str | None) -> Dataset:
     if dataset_name_or_path == "data/datasets/pl/swiss_franc_loans":
         data_files = {
             name: f"{name}.json"
-            for name in ("train", "test", "annotated")
+            for name in ("train", "test", "test_clean", "annotated")
             if (Path(dataset_name_or_path) / f"{name}.json").exists()
         }
         return load_dataset(dataset_name_or_path, data_files=data_files, split=split)
