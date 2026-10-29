@@ -6,4 +6,4 @@ quantization: bitsandbytes
 # prompt + context + output budget; must stay identical for zero-shot and fine-tuned runs
 max_model_len: 8192
 # vLLM refuses to start when less than this fraction of total memory is free (24 GB * 0.85 = 20.4 GB)
-gpu_memory_utilization: 0.85
+gpu_memory_utilization: 0.70
