@@ -10,6 +10,7 @@
 #         SMOKE=1            1 document, 1 fine-tuning step, separate OUT_ROOT (<OUT_ROOT>_smoke):
 #                            quick check of guided decoding + bitsandbytes + LoRA
 #         MAX_MODEL_LEN      vLLM context length, same for all runs (default 8192)
+#         HW_PROFILE         24gb (default, RTX 3090, 4-bit) or gb10 (ASUS Ascent GX10, bf16; set MAX_MODEL_LEN=16384)
 #         GPU_UTIL           overrides gpu_memory_utilization of the profile (shared GPU)
 #         JUDGE_MODEL=<name> run scripts/sft/llm_as_judge.py with this judge (needs OPENAI_API_KEY),
 #                            skipped when empty
@@ -23,6 +24,7 @@ OUT_ROOT="${OUT_ROOT:-data/experiments/swiss_franc_small_models}"
 JUDGE_MODEL="${JUDGE_MODEL:-}"
 DRY_RUN="${DRY_RUN:-0}"
 SMOKE="${SMOKE:-0}"
+HW_PROFILE="${HW_PROFILE:-24gb}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-8192}"
 MAX_DOCS=0 # 0 = all documents
 SFT_SMOKE_ARGS=()
@@ -71,7 +73,7 @@ predict() { # <mode> <model> <seed> <out_dir> [hydra overrides...]
     fi
     run python scripts/sft/predict_vllm.py \
         dataset=$DATASET llm="$model" prompt=$PROMPT ie_schema=$IE_SCHEMA split=$SPLIT \
-        +profile="${model}_predict_24gb" guided_json=true max_model_len="$MAX_MODEL_LEN" \
+        +profile="${model}_predict_${HW_PROFILE}" guided_json=true max_model_len="$MAX_MODEL_LEN" \
         random_seed="$seed" output_dir="$out_dir" "${max_docs_arg[@]}" "${gpu_util_arg[@]}" "$@"
 }
 
@@ -108,7 +110,7 @@ for model in $MODELS; do
         else
             run python scripts/sft/fine_tune_deepspeed.py \
                 dataset=$DATASET llm="$model" prompt=$PROMPT ie_schema=$IE_SCHEMA \
-                +profile="${model}_sft_24gb" \
+                +profile="${model}_sft_${HW_PROFILE}" \
                 training_args.seed="$seed" output_dir="$adapter_dir" "${SFT_SMOKE_ARGS[@]}"
         fi
 

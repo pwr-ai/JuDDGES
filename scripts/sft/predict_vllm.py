@@ -11,7 +11,12 @@ from loguru import logger
 from omegaconf import DictConfig
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
-from vllm.sampling_params import GuidedDecodingParams
+
+try:  # vLLM >= 0.11
+    from vllm.sampling_params import StructuredOutputsParams
+except ImportError:  # vLLM 0.9.x
+    StructuredOutputsParams = None
+    from vllm.sampling_params import GuidedDecodingParams
 
 from juddges.config import PredictInfoExtractionConfig
 from juddges.data.dataset_factory import get_dataset
@@ -53,14 +58,16 @@ def main(cfg: DictConfig) -> None:
         logger.warning(f"max_docs={config.max_docs}: using only the first {len(ds)} documents")
 
     assert config.generate_kwargs.keys()
-    guided_decoding = (
-        GuidedDecodingParams(json=ie_schema_to_json_schema(config.ie_schema))
-        if config.guided_json
-        else None
-    )
-    params = SamplingParams(
-        **config.generate_kwargs, seed=config.random_seed, guided_decoding=guided_decoding
-    )
+    json_schema = ie_schema_to_json_schema(config.ie_schema) if config.guided_json else None
+    if StructuredOutputsParams is not None:
+        constraint = {
+            "structured_outputs": StructuredOutputsParams(json=json_schema) if json_schema else None
+        }
+    else:
+        constraint = {
+            "guided_decoding": GuidedDecodingParams(json=json_schema) if json_schema else None
+        }
+    params = SamplingParams(**config.generate_kwargs, seed=config.random_seed, **constraint)
 
     llm = LLM(
         model=config.llm.name,
@@ -139,8 +146,12 @@ def main(cfg: DictConfig) -> None:
 def _guided_decoding_backend(llm: LLM, guided_json: bool) -> str | None:
     if not guided_json:
         return None
-    decoding_config = getattr(llm.llm_engine, "decoding_config", None)
-    return getattr(decoding_config, "guided_decoding_backend", None)
+    engine = llm.llm_engine
+    decoding_config = getattr(engine, "decoding_config", None)
+    if decoding_config is not None:
+        return getattr(decoding_config, "guided_decoding_backend", None)
+    structured = getattr(getattr(engine, "vllm_config", None), "structured_outputs_config", None)
+    return getattr(structured, "backend", None)
 
 
 def prepare_and_save_dataset_for_prediction(
