@@ -30,6 +30,11 @@ def evaluate_date(
         return {"match": 0}
 
 
+def evaluate_boolean(predicted: bool | None, gold: bool | None) -> dict[str, int]:
+    """Exact match of two booleans; null matches only null."""
+    return {"match": int(predicted == gold)}
+
+
 def evaluate_number(
     predicted: Any,
     gold: Any,

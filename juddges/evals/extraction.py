@@ -5,6 +5,7 @@ from loguru import logger
 from tqdm import trange
 
 from juddges.evals.metrics import (
+    evaluate_boolean,
     evaluate_date,
     evaluate_enum,
     evaluate_list_greedy,
@@ -99,6 +100,8 @@ class ExtractionEvaluator:
 
             if field_type == "date":
                 field_results[key] = evaluate_date(pred_val, gold_val)
+            elif field_type == "boolean":
+                field_results[key] = evaluate_boolean(pred_val, gold_val)
             elif field_type in ["number", "integer"]:
                 field_results[key] = evaluate_number(pred_val, gold_val)
             elif field_type == "string":
@@ -115,7 +118,7 @@ class ExtractionEvaluator:
     def get_zero_score(self, field_type: str) -> dict[str, Any]:
         if field_type == "date":
             return {"match": 0}
-        elif field_type in ["number", "integer"]:
+        elif field_type in ["boolean", "number", "integer"]:
             return {"match": 0}
         elif field_type == "string":
             return {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0}
