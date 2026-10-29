@@ -69,7 +69,7 @@ A tri-national collaboration between:
 - **Language Models**: Llama 3.1/3.2, Mistral, Bielik, Qwen, Phi-4
 - **Training**: PEFT/LoRA fine-tuning with DeepSpeed
 - **Orchestration**: DVC for reproducible ML pipelines
-- **Infrastructure**: Docker, Prefect, MongoDB, HuggingFace Hub
+- **Infrastructure**: Docker, HuggingFace Hub
 
 ## Architecture Documentation
 

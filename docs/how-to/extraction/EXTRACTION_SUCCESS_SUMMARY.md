@@ -315,7 +315,7 @@ results = chain.batch_extract(
 **Connect with existing pipeline:**
 1. Read judgments from Weaviate
 2. Extract structured information with Gemini
-3. Store results back to Weaviate/MongoDB
+3. Store results back to Weaviate
 4. Use extracted data for:
    - Search facets
    - Analytics dashboards

@@ -27,7 +27,6 @@ The JuDDGES documentation has been reorganized according to the **Diátaxis fram
 **Categories**:
 - **[data-acquisition/](how-to/data-acquisition/)** - Data collection pipelines
   - `data_acquisition_pl_court.md` - Polish court data pipeline
-  - `data_acquisition_nsa.md` - NSA data acquisition
 
 - **[embeddings/](how-to/embeddings/)** - Vector embeddings and ingestion
   - `embeddings_deploy_weaviate.md` - Deploy Weaviate database

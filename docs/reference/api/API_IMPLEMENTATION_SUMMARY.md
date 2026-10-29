@@ -163,7 +163,6 @@ High priority for future documentation:
 | `llm_as_judge.batched_judge` | Medium | Medium |
 | `preprocessing.text_encoder` | Medium | Low |
 | `preprocessing.context_truncator` | Medium | Low |
-| `retrieval.mongo_hybrid_search` | Low | Medium |
 | `utils` modules | Low | Low |
 
 ## Key Features

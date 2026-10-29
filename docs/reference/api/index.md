@@ -223,16 +223,6 @@ Data models for LLM judge evaluation.
 
 Utilities for loading and processing judge results.
 
-## Retrieval
-
-### [Mongo Hybrid Search](retrieval/mongo_hybrid_search.md)
-
-Hybrid search combining semantic and keyword search.
-
-### [Mongo Term-Based Search](retrieval/mongo_term_based_search.md)
-
-Traditional keyword-based search.
-
 ## Utilities
 
 ### [Config Utils](utils/config.md)

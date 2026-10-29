@@ -12,16 +12,19 @@ This document tracks the major milestones achieved in the JuDDGES project, their
 
 ### What Was Achieved
 
-#### Polish Court Data Pipeline (`data/pl_court_data_pipeline.py`)
+#### Polish Court Data Pipeline (`data/pl_court_data_pipeline.py`, since removed)
+
+> **Note**: This pipeline, its Prefect deployment and its MongoDB intermediate storage have been retired and removed from the repository. The description below is kept for historical reference.
+
 - **Prefect-orchestrated workflow**: Automated task scheduling with retry logic
 - **Full API integration**: Complete Polish Court API client with schema mapping
 - **Incremental updates**: Tracks last update dates, fetches only new documents
 - **Error resilience**: Exponential backoff, connection failure handling
 - **Scalability**: Thread pool with 10 concurrent workers
-- **Storage chain**: MongoDB → Parquet → HuggingFace Hub
+- **Storage chain**: MongoDB (retired) → Parquet → HuggingFace Hub
 - **Scheduling**: Weekly automated runs (Fridays at 18:00)
 
-#### NSA Data Scraper (`data/nsa/`)
+#### NSA Data Scraper (`data/nsa/`, scraping scripts since removed)
 - **Multi-stage scraping**: List pages → detail pages → extraction
 - **Deduplication**: Intelligent change detection
 - **HuggingFace integration**: Automatic dataset updates
@@ -31,7 +34,7 @@ This document tracks the major milestones achieved in the JuDDGES project, their
 
 ```python
 # Key Features
-- 50,000+ document sharding in MongoDB
+- 50,000+ document sharding in MongoDB (retired)
 - Parallel processing with ThreadPoolExecutor
 - Exponential backoff: 2^attempt seconds
 - HuggingFace Hub automatic upload
@@ -397,7 +400,7 @@ Analysis Capabilities:
 
 ### What Was Achieved
 
-#### Judgment Search Dashboard
+#### Judgment Search Dashboard (since removed)
 - **Semantic search**: Vector-based document retrieval
 - **Keyword search**: BM25 traditional search
 - **Filters**: Court, date range, type
@@ -423,7 +426,6 @@ Analysis Capabilities:
 
 ```python
 Streamlit Apps:
-  - juddges/dashboards/search_judgments.py
   - juddges/dashboards/extract_information.py
   - juddges/dashboards/case_law_trends.py
   - juddges/dashboards/project_info.py
