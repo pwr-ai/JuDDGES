@@ -121,6 +121,7 @@ class FineTuningConfig(BaseModel, extra="forbid"):
     prompt: PromptInfoExtractionConfig
     ie_schema: dict[str, dict[str, Any]]
     max_context_size: int
+    max_train_docs: int | None = None  # train on the first max_train_docs documents only
     training_args: dict[str, Any]
     peft_args: dict[str, Any] | None
     truncate_context: bool

@@ -64,6 +64,9 @@ def main(cfg: DictConfig) -> None:
         )
 
         dataset = load_dataset(config.dataset.name, split="train", num_proc=NUM_PROC)
+        if config.max_train_docs is not None:
+            dataset = dataset.select(range(min(config.max_train_docs, len(dataset))))
+            logger.warning(f"max_train_docs={config.max_train_docs}: training on {len(dataset)} documents")
         dataset = prepare_dataset(
             dataset=dataset,
             tokenizer=model_pack.tokenizer,

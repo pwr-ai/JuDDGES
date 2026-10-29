@@ -13,6 +13,8 @@
 #         HW_PROFILE         24gb (default, RTX 3090, 4-bit) or gb10 (ASUS Ascent GX10, bf16; set MAX_MODEL_LEN=16384)
 #         TRAIN_PYTHON       interpreter for fine-tuning only (needs trl 0.16 / transformers 4.51; vLLM needs newer)
 #         IE_SCHEMA          ie_schema config (use swiss_franc_loans_2024 for the sprawy_frankowe data)
+#         ZERO_SHOT_ONLY=1   skip fine-tuning and fine-tuned prediction
+#         SFT_MAX_TRAIN=N    fine-tune on the first N training documents for SFT_EPOCHS (default 1) epochs
 #         GPU_UTIL           overrides gpu_memory_utilization of the profile (shared GPU)
 #         JUDGE_MODEL=<name> run scripts/sft/llm_as_judge.py with this judge (needs OPENAI_API_KEY),
 #                            skipped when empty
@@ -30,6 +32,10 @@ HW_PROFILE="${HW_PROFILE:-24gb}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-8192}"
 MAX_DOCS=0 # 0 = all documents
 SFT_SMOKE_ARGS=()
+ZERO_SHOT_ONLY="${ZERO_SHOT_ONLY:-0}"
+if [[ -n "${SFT_MAX_TRAIN:-}" ]]; then
+    SFT_SMOKE_ARGS+=(max_train_docs="$SFT_MAX_TRAIN" training_args.num_train_epochs="${SFT_EPOCHS:-1}")
+fi
 if [[ "$SMOKE" == "1" ]]; then
     MAX_DOCS=1
     OUT_ROOT="${OUT_ROOT}_smoke"
@@ -106,6 +112,11 @@ for model in $MODELS; do
 
         echo "### $model, seed $seed"
         predict zero_shot "$model" "$seed" "$zero_shot_dir"
+
+        if [[ "$ZERO_SHOT_ONLY" == "1" ]]; then
+            evaluate "$zero_shot_dir"
+            continue
+        fi
 
         if [[ -f "$adapter_dir/adapter_model.safetensors" ]]; then
             echo "# skip fine-tune: $adapter_dir/adapter_model.safetensors exists"
