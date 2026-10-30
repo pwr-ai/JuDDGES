@@ -1,0 +1,231 @@
+apelacja:
+  type: string
+  description: Określenie apelacji, w której znajduje się sąd rozpoznający sprawę
+  required: false
+typ_sadu:
+  type: enum
+  choices:
+  - Sąd Rejonowy
+  - Sąd Okręgowy
+  - Sąd Frankowy
+  description: Typ sądu rozpoznającego sprawę
+  required: false
+instancja_sadu:
+  type: enum
+  choices:
+  - Sąd I instancji
+  - Sąd odwoławczy
+  description: Czy sąd jest I instancji czy odwoławczy
+  required: false
+podstawa_prawna:
+  type: string
+  description: Podstawa prawna roszczenia
+  required: false
+podstawa_prawna_podana:
+  type: boolean
+  description: Czy powód podał podstawę prawną?
+  required: false
+rodzaj_roszczenia:
+  type: enum
+  choices:
+  - O ustalenie istnienia/nieistnienia stosunku prawnego
+  - O ukształtowanie stosunku prawnego
+  - O zapłatę
+  - Roszczenia dodatkowe
+  description: Rodzaj roszczenia
+  required: false
+modyfikacje_powodztwa:
+  type: boolean
+  description: Czy były modyfikacje powództwa
+  required: false
+typ_modyfikacji:
+  type: enum
+  choices:
+  - Rodzaj roszczenia
+  - Kwoty roszczenia
+  description: Typ modyfikacji powództwa
+  required: false
+status_kredytobiorcy:
+  type: enum
+  choices:
+  - Konsument
+  - Przedsiębiorca
+  description: Status kredytobiorcy
+  required: false
+wspoluczestnictwo_powodowe:
+  type: boolean
+  description: Czy współuczestnictwo po stronie powodowej
+  required: false
+typ_wspoluczestnictwa:
+  type: enum
+  choices:
+  - Małżeństwo
+  - Konkubinat
+  - Inni członkowie rodziny
+  - Spadkobiercy
+  description: Rodzaj współuczestnictwa
+  required: false
+rola_pozwanego:
+  type: enum
+  choices:
+  - Strona umowy
+  - Następca prawny
+  description: Czy pozwany faktycznie był stroną umowy czy następcą prawnym
+  required: false
+wczesniejsze_skargi_do_rzecznika:
+  type: boolean
+  description: Czy były uprzednie skargi do rzecznika finansowego
+  required: false
+umowa_kredytowa:
+  type: enum
+  choices:
+  - Zawarta bezpośrednio w banku
+  - Z udziałem pośrednika
+  description: Czy umowa kredytowa zawierana bezpośrednio w banku czy z pośrednikiem
+  required: false
+klauzula_niedozwolona:
+  type: boolean
+  description: Istnienie klauzuli niedozwolonej w umowie
+  required: false
+wpisana_do_rejestru_uokik:
+  type: boolean
+  description: Czy klauzula wpisana do rejestru klauzul niedozwolonych UOKiK
+  required: false
+waluta_splaty:
+  type: enum
+  choices:
+  - PLN
+  - CHF
+  description: Waluta spłaty
+  required: false
+aneks_do_umowy:
+  type: boolean
+  description: Czy był aneks do umowy
+  required: false
+data_aneksu:
+  type: date
+  description: Data aneksu
+  required: false
+przedmiot_aneksu:
+  type: enum
+  choices:
+  - Zmiana waluty spłaty
+  - Inne kwestie
+  description: Czego dotyczył aneks
+  required: false
+status_splaty_kredytu:
+  type: boolean
+  description: Czy kredyt był spłacony, w tym w trakcie procesu
+  required: false
+data_wyroku:
+  type: date
+  description: Data wydania wyroku
+  required: false
+rozstrzygniecie_sadu:
+  type: string
+  description: Rozstrzygnięcie
+  required: false
+typ_rozstrzygniecia:
+  type: enum
+  choices:
+  - Uwzględnienie powództwa w całości
+  - Uwzględnienie powództwa w części
+  - Oddalenie powództwa
+  - Oddalenie apelacji
+  - Zmiana wyroku
+  - Przekazanie do ponownego rozpoznania
+  description: Typ rozstrzygnięcia
+  required: false
+sesja_sadowa:
+  type: enum
+  choices:
+  - Rozprawa
+  - Posiedzenie niejawne
+  description: Czy wyrok wydano na rozprawie czy na posiedzeniu niejawnym
+  required: false
+dowody:
+  type: list
+  items:
+    type: enum
+    choices:
+    - Przesłuchanie stron
+    - Przesłuchanie świadków
+    - Dowód z opinii biegłego
+  description: Jakie dowody zostały przeprowadzone
+  required: false
+oswiadczenie_niewaznosci:
+  type: boolean
+  description: Czy odbierano oświadczenie powoda o skutkach nieważności umowy
+  required: false
+odwolanie_do_sn:
+  type: boolean
+  description: Czy odwołano się do orzecznictwa SN
+  required: false
+odwolanie_do_tsue:
+  type: boolean
+  description: Czy odwołano się do orzecznictwa TSUE
+  required: false
+teoria_prawna:
+  type: enum
+  choices:
+  - Teoria dwóch kondykcji
+  - Teoria salda
+  description: Teoria prawna, na której oparto wyrok
+  required: false
+zarzut_zatrzymania_lub_potracenia:
+  type: boolean
+  description: Czy uwzględniono zarzut zatrzymania lub potrącenia
+  required: false
+odsetki_ustawowe:
+  type: boolean
+  description: Czy uwzględniono odsetki ustawowe
+  required: false
+data_rozpoczecia_odsetek:
+  type: enum
+  choices:
+  - Od dnia wezwania do zapłaty
+  - Od daty wytoczenia powództwa
+  - Od daty wydania wyroku
+  - Od innej daty
+  description: Data rozpoczęcia naliczania odsetek
+  required: false
+koszty_postepowania:
+  type: boolean
+  description: Czy zasądzono zwrot kosztów postępowania
+  required: false
+beneficjent_kosztow:
+  type: string
+  description: Na rzecz której strony zasądzono zwrot kosztów
+  required: false
+zabezpieczenie_udzielone:
+  type: boolean
+  description: Czy udzielono zabezpieczenia
+  required: false
+rodzaj_zabezpieczenia:
+  type: string
+  description: Rodzaj zabezpieczenia
+  required: false
+zabezpieczenie_pierwsza_instancja:
+  type: boolean
+  description: Czy zabezpieczenia udzielił sąd I instancji
+  required: false
+czas_trwania_sprawy:
+  type: string
+  description: Czas rozpoznania sprawy – od złożenia pozwu do wydania wyroku
+  required: false
+wynik_sprawy:
+  type: enum
+  choices:
+  - Wygrana kredytobiorcy
+  - Wygrana banku
+  - Częściowe uwzględnienie roszczeń obu stron
+  description: Ocena, czy bank czy kredytobiorca wygrał sprawę
+  required: false
+szczegoły_wyniku_sprawy:
+  type: string
+  description: Szczegóły dotyczące wyniku sprawy
+  required: false
+sprawa_frankowiczów:
+  type: boolean
+  description: Czy sprawa dotyczy kredytu frankowego (CHF)
+  required: false

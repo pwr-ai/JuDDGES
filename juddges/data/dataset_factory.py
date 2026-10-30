@@ -6,11 +6,12 @@ from datasets import Dataset, load_dataset
 def get_dataset(dataset_name_or_path: str | Path, split: str | None) -> Dataset:
     dataset_name_or_path = str(dataset_name_or_path)
     if dataset_name_or_path == "data/datasets/pl/swiss_franc_loans":
-        return load_dataset(
-            dataset_name_or_path,
-            data_files={"train": "train.json", "test": "test.json", "annotated": "annotated.json"},
-            split=split,
-        )
+        data_files = {
+            name: f"{name}.json"
+            for name in ("train", "test", "test_clean", "annotated")
+            if (Path(dataset_name_or_path) / f"{name}.json").exists()
+        }
+        return load_dataset(dataset_name_or_path, data_files=data_files, split=split)
     elif dataset_name_or_path == "data/datasets/pl/personal_rights":
         return load_dataset(
             dataset_name_or_path,

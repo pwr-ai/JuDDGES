@@ -1,0 +1,9 @@
+# @package _global_
+# vLLM inference on one 24 GB GPU (RTX 3090, ~3 GB taken by the desktop). Usage: +profile=<this file name>
+# In-flight bitsandbytes NF4 quantization: the same 4-bit base as the QLoRA training profile, so
+# zero-shot and fine-tuned runs share one quantized base model (the LoRA adapter is not merged).
+quantization: bitsandbytes
+# prompt + context + output budget; must stay identical for zero-shot and fine-tuned runs
+max_model_len: 8192
+# vLLM refuses to start when less than this fraction of total memory is free (24 GB * 0.85 = 20.4 GB)
+gpu_memory_utilization: 0.70

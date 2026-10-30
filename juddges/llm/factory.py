@@ -1,3 +1,4 @@
+import importlib.util
 import warnings
 from dataclasses import dataclass
 from typing import Any
@@ -100,11 +101,13 @@ def get_llm_tokenizer(
     else:
         if llm_config.use_4bit:
             kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=True,
+                **llm_config.bnb_4bit_kwargs,
                 bnb_4bit_compute_dtype=torch.bfloat16,
             )
         if torch.cuda.is_available():
-            kwargs["attn_implementation"] = "flash_attention_2"
+            kwargs["attn_implementation"] = (
+                "flash_attention_2" if importlib.util.find_spec("flash_attn") else "sdpa"
+            )
 
         model = AutoModelForCausalLM.from_pretrained(
             llm_config.name,
