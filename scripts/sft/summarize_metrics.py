@@ -114,6 +114,7 @@ def summarize_extraction(root_dir: Path, judge_model: str | None = None) -> None
         "num_docs",
         "parsing_errors",
         "finish_reason_length",
+        "failed_or_truncated",
         "date_match_iso",
         "date_match_iso_nonnull_gold",
         "exact_match_categorical",
@@ -175,6 +176,16 @@ def summarize_run(run_dir: Path, judge_model: str | None = None) -> dict[str, An
             if any(nonnull_gold[k])
         }
 
+    closed_fields = [k for k, v in schema.items() if v["type"] in ("enum", "boolean")]
+    truncated = [p.get("finish_reason") == "length" for p in predictions]
+    null_rate: dict[str, float] = {}
+    majority: dict[str, float] = {}
+    for field in closed_fields:
+        gold_vals = [json.dumps(g.get(field)) for g in golds]
+        majority[field] = max(gold_vals.count(v) for v in set(gold_vals)) / len(gold_vals)
+        pred_vals = [parsed.predictions.get(i) for i in range(len(golds))]
+        null_rate[field] = float(np.mean([pr is not None and pr.get(field) is None for pr in pred_vals]))
+
     date_nonnull = nonnull_means(date_fields)
     categorical_nonnull = nonnull_means(categorical_fields)
     per_doc_exact = np.mean(list(scores.values()), axis=0)
@@ -182,6 +193,9 @@ def summarize_run(run_dir: Path, judge_model: str | None = None) -> dict[str, An
         "num_docs": len(predictions),
         "parsing_errors": len(parsed.errors),
         "finish_reason_length": sum(p.get("finish_reason") == "length" for p in predictions),
+        "failed_or_truncated": len(set(parsed.errors) | {i for i, x in enumerate(truncated) if x}),
+        "pred_null_rate_closed_fields": null_rate,
+        "majority_baseline_in_sample": majority,
         "per_field_exact_match": {k: float(np.mean(v)) for k, v in scores.items()},
         "per_field_exact_match_nonnull_gold": {**date_nonnull, **categorical_nonnull},
         "date_match_iso": _mean_or_none([np.mean(scores[k]) for k in date_fields]),
