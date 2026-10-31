@@ -1,4 +1,4 @@
-# Deploy the Weaviate v2 stack (Weaviate 1.40 + BGE-M3)
+# Deploy the Weaviate v2 stack (Weaviate 1.40 + mmlw-retrieval-e5-large)
 
 The stack in `weaviate/v2/` runs a fresh Weaviate instance for court judgments
 alongside the legacy one in `weaviate/docker-compose.yaml`. It uses a different
@@ -7,7 +7,7 @@ compose project name, different ports and different volumes, so both can run at 
 | Service | Image | Host port (default) |
 |---|---|---|
 | `weaviate` | `cr.weaviate.io/semitechnologies/weaviate:1.40.2` | `8110` (HTTP), `50061` (gRPC) |
-| `embeddings` | `ghcr.io/huggingface/text-embeddings-inference:86-1.9.4` serving `BAAI/bge-m3` | `8111` |
+| `embeddings` | `ghcr.io/huggingface/text-embeddings-inference:86-1.9.4` serving `sdadas/mmlw-retrieval-e5-large` | `8111` |
 
 Ports bind to `127.0.0.1` by default. Set `WEAVIATE_BIND=0.0.0.0` only behind a
 firewall or reverse proxy.
@@ -20,7 +20,7 @@ cp .env.example .env        # set AUTHENTICATION_APIKEY_ALLOWED_KEYS / _USERS
 docker compose up -d
 ```
 
-On first start, TEI downloads BGE-M3 (~2.2 GB) into the `embedding_v2_model_cache`
+On first start, TEI downloads mmlw-retrieval-e5-large (~2.2 GB) into the `embedding_v2_model_cache`
 volume. Weaviate waits until TEI reports healthy.
 
 ## Verify
@@ -30,7 +30,7 @@ source .env
 curl -fs localhost:8110/v1/.well-known/ready && echo ready
 curl -s -H "Authorization: Bearer $AUTHENTICATION_APIKEY_ALLOWED_KEYS" localhost:8110/v1/meta   # "version": "1.40.2"
 curl -s localhost:8111/embed -H 'Content-Type: application/json' \
-  -d '{"inputs":["Sąd Najwyższy oddalił kasację."]}'                                        # 1024 floats
+  -d '{"inputs":["query: Sąd Najwyższy oddalił kasację."]}'                                 # 1024 floats
 ```
 
 ## Configuration notes
@@ -38,7 +38,11 @@ curl -s localhost:8111/embed -H 'Content-Type: application/json' \
 - **GPU image tag.** The `86-` tag targets Ampere `sm_86` (RTX 3090, A5000). Use
   `hopper-1.9.4` for H100, `89-1.9.4` for Ada, or `1.9.4` for A100.
 - **GPU selection.** `EMBEDDINGS_GPU` picks the device id.
-- **Quantization.** `DEFAULT_QUANTIZATION=rq-8` gives every new collection 8-bit
+- **Prompts.** TEI does not add prompts for this model. Clients must prefix queries
+  with `query:` and chunks with `passage:`, each followed by a space. Without the prefix, cosine to the
+  reference vectors drops to ~0.82. The model's context is 512 tokens, so chunk to
+  480 tokens with 64 overlap.
+- **Quantization.** `DEFAULT_QUANTIZATION=rq-4` gives every new collection 4-bit
   rotational quantization when its schema does not configure one. Collection schemas
   should still set the quantizer explicitly. Quantization cannot be disabled on a
   collection once it is enabled. The rationale is in

@@ -1,92 +1,153 @@
 # Embedding model and vector quantization for Polish judgments
 
-This page explains why the v2 Weaviate stack uses BGE-M3 with 1024 dimensions and
-RQ 8-bit quantization, and what should be measured before changing either. It
-reflects the state as of October 2026.
+This page explains which embedding model, chunk size, dimensionality, Weaviate
+quantization and search mode to use for the v2 Weaviate stack, based on a
+measured evaluation on our own judgments (October 2026, branch
+`feat/embedding-eval`, code in `scripts/embedding_eval/`).
 
-> **Status: preliminary.** The choices below are based on published benchmarks. They
-> will be updated with measured results from the pre-ingest evaluation on our own
-> judgments (branch `feat/embedding-eval`).
+## Evaluation setup
 
-## Model choice
+- **Task.** Thesis → judgment retrieval. The query is the `thesis` of a judgment
+  from `JuDDGES/pl-court-raw`, and the only relevant document is that judgment.
+- **Scoring.** Chunks are scored by cosine similarity, and a judgment takes the
+  score of its best chunk (MaxP).
+- **Metrics.** nDCG@10, MRR@10 and Recall@1/10/100. The 95% CIs come from a paired
+  bootstrap (1000 resamples, seed 42).
+- **Query types.** Queries are split into `verbatim` and `abstractive`. A query is
+  `verbatim` when the thesis appears literally in the text; that is about 6% of
+  queries.
+- **Iterations.** The corpus grows in six nested iterations, 0 through 5. Each
+  iteration adds 1000 queries and 20k judgments, from 20k judgments / 1000
+  queries up to 120k judgments / 6000 queries.
+  - A config is pruned when the upper bound of the 95% CI of its nDCG@10 gap to
+    the best config falls below -0.03.
+  - `bgem3_c512` (BGE-M3) and the legacy `qwen06_d128_c2048` are always kept as reference
+    configs.
+- **Chunking.** Chunks are split with the BGE-M3 tokenizer:
+  - `c512` is 480 tokens with 64 overlap.
+  - `c2048` is 2048 tokens with 256 overlap, the same as the legacy prod config.
+- **Weaviate.** The Weaviate runs use 1.40.2 with HNSW (ef_construction 128,
+  max_connections 32, dynamic ef). Each run compares fp32, RQ8, RQ4 and RQ1
+  vectors, and also BM25 and hybrid search with relativeScoreFusion.
 
-The table shows Polish retrieval quality as the average NDCG@10 over the 41 Polish
-tasks of PIRB (Dadas et al., arXiv 2609.12913, September 2026):
+Raw results are kept as CSVs under `data/experiments/embedding_eval/results/`.
+`scripts/embedding_eval/export_tables.py` rebuilds the paper tables and figures
+from them.
 
-| Model | PIRB NDCG@10 | Params | Dims | Max context | MRL | License |
-|---|---|---|---|---|---|---|
-| Qwen3-Embedding-8B | 60.93 | 8B | 4096 | 32K | ? | Apache-2.0 |
-| sdadas/mmlw-retrieval-roberta-large-v2 | 60.71 | 0.4B | 1024 | 512 | no | gemma |
-| Qwen3-Embedding-4B | 59.19 | 4B | 2560 | 32K | yes | Apache-2.0 |
-| sdadas/mmlw-retrieval-e5-large | 58.30 | 0.6B | 1024 | 512 | no | Apache-2.0 |
-| jina-embeddings-v3 | 57.33 | ~0.57B | 1024 | 8192 | yes | CC-BY-NC-4.0 |
-| multilingual-e5-large | 57.29 | 0.56B | 1024 | 512 | no | MIT |
-| **BAAI/bge-m3** | **55.75** | 0.57B | 1024 | 8192 | no | MIT |
-| EmbeddingGemma-300m | 55.22 | 0.3B | 768 | 2048 | yes | Gemma |
-| Qwen3-Embedding-0.6B (legacy stack) | 50.71 | 0.6B | 1024 | 32K | yes | Apache-2.0 |
+## Results
 
-BGE-M3 is the default because it is the strongest model that meets all four of
-these requirements:
+### Dense models (exact search, nDCG@10)
 
-- **8K context.** Chunks are 500-1000 tokens, and the mmlw and e5 models truncate at 512.
-- **Permissive license.** MIT, unlike jina-embeddings-v3.
-- **Native TEI support.** BGE-M3 is XLM-RoBERTa. The plain-RoBERTa mmlw models are
-  not on the TEI support list.
-- **Cheap to serve at 33M vectors.** Qwen3-4B and Qwen3-8B cost 7-14x more compute
-  per vector.
+The "cumulative" columns use all queries up to that iteration, evaluated against
+the growing corpus.
 
-BGE-M3 is +5 NDCG@10 over the Qwen3-Embedding-0.6B model the legacy stack used.
+| Config | 20k judgments | 60k | 120k | Δ vs best @120k [95% CI] | Recall@100 @120k |
+|---|---|---|---|---|---|
+| **sdadas/mmlw-retrieval-e5-large, c512** | 0.469 | 0.385 | **0.341** | — | 0.605 |
+| Qwen3-Embedding-4B, c512, 2560d | 0.462 | 0.382 | 0.337 | -0.004 [-0.012, +0.003] | 0.623 |
+| Qwen3-Embedding-4B, c512, MRL 1024d | 0.455 | 0.373 | 0.326 | -0.015 [-0.023, -0.007] | 0.615 |
+| Qwen3-Embedding-4B, c512, MRL 512d | 0.436 | 0.356 | 0.314 | -0.027 [-0.035, -0.019] | 0.599 |
+| BAAI/bge-m3, c512 | 0.449 | 0.360 | 0.313 | -0.028 [-0.035, -0.022] | 0.579 |
+| BAAI/bge-m3, c512, truncated 512d | 0.432 | 0.346 | 0.304 | pruned at 120k | 0.566 |
+| sdadas/mmlw-retrieval-roberta-large-v2, c512 | 0.416 | pruned at 20k | | | |
+| Qwen3-Embedding-0.6B, c512 | 0.388 | pruned at 20k | | | |
+| BAAI/bge-m3, c2048 | 0.285 | pruned at 20k | | | |
+| Qwen3-Embedding-0.6B, c2048, 128d (legacy prod) | 0.216 | 0.152 | 0.121 | -0.220 | 0.346 |
 
-No public benchmark reports BGE-M3, Qwen3 or mmlw on _Polish court judgments_. The
-PIRB legal subsets (PolEval-2022 legal QA, e-Prawnik, Specprawnik) rank models
-differently from the overall average. Candidates should therefore be validated on
-our own data, see [Validation before full ingest](#validation-before-full-ingest).
+What these numbers show:
 
-## Dimensionality reduction
+- **The top two models are tied.** mmlw-e5-large and Qwen3-4B are statistically
+  tied at every corpus size.
+- **Qwen3-4B costs far more to serve.** It embeds about 9x slower: 14 chunks/s on
+  an RTX 3090 with TEI, against 125 chunks/s for mmlw-e5. Its vectors also have
+  2.5x more dimensions.
+- **BGE-M3 is consistently behind.** It trails the best model by about 0.028.
+- **512-token chunks beat 2048-token chunks.** The gap is about 0.16 nDCG@10 for
+  every model. The legacy prod config is the worst one tested.
+- **BGE-M3 does not truncate well.** It is not Matryoshka-trained, and cutting it to
+  512 dims costs 0.01-0.02.
+- **Qwen3-4B truncates well.** With MRL it loses only 0.01 at 1024 dims.
+- **Quality falls as the corpus grows, but the fall slows.** Take the 1000
+  iteration-0 queries and evaluate them against the growing corpus:
+  - mmlw-e5 scores 0.469, 0.413, 0.389, 0.370, 0.355 and 0.343 at 20k through
+    120k judgments.
+  - The step-to-step drops shrink: -0.056, -0.024, -0.019, -0.015 and -0.012.
+  - The model ranking does not change.
+  - Absolute numbers on the full 3M corpus will be lower again.
 
-BGE-M3 is **not** Matryoshka-trained. Truncating it is not a supported way to save
-space: reported cosine similarity to the full vector is only ~0.71 at 512 dims. If
-fewer dimensions are needed, switch to an MRL model such as Qwen3-Embedding-4B or
-EmbeddingGemma. For reference, EmbeddingGemma loses 0.4 / 1.5 / 2.9 MTEB points at
-512 / 256 / 128 dims.
+### Quantization (Weaviate 1.40.2, 120k judgments, 2.2M chunks)
 
-## Quantization (Weaviate 1.40)
+| Vector index | bge-m3 | mmlw-e5 | Qwen3-4B | ANN recall@100 (mmlw-e5) |
+|---|---|---|---|---|
+| exact (brute force) | 0.313 | 0.341 | 0.337 | 1.000 |
+| HNSW fp32 | 0.307 | 0.338 | 0.335 | 0.977 |
+| HNSW RQ8 | 0.308 | 0.338 | 0.335 | 0.977 |
+| **HNSW RQ4** | 0.308 | **0.339** | 0.335 | **0.986** |
+| HNSW RQ1 | 0.307 | 0.333 | 0.333 | 0.870 |
 
-| Method | Vector size vs float32 | Recall (Weaviate docs) | Training |
+- **RQ8 and RQ4 cost nothing.** Both are within 0.003 of fp32 HNSW in every
+  iteration. RQ4 has the higher ANN recall, which is likely an effect of its
+  rescoring.
+- **Most of the loss against exact search comes from HNSW.** HNSW itself costs
+  about 0.003-0.006, and quantization adds almost nothing on top.
+- **RQ1 is unsafe for 1024-dim models.** On mmlw-e5 it drops ANN recall to 0.87. It
+  holds up only on the 2560-dim Qwen3-4B.
+- **Dense queries are fast.** p95 latency for a single dense query is 15-25 ms at
+  2.2M chunks.
+
+### BM25 and hybrid search (120k judgments, nDCG@10)
+
+| Search | bge-m3 | mmlw-e5 | Qwen3-4B |
 |---|---|---|---|
-| RQ 8-bit | 4x smaller | 98-99% | none |
-| RQ 4-bit (new in 1.40) | ~8x smaller | 94-95%, 99.8%+ with rescoring | none |
-| RQ 1-bit / BQ | ~32x smaller | moderate, needs large rescore (default 512) | none |
-| PQ | ~24x smaller | tunable trade-off | 10k-100k objects/shard |
-| SQ | 4x smaller | better than BQ | 100k objects/shard |
+| dense (RQ8) | 0.308 | 0.338 | 0.335 |
+| BM25 | 0.496 | 0.496 | 0.496 |
+| hybrid α=0.25 | 0.494 | 0.496 | 0.501 |
+| hybrid α=0.5 | 0.463 | 0.472 | 0.484 |
+| hybrid α=0.75 | 0.354 | 0.383 | 0.387 |
 
-The table below estimates RAM for 33M vectors (3M documents + ~30M chunks) at 1024
-dims. The figures cover vector data only. The HNSW graph adds roughly 17 GB in
-every variant.
+- **BM25 beats dense retrieval by about +0.16.** It wins on both query types, with
+  verbatim queries benefiting most.
+- **Hybrid adds only a little.** Low-α hybrid barely moves nDCG over BM25 alone, but
+  it raises Recall@100 from 0.697 to 0.706-0.712.
+- **Higher α is worse.** Quality falls steadily as α increases.
+- **This task favours lexical matching.** Theses are written from the judgment text,
+  so these numbers likely overstate the advantage of BM25 for free-form user
+  questions.
+- **BM25 and hybrid are slow.** Their p95 latency is 300-450 ms at 2.2M chunks.
 
-| Variant | Vectors in RAM |
-|---|---|
-| float32 | ~135 GB |
-| **RQ 8-bit** | **~34 GB** |
-| RQ 4-bit | ~17 GB |
-| RQ 1-bit | ~4.5 GB |
+### Storage for the full corpus (3M judgments)
 
-**Decision: RQ 8-bit.** RQ 8-bit fits comfortably on the host (251 GB RAM) at
-near-lossless recall, with no training step. RQ 4-bit is the next step if memory
-becomes tight, but only after it is measured on our queries, because legal retrieval
-is precision-sensitive. In every variant the uncompressed vectors stay on disk
-(~135 GB) for rescoring.
+The figures below are extrapolated to 3M judgments. At about 18 chunks per judgment
+with c512, that is about 54M vectors. The figures cover vector data only. The HNSW
+graph comes on top, and the uncompressed vectors stay on disk for rescoring.
 
-## Validation before full ingest
+| Config | fp32 | RQ8 | RQ4 | GPU-hours to embed |
+|---|---|---|---|---|
+| mmlw-e5 / bge-m3 / Qwen3-4B@1024, c512 | 223 GB | 57 GB | **29 GB** | 138 / 120 / 1057 |
+| Qwen3-4B, 2560d, c512 | 558 GB | 140 GB | 71 GB | 1057 |
+| legacy Qwen3-0.6B@128, c2048 | 7 GB | 2 GB | 1 GB | 401 |
 
-Run these steps on a sample of roughly 1-2M chunks before the full ingest:
+## Decision
 
-1. Build ~200 gold queries from judgments, for example thesis → judgment or legal
-   question → reasons section.
-2. Compare BGE-M3 1024d with `mmlw-retrieval-e5-large` (with chunks ≤512 tokens) and
-   `Qwen3-Embedding-4B` at 512d via MRL. Report NDCG@10 and Recall@100, using hybrid
-   search with the production `alpha`.
-3. For the winning model, compare RQ8 with RQ4 at the same `rescoreLimit`.
+| Choice | Value | Why |
+|---|---|---|
+| Model | `sdadas/mmlw-retrieval-e5-large` (1024d) | Best or tied-best quality at every corpus size, BGE-M3 speed, Apache-2.0. Prompts: `query:` / `passage:` followed by a space. |
+| Chunking | 480 tokens, 64 overlap | +0.16 nDCG@10 over 2048-token chunks, and it fits the model's 512-token context. |
+| Dimensions | full 1024 | The model has no MRL. RQ4 saves more space than truncation would, at no quality cost. |
+| Quantization | RQ4 | No measurable loss against RQ8, at half the RAM: about 29 GB for 54M vectors. |
+| Search | hybrid, α ≈ 0.25 | Matches BM25 on nDCG@10, gives the best Recall@100, and keeps semantic matching for questions that are not thesis-like. |
 
-Keep BGE-M3 + RQ8 unless an alternative wins by a margin that justifies its serving
-cost.
+- **Fallback model.** Qwen3-Embedding-4B at 1024 dims (MRL) reaches nearly the
+  same quality. It is the option if a longer context or instruction-following
+  becomes important, at about 8x the embedding cost.
+- **BGE-M3.** It remains acceptable, at -0.028 nDCG@10, but it is no longer the
+  recommended default.
+
+### Known limitations
+
+- **Query set.** Theses only, with one relevant judgment per query. User questions
+  will be shorter and less lexical.
+- **Corpus scale.** The evaluated corpus reaches only 120k judgments, against 3M in
+  production. The trends are stable, but absolute scores will be lower.
+- **HNSW is not deterministic.** Repeated Weaviate runs differ by up to about 0.003
+  nDCG@10.

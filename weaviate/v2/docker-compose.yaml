@@ -1,4 +1,4 @@
-# Weaviate v2 stack for court judgments: Weaviate 1.40 + BGE-M3 served by HuggingFace TEI.
+# Weaviate v2 stack for court judgments: Weaviate 1.40 + mmlw-retrieval-e5-large served by HuggingFace TEI.
 # Runs side by side with the legacy stack in ../docker-compose.yaml (separate project name,
 # ports and volumes), so the old instance stays untouched while the new one is ingested.
 #
@@ -39,8 +39,9 @@ services:
       - ENABLE_MODULES=backup-filesystem
       - BACKUP_FILESYSTEM_PATH=/var/lib/weaviate-backups
       # Safety net only: collections set their quantizer explicitly in the schema.
-      # RQ 8-bit = 4x smaller in-RAM vectors at ~98-99% recall, no training step.
-      - DEFAULT_QUANTIZATION=${DEFAULT_QUANTIZATION:-rq-8}
+      # RQ 4-bit = ~8x smaller in-RAM vectors, no measurable nDCG loss vs fp32 on our
+      # judgments (docs/explanation/embedding-and-quantization.md), no training step.
+      - DEFAULT_QUANTIZATION=${DEFAULT_QUANTIZATION:-rq-4}
       - QUERY_DEFAULTS_LIMIT=25
       - QUERY_MAXIMUM_RESULTS=10000
       - DISK_USE_READONLY_PERCENTAGE=95
@@ -68,13 +69,15 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # BGE-M3 dense embeddings (1024 dims, 8192 token context).
+  # sdadas/mmlw-retrieval-e5-large dense embeddings (1024 dims, 512 token context).
+  # TEI adds no prompts: clients must prefix "query: " to queries and "passage: " to chunks,
+  # and chunk to <=480 tokens (BGE-M3 tokenizer) with 64 overlap.
   # Image tag "86-" targets Ampere sm_86 (RTX 3090 / A5000); use "hopper-" or plain "1.9.4" on other GPUs.
   embeddings:
     image: ghcr.io/huggingface/text-embeddings-inference:86-1.9.4
     command:
       - --model-id
-      - ${EMBEDDING_MODEL:-BAAI/bge-m3}
+      - ${EMBEDDING_MODEL:-sdadas/mmlw-retrieval-e5-large}
       - --max-client-batch-size
       - '256'
       - --max-batch-tokens
