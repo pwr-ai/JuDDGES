@@ -319,7 +319,19 @@
     "Łukasz",
     "Michał",
     "Chérifa",
-    "regenerable"
+    "regenerable",
+    "NDCG",
+    "PIRB",
+    "jina",
+    "BAAI",
+    "Prawnik",
+    "Specprawnik",
+    "Matryoshka",
+    "MTEB",
+    "quantizer",
+    "oddalił",
+    "kasację",
+    "bgem"
   ],
   "flagWords": [],
   "ignorePaths": [
