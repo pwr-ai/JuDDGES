@@ -16,6 +16,7 @@
 #         ZERO_SHOT_ONLY=1   skip fine-tuning and fine-tuned prediction
 #         SFT_MAX_TRAIN=N    fine-tune on the first N training documents for SFT_EPOCHS (default 1) epochs
 #         MAX_DOCS=N         predict and evaluate on the first N documents of the split only
+#         MAX_OUTPUT_TOKENS  overrides dataset.max_output_tokens (800) for prediction; shrinks the input budget by the same amount
 #         GPU_UTIL           overrides gpu_memory_utilization of the profile (shared GPU)
 #         JUDGE_MODEL=<name> run scripts/sft/llm_as_judge.py with this judge (needs OPENAI_API_KEY),
 #                            skipped when empty
@@ -76,6 +77,10 @@ predict() { # <mode> <model> <seed> <out_dir> [hydra overrides...]
     if [[ "$MAX_DOCS" != "0" ]]; then
         max_docs_arg=(max_docs="$MAX_DOCS")
     fi
+    local out_tokens_arg=()
+    if [[ -n "${MAX_OUTPUT_TOKENS:-}" ]]; then
+        out_tokens_arg=(dataset.max_output_tokens="$MAX_OUTPUT_TOKENS")
+    fi
     local gpu_util_arg=()
     if [[ -n "${GPU_UTIL:-}" ]]; then
         gpu_util_arg=(gpu_memory_utilization="$GPU_UTIL")
@@ -83,7 +88,7 @@ predict() { # <mode> <model> <seed> <out_dir> [hydra overrides...]
     run python scripts/sft/predict_vllm.py \
         dataset=$DATASET llm="$model" prompt=$PROMPT ie_schema=$IE_SCHEMA split=$SPLIT \
         +profile="${model}_predict_${HW_PROFILE}" guided_json=true max_model_len="$MAX_MODEL_LEN" \
-        random_seed="$seed" output_dir="$out_dir" "${max_docs_arg[@]}" "${gpu_util_arg[@]}" "$@"
+        random_seed="$seed" output_dir="$out_dir" "${max_docs_arg[@]}" "${gpu_util_arg[@]}" "${out_tokens_arg[@]}" "$@"
 }
 
 evaluate() { # <out_dir>
