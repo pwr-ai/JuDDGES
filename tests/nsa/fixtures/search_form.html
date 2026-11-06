@@ -1,0 +1,564 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+
+
+
+
+
+<html>
+
+<HEAD>
+
+
+
+<META NAME="ROBOTS" CONTENT="NOARCHIVE">
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<META name="GENERATOR" content="IBM Software Development Platform">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META name="Description" content="Centralna Baza Orzeczeń Naczelnego (NSA) i Wojewódzkich (WSA) Sądów Administracyjnych, Orzecznictwo NSA i WSA" />
+<link rel="shortcut icon" href="/img/favicon.ico" />
+
+<TITLE>
+
+
+
+Centralna Baza Orzeczeń Sądów Administracyjnych</TITLE>
+
+<!-- YUI scripts -->
+<link type="text/css" rel="stylesheet" href="/yui/container/assets/container.css">
+
+<script type="text/javascript" src="/yui/yahoo/yahoo-min.js"></script>
+<script type="text/javascript" src="/yui/event/event-min.js" ></script>
+<script type="text/javascript" src="/yui/dom/dom-min.js" ></script>
+<script type="text/javascript" src="/yui/dragdrop/dragdrop-min.js" ></script>
+<script type="text/javascript" src="/yui/connection/connection-min.js"></script>
+<script type="text/javascript" src="/yui/animation/animation-min.js"></script>
+
+<script type="text/javascript" src="/js/opcje7.js"></script>
+<script type="text/javascript" src="/js/zaznaczanie5.js" charset="windows-1250"></script>
+
+<!-- Skrypty kalendarza -->
+<script type="text/javascript" src="/js/CalendarPopup7.js" charset="windows-1250"></script>
+
+<!-- Skrypt formularza zapytań -->
+<script type="text/javascript" src="/js/query7.js" charset="windows-1250"></script>
+<script type="text/javascript" src="/js/slowniki7.js" charset="windows-1250"></script>
+<script type="text/javascript" src="/js/cal.js" charset="windows-1250"></script>
+
+<LINK href="/css/Master3.css" rel="stylesheet" type="text/css">
+<LINK href="/css/info.css" rel="stylesheet" type="text/css">
+<LINK href="/css/opcje.css" rel="stylesheet" type="text/css">
+
+<script type="text/javascript">
+   var ctx= "/cbo";
+</script>
+
+<LINK href="/css/orzeczenia2.css" rel="stylesheet" type="text/css">
+
+</HEAD>
+
+<BODY onLoad="qInit(); dodaCk();">
+
+<div class="tac">
+<div class="tal">
+<div class="tab">
+
+
+<TABLE id="header">
+    <TBODY>
+    <TR>
+		<TD id="logo">
+			<a href="http://www.nsa.gov.pl" target="nsa"><IMG src="/img/logo.gif" alt="Strona główna NSA http://www.nsa.gov.pl" title="Strona główna NSA http://www.nsa.gov.pl"></a>
+		</TD>
+		<TD id="desc">
+			<H1 class="naglowek" title="Formularz wyszukiwania CBO" ><a href="/cbo/query">Centralna Baza Orzeczeń Sądów Administracyjnych</a></H1>
+			<table id="q-link"><tr><td>
+					
+				
+					<span class="h-oper">Formularz wyszukiwania</span>
+							
+			</td>
+					    
+		    </tr></table>
+		</TD>
+	
+	</TR>
+	
+	</TBODY>
+</TABLE>
+
+
+<table class="top-linki">
+
+<tr>
+<td align="right">
+&nbsp;
+
+
+
+
+
+</td>
+</tr>
+
+</table>
+	
+
+
+
+
+<form name="QueryForm" method="post" action="/cbo/search">
+
+
+
+<div class="forma">
+
+
+   <TABLE id="qt" border="0" cellspacing="0" cellpadding="0">
+
+   
+		<TBODY>
+		
+<!-- Szukane słowa, frazy ---------------------------------------------------------------------- -->		
+
+			<TR>
+				<TD class="slowa" align="left">
+				<label for="wszystkieSlowa" class="fhelp"><a href="javascript:p3Help('wszystkie');">Szukane słowa</a></label></TD>
+				<TD></TD>
+				<TD>
+				
+				<input type="text" name="wszystkieSlowa" size="80" value="" class="qinput" id="wszystkieSlowa">
+				
+				</TD>
+				<TD></TD>
+			</TR>
+
+<!-- Część dokumentu w której ma być wyszukiwanie podanych słów -------------------------------- -->			
+
+			<TR>
+				<TD class="slowa" align="left" style="vertical-align: top;">
+				<label for="wystepowanie" class="fhelp"><a href="javascript:p3Help('wystepowanie');">Występujące w</a></label></TD>
+				<TD></TD>
+				<TD>
+				
+				<table width="100%" cellspacing="0" cellpadding="0">
+				    <tr>
+				    
+					<td style="white-space: nowrap; vertical-align: top;">
+					<select name="wystepowanie" class="sel_nob" id="wystepowanie"><option value="gdziekolwiek">gdziekolwiek</option>
+						<option value="w sentencji">sentencji</option>
+						<option value="w tezach">tezie</option>
+						<option value="w uzasadnieniu">uzasadnieniu</option></select>
+					&nbsp;&nbsp;
+					<input type="checkbox" name="odmiana" value="on" checked="checked" style="margin-left: 0; padding-left: 0;" id="z_odm"><span class="slowa-s fhelp"><a href="javascript:p3Help('z_odmiana');"> Z odmianą słów</a></span>
+					</td>
+					
+					</tr>
+					
+				</table>
+				</TD>
+				<TD></TD>
+			</TR>
+
+<tr><td colspan="4" class="space-down">&nbsp;</td></tr>
+			
+<!-- Sygnatura i sygnatury powiązane -------------------------------------------------- -->
+
+			<TR>
+				<TD class="slowa" align="left">
+				<label for="sygnatura" class="fhelp"><a href="javascript:p3Help('sygnatura');">Sygnatura</a></label></TD>
+				<TD></TD>
+				<TD>
+					<input type="text" name="sygnatura" size="80" value="" class="qinput" id="sygnatura">
+
+					
+				</TD>
+				<TD></TD>
+			</TR>
+						
+<!-- Sąd ----------------------------------------------------------------------------------------- -->
+
+			<TR>
+				<TD class="slowa" align="left"><label for="sad" class="fhelp"><a href="javascript:p3Help('sad');">Sąd</a></label></TD>
+				<TD></TD>
+				<TD>
+				 
+				<select name="sad" class="sel_rodzaj sel_nob" id="sad"><option value="dowolny">dowolny</option>
+						
+							<option value="Naczelny Sąd Administracyjny">Naczelny Sąd Administracyjny</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Białymstoku">Wojewódzki Sąd Administracyjny w Białymstoku</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Bydgoszczy">Wojewódzki Sąd Administracyjny w Bydgoszczy</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Gdańsku">Wojewódzki Sąd Administracyjny w Gdańsku</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Gliwicach">Wojewódzki Sąd Administracyjny w Gliwicach</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Gorzowie Wlkp.">Wojewódzki Sąd Administracyjny w Gorzowie Wlkp.</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Kielcach">Wojewódzki Sąd Administracyjny w Kielcach</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Krakowie">Wojewódzki Sąd Administracyjny w Krakowie</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Lublinie">Wojewódzki Sąd Administracyjny w Lublinie</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Łodzi">Wojewódzki Sąd Administracyjny w Łodzi</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Olsztynie">Wojewódzki Sąd Administracyjny w Olsztynie</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Opolu">Wojewódzki Sąd Administracyjny w Opolu</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Poznaniu">Wojewódzki Sąd Administracyjny w Poznaniu</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Rzeszowie">Wojewódzki Sąd Administracyjny w Rzeszowie</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Szczecinie">Wojewódzki Sąd Administracyjny w Szczecinie</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny w Warszawie">Wojewódzki Sąd Administracyjny w Warszawie</option>
+						
+							<option value="Wojewódzki Sąd Administracyjny we Wrocławiu">Wojewódzki Sąd Administracyjny we Wrocławiu</option>
+						
+							<option value="NSA w Warszawie (przed reformą)">NSA w Warszawie (przed reformą)</option>
+						
+							<option value="NSA oz. w Białymstoku">NSA oz. w Białymstoku</option>
+						
+							<option value="NSA oz. w Bydgoszczy">NSA oz. w Bydgoszczy</option>
+						
+							<option value="NSA oz. w Gdańsku">NSA oz. w Gdańsku</option>
+						
+							<option value="NSA oz. w Katowicach">NSA oz. w Katowicach</option>
+						
+							<option value="NSA oz. w Krakowie">NSA oz. w Krakowie</option>
+						
+							<option value="NSA oz. w Lublinie">NSA oz. w Lublinie</option>
+						
+							<option value="NSA oz. w Łodzi">NSA oz. w Łodzi</option>
+						
+							<option value="NSA oz. w Poznaniu">NSA oz. w Poznaniu</option>
+						
+							<option value="NSA oz. w Rzeszowie">NSA oz. w Rzeszowie</option>
+						
+							<option value="NSA oz. w Szczecinie">NSA oz. w Szczecinie</option>
+						
+							<option value="NSA oz. we Wrocławiu">NSA oz. we Wrocławiu</option></select>
+				</TD>
+				
+			</TR>	
+			
+<!-- Rodzaj orzeczenia ---------------------------------------------------------------------------- -->			
+
+			<TR>
+				<TD class="slowa" align="left"><label for="rodzaj" class="fhelp"><a href="javascript:p3Help('rodzaj');">Rodzaj orzeczenia</a></label></TD>
+				<TD></TD>
+				<TD><select name="rodzaj" class="sel_rodzaj sel_nob" id="rodzaj"><option value="dowolny">dowolny</option>
+						
+							<option value="Wyrok">Wyrok</option>
+						
+							<option value="Postanowienie">Postanowienie</option>
+						
+							<option value="Uchwała">Uchwała</option></select>
+				</TD>
+				<TD></TD>
+			</TR>
+			
+<!-- Symbole z możliwością podglądu do słownika ------------------------------------------- -->
+
+			<TR>
+				<TD class="slowa" align="left"><label for="symbole" class="fhelp"><a href="javascript:p3Help('symbole');">Symbol sprawy</a></label></TD>
+				<TD></TD>
+				<TD>
+				<input type="text" name="symbole" size="80" value="" class="qinput" id="symbole">
+				</TD>
+				<td>
+				<a href="javascript:sl('symbole');"><IMG src="/img/slownik.gif"/></A>
+				</TD>
+			</TR>
+						
+<!-- Zakres daty wydania orzeczenia ---------------------------------------------------- -->
+
+			<TR>
+				<TD class="slowa" align="left"><label for="odDaty" class="fhelp"><a href="javascript:p3Help('data_orzeczenia');">Data orzeczenia<br/><font size="-2">(RRRR-MM-DD)</font></a></label></TD>
+				<TD></TD>
+				<TD>
+					<input type="text" name="odDaty" size="10" value="" class="qinput" id="odDaty"> 
+					<A HREF="#" onClick="cal1xx.select(document.forms[document.forms.length-1].odDaty,'anchor1xx','yyyy-MM-dd'); return false;" 
+						NAME="anchor1xx" ID="anchor1xx"><IMG border="0" src="/img/calendar.gif"/></A>
+						
+					&nbsp;&nbsp;<span style="font-size: 15px;">do</span> &nbsp;
+					
+					<input type="text" name="doDaty" size="10" value="" class="qinput"> 
+					<A HREF="#" onClick="cal1xx.select(document.forms[document.forms.length-1].doDaty,'anchor2xx','yyyy-MM-dd'); return false;" 
+						NAME="anchor2xx" ID="anchor2xx"><IMG border="0" src="/img/calendar.gif"/></A>
+				</TD>
+				<TD></TD>
+			</TR>
+			
+<!-- Sędzia i funkcja, z możliwością podglądu do słownika  -------------------------------- -->
+
+			<TR>
+				<TD class="slowa" align="left" style="padding-top: 10px"><label for="sedziowie" class="fhelp"><a href="javascript:p3Help('sedziowie');">Sędzia</a></label></TD>
+				<TD class="czek">&nbsp;</TD>
+				<TD>
+					<input type="text" name="sedziowie" size="40" value="" class="qinput" id="sedziowie">
+
+				    <a href="javascript:sl('sedziowie');"><IMG src="/img/slownik.gif"/></A>
+				    &nbsp;&nbsp;&nbsp;
+				    				    
+				    <span class="fhelp" style="font-size: 15px;"><a href="javascript:p3Help('funkcja');">Funkcja </a></span> 
+				    <select name="funkcja" class="sel_funkcja sel_nob" id="funkcja"><option value="dowolna">dowolna</option>
+						
+							<option value="przewodniczący">przewodniczący</option>
+						
+							<option value="sprawozdawca">sprawozdawca</option>
+						
+							<option value="autor uzasadnienia">autor uzasadnienia</option></select>
+				</TD>
+				<TD></TD>
+			</TR>
+			
+<tr><td colspan="4" class="space-up">&nbsp;</td></tr>			
+
+			<TR>
+				<TD class="slowa" align="left" style="padding-top: 10px; vertical-align: top;"><label for="status">Status</label></TD>
+				<TD class="czek">&nbsp;</TD>
+				<TD>
+				<table style="width: 100%;" cellspacing="0" cellpadding="0" style="padding-top: 0;">
+				<tr>
+				<td style="vertical-align: top;">
+					<table id="ccc" cellspacing="0" cellpadding="0" style="padding-top: 0;">
+					<tr>
+						<td><span class="fhelp"><a href="javascript:p3Help('s_prawomocne');">Orzeczenie prawomocne</a></span></td>
+						<td><input type="checkbox" name="takPrawomocne" value="on" onclick="ccChange('t_prawomocne','n_prawomocne');" id="t_prawomocne"><label for="t_prawomocne"> Tak</label></td>
+						<td><input type="checkbox" name="niePrawomocne" value="on" onclick="ccChange('n_prawomocne','t_prawomocne');" id="n_prawomocne"><label for="n_prawomocne"> Nie</label></td>
+					</tr>
+					
+					<tr>
+						<td><span class="fhelp"><a href="javascript:p3Help('s_konczace');">Orzeczenie kończące</a></span></td>
+						<td><input type="checkbox" name="takKonczace" value="on" onclick="ccChange('t_konczace','n_konczace');" id="t_konczace"><label for="t_konczace"> Tak</label></td>
+						<td><input type="checkbox" name="nieKonczace" value="on" onclick="ccChange('n_konczace','t_konczace');" id="n_konczace"><label for="n_konczace"> Nie</label></td>
+					</tr>
+					
+						
+					
+															
+					
+					</table>
+				</td>
+
+				<td style="vertical-align: top;">				
+					<table id="ccc" cellspacing="0" cellpadding="0" style="padding-top: 0;">
+					<tr>
+						<td><span class="fhelp"><a href="javascript:p3Help('z_tezami');">Z tezą</a></span></td>
+						<td><input type="checkbox" name="takTezy" value="on" onclick="ccChange('t_tezy','n_tezy');" id="t_tezy"><label for="t_tezy"> Tak</label></td>
+						<td><input type="checkbox" name="nieTezy" value="on" onclick="ccChange('n_tezy','t_tezy');" id="n_tezy"><label for="n_tezy"> Nie</label></td>
+					</tr>
+					<tr>
+						<td><span class="fhelp"><a href="javascript:p3Help('z_uzasadnieniem');">Z uzasadnieniem</a></span></td>
+						<td><input type="checkbox" name="takUzasadnienie" value="on" onclick="ccChange('t_uzasadnienie','n_uzasadnienie');" id="t_uzasadnienie"><label for="t_uzasadnienie"> Tak</label></td>
+						<td><input type="checkbox" name="nieUzasadnienie" value="on" onclick="ccChange('n_uzasadnienie','t_uzasadnienie');" id="n_uzasadnienie"><label for="n_uzasadnienie"> Nie</label></td>
+					</tr>
+					<tr>
+						<td><span class="fhelp"><a href="javascript:p3Help('z_odrebnym');">Ze zdaniem odrębnym</a></span></td>
+						<td><input type="checkbox" name="takOdrebne" value="on" onclick="ccChange('t_odrebne','n_odrebne');" id="t_odrebne"><label for="t_odrebne"> Tak</label></td>
+						<td><input type="checkbox" name="nieOdrebne" value="on" onclick="ccChange('n_odrebne','t_odrebne');" id="n_odrebne"><label for="n_odrebne"> Nie</label></td>
+					</tr>
+					</table>
+				</td>
+				</tr>
+				</table>
+				</TD>
+				<TD></TD>
+			</TR>					
+								
+
+
+
+<tr name="dodatkowe" style=""><td colspan="4" class="space-up">&nbsp;</td></tr>
+
+
+			
+<!-- Rodzaj skarżonego organu ---------------------------------------------------------------- -->
+
+			<TR name="dodatkowe" id="tr_rodzaj_organu" style="">		
+			
+				<TD class="slowa" align="left"><label for="rodzaj_organu" class="fhelp"><a href="javascript:p3Help('rodzaj_organu');">Rodzaj skarżonego organu</a></label></TD>
+				<TD></TD>
+				<TD>
+				<input type="text" name="rodzaj_organu" size="80" value="" class="qinput" id="rodzaj_organu">
+				</TD>
+				<TD>
+				<a href="javascript:sl('rodzaj_organu');"><IMG src="/img/slownik.gif"/></A>
+				</TD>
+			</TR>			
+			
+			
+
+<!-- Hasła tematyczne ------------------------------------------------------------ -->
+
+			<TR name="dodatkowe" id="tr_hasla" style="">
+				<TD class="slowa" align="left"><label for="hasla" class="fhelp"><a href="javascript:p3Help('hasla');">Hasła tematyczne</a></label></TD>
+				<TD></TD>
+				<TD>
+				    <input type="text" name="hasla" size="80" value="" class="qinput" id="hasla">
+				</TD>
+				<TD>
+				<a href="javascript:sl('hasla');"><IMG src="/img/slownik.gif"/></A>
+				</TD>
+			</TR>
+
+
+						
+<!-- Powołane przepisy ----------------------------------------------------------- -->
+
+			<TR name="dodatkowe" id="tr_przepisy" style="">
+				<TD class="slowa" align="left"><label for="przepisy" class="fhelp"><a href="javascript:p3Help('powolane');">Powołane przepisy</a></label></TD>
+				<TD class="czek">&nbsp;</TD>
+				<TD>
+				<table cellspacing="0" cellpadding="0" style="width: 100%;"><tr>
+				<td style="text-align: left; padding: 0;">
+					<label for"akty" class="slowa-c fhelp"><a href="javascript:p3Help('akty');">Akt prawny</a></label> 
+					<input type="text" name="akty" size="30" value="" class="qinput" id="akty">
+					<a href="javascript:slap();"><IMG src="/img/slownik.gif"/></A>
+				</td>
+				<td style="text-align: right; padding: 0;">
+					<label class="slowa-c fhelp"><a href="javascript:p3Help('przepisy');">Przepis</a></label> 
+					<input type="text" name="przepisy" size="15" value="" class="qinput" id="przepisy">
+				</td>
+				</tr>
+				</table>
+				</TD>
+				<TD>
+				
+				</TD>
+			</TR>
+			
+<!-- Przeznaczenie do publikacji i publikacja -------------------------------- -->
+
+			<TR name="dodatkowe" id="tr_publikacje" style="">
+				<TD class="slowa" align="left"><label for="publikacje" class="fhelp"><a href="javascript:p3Help('publikacja');">Urzędowy zbiór orzeczeń</a></label></TD>
+				<TD class="czek"></TD>
+				<TD style="white-space: nowrap;">
+				<table cellspacing=0 cellpadding=0 style="width: 100%;">
+				
+				
+				
+				<tr>
+					<td style="text-align: left; padding: 0;">				    
+						<input type="checkbox" name="opublikowane" value="on" id="opublikowane"><label class="slowa-c" for="opublikowane"> Opublikowane</label>
+					</td>
+					<td style="text-align: right; padding: 0;">
+						<label for="publikacje" class="slowa-c" style="margin-top: 5px;">Rok, nr, poz </label>
+						&nbsp;
+						<input type="text" name="publikacje" size="35" value="" class="qinput" id="publikacje">
+					</td>
+				</tr>
+				
+				</table>
+
+				</TD>
+				<TD></TD>
+			</TR>			
+			
+<!-- Przeznaczenie do glosowania i glosy -------------------------------- -->			
+			
+			<TR name="dodatkowe" id="tr_glosy" style="">
+				<TD class=" slowa" align="left"><label for="glosy" class="fhelp"><a href="javascript:p3Help('glosy');">Glosy</a></label></TD>
+				<TD class="czek"></TD>
+				<TD style="white-space: nowrap;">
+				<table cellspacing=0 cellpadding=0 style="width: 100%;">
+				
+				
+				
+				<tr>
+					<td style="text-align: left; padding: 0;">				    
+						<input type="checkbox" name="glosowane" value="on" id="glosowane"><label class="slowa-c" for="glosowane"> Z glosą</label>
+					</td>
+					<td style="text-align: right; padding: 0;">
+						<label for="glosy" class="slowa-c" style="margin-top: 5px;">Publ. </label>
+						&nbsp;
+						<input type="text" name="glosy" size="35" value="" class="qinput" id="glosy">
+					</td>
+				</tr>
+				
+				</table>
+
+				</TD>
+				<TD></TD>
+			</TR>			
+			
+<!-- Przyciski końcowe -------------------------------------------------------------- -->											
+
+			<TR>
+				<TD class="space-up"></TD>
+				<TD class="space-up"></TD>
+				<TD class="space-up">
+				
+				<table width="100%"><tr>
+					<td style="vertical-align: bottom;">
+					<input type="button" name="clear" value="Wyczyść formularz" onclick="clearForm();" id="btnWyczysc">
+					</td>
+				    <td style="text-align: right;">
+				    <input type="submit" name="submit" value="Szukaj" style="font-size: 18pt;">
+				    </td>
+				</tr>
+				</table>
+				</TD>
+				<TD class="space-up"></TD>
+			</TR>
+			
+		</TBODY>
+	</TABLE>
+
+</div>
+
+</form>
+
+
+<DIV ID="caldiv" STYLE="position:absolute; visibility:hidden; background-color:white;"></DIV>
+<div id="errorMsg" style="display:none;border:1px solid #e00;background-color:#fee;padding:2px;margin-top:8px;width:300px;height: 50px;font:normal 12px Arial;color:#800"></div>
+
+<br><br>
+
+
+
+	<div class="instr"><a href="/instrukcja.html" target="cbois-help"><b>Opis zasad wyszukiwania</b></a></div>
+
+
+
+   <div class="disclaimer">Naczelny Sąd Administracyjny informuje, iż udostępniona w Internecie baza orzeczeń służy wyłącznie celom informacyjnym oraz edukacyjnym i nie ma statusu zbioru urzędowego. Znajdujące się w niej orzeczenia są anonimizowane z uwzględnieniem celów wynikających z przepisów ustawy o ochronie danych osobowych i innych regulacji szczególnych.
+
+<p> <b>W ramach naszej witryny stosujemy pliki cookies</b> w celu świadczenia Państwu usług na najwyższym poziomie, w tym w celu ułatwienia korzystania z serwisu i w celach statystycznych. Korzystanie z witryny bez zmiany ustawień dotyczących cookies oznacza, że będą one zamieszczane w Państwa urządzeniu końcowym. W każdej chwili mogą Państwo dokonać zmiany warunków przechowywania cookies lub uzyskiwania do nich dostępu poprzez modyfikację ustawień w Państwa przeglądarce internetowej. </p>
+
+<p><b><a href="https://nsa.gov.pl/dokumenty/deklaracja-dostepnosci-cbosa/"> Deklaracja dostępności</a></b></div>
+
+
+<br>
+
+<hr style="margin-bottom:1"/>
+
+<div id="sp">Powered by SoftProdukt</div>
+
+
+</div></div></div>
+
+
+
+
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-1768873-2', 'nsa.gov.pl');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+</BODY>
+</html>

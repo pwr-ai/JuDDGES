@@ -41,15 +41,24 @@ class NSAScraper:
     """
 
     def __init__(
-        self, user_agent: str, proxy_config: dict[str, str] | None = None, wait: bool = True
+        self,
+        user_agent: str,
+        proxy_config: dict[str, str] | None = None,
+        wait: bool = True,
+        wait_range: tuple[float, float] = (0.5, 1.5),
     ) -> None:
         """
         Args:
             user_agent: User agent string to use for requests
             proxy_config: Optional proxy configuration in format {'http': 'http://proxy:port', 'https': 'https://proxy:port'}
             wait: Whether to add random delays between requests (default: True)
+            wait_range: (min, max) seconds of the uniform random delay after every request
+                (used only if wait is True; default: (0.5, 1.5), ~1 s on average)
         """
+        if wait_range[0] < 0 or wait_range[0] > wait_range[1]:
+            raise ValueError(f"Invalid wait_range: {wait_range}")
         self.wait = wait
+        self.wait_range = wait_range
         self.browser = mechanicalsoup.StatefulBrowser(
             user_agent=user_agent,
             requests_adapters={
@@ -57,14 +66,16 @@ class NSAScraper:
                     max_retries=Retry(
                         total=10,
                         backoff_factor=0.1,
-                        status_forcelist=[500, 502, 503, 504, 403, 429],
+                        status_forcelist=[500, 502, 503, 504, 429],
+                        respect_retry_after_header=True,
                     )
                 ),
                 "http://": HTTPAdapter(
                     max_retries=Retry(
                         total=10,
                         backoff_factor=0.1,
-                        status_forcelist=[500, 502, 503, 504, 403, 429],
+                        status_forcelist=[500, 502, 503, 504, 429],
+                        respect_retry_after_header=True,
                     )
                 ),
             },
@@ -81,21 +92,21 @@ class NSAScraper:
         tries=5,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
     )
-    def search_documents_for_date(self, date: str) -> dict[int, list[str] | None] | None:
+    def search_documents_for_date(
+        self, date: str, with_reasons: bool | None = None
+    ) -> dict[int, list[str] | None] | None:
         """Search for documents published on a specific date.
 
         Args:
             date: Date in YYYY-MM-DD format
+            with_reasons: True to find only judgments with reasons ("Uzasadnienie"), False to find
+                only judgments without them, None to not filter on this
 
         Returns:
             Dictionary mapping page numbers to lists of document IDs, or None if no documents found
         """
-        final_num_documents = self.get_num_docs_for_date(date)
-        self._browser_open("https://orzeczenia.nsa.gov.pl/cbo")
-        self.browser.select_form()
-        self.browser["odDaty"] = date
-        self.browser["doDaty"] = date
-        self._browser_submit_selected()
+        final_num_documents = self.get_num_docs_for_date(date, with_reasons)
+        self._submit_date_search(date, with_reasons)
         if self._any_documents_found(self.browser):
             documents = self._retrieve_documents()
             num_documents = sum(map(lambda x: len(x) if x else 0, documents.values()))
@@ -135,25 +146,39 @@ class NSAScraper:
             NoNumberOfDocumentsFound,
         ),
     )
-    def get_num_docs_for_date(self, date: str) -> int:
+    def get_num_docs_for_date(self, date: str, with_reasons: bool | None = None) -> int:
         """Get the total number of documents published on a specific date.
 
         Args:
             date: Date in YYYY-MM-DD format
+            with_reasons: True to count only judgments with reasons ("Uzasadnienie"), False to count
+                only judgments without them, None to not filter on this
 
         Returns:
             Number of documents found for the given date
         """
-        self._browser_open("https://orzeczenia.nsa.gov.pl/cbo")
-        self.browser.select_form()
-        self.browser["odDaty"] = date
-        self.browser["doDaty"] = date
-        self._browser_submit_selected()
+        self._submit_date_search(date, with_reasons)
         if self._any_documents_found(self.browser):
             num_documents = self._extract_document_count(self.browser.page.prettify())
             return num_documents
         else:
             return 0
+
+    def _submit_date_search(self, date: str, with_reasons: bool | None = None) -> None:
+        """Open the search form, fill in the date (and reasons filter) and submit it.
+
+        Args:
+            date: Date in YYYY-MM-DD format
+            with_reasons: True ticks only "Z uzasadnieniem: Tak", False ticks only "Nie",
+                None ticks neither
+        """
+        self._browser_open("https://orzeczenia.nsa.gov.pl/cbo")
+        form = self.browser.select_form()
+        self.browser["odDaty"] = date
+        self.browser["doDaty"] = date
+        if with_reasons is not None:
+            form.set_checkbox({"takUzasadnienie" if with_reasons else "nieUzasadnienie": True})
+        self._browser_submit_selected()
 
     def _browser_open(self, url: str) -> None:
         """Open a URL in the browser.
@@ -177,9 +202,7 @@ class NSAScraper:
         """
         response.raise_for_status()
         if self.wait:
-            # wait random from normal distribution
-            time_to_wait = random.normalvariate(1, 0.5)
-            time.sleep(time_to_wait if time_to_wait > 0 else 0)
+            time.sleep(random.uniform(*self.wait_range))
         if not self._correct_page():
             raise IncorrectPage(f"Incorrect page: {self.browser.page.text}")
 
@@ -201,7 +224,7 @@ class NSAScraper:
         Returns:
             Dictionary mapping page numbers to lists of document IDs or None if no documents found
         """
-        page_links = self.browser.links(url_regex="^/cbo/find\?p=")
+        page_links = self.browser.links(url_regex=r"^/cbo/find\?p=")
         if not page_links:
             last_page = 1
         else:

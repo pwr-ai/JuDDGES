@@ -168,6 +168,20 @@ PYARROW_SCHEMA = pa.schema(
 )
 
 
+def has_reasons(page_html: str) -> bool:
+    """Check whether a judgment page contains the reasons ("Uzasadnienie") section.
+
+    Args:
+        page_html: HTML content of the judgment page
+
+    Returns:
+        True if the page has a non-empty reasons section, False if only e.g. "Sentencja" is present
+    """
+    soup = BeautifulSoup(page_html, "html.parser")
+    sections = NSADataExtractor()._extract_text_sections(soup)
+    return bool(sections.get(FIELD_MAP["Uzasadnienie"]))
+
+
 class NSADataExtractor:
     """Extractor for structured data from raw NSA judgment HTML pages.
 
