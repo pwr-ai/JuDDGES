@@ -52,10 +52,14 @@ from juddges.settings import CONFIG_PATH
 
 client = connect_local(api_key="<key from .env>")  # ports 8110 / 50061
 ie = load_ie_schema(CONFIG_PATH / "ie_schema" / "swiss_franc_loans.yaml")
-create_collections(client, SchemaConfig(chunk_shards=8), ie_schemas=[ie])  # skips existing collections
+create_collections(client, SchemaConfig(chunk_shards=8), ie_schemas=[ie])  # existing collections: only missing properties are added
 ```
 
 Set the shard counts before the first ingest: they cannot be changed afterwards.
+On collections that already exist, `create_collections` leaves vectors, sharding and the inverted-index config
+alone and only adds missing properties (including those of the given IE schemas). A property that exists with
+another type raises. One whose index flags, tokenization or nested keys differ only logs a warning, because
+Weaviate cannot change those in place: to change them, create a new collection and re-ingest.
 
 To add another IE schema to existing collections (idempotent, existing properties are skipped). Do it
 before ingesting chunks if the flat enum copies should be on chunks:

@@ -114,7 +114,7 @@ Index column: `filter` = filterable, `BM25` = searchable, `range` = range filter
 | `court_name`, `department_name`: FIELD instead of WORD tokenization | An exact filter on "Sąd Okręgowy w Krakowie" must not match "Sąd Apelacyjny w Krakowie". |
 | `title`, `summary`, `thesis`: BM25 only, not filterable | Nothing filters on long text. |
 | `source_url`: stored only | Looked up through `source_id`. |
-| `extracted_legal_bases`: `object[]` instead of a JSON string | The structure is fixed (see above). Stored only, because nested paths cannot be filtered. |
+| `extracted_legal_bases`: `object[]` instead of a JSON string | The structure is fixed (see above). Stored only, because nested-path filtering is a disabled-by-default preview feature. |
 | `parties`, `legal_analysis`, `judgment_specific`: JSON string, stored only | The extractor does not fix their shape, so there is no safe `nestedProperties`. |
 | `legal_concepts`: `text[]`, stored only | The extractor returns an array of strings. |
 | One vector over truncated `full_text` replaced by `thesis` and `summary` vectors | Full text is covered by chunk vectors. |
@@ -142,8 +142,9 @@ is enabled for chunks.
 
 Generated from `configs/ie_schema/<name>.yaml` by `juddges/data/weaviate_v2/ie_properties.py`
 (`load_ie_schema`, `ie_properties`, `ie_chunk_properties`, `build_ie_payload`, `ie_chunk_payload`,
-`add_ie_schema`). Weaviate 1.40 stores `object` properties but fails to filter by a nested path
-(`invalid where filter`), so each schema produces a stored object plus flat, filterable copies.
+`add_ie_schema`). Weaviate 1.40 stores `object` properties, but filtering by a nested path is a preview feature that is off by
+default (`filtering on nested properties is a preview feature ... WEAVIATE_PREVIEW_NESTED_FILTERING`). So
+each schema produces a stored object plus flat, filterable copies that work on a default server.
 
 | Property | Type | Notes |
 |---|---|---|
@@ -179,6 +180,25 @@ Override it per call:
 - `list_enum=False`, `enum=False`, ... switch whole categories off.
 - `chunk_kinds`: scalar kinds whose flat copies are also written to chunks. Default `{IeKind.ENUM}`. Lists are
   never copied to chunks.
+- `chunk_keys`: per-schema allowlist, `{"swiss_franc_loans": frozenset({"typ_sadu", "data_wyroku"})}`. A schema
+  listed there ignores `chunk_kinds`: exactly these scalar keys (YAML key or sanitized name) are copied, an empty
+  set copies none, and unknown or non-scalar keys raise `ValueError`.
+
+#### Chunk copies cost index space
+
+Each chunk copy is an extra inverted index over every chunk (~54M objects), and a value is stored on each
+chunk of a judgment. The default (all scalar enums) puts these on chunks per schema:
+
+| Schema | Keys | Flat copies on judgments | Copies on chunks (default) |
+|---|---|---|---|
+| `swiss_franc_loans`, `swiss_franc_loans_refined` | 44 | 37 | 34 |
+| `personal_rights`, `personal_rights_refined` | 12 | 10 | 4 |
+| `en_appealcourt` | 43 | 18 | 0 (only lists) |
+
+The copies pay off when a query filters on them and needs ANN pre-filtering inside the chunk index (it avoids a
+join through `parent_judgment`). For a schema where only a few keys are used as filters, set `chunk_keys` to
+those and keep the rest on judgments only. Filtering judgments first and then searching chunks by
+`judgment_id` stays possible for every key.
 
 Add the IE schema to the chunk collection before ingesting chunks: a property added later is indexed only for
 objects written afterwards.
@@ -187,7 +207,9 @@ objects written afterwards.
 
 - Names: Polish diacritics are transliterated, other invalid characters become `_`, repeated underscores are
   collapsed (`__` is the separator), a leading digit gets a `_` prefix and the first letter is lowercased
-  (`ConvictPleaDate` -> `convictPleaDate`). Two keys that map to the same name raise `ValueError`.
+  (`ConvictPleaDate` -> `convictPleaDate`). Two keys that map to the same name raise `ValueError`, and so do names that clash across IE schemas (two stems
+  that sanitize alike, or `ie_a_meta__model` of schema `a` vs key `model` of schema `a_meta`), checked in
+  `create_collections` and `add_ie_schema` against the other schemas given and those already on `Judgments`.
   Unsupported YAML types raise as well.
 - `build_ie_payload(schema, result, schema_version=, model=, extracted_at=)` returns the properties of one
   judgment. Null, empty and unparseable values are dropped, dates become `YYYY-MM-DDTHH:MM:SSZ` (UTC),
