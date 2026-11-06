@@ -33,6 +33,56 @@ curl -s localhost:8111/embed -H 'Content-Type: application/json' \
   -d '{"inputs":["query: Sąd Najwyższy oddalił kasację."]}'                                 # 1024 floats
 ```
 
+## Create the collections
+
+The schema (`Judgments` and `JudgmentChunks`, RQ 4-bit, Polish stopwords) is defined in
+`juddges/data/weaviate_v2/`. Property tables and the IE naming rules are in the
+[Weaviate v2 schema reference](../../reference/weaviate-v2-schema.md).
+
+```python
+from juddges.data.weaviate_v2.ie_properties import add_ie_schema, load_ie_schema
+from juddges.data.weaviate_v2.schema import (
+    JUDGMENT_CHUNKS_COLLECTION,
+    JUDGMENTS_COLLECTION,
+    SchemaConfig,
+    connect_local,
+    create_collections,
+)
+from juddges.settings import CONFIG_PATH
+
+client = connect_local(api_key="<key from .env>")  # ports 8110 / 50061
+ie = load_ie_schema(CONFIG_PATH / "ie_schema" / "swiss_franc_loans.yaml")
+create_collections(client, SchemaConfig(chunk_shards=8), ie_schemas=[ie])  # existing collections: only missing properties are added
+```
+
+Set the shard counts before the first ingest: they cannot be changed afterwards.
+On collections that already exist, `create_collections` leaves vectors, sharding and the inverted-index config
+alone and only adds missing properties (including those of the given IE schemas). A property that exists with
+another type raises. One whose index flags, tokenization or nested keys differ only logs a warning, because
+Weaviate cannot change those in place: to change them, create a new collection and re-ingest.
+
+To add another IE schema to existing collections (idempotent, existing properties are skipped). Do it
+before ingesting chunks if the flat enum copies should be on chunks:
+
+```python
+add_ie_schema(
+    client.collections.get(JUDGMENTS_COLLECTION),
+    CONFIG_PATH / "ie_schema" / "personal_rights.yaml",
+    chunk_collection=client.collections.get(JUDGMENT_CHUNKS_COLLECTION),
+)
+```
+
+Integration tests against a throwaway Weaviate:
+
+```bash
+docker run -d --rm --name wv-schema-test -p 127.0.0.1:8119:8080 -p 127.0.0.1:50069:50051 \
+  -e AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true -e DEFAULT_VECTORIZER_MODULE=none \
+  -e PERSISTENCE_DATA_PATH=/tmp/w -e CLUSTER_HOSTNAME=n1 -e RAFT_BOOTSTRAP_EXPECT=1 \
+  cr.weaviate.io/semitechnologies/weaviate:1.40.2
+WEAVIATE_TEST_URL=http://127.0.0.1:8119 pytest tests/weaviate_v2 -m requires_weaviate
+docker stop wv-schema-test
+```
+
 ## Configuration notes
 
 - **GPU image tag.** The `86-` tag targets Ampere `sm_86` (RTX 3090, A5000). Use
