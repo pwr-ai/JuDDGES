@@ -3,7 +3,7 @@
 For every schema file `<name>.yaml` a judgment (and optionally chunk) collection gets:
 
 - `ie_<name>`: one `object` property holding the full extraction result. It is stored only,
-  because Weaviate 1.40 cannot filter by nested path (`invalid where filter`).
+  because nested-path filtering is a preview feature, off by default in Weaviate 1.40.
 - `ie_<name>__<key>`: flat top-level copies of the keys worth filtering on (see `FlatCopyPolicy`).
 - `ie_<name>_meta__schema_version|model|extracted_at`: provenance of the extraction.
 
@@ -16,6 +16,7 @@ import unicodedata
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
+from decimal import Decimal, InvalidOperation
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
@@ -95,6 +96,11 @@ class FlatCopyPolicy:
             description carries no "YYYY-MM-DD" hint.
         chunk_kinds: scalar kinds whose flat copies are also written to chunks (denormalized for
             pre-filtering ANN search). Default only enums: cheap, low cardinality.
+        chunk_keys: per-schema allowlist {schema name: keys}. A schema listed here ignores
+            `chunk_kinds`: exactly the listed keys (YAML key or sanitized name) are copied to
+            chunks, an empty set means none. Every listed key must be a scalar with a flat copy,
+            otherwise parsing raises. Use it to cap chunk-collection size, where every copy costs
+            an inverted index over ~54M objects.
     """
 
     enum: bool = True
@@ -106,6 +112,7 @@ class FlatCopyPolicy:
     exclude: frozenset[str] = frozenset()
     kind_overrides: Mapping[str, IeKind] = field(default_factory=dict)
     chunk_kinds: frozenset[IeKind] = frozenset({IeKind.ENUM})
+    chunk_keys: Mapping[str, frozenset[str]] = field(default_factory=dict)
 
 
 DEFAULT_POLICY = FlatCopyPolicy()
@@ -206,6 +213,7 @@ def parse_ie_schema(
     schema_name = sanitize_name(name, lower_first=False)
     keys: list[IeKey] = []
     seen: dict[str, str] = {}
+    allow = policy.chunk_keys.get(schema_name)
     for key, key_spec in spec.items():
         prop = sanitize_name(str(key))
         if prop in seen:
@@ -225,11 +233,27 @@ def parse_ie_schema(
                 required=bool(key_spec.get("required", True)),
                 choices=tuple(str(c) for c in key_spec.get("choices") or () if c is not None),
                 flat_copy=flat,
-                on_chunks=flat and not is_list and kind in policy.chunk_kinds,
+                on_chunks=flat
+                and not is_list
+                and (
+                    kind in policy.chunk_kinds
+                    if allow is None
+                    else (str(key) in allow or prop in allow)
+                ),
             )
         )
     schema = IeSchema(name=schema_name, keys=tuple(keys))
     _check_name_lengths(schema)
+    if allow is not None:
+        known = {k.key for k in keys} | {k.prop for k in keys}
+        if unknown := sorted(allow - known):
+            raise ValueError(f"schema {name!r}: chunk_keys has unknown keys {unknown}")
+        if bad := sorted(
+            k.key for k in keys if (k.key in allow or k.prop in allow) and not k.on_chunks
+        ):
+            raise ValueError(
+                f"schema {name!r}: chunk_keys {bad} are not scalar keys with a flat copy"
+            )
     return schema
 
 
@@ -254,7 +278,7 @@ def load_ie_schema(path: Path, policy: FlatCopyPolicy = DEFAULT_POLICY) -> IeSch
 
 
 def _nested_property(k: IeKey) -> wvcc.Property:
-    # Not indexed: nested paths cannot be filtered/searched in Weaviate 1.40, so indexes are waste.
+    # Not indexed: nested paths are not filterable by default in Weaviate 1.40, so indexes are waste.
     data_type = _ARRAY_TYPE[k.kind] if k.is_list else _SCALAR_TYPE[k.kind]
     return wvcc.Property(
         name=k.prop,
@@ -351,10 +375,44 @@ def to_rfc3339(value: Any) -> Optional[str]:
             )
         else:
             return None
-    except ValueError:
+        dt = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+        return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    except (ValueError, OverflowError):
         return None
-    dt = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
-    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+INT64_MIN, INT64_MAX = -(2**63), 2**63 - 1
+_INT_TEXT = re.compile(r"[+-]?[0-9]+")
+
+
+def _to_int64(value: Any) -> Optional[int]:
+    """Exact integer value of an int, integral float or integer-like string; None if not int64."""
+    if isinstance(value, int):
+        number = value
+    elif isinstance(value, float):
+        if not value.is_integer():  # also rejects nan/inf
+            return None
+        number = int(value)
+    elif isinstance(value, str):
+        text = value.strip()
+        if _INT_TEXT.fullmatch(text):
+            number = int(text)
+        elif "_" in text:  # Decimal() would accept "1_000"
+            return None
+        else:  # "4.0", "1e3": exact decimal arithmetic, never via float
+            try:
+                dec = Decimal(text)
+            except InvalidOperation:
+                return None
+            if not dec.is_finite() or dec.adjusted() > 19 or dec != dec.to_integral_value():
+                return None
+            number = int(dec)
+    else:
+        return None
+    if not INT64_MIN <= number <= INT64_MAX:
+        logger.debug("integer {} is outside int64, dropped", number)
+        return None
+    return number
 
 
 def _coerce_scalar(kind: IeKind, value: Any) -> Any:
@@ -375,14 +433,14 @@ def _coerce_scalar(kind: IeKind, value: Any) -> Any:
         return {"true": True, "false": False}.get(text)
     if isinstance(value, bool):  # bool is an int subclass; never a number here
         return None
+    if kind == IeKind.INTEGER:
+        return _to_int64(value)
     try:
         number = float(value.strip()) if isinstance(value, str) else float(value)
     except (TypeError, ValueError):
         return None
     if not math.isfinite(number):
         return None
-    if kind == IeKind.INTEGER:
-        return int(number) if number.is_integer() else None
     return number
 
 
@@ -442,21 +500,109 @@ def ie_chunk_payload(schema: IeSchema, payload: Mapping[str, Any]) -> dict[str, 
 
 # --- collection updates ------------------------------------------------------------------------
 
+_FLAGS = (
+    ("index_filterable", "indexFilterable"),
+    ("index_searchable", "indexSearchable"),
+    ("index_range_filters", "indexRangeFilters"),
+)
 
-def _add_missing_properties(collection: Any, props: Iterable[wvcc.Property]) -> list[str]:
-    existing = {p.name: p.data_type for p in collection.config.get().properties}
+
+def property_drift(existing: Any, wanted: wvcc.Property) -> list[str]:
+    """Differences between an existing property (collection config) and the wanted one.
+
+    Index flags and tokenization are immutable and nested properties of an `object` cannot be
+    extended in Weaviate, so none of these can be fixed in place. Returns human-readable messages.
+    """
+    messages: list[str] = []
+    for existing_attr, wanted_attr in _FLAGS:
+        want = getattr(wanted, wanted_attr)
+        if want is not None and bool(getattr(existing, existing_attr, None)) != bool(want):
+            messages.append(
+                f"{existing_attr} is {getattr(existing, existing_attr, None)}, wanted {want}"
+            )
+    want_tok, have_tok = wanted.tokenization, getattr(existing, "tokenization", None)
+    if want_tok is not None and have_tok is not None and want_tok != have_tok:
+        messages.append(f"tokenization is {have_tok.value}, wanted {want_tok.value}")
+    if wanted.nestedProperties:
+        have = {n.name: n.data_type for n in getattr(existing, "nested_properties", None) or ()}
+        missing = sorted(n.name for n in wanted.nestedProperties if n.name not in have)
+        changed = sorted(
+            n.name for n in wanted.nestedProperties if n.name in have and have[n.name] != n.dataType
+        )
+        if missing:
+            messages.append(f"nested keys missing and impossible to add: {missing}")
+        if changed:
+            messages.append(f"nested keys with a different type: {changed}")
+    return messages
+
+
+def add_missing_properties(collection: Any, props: Iterable[wvcc.Property]) -> list[str]:
+    """Add the properties that are not on the collection yet. Idempotent.
+
+    A property that exists with another type raises `ValueError`. One that exists with the same
+    type but a different index config (or nested keys) is skipped with a warning, as Weaviate
+    cannot change that in place. Returns the names of the added properties.
+    """
+    existing = {p.name: p for p in collection.config.get().properties}
     added: list[str] = []
     for prop in props:
-        if prop.name in existing:
-            if existing[prop.name] != prop.dataType:
-                raise ValueError(
-                    f"{collection.name}.{prop.name} exists as {existing[prop.name].value}, "
-                    f"schema wants {prop.dataType.value}"
-                )
+        have = existing.get(prop.name)
+        if have is None:
+            collection.config.add_property(prop)
+            added.append(prop.name)
             continue
-        collection.config.add_property(prop)
-        added.append(prop.name)
+        if have.data_type != prop.dataType:
+            raise ValueError(
+                f"{collection.name}.{prop.name} exists as {have.data_type.value}, "
+                f"schema wants {prop.dataType.value}"
+            )
+        for message in property_drift(have, prop):
+            logger.warning("{}.{} differs from the schema: {}", collection.name, prop.name, message)
     return added
+
+
+def existing_ie_schema_names(collection: Any) -> list[str]:
+    """Names of the IE schemas that already have their `ie_<name>` object on the collection."""
+    return [
+        p.name[len(IE_PREFIX) :]
+        for p in collection.config.get().properties
+        if p.name.startswith(IE_PREFIX) and p.data_type == wvcc.DataType.OBJECT
+    ]
+
+
+def check_ie_collisions(schemas: Iterable[IeSchema], existing_names: Iterable[str] = ()) -> None:
+    """Raise `ValueError` if property names of different IE schemas can clash.
+
+    Covers two stems that sanitize to the same name, any generated name produced twice, and
+    schemas already on a collection (`existing_names`, see `existing_ie_schema_names`) whose
+    reserved prefixes (`ie_<name>__`, `ie_<name>_meta__`) a new schema would write into, e.g.
+    schema `a` meta `ie_a_meta__model` vs schema `a_meta` key `model`.
+    """
+    schemas = list(schemas)
+    seen_names: set[str] = set()
+    for s in schemas:
+        if s.name in seen_names:
+            raise ValueError(f"IE schema name {s.name!r} given twice (or two stems sanitize to it)")
+        seen_names.add(s.name)
+    owners: dict[str, str] = {}
+    for s in schemas:
+        for prop in ie_properties(s) + ie_chunk_properties(s):
+            if (owner := owners.setdefault(prop.name, s.name)) != s.name:
+                raise ValueError(f"IE schemas {owner!r} and {s.name!r} both produce {prop.name!r}")
+    for s in schemas:
+        for other in existing_names:
+            if other == s.name:
+                continue
+            prefixes = (
+                f"{IE_PREFIX}{other}{FLAT_SEP}",
+                f"{IE_PREFIX}{other}{META_INFIX}{FLAT_SEP}",
+            )
+            for prop in ie_properties(s) + ie_chunk_properties(s):
+                if prop.name.startswith(prefixes) or prop.name == f"{IE_PREFIX}{other}":
+                    raise ValueError(
+                        f"IE schema {s.name!r} property {prop.name!r} collides with "
+                        f"existing IE schema {other!r}"
+                    )
 
 
 def add_ie_schema(
@@ -468,15 +614,19 @@ def add_ie_schema(
 ) -> list[str]:
     """Add the properties of one IE schema to an existing collection. Idempotent.
 
-    Properties that already exist with the same type are skipped; with a different type it raises.
+    Properties that already exist with the same type are skipped (warning when their index
+    config or nested keys differ from the YAML, which Weaviate cannot change in place); a
+    different type raises. Raises `ValueError` if the schema's names collide with another IE
+    schema already on the collection.
     Pass `chunk_collection` to also add the flat chunk copies. Do that before ingesting chunks:
     properties added later are indexed only for objects written (or updated) afterwards.
 
     Returns the names of the properties that were actually added (judgment collection first).
     """
     schema = load_ie_schema(yaml_path, policy)
-    added = _add_missing_properties(collection, ie_properties(schema))
+    check_ie_collisions([schema], existing_ie_schema_names(collection))
+    added = add_missing_properties(collection, ie_properties(schema))
     if chunk_collection is not None:
-        added += _add_missing_properties(chunk_collection, ie_chunk_properties(schema))
+        added += add_missing_properties(chunk_collection, ie_chunk_properties(schema))
     logger.info("IE schema {}: added {} properties", schema.name, len(added))
     return added

@@ -263,8 +263,11 @@ def test_insert_filter_hybrid(created, ie_franc) -> None:
     stored = res.objects[0].properties["ie_swiss_franc_loans"]
     assert stored["data_aneksu"].date().isoformat() == "2020-01-15"
 
-    # nested paths are NOT filterable on this Weaviate version (why flat copies exist)
-    with pytest.raises(Exception):
+    # nested paths are not filterable by default: preview feature behind
+    # WEAVIATE_PREVIEW_NESTED_FILTERING (why flat copies exist)
+    with pytest.raises(
+        weaviate.exceptions.WeaviateQueryError, match="nested properties is a preview feature"
+    ):
         judgments.query.fetch_objects(
             filters=Filter.by_property("ie_swiss_franc_loans.data_wyroku").is_none(False)
         )

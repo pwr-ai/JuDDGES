@@ -22,7 +22,14 @@ from loguru import logger
 import weaviate
 import weaviate.classes.config as wvcc
 from juddges.data.documents_weaviate_db import POLISH_STOPWORDS
-from juddges.data.weaviate_v2.ie_properties import IeSchema, ie_chunk_properties, ie_properties
+from juddges.data.weaviate_v2.ie_properties import (
+    IeSchema,
+    add_missing_properties,
+    check_ie_collisions,
+    existing_ie_schema_names,
+    ie_chunk_properties,
+    ie_properties,
+)
 from juddges.settings import VectorName
 
 JUDGMENTS_COLLECTION = "Judgments"
@@ -261,11 +268,16 @@ def create_collections(
     config: SchemaConfig = SchemaConfig(),
     ie_schemas: Sequence[IeSchema] = (),
 ) -> None:
-    """Create `Judgments` and `JudgmentChunks` if they do not exist yet.
+    """Create `Judgments` and `JudgmentChunks`, or bring existing ones up to date.
 
-    `ie_schemas` are added at creation time, including the flat chunk copies. Further IE schemas
-    can be added later with `ie_properties.add_ie_schema`.
+    `ie_schemas` are added at creation time, including the flat chunk copies. On a collection
+    that already exists, vectors, sharding and inverted-index config are left alone (immutable),
+    and `add_missing_properties` adds the properties that are missing (static ones and the IE
+    ones). Existing properties with another type raise; ones with a different index config or
+    nested keys only log a warning. IE name collisions between the given schemas, or with IE
+    schemas already on `Judgments`, raise `ValueError` before anything is changed.
     """
+    check_ie_collisions(ie_schemas)
     judgment_props = judgments_properties()
     chunk_props = judgment_chunks_properties()
     for ie in ie_schemas:
@@ -273,7 +285,12 @@ def create_collections(
         chunk_props += ie_chunk_properties(ie)
 
     if client.collections.exists(JUDGMENTS_COLLECTION):
-        logger.info("Collection '{}' already exists, skipping", JUDGMENTS_COLLECTION)
+        judgments = client.collections.get(JUDGMENTS_COLLECTION)
+        check_ie_collisions(ie_schemas, existing_ie_schema_names(judgments))
+        added = add_missing_properties(judgments, judgment_props)
+        logger.info(
+            "Collection '{}' already exists, added {} properties", JUDGMENTS_COLLECTION, len(added)
+        )
     else:
         client.collections.create(
             name=JUDGMENTS_COLLECTION,
@@ -289,7 +306,14 @@ def create_collections(
         logger.info("Collection '{}' created", JUDGMENTS_COLLECTION)
 
     if client.collections.exists(JUDGMENT_CHUNKS_COLLECTION):
-        logger.info("Collection '{}' already exists, skipping", JUDGMENT_CHUNKS_COLLECTION)
+        added = add_missing_properties(
+            client.collections.get(JUDGMENT_CHUNKS_COLLECTION), chunk_props
+        )
+        logger.info(
+            "Collection '{}' already exists, added {} properties",
+            JUDGMENT_CHUNKS_COLLECTION,
+            len(added),
+        )
     else:
         client.collections.create(
             name=JUDGMENT_CHUNKS_COLLECTION,
