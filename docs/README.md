@@ -49,6 +49,7 @@ Task-oriented recipes for common problems. See the [full how-to index](how-to/).
 **Data acquisition**:
 
 - [Polish court data acquisition](how-to/data-acquisition/data_acquisition_pl_court.md)
+- [NSA data acquisition](how-to/data-acquisition/data_acquisition_nsa.md)
 
 **Embeddings & Weaviate**:
 
