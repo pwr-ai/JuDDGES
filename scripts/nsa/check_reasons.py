@@ -7,9 +7,15 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
-from juddges.data.nsa.reasons import DEFAULT_SCHEDULE, check_date, parse_schedule, plan_checks
+from juddges.data.nsa.reasons import (
+    DEFAULT_SCHEDULE,
+    TooManyErrors,
+    check_date,
+    parse_schedule,
+    plan_checks,
+)
 from juddges.data.nsa.scraper import NSAScraper
-from juddges.data.nsa.state import NSAState
+from juddges.data.nsa.state import NSAState, StateLocked
 from juddges.utils.logging import setup_loguru
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -35,6 +41,11 @@ def main(
     logger.info("Running check_reasons.py with args:\n" + str(locals()))
 
     state = NSAState(state_dir)
+    try:
+        state.acquire_lock()
+    except StateLocked as e:
+        logger.error(str(e))
+        raise typer.Exit(1)
     docs = state.load_documents()
     plans = plan_checks(docs, datetime.now(), max_age_days, parse_schedule(schedule))
 
@@ -53,10 +64,25 @@ def main(
 
     proxy = {"http": proxy_address, "https": proxy_address} if proxy_address else None
     scraper = NSAScraper(USER_AGENT, proxy_config=proxy, wait_range=(wait_min, wait_max))
+
+    def flush(pages: list[dict]) -> None:
+        state.append_pages(pages)  # pages first: has_reasons=True never lacks its page
+        state.save_documents(docs)
+
     consecutive_errors = 0
     for plan in plans:
         try:
-            result = check_date(docs, plan, scraper, datetime.now())
+            result = check_date(
+                docs,
+                plan,
+                scraper,
+                datetime.now(),
+                flush,
+                max_consecutive_errors=max_consecutive_errors,
+            )
+        except TooManyErrors as e:
+            logger.error(f"{e}, stopping")
+            break
         except Exception as e:
             consecutive_errors += 1
             logger.error(f"Failed to check date {plan.date}: {e}; Error type: {type(e)}")
@@ -65,8 +91,6 @@ def main(
                 break
             continue
         consecutive_errors = 0
-        state.append_pages(result.pages)
-        state.save_documents(docs)
         logger.info(
             f"{plan.date}: {result.strategy}, checked {result.n_checked}/{len(plan.doc_ids)}, "
             f"new reasons {result.n_new_reasons}, errors {result.n_errors}"

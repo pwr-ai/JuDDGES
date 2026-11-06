@@ -10,6 +10,9 @@ from requests.adapters import HTTPAdapter
 from retry import retry
 from urllib3 import Retry
 
+# Failed attempts must be slow too: wait 10 s, 20 s, 40 s, 80 s (+ jitter, capped) between tries.
+RETRY_POLICY = dict(tries=5, delay=10, backoff=2, max_delay=120, jitter=(0, 5))
+
 
 class IncorrectNumberOfDocumentsFound(Exception):
     """Raised when the number of found documents doesn't match the expected count."""
@@ -62,38 +65,39 @@ class NSAScraper:
         self.browser = mechanicalsoup.StatefulBrowser(
             user_agent=user_agent,
             requests_adapters={
-                "https://": HTTPAdapter(
-                    max_retries=Retry(
-                        total=10,
-                        backoff_factor=0.1,
-                        status_forcelist=[500, 502, 503, 504, 429],
-                        respect_retry_after_header=True,
-                    )
-                ),
-                "http://": HTTPAdapter(
-                    max_retries=Retry(
-                        total=10,
-                        backoff_factor=0.1,
-                        status_forcelist=[500, 502, 503, 504, 429],
-                        respect_retry_after_header=True,
-                    )
-                ),
+                "https://": self._http_adapter(),
+                "http://": self._http_adapter(),
             },
         )
 
         if proxy_config:
             self.browser.session.proxies = proxy_config
 
+    @staticmethod
+    def _http_adapter() -> HTTPAdapter:
+        # Few, slow urllib3 retries: they multiply with the `retry` decorators of this class
+        return HTTPAdapter(
+            max_retries=Retry(
+                total=2,
+                backoff_factor=10,
+                status_forcelist=[500, 502, 503, 504, 429],
+                respect_retry_after_header=True,
+            )
+        )
+
     def close(self) -> None:
         """Close the browser session."""
         self.browser.close()
 
     @retry(
-        tries=5,
+        **RETRY_POLICY,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
     )
     def search_documents_for_date(
-        self, date: str, with_reasons: bool | None = None
+        self,
+        date: str,
+        with_reasons: bool | None = None,
+        expected_count: int | None = None,
     ) -> dict[int, list[str] | None] | None:
         """Search for documents published on a specific date.
 
@@ -101,11 +105,20 @@ class NSAScraper:
             date: Date in YYYY-MM-DD format
             with_reasons: True to find only judgments with reasons ("Uzasadnienie"), False to find
                 only judgments without them, None to not filter on this
+            expected_count: Number of documents if already known (e.g. from `get_num_docs_for_date`
+                with the same arguments); saves a request pair. Otherwise it is fetched first.
 
         Returns:
             Dictionary mapping page numbers to lists of document IDs, or None if no documents found
         """
-        final_num_documents = self.get_num_docs_for_date(date, with_reasons)
+        final_num_documents = (
+            expected_count
+            if expected_count is not None
+            else self.get_num_docs_for_date(date, with_reasons)
+        )
+        if final_num_documents == 0:
+            logger.info("No documents found")
+            return None
         self._submit_date_search(date, with_reasons)
         if self._any_documents_found(self.browser):
             documents = self._retrieve_documents()
@@ -121,7 +134,7 @@ class NSAScraper:
             return None
 
     @retry(
-        tries=5,
+        **RETRY_POLICY,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
     )
     def get_page_for_doc(self, doc_id: str) -> str:
@@ -137,7 +150,7 @@ class NSAScraper:
         return self.browser.page.prettify()
 
     @retry(
-        tries=5,
+        **RETRY_POLICY,
         exceptions=(
             RequestException,
             HTTPError,
@@ -186,13 +199,25 @@ class NSAScraper:
         Args:
             url: URL to open
         """
-        response = self.browser.open(url, verify=False, timeout=60)
+        try:
+            response = self.browser.open(url, verify=False, timeout=60)
+        except RequestException:
+            self._wait()
+            raise
         self._post_call(response)
 
     def _browser_submit_selected(self) -> None:
         """Submit the currently selected form."""
-        response = self.browser.submit_selected(verify=False, timeout=60)
+        try:
+            response = self.browser.submit_selected(verify=False, timeout=60)
+        except RequestException:
+            self._wait()
+            raise
         self._post_call(response)
+
+    def _wait(self) -> None:
+        if self.wait:
+            time.sleep(random.uniform(*self.wait_range))
 
     def _post_call(self, response) -> None:
         """Handle post-request operations including waiting and error checking.
@@ -200,9 +225,8 @@ class NSAScraper:
         Args:
             response: Response object from the request
         """
+        self._wait()  # also after errors, so that failures never speed up the request rate
         response.raise_for_status()
-        if self.wait:
-            time.sleep(random.uniform(*self.wait_range))
         if not self._correct_page():
             raise IncorrectPage(f"Incorrect page: {self.browser.page.text}")
 
@@ -237,7 +261,7 @@ class NSAScraper:
         return documents
 
     @retry(
-        tries=5,
+        **RETRY_POLICY,
         exceptions=(RequestException, HTTPError, IncorrectNumberOfDocumentsFound, IncorrectPage),
     )
     def _retrieve_documents_from_page(self, page_id: int) -> list[str] | None:

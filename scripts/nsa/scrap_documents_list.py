@@ -7,7 +7,7 @@ from loguru import logger
 
 from juddges.data.nsa.reasons import flatten_search_result
 from juddges.data.nsa.scraper import NSAScraper
-from juddges.data.nsa.state import NSAState, register_documents
+from juddges.data.nsa.state import NSAState, StateLocked, register_documents
 from juddges.settings import get_nsa_end_date
 from juddges.utils.logging import setup_loguru
 
@@ -38,6 +38,11 @@ def main(
     logger.info("Running scrap_documents_list.py with args:\n" + str(locals()))
 
     state = NSAState(state_dir)
+    try:
+        state.acquire_lock()
+    except StateLocked as e:
+        logger.error(str(e))
+        raise typer.Exit(1)
     done = set(state.load_document_lists())
     docs = state.load_documents()
     refresh_from = (datetime.now() - timedelta(days=refresh_days_back)).strftime(DATE_FORMAT)

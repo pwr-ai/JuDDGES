@@ -8,7 +8,7 @@ from loguru import logger
 
 from juddges.data.nsa.extractor import has_reasons
 from juddges.data.nsa.scraper import NSAScraper
-from juddges.data.nsa.state import NSAState
+from juddges.data.nsa.state import NSAState, StateLocked
 from juddges.utils.logging import setup_loguru
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -30,6 +30,11 @@ def main(
     logger.info("Running download_document_pages.py with args:\n" + str(locals()))
 
     state = NSAState(state_dir)
+    try:
+        state.acquire_lock()
+    except StateLocked as e:
+        logger.error(str(e))
+        raise typer.Exit(1)
     docs = state.load_documents()
     todo = docs[docs["page_downloaded_at"].isna()].sort_values("judgment_date", ascending=False)
     to_download = todo["doc_id"].tolist()[:limit]
@@ -46,30 +51,32 @@ def main(
         state.save_documents(docs)
         buffer.clear()
 
-    for doc_id in to_download:
-        try:
-            page = scraper.get_page_for_doc(doc_id)
-        except Exception as e:
-            consecutive_errors += 1
-            logger.error(f"Failed to download {doc_id}: {e}; Error type: {type(e)}")
-            if consecutive_errors >= max_consecutive_errors:
-                logger.error(f"{consecutive_errors} consecutive errors, stopping")
-                break
-            continue
-        consecutive_errors = 0
-        now = pd.Timestamp(datetime.now())
-        found = has_reasons(page)
-        docs.loc[doc_id, "page_downloaded_at"] = now
-        docs.loc[doc_id, "has_reasons"] = found
-        if found:
-            docs.loc[doc_id, "reasons_found_at"] = now
-        buffer.append({"doc_id": doc_id, "page": page, "downloaded_at": now})
-        downloaded += 1
-        if len(buffer) >= flush_every:
-            flush()
-            logger.info(f"Downloaded {downloaded}/{len(to_download)}")
-    flush()
-    scraper.close()
+    try:
+        for doc_id in to_download:
+            try:
+                page = scraper.get_page_for_doc(doc_id)
+            except Exception as e:
+                consecutive_errors += 1
+                logger.error(f"Failed to download {doc_id}: {e}; Error type: {type(e)}")
+                if consecutive_errors >= max_consecutive_errors:
+                    logger.error(f"{consecutive_errors} consecutive errors, stopping")
+                    break
+                continue
+            consecutive_errors = 0
+            now = pd.Timestamp(datetime.now())
+            found = has_reasons(page)
+            docs.loc[doc_id, "page_downloaded_at"] = now
+            docs.loc[doc_id, "has_reasons"] = found
+            if found:
+                docs.loc[doc_id, "reasons_found_at"] = now
+            buffer.append({"doc_id": doc_id, "page": page, "downloaded_at": now})
+            downloaded += 1
+            if len(buffer) >= flush_every:
+                flush()
+                logger.info(f"Downloaded {downloaded}/{len(to_download)}")
+    finally:
+        flush()  # also on Ctrl-C or an unexpected error
+        scraper.close()
     logger.info(f"Finished, downloaded {downloaded} pages")
 
 

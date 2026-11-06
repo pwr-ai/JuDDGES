@@ -14,7 +14,8 @@ parquet dataset consumed by `push_to_repo.py`.
      `{date, num_docs, document_ids, scraped_at}`; the latest row per date wins.
    - `state/documents.parquet` – one row per document: `doc_id, judgment_date, first_seen_at,
      page_downloaded_at, has_reasons, reasons_found_at, last_reasons_check_at,
-     reasons_check_count`. Rewritten atomically (temp file + rename).
+     reasons_check_count, listed_dates`. `listed_dates` holds every date on whose listing the
+     document appeared (normally one). Rewritten atomically (temp file + fsync + rename).
    - `state/pages/pages_<timestamp>.parquet` – append-only chunks `{doc_id, page, downloaded_at}`;
      the latest page version per document wins.
    - `dataset/data_{i}.parquet` – extracted dataset (output of `extract_data_from_pages.py`).
@@ -26,9 +27,19 @@ parquet dataset consumed by `push_to_repo.py`.
 ## Politeness defaults
 
 The scripts use a single scraper, single thread, and wait a random 5–10 s after every request
-(about one request per 7.5 s on average). Change it with `--wait-min` / `--wait-max`. After
-`--max-consecutive-errors` (default 5) failures in a row a script stops; all scripts save progress
-regularly, so re-running resumes where it stopped.
+(about one request per 7.5 s on average). Change it with `--wait-min` / `--wait-max`. The wait is
+applied after every request attempt, including failed ones. Failed requests are retried at most 5
+times with a growing delay (10 s, 20 s, 40 s, 80 s, plus jitter), and urllib3 adds at most 2
+retries (backoff 10 s, `Retry-After` respected) for 429/5xx statuses.
+
+Error handling: a date or a document that still fails after those retries is logged and skipped
+(it stays pending and is retried on the next run). After `--max-consecutive-errors` (default 5)
+such failures in a row a script stops; `check_reasons.py` counts failed document downloads within
+a date and failed dates, and stops the whole run in both cases. Progress is saved regularly (also
+on Ctrl-C), so re-running resumes where it stopped.
+
+Only one script can use a state directory at a time: each takes an exclusive lock on
+`state/.lock` and exits immediately with an error message if another one holds it.
 
 ## Sentencja first, uzasadnienie later
 
@@ -68,19 +79,28 @@ Re-checks documents with `has_reasons == False` whose `judgment_date` is within 
 (default 730). Documents of one judgment date are due when the time since their
 `last_reasons_check_at` (or `page_downloaded_at` if never checked) reaches the `--schedule` interval
 for their `reasons_check_count`; the default schedule is `30,60,90,180,365` days, and after its end
-the last interval is reused.
+the last interval is reused. The interval is measured from the previous check, so the default
+schedule checks about 30, 90, 180, 360 and 725 days after the page was downloaded (cumulative
+sums), and then every 365 days until the judgment is older than `--max-age-days`.
 
 For each due date the cheaper strategy is chosen:
 
-- **search** – ask NSA for the date's judgments "with reasons" (about `ceil(n/10) + 2` requests,
-  where `n` is the number of judgments with reasons on that date; the count is fetched first) and
-  re-download only the flagged documents that appear in the result;
-- **direct** – re-download every flagged document of that date, when there are fewer of them than
-  the search would cost.
+- **search** – ask NSA for the date's judgments "with reasons" and re-download only the flagged
+  documents that appear in the result. The number `n` of judgments with reasons is fetched first
+  (2 requests); if it is 0 nothing else is requested. Otherwise the search costs another
+  `2 + ceil(n/10)` requests (submit the form, then fetch the result pages). Search is chosen when
+  that is fewer requests than the number of flagged documents;
+- **direct** – re-download every flagged document of that date otherwise. Dates with 2 or fewer
+  flagged documents go straight to this strategy without the count.
+
+Documents that were listed on more than one date (NSA listings sometimes shift between dates, so
+the same ID appears on two neighbouring days) are always downloaded directly, because absence from
+a date's search result does not prove that they have no reasons.
 
 Updates `has_reasons`, `reasons_found_at`, `last_reasons_check_at`, `reasons_check_count` and stores
-the new page versions. A document whose download failed is not marked as checked, so it is retried
-on the next run.
+the new page versions. Pages are stored before the state that refers to them, every 50 pages and
+when the run is interrupted. A document whose download failed is not marked as checked, so it is
+retried on the next run.
 
 `--dry-run` prints a table (dates, flagged counts, strategy, estimated requests) without any
 network access. As `n` is unknown offline, the estimate uses the number of all known documents of
@@ -89,9 +109,9 @@ the date as an upper bound for the search cost.
 ### `extract_data_from_pages.py`
 
 Takes the latest page of every document and writes `NSA_DATA_PATH/dataset/data_{i}.parquet`
-(one file per page chunk) using `NSADataExtractor`. Existing `data_*.parquet` files in the output
-directory are removed after confirmation. Options: `--n-jobs`, `--state-dir`, `--output-path`,
-`--log-file`.
+(about `--rows-per-file` documents each, default 50000, all held in memory at once) using
+`NSADataExtractor`. Existing `data_*.parquet` files in the output directory are removed after
+confirmation. Options: `--n-jobs`, `--rows-per-file`, `--state-dir`, `--output-path`, `--log-file`.
 
 ## Recommended run order
 
@@ -109,7 +129,7 @@ The first two steps take long (one request per 5–10 s) but can be interrupted 
 Periodic "what's new" run:
 
 ```bash
-python scripts/nsa/scrap_documents_list.py --start-date <last scraped date minus refresh window>
+python scripts/nsa/scrap_documents_list.py   # skips known dates, re-scrapes the last 30 days
 python scripts/nsa/download_document_pages.py
 python scripts/nsa/check_reasons.py --dry-run   # inspect the plan first
 python scripts/nsa/check_reasons.py

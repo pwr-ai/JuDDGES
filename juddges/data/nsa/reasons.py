@@ -1,7 +1,8 @@
 """Logic for tracking judgments published without reasons ("Uzasadnienie") and re-checking them."""
 
 import math
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -11,8 +12,15 @@ from juddges.data.nsa.extractor import has_reasons
 from juddges.data.nsa.scraper import NSAScraper
 
 SEARCH_PAGE_SIZE = 10  # documents per search result page
-SEARCH_OVERHEAD = 2  # requests spent on opening the form / counting
+COUNT_COST = 2  # requests of get_num_docs_for_date: open the form + submit it
+SEARCH_SUBMIT_COST = 2  # requests of submitting the search again (the first results page is
+# then fetched once more as page 1, which is included in the ceil(n / SEARCH_PAGE_SIZE) pages)
 DEFAULT_SCHEDULE = (30, 60, 90, 180, 365)
+DEFAULT_MAX_CONSECUTIVE_ERRORS = 5
+
+
+class TooManyErrors(RuntimeError):
+    """Too many consecutive failures; the caller should stop the whole run."""
 
 
 @dataclass
@@ -26,7 +34,6 @@ class DatePlan:
 @dataclass
 class CheckResult:
     strategy: str
-    pages: list[dict] = field(default_factory=list)
     n_checked: int = 0
     n_errors: int = 0
     n_new_reasons: int = 0
@@ -39,13 +46,21 @@ def parse_schedule(schedule: str) -> list[int]:
     return days
 
 
-def search_cost(n_with_reasons: int) -> int:
-    return math.ceil(n_with_reasons / SEARCH_PAGE_SIZE) + SEARCH_OVERHEAD
+def search_cost(n_with_reasons: int, counted: bool = False) -> int:
+    """Requests needed to find the judgments with reasons of one date via the search.
+
+    The count request comes first; when there are no such judgments nothing else is needed.
+    `counted=True` excludes the count (already spent).
+    """
+    count = 0 if counted else COUNT_COST
+    if n_with_reasons == 0:
+        return count
+    return count + SEARCH_SUBMIT_COST + math.ceil(n_with_reasons / SEARCH_PAGE_SIZE)
 
 
-def choose_strategy(n_flagged: int, n_with_reasons: int) -> str:
+def choose_strategy(n_flagged: int, n_with_reasons: int, counted: bool = True) -> str:
     """Search for judgments with reasons only if it costs fewer requests than fetching all."""
-    return "search" if search_cost(n_with_reasons) < n_flagged else "direct"
+    return "search" if search_cost(n_with_reasons, counted) < n_flagged else "direct"
 
 
 def find_due_documents(
@@ -77,7 +92,7 @@ def plan_checks(
     plans = []
     for date, group in sorted(due.groupby("judgment_date"), reverse=True):
         n = len(group)
-        strategy = choose_strategy(n, int(docs_per_date[date]))
+        strategy = choose_strategy(n, int(docs_per_date[date]), counted=False)
         est = search_cost(int(docs_per_date[date])) if strategy == "search" else n
         plans.append(DatePlan(date, group["doc_id"].tolist(), strategy, est))
     return plans
@@ -92,46 +107,81 @@ def flatten_search_result(result: dict[int, list[str] | None] | None) -> set[str
 
 
 def check_date(
-    docs: pd.DataFrame, plan: DatePlan, scraper: NSAScraper, now: datetime
+    docs: pd.DataFrame,
+    plan: DatePlan,
+    scraper: NSAScraper,
+    now: datetime,
+    flush: Callable[[list[dict]], None],
+    flush_every: int = 50,
+    max_consecutive_errors: int = DEFAULT_MAX_CONSECUTIVE_ERRORS,
 ) -> CheckResult:
-    """Re-check flagged documents of one date; updates `docs` in place, returns new pages."""
+    """Re-check flagged documents of one date; updates `docs` in place.
+
+    New pages are passed to `flush` (which must store them first and the `docs` state afterwards)
+    every `flush_every` pages and at the end - also when an exception (or Ctrl-C) interrupts the
+    date - so `has_reasons=True` is never persisted without its page.
+
+    Raises:
+        TooManyErrors: after `max_consecutive_errors` failed downloads in a row.
+    """
     ts = pd.Timestamp(now)
-    n = len(plan.doc_ids)
-    to_download = plan.doc_ids
-    checked: set[str] = set()
-    strategy = "direct"
+    result = CheckResult(strategy="direct")
+    to_download = list(plan.doc_ids)
+    buffer: list[dict] = []
 
-    if n > SEARCH_OVERHEAD:
-        n_with_reasons = scraper.get_num_docs_for_date(plan.date, with_reasons=True)
-        strategy = choose_strategy(n, n_with_reasons)
-        if strategy == "search":
-            found = (
-                flatten_search_result(scraper.search_documents_for_date(plan.date, True))
-                if n_with_reasons
-                else set()
-            )
-            to_download = [d for d in plan.doc_ids if d in found]
-            checked = set(plan.doc_ids) - set(to_download)  # not listed => still no reasons
-
-    result = CheckResult(strategy=strategy)
-    for doc_id in to_download:
-        try:
-            page = scraper.get_page_for_doc(doc_id)
-        except Exception as e:
-            logger.error(f"Failed to download {doc_id}: {e}; Error type: {type(e)}")
-            result.n_errors += 1
-            continue
-        checked.add(doc_id)
-        found_reasons = has_reasons(page)
-        result.pages.append({"doc_id": doc_id, "page": page, "downloaded_at": ts})
-        docs.loc[doc_id, "page_downloaded_at"] = ts
-        docs.loc[doc_id, "has_reasons"] = found_reasons
-        if found_reasons:
-            docs.loc[doc_id, "reasons_found_at"] = ts
-            result.n_new_reasons += 1
-
-    for doc_id in checked:
+    def mark_checked(doc_id: str) -> None:
         docs.loc[doc_id, "last_reasons_check_at"] = ts
         docs.loc[doc_id, "reasons_check_count"] += 1
-    result.n_checked = len(checked)
+        result.n_checked += 1
+
+    try:
+        if len(plan.doc_ids) > COUNT_COST:
+            n_with_reasons = scraper.get_num_docs_for_date(plan.date, with_reasons=True)
+            result.strategy = choose_strategy(len(plan.doc_ids), n_with_reasons)
+            if result.strategy == "search":
+                found = (
+                    flatten_search_result(
+                        scraper.search_documents_for_date(
+                            plan.date, True, expected_count=n_with_reasons
+                        )
+                    )
+                    if n_with_reasons
+                    else set()
+                )
+                to_download = []
+                for doc_id in plan.doc_ids:
+                    # A document listed on several dates may be reported under another date, so
+                    # "not in the result" proves nothing: download it.
+                    if doc_id in found or len(docs.at[doc_id, "listed_dates"]) > 1:
+                        to_download.append(doc_id)
+                    else:
+                        mark_checked(doc_id)
+
+        consecutive_errors = 0
+        for doc_id in to_download:
+            try:
+                page = scraper.get_page_for_doc(doc_id)
+            except Exception as e:
+                logger.error(f"Failed to download {doc_id}: {e}; Error type: {type(e)}")
+                result.n_errors += 1
+                consecutive_errors += 1
+                if consecutive_errors >= max_consecutive_errors:
+                    raise TooManyErrors(
+                        f"{consecutive_errors} consecutive download errors on {plan.date}"
+                    ) from e
+                continue
+            consecutive_errors = 0
+            found_reasons = has_reasons(page)
+            buffer.append({"doc_id": doc_id, "page": page, "downloaded_at": ts})
+            docs.loc[doc_id, "page_downloaded_at"] = ts
+            docs.loc[doc_id, "has_reasons"] = found_reasons
+            if found_reasons:
+                docs.loc[doc_id, "reasons_found_at"] = ts
+                result.n_new_reasons += 1
+            mark_checked(doc_id)
+            if len(buffer) >= flush_every:
+                flush(buffer)
+                buffer = []
+    finally:
+        flush(buffer)
     return result
