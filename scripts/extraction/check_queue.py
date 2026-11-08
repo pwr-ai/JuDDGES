@@ -7,7 +7,6 @@ import os
 
 import redis
 from dotenv import load_dotenv
-from loguru import logger
 from rich.console import Console
 from rich.table import Table
 

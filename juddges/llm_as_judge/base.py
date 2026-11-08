@@ -145,8 +145,6 @@ class StructuredOutputJudgeBase:
             messages = self.prepare_single_item_messages(
                 pred=parsed_preds.predictions[idx],
                 gold=parsed_preds.gold[idx],
-                user_prompt=self.user_prompt,
-                system_prompt=self.system_prompt,
             )
             dataset_messages[idx] = messages
         return dataset_messages

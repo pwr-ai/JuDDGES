@@ -23,9 +23,7 @@ console = Console()
 
 
 def calculate_throughput(
-    storage: ExtractionStorage,
-    run_id: Optional[str] = None,
-    minutes: int = 5
+    storage: ExtractionStorage, run_id: Optional[str] = None, minutes: int = 5
 ) -> Dict:
     """Calculate extraction throughput statistics.
 
@@ -139,19 +137,21 @@ def get_active_runs(storage: ExtractionStorage) -> List[Dict]:
             if row.sample_size and row.total_documents:
                 progress = (row.total_documents / row.sample_size) * 100
 
-            runs.append({
-                "id": str(row.id),
-                "model": row.model_name,
-                "sample_size": row.sample_size,
-                "total_docs": row.total_documents or 0,
-                "successful": row.successful_extractions or 0,
-                "failed": row.failed_extractions or 0,
-                "batch_size": row.batch_size,
-                "workers": row.max_workers,
-                "started_at": row.started_at,
-                "elapsed_minutes": round(elapsed, 1),
-                "progress_pct": round(progress, 1),
-            })
+            runs.append(
+                {
+                    "id": str(row.id),
+                    "model": row.model_name,
+                    "sample_size": row.sample_size,
+                    "total_docs": row.total_documents or 0,
+                    "successful": row.successful_extractions or 0,
+                    "failed": row.failed_extractions or 0,
+                    "batch_size": row.batch_size,
+                    "workers": row.max_workers,
+                    "started_at": row.started_at,
+                    "elapsed_minutes": round(elapsed, 1),
+                    "progress_pct": round(progress, 1),
+                }
+            )
 
         return runs
 
@@ -193,16 +193,18 @@ def get_recent_completed_runs(storage: ExtractionStorage, limit: int = 5) -> Lis
                 else 0.0
             )
 
-            runs.append({
-                "id": str(row.id),
-                "model": row.model_name,
-                "total_docs": row.total_documents or 0,
-                "successful": row.successful_extractions or 0,
-                "failed": row.failed_extractions or 0,
-                "duration_minutes": round(duration_minutes, 1),
-                "docs_per_minute": round(docs_per_minute, 2),
-                "completed_at": row.completed_at,
-            })
+            runs.append(
+                {
+                    "id": str(row.id),
+                    "model": row.model_name,
+                    "total_docs": row.total_documents or 0,
+                    "successful": row.successful_extractions or 0,
+                    "failed": row.failed_extractions or 0,
+                    "duration_minutes": round(duration_minutes, 1),
+                    "docs_per_minute": round(docs_per_minute, 2),
+                    "completed_at": row.completed_at,
+                }
+            )
 
         return runs
 
@@ -292,9 +294,7 @@ def create_dashboard_table(
         )
         for run in recent_runs:
             success_rate = (
-                (run['successful'] / run['total_docs'] * 100)
-                if run['total_docs'] > 0
-                else 0
+                (run["successful"] / run["total_docs"] * 100) if run["total_docs"] > 0 else 0
             )
             table.add_row(
                 f"Run {run['id'][:8]}...",
@@ -384,7 +384,9 @@ def main():
             monitor_live(storage, refresh_seconds=args.refresh)
         else:
             # Single snapshot mode
-            current_throughput = calculate_throughput(storage, run_id=args.run_id, minutes=args.minutes)
+            current_throughput = calculate_throughput(
+                storage, run_id=args.run_id, minutes=args.minutes
+            )
             active_runs = get_active_runs(storage)
             recent_runs = get_recent_completed_runs(storage, limit=args.recent)
 

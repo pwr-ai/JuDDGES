@@ -173,16 +173,20 @@ def main():
                 "gpt_vs_human": s_gpt_human,
             }
 
-        results.append({
-            "idx": idx,
-            "gemini_extraction": gemini_result,
-            "scores": doc_scores,
-        })
+        results.append(
+            {
+                "idx": idx,
+                "gemini_extraction": gemini_result,
+                "scores": doc_scores,
+            }
+        )
 
         if (i + 1) % 10 == 0:
             avg_gg = mean(s for scores in field_scores_gemini_vs_gpt.values() for s in scores)
             avg_gh = mean(s for scores in field_scores_gemini_vs_human.values() for s in scores)
-            logger.info(f"  [{i + 1}/{len(indices)}] Gem vs GPT: {avg_gg:.3f}, Gem vs Human: {avg_gh:.3f}, errors: {parse_errors}")
+            logger.info(
+                f"  [{i + 1}/{len(indices)}] Gem vs GPT: {avg_gg:.3f}, Gem vs Human: {avg_gh:.3f}, errors: {parse_errors}"
+            )
 
     # Aggregate
     logger.info(f"\n{'='*80}")

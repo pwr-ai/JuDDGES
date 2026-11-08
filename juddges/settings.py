@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import langchain
 import mlflow
 import tiktoken
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from zoneinfo import ZoneInfo
 
 # get root path as ROOT_PATH as pathlib objects
 ROOT_PATH = Path(__file__).resolve().parent.parent

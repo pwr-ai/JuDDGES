@@ -59,7 +59,9 @@ class ExtractionCoordinator:
 
         # Connect to Redis with authentication support
         # Redis URL can include password: redis://:password@host:port/db
-        logger.info(f"Connecting to Redis: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}")
+        logger.info(
+            f"Connecting to Redis: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}"
+        )
 
         try:
             self.redis_client = redis.from_url(
@@ -71,10 +73,10 @@ class ExtractionCoordinator:
             # Test connection
             self.redis_client.ping()
             logger.info("Successfully connected to Redis")
-        except redis.exceptions.AuthenticationError as e:
+        except redis.exceptions.AuthenticationError:
             logger.error(
-                f"Redis authentication failed. Please ensure REDIS_URL includes password: "
-                f"redis://:YOUR_PASSWORD@host:port/db"
+                "Redis authentication failed. Please ensure REDIS_URL includes password: "
+                "redis://:YOUR_PASSWORD@host:port/db"
             )
             raise
         except Exception as e:
@@ -128,20 +130,22 @@ class ExtractionCoordinator:
             run_name=run_name,
         )
 
-        console.print(f"\n[bold cyan]Extraction Coordinator[/bold cyan]")
+        console.print("\n[bold cyan]Extraction Coordinator[/bold cyan]")
         console.print(f"Run ID: {run_id}")
         console.print(f"Target documents: {max_documents:,}")
         if skip_documents > 0:
-            console.print(f"Skip documents: [yellow]{skip_documents:,}[/yellow] (starting from offset)")
+            console.print(
+                f"Skip documents: [yellow]{skip_documents:,}[/yellow] (starting from offset)"
+            )
         if search_queries:
             console.print(f"Search queries: {', '.join(search_queries)}")
             console.print(f"Search mode: {search_mode}")
         else:
-            console.print(f"Search queries: [yellow]None (fetching ALL documents)[/yellow]")
+            console.print("Search queries: [yellow]None (fetching ALL documents)[/yellow]")
         console.print(f"Job batch size: {self.job_batch_size}")
         console.print(f"Redis queue: {self.queue_name}")
         if force_cursor:
-            console.print(f"[yellow]Force cursor: enabled (bypassing 10K limit)[/yellow]")
+            console.print("[yellow]Force cursor: enabled (bypassing 10K limit)[/yellow]")
         console.print()
 
         # Fetch all matching document IDs
@@ -150,7 +154,7 @@ class ExtractionCoordinator:
 
         # If no search queries, fetch all documents with force_cursor
         if not search_queries:
-            console.print(f"  Fetching ALL documents (no search filter)")
+            console.print("  Fetching ALL documents (no search filter)")
             doc_ids = self._fetch_document_ids(
                 search_query=None,
                 document_type_filter=document_type_filter,
@@ -194,7 +198,7 @@ class ExtractionCoordinator:
             console.print(f"  Documents needing extraction: {len(all_document_ids):,}")
 
         # Split into job batches and queue
-        console.print(f"\n[cyan]Step 3:[/cyan] Queuing jobs to Redis...")
+        console.print("\n[cyan]Step 3:[/cyan] Queuing jobs to Redis...")
         num_jobs = (len(all_document_ids) + self.job_batch_size - 1) // self.job_batch_size
 
         with Progress(

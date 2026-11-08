@@ -24,6 +24,7 @@ def main():
     # Load from .env
     try:
         from dotenv import load_dotenv
+
         load_dotenv()
     except ImportError:
         pass
@@ -67,15 +68,20 @@ def main():
             console.print(table)
 
             # Check for gemini-2.5-flash
-            gemini_flash_found = any("gemini-2" in m.get("name", "").lower() or "gemini-1.5" in m.get("name", "").lower() for m in models)
+            gemini_flash_found = any(
+                "gemini-2" in m.get("name", "").lower() or "gemini-1.5" in m.get("name", "").lower()
+                for m in models
+            )
 
             if gemini_flash_found:
                 console.print("\n[green]✓ Gemini models available![/green]")
             else:
-                console.print("\n[yellow]⚠ Gemini 2.5 might not be available with this key[/yellow]")
+                console.print(
+                    "\n[yellow]⚠ Gemini 2.5 might not be available with this key[/yellow]"
+                )
 
         elif response.status_code == 403:
-            console.print(f"[red]✗ 403 Permission Denied[/red]")
+            console.print("[red]✗ 403 Permission Denied[/red]")
             console.print("\n[yellow]Your API key doesn't have access to Gemini API[/yellow]")
             console.print("\n🔧 [bold]Solution:[/bold]")
             console.print("  1. Go to: https://aistudio.google.com/apikey")
@@ -84,7 +90,7 @@ def main():
             sys.exit(1)
 
         elif response.status_code == 400:
-            console.print(f"[red]✗ 400 Invalid API Key[/red]")
+            console.print("[red]✗ 400 Invalid API Key[/red]")
             console.print("\n[yellow]The API key format is invalid[/yellow]")
             sys.exit(1)
 
@@ -116,20 +122,19 @@ def main():
     try:
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/{working_model}:generateContent?key={api_key}",
-            json={
-                "contents": [{
-                    "parts": [{
-                        "text": "Say hello in one word"
-                    }]
-                }]
-            },
+            json={"contents": [{"parts": [{"text": "Say hello in one word"}]}]},
             timeout=30,
         )
 
         if response.status_code == 200:
             data = response.json()
-            text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-            console.print(f"\n[green]✓ Generation successful![/green]")
+            text = (
+                data.get("candidates", [{}])[0]
+                .get("content", {})
+                .get("parts", [{}])[0]
+                .get("text", "")
+            )
+            console.print("\n[green]✓ Generation successful![/green]")
             console.print(f"[dim]Response: {text}[/dim]")
 
             # Success message
@@ -142,7 +147,7 @@ def main():
             console.print("  python scripts/extraction/run_10_examples.py")
 
         elif response.status_code == 403:
-            console.print(f"\n[red]✗ 403 Permission Denied during generation[/red]")
+            console.print("\n[red]✗ 403 Permission Denied during generation[/red]")
             error_data = response.json()
             console.print(f"[dim]{json.dumps(error_data, indent=2)}[/dim]")
 

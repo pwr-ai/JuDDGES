@@ -12,19 +12,19 @@ This script provides statistics and insights about:
 import argparse
 from typing import Dict, List
 
-from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
-
 
 console = Console()
 
 
 def print_statistics(stats: Dict) -> None:
     """Print raw_content statistics in a formatted table."""
-    table = Table(title="Raw Text Coverage Statistics", show_header=True, header_style="bold magenta")
+    table = Table(
+        title="Raw Text Coverage Statistics", show_header=True, header_style="bold magenta"
+    )
     table.add_column("Metric", style="cyan", width=30)
     table.add_column("Value", style="green", justify="right")
 
@@ -78,9 +78,7 @@ def print_comparison(comparison: Dict) -> None:
 
 def print_type_coverage(db: WeaviateLegalDocumentsDatabase, document_types: List[str]) -> None:
     """Print coverage statistics by document type."""
-    table = Table(
-        title="Coverage by Document Type", show_header=True, header_style="bold green"
-    )
+    table = Table(title="Coverage by Document Type", show_header=True, header_style="bold green")
     table.add_column("Document Type", style="cyan", width=25)
     table.add_column("With raw_content", style="green", justify="right")
     table.add_column("Without raw_content", style="red", justify="right")
@@ -162,7 +160,7 @@ def main():
 
     # Show missing documents
     if stats["without_raw_content"] > 0:
-        console.print(f"\n[bold blue]Finding documents missing raw_content...")
+        console.print("\n[bold blue]Finding documents missing raw_content...")
         missing = db.filter_by_raw_content_presence(has_raw_content=False, limit=args.show_missing)
         print_missing_samples(missing, limit=args.show_missing)
 
@@ -175,9 +173,7 @@ def main():
 
     # Compare specific document
     if args.compare_document:
-        console.print(
-            f"\n[bold blue]Comparing text fields for document {args.compare_document}..."
-        )
+        console.print(f"\n[bold blue]Comparing text fields for document {args.compare_document}...")
         comparison = db.compare_text_fields(args.compare_document)
 
         if comparison:

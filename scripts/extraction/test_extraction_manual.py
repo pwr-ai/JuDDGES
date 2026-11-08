@@ -15,7 +15,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.json import JSON
 from rich.panel import Panel
-from rich.prompt import Confirm, Prompt
+from rich.prompt import Confirm
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -160,9 +160,7 @@ def test_caching():
         return False
 
     if time2 < time1 * 0.5:
-        console.print(
-            f"[green]✓ Cache speedup: {time1/time2:.1f}x faster[/green]"
-        )
+        console.print(f"[green]✓ Cache speedup: {time1/time2:.1f}x faster[/green]")
     else:
         console.print(
             f"[yellow]⚠ Cache might not be working (speedup: {time1/time2:.1f}x)[/yellow]"
@@ -325,16 +323,12 @@ def main():
     total = len(results)
     passed = sum(1 for s in results.values() if s)
 
-    console.print(
-        f"\n[bold]Total: {passed}/{total} tests passed[/bold]"
-    )
+    console.print(f"\n[bold]Total: {passed}/{total} tests passed[/bold]")
 
     if passed == total:
         console.print("\n[bold green]🎉 All tests passed![/bold green]")
     else:
-        console.print(
-            f"\n[bold yellow]⚠ {total - passed} test(s) failed[/bold yellow]"
-        )
+        console.print(f"\n[bold yellow]⚠ {total - passed} test(s) failed[/bold yellow]")
 
 
 if __name__ == "__main__":

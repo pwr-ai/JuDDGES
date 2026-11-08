@@ -20,10 +20,8 @@ Usage:
 
 import json
 import random
-import time
 from collections import Counter, defaultdict
 from pathlib import Path
-from statistics import mean
 
 from datasets import load_dataset
 from loguru import logger
@@ -89,13 +87,15 @@ def find_errors(ds_test, ds_annotated, schema_fields: list[str]) -> list[dict]:
 
             # Check if they disagree
             if str(pred_val).strip().lower() != str(gold_val).strip().lower():
-                errors.append({
-                    "doc_idx": idx,
-                    "field_name": field_name,
-                    "pred_value": pred_val,
-                    "gold_value": gold_val,
-                    "doc_excerpt": text[:2000],
-                })
+                errors.append(
+                    {
+                        "doc_idx": idx,
+                        "field_name": field_name,
+                        "pred_value": pred_val,
+                        "gold_value": gold_val,
+                        "doc_excerpt": text[:2000],
+                    }
+                )
 
     return errors
 
@@ -144,7 +144,9 @@ def main():
     # Find all errors
     logger.info("Finding extraction errors (GPT-4.1 test vs human annotated)...")
     all_errors = find_errors(ds_test, ds_annotated, list(schema.keys()))
-    logger.info(f"Found {len(all_errors)} field-level disagreements across {len(ds_test)} docs × {len(schema)} fields")
+    logger.info(
+        f"Found {len(all_errors)} field-level disagreements across {len(ds_test)} docs × {len(schema)} fields"
+    )
 
     # Error rate
     total_fields = len(ds_test) * len(schema)
@@ -153,7 +155,7 @@ def main():
 
     # Distribution by field
     field_error_counts = Counter(e["field_name"] for e in all_errors)
-    logger.info(f"\nTop 10 error fields:")
+    logger.info("\nTop 10 error fields:")
     for field, count in field_error_counts.most_common(10):
         logger.info(f"  {field}: {count} errors ({count/len(ds_test)*100:.1f}% of docs)")
 
@@ -178,13 +180,15 @@ def main():
         category_counts[category] += 1
         field_category_counts[error["field_name"]][category] += 1
 
-        classified.append({
-            "field_name": error["field_name"],
-            "pred_value": str(error["pred_value"])[:200],
-            "gold_value": str(error["gold_value"])[:200],
-            "category": category,
-            "explanation": result.get("explanation", ""),
-        })
+        classified.append(
+            {
+                "field_name": error["field_name"],
+                "pred_value": str(error["pred_value"])[:200],
+                "gold_value": str(error["gold_value"])[:200],
+                "category": category,
+                "explanation": result.get("explanation", ""),
+            }
+        )
 
         if (i + 1) % 50 == 0:
             logger.info(f"  [{i + 1}/{sample_size}] classified")
@@ -206,7 +210,9 @@ def main():
     # Per-field top categories
     print(f"\n{'Field':<35} {'Top Category':<20} {'Count':>6}")
     print("-" * 65)
-    for field, counts in sorted(field_category_counts.items(), key=lambda x: sum(x[1].values()), reverse=True)[:15]:
+    for field, counts in sorted(
+        field_category_counts.items(), key=lambda x: sum(x[1].values()), reverse=True
+    )[:15]:
         top_cat = counts.most_common(1)[0] if counts else ("none", 0)
         print(f"{field:<35} {top_cat[0]:<20} {top_cat[1]:>6}")
 

@@ -8,7 +8,7 @@ Python code examples from markdown documentation files.
 import ast
 import re
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Iterator
 
 import pytest
 import yaml
@@ -38,9 +38,7 @@ def pytest_configure(config):
     )
     config.addinivalue_line("markers", "requires_gemini: Mark test as requiring Gemini API key")
     config.addinivalue_line("markers", "requires_gpu: Mark test as requiring GPU")
-    config.addinivalue_line(
-        "markers", "requires_network: Mark test as requiring network access"
-    )
+    config.addinivalue_line("markers", "requires_network: Mark test as requiring network access")
 
 
 @pytest.fixture(scope="session")

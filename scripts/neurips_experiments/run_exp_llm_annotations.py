@@ -20,7 +20,7 @@ import os
 import time
 from collections import defaultdict
 from pathlib import Path
-from statistics import mean, stdev
+from statistics import mean
 
 import anthropic
 import yaml
@@ -80,7 +80,10 @@ def extract_gpt54(client: OpenAI, text: str, schema: dict) -> dict | None:
             response = client.chat.completions.create(
                 model="gpt-5.4",
                 messages=[
-                    {"role": "system", "content": "You are a Polish legal expert performing precise information extraction. Return only valid JSON."},
+                    {
+                        "role": "system",
+                        "content": "You are a Polish legal expert performing precise information extraction. Return only valid JSON.",
+                    },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.0,
@@ -92,7 +95,7 @@ def extract_gpt54(client: OpenAI, text: str, schema: dict) -> dict | None:
             logger.warning(f"GPT-5.4 JSON parse error attempt {attempt + 1}")
         except Exception as e:
             logger.warning(f"GPT-5.4 API error attempt {attempt + 1}: {e}")
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
     return None
 
 
@@ -121,17 +124,22 @@ def extract_sonnet(client: anthropic.Anthropic, text: str, schema: dict) -> dict
             logger.warning(f"Sonnet JSON parse error attempt {attempt + 1}")
         except Exception as e:
             logger.warning(f"Sonnet API error attempt {attempt + 1}: {e}")
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
     return None
 
 
 def score_field(val_a, val_b) -> float:
     """Simple exact-match accuracy for a field pair."""
-    if val_a == "None": val_a = None
-    if val_b == "None": val_b = None
-    if val_a is None and val_b is None: return 1.0
-    if val_a is None or val_b is None: return 0.0
-    if str(val_a).strip().lower() == str(val_b).strip().lower(): return 1.0
+    if val_a == "None":
+        val_a = None
+    if val_b == "None":
+        val_b = None
+    if val_a is None and val_b is None:
+        return 1.0
+    if val_a is None or val_b is None:
+        return 0.0
+    if str(val_a).strip().lower() == str(val_b).strip().lower():
+        return 1.0
     return 0.0
 
 

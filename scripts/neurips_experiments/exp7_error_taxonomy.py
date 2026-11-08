@@ -55,7 +55,6 @@ def sample_errors(
     with open(predictions_file) as f:
         predictions = json.load(f)
 
-    agg_scores = scores_data.get("aggregated_scores", {})
     all_results = scores_data.get("all_results", [])
 
     # Find fields with errors (score < 1.0)
@@ -81,17 +80,27 @@ def sample_errors(
 
             if is_error:
                 try:
-                    pred_parsed = json.loads(pred_data["answer"]) if isinstance(pred_data["answer"], str) else pred_data["answer"]
-                    gold_parsed = json.loads(pred_data["gold"]) if isinstance(pred_data["gold"], str) else pred_data["gold"]
+                    pred_parsed = (
+                        json.loads(pred_data["answer"])
+                        if isinstance(pred_data["answer"], str)
+                        else pred_data["answer"]
+                    )
+                    gold_parsed = (
+                        json.loads(pred_data["gold"])
+                        if isinstance(pred_data["gold"], str)
+                        else pred_data["gold"]
+                    )
 
-                    error_samples.append({
-                        "doc_idx": idx,
-                        "field_name": field_name,
-                        "field_type": schema.get(field_name, {}).get("type", "unknown"),
-                        "predicted_value": str(pred_parsed.get(field_name, ""))[:500],
-                        "gold_value": str(gold_parsed.get(field_name, ""))[:500],
-                        "scores": field_scores,
-                    })
+                    error_samples.append(
+                        {
+                            "doc_idx": idx,
+                            "field_name": field_name,
+                            "field_type": schema.get(field_name, {}).get("type", "unknown"),
+                            "predicted_value": str(pred_parsed.get(field_name, ""))[:500],
+                            "gold_value": str(gold_parsed.get(field_name, ""))[:500],
+                            "scores": field_scores,
+                        }
+                    )
                 except (json.JSONDecodeError, TypeError, AttributeError):
                     continue
 
@@ -115,6 +124,7 @@ def classify_errors_with_llm(
         return classify_errors_heuristic(error_samples)
 
     from openai import OpenAI
+
     client = OpenAI(api_key=api_key)
 
     system_prompt = f"""You are an error analysis expert for information extraction systems.
@@ -189,13 +199,9 @@ def classify_errors_heuristic(
 
 
 def main(
-    results_dir: Path = typer.Argument(
-        ..., help="Results directory with scores and predictions"
-    ),
+    results_dir: Path = typer.Argument(..., help="Results directory with scores and predictions"),
     sample_size: int = typer.Option(50, help="Number of errors to sample"),
-    classifier_model: str = typer.Option(
-        "gpt-4.1-mini", help="LLM for error classification"
-    ),
+    classifier_model: str = typer.Option("gpt-4.1-mini", help="LLM for error classification"),
     output: Path = typer.Option(
         "results/neurips/exp7_error_taxonomy.json",
     ),
@@ -238,7 +244,7 @@ def main(
             )
 
             if not samples:
-                logger.info(f"  No errors found")
+                logger.info("  No errors found")
                 continue
 
             classified = classify_errors_with_llm(samples, classifier_model)
@@ -275,12 +281,8 @@ def main(
             }
             for cat, count in overall_counts.most_common()
         },
-        "per_model": {
-            model: dict(counts) for model, counts in model_error_counts.items()
-        },
-        "per_field_type": {
-            ftype: dict(counts) for ftype, counts in type_counts.items()
-        },
+        "per_model": {model: dict(counts) for model, counts in model_error_counts.items()},
+        "per_field_type": {ftype: dict(counts) for ftype, counts in type_counts.items()},
         "samples": [
             {
                 "field": c["field_name"],
@@ -309,7 +311,7 @@ def main(
         print(f"{cat:<25} {count:>6} {count/total*100:>5.1f}%")
 
     if model_error_counts:
-        print(f"\nPer-model breakdown:")
+        print("\nPer-model breakdown:")
         for model, counts in model_error_counts.items():
             total_model = sum(counts.values())
             print(f"\n  {model} ({total_model} errors):")

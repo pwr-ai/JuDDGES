@@ -10,11 +10,11 @@ This module handles ingesting extracted data back into Weaviate, including:
 import time
 from typing import Any, Dict, List, Optional
 
-import weaviate.util
 from loguru import logger
 from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
+import weaviate.util
 from juddges.extraction.field_mapping import FieldMapper
 from juddges.extraction.statistics import IngestionStatistics
 from juddges.extraction.weaviate_client import WeaviateRestClient
@@ -149,10 +149,12 @@ class WeaviateIngestionService:
                             successful_updates += 1
                         else:
                             failed_updates += 1
-                            errors.append({
-                                "document_id": result.get("document_id", "unknown"),
-                                "error": "Update failed",
-                            })
+                            errors.append(
+                                {
+                                    "document_id": result.get("document_id", "unknown"),
+                                    "error": "Update failed",
+                                }
+                            )
 
                         progress.update(task, advance=1)
 
@@ -220,26 +222,32 @@ class WeaviateIngestionService:
                     existing_doc = self.client.get_document(document_id)
                     if existing_doc:
                         existing_properties = existing_doc.get("properties", {})
-                        update_payload = self._filter_empty_fields(update_payload, existing_properties)
+                        update_payload = self._filter_empty_fields(
+                            update_payload, existing_properties
+                        )
 
                         if not update_payload:
                             # All fields already populated
                             successful += 1
                             continue
 
-                batch_objects.append({
-                    "id": weaviate_uuid,
-                    "class": "LegalDocuments",
-                    "properties": update_payload,
-                })
+                batch_objects.append(
+                    {
+                        "id": weaviate_uuid,
+                        "class": "LegalDocuments",
+                        "properties": update_payload,
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"Error building payload for {document_id}: {e}")
                 failed += 1
-                errors.append({
-                    "document_id": document_id,
-                    "error": f"Payload build error: {e}",
-                })
+                errors.append(
+                    {
+                        "document_id": document_id,
+                        "error": f"Payload build error: {e}",
+                    }
+                )
 
         if not batch_objects:
             # All documents skipped (no updates needed)

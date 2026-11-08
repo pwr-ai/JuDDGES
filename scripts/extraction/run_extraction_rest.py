@@ -9,7 +9,6 @@ This script orchestrates document extraction from Weaviate using modular compone
 """
 
 import argparse
-import json
 import os
 import random
 import time
@@ -33,7 +32,6 @@ from juddges.extraction import (
     create_polish_legal_schema,
     display_extraction_results,
     display_ingestion_results,
-    generate_extraction_summary,
     save_extraction_results,
     save_ingestion_report,
 )
@@ -311,7 +309,9 @@ def main():
     if storage and run_id:
         try:
             duration = time.time() - start_time
-            successful = sum(1 for r in extraction_results if r.get("extraction_status") == "success")
+            successful = sum(
+                1 for r in extraction_results if r.get("extraction_status") == "success"
+            )
             failed = len(extraction_results) - successful
 
             storage.complete_extraction_run(
@@ -336,7 +336,7 @@ def main():
                 storage.save_field_coverage(run_id, field_coverage_dict)
 
             logger.info(f"Completed extraction run: {run_id}")
-            console.print(f"[green]✓[/green] Extraction run completed and saved to database")
+            console.print("[green]✓[/green] Extraction run completed and saved to database")
         except Exception as e:
             logger.error(f"Failed to complete extraction run: {e}")
             console.print(f"[red]Failed to complete extraction run: {e}[/red]")
@@ -382,14 +382,16 @@ def main():
 
             # Save ingestion report
             save_ingestion_report(ingestion_stats, output_dir)
-            console.print(f"\n[cyan]Ingestion report saved to:[/cyan] {output_dir / 'ingestion_report.json'}")
+            console.print(
+                f"\n[cyan]Ingestion report saved to:[/cyan] {output_dir / 'ingestion_report.json'}"
+            )
 
         except Exception as e:
             console.print(f"\n[red]✗ Ingestion failed: {e}[/red]")
             logger.exception("Ingestion error")
             raise
 
-    console.print(f"\n[bold green]✓ Extraction complete![/bold green]")
+    console.print("\n[bold green]✓ Extraction complete![/bold green]")
     console.print(f"Results saved to: {output_dir}")
 
 

@@ -6,7 +6,6 @@ large LLM configuration objects without hitting PostgreSQL btree limits.
 """
 
 import os
-from pathlib import Path
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -30,28 +29,34 @@ def setup_cache_schema(postgres_url: str):
 
     with engine.connect() as conn:
         # Check if table exists
-        result = conn.execute(text("""
+        result = conn.execute(
+            text("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables
                 WHERE table_schema = 'public'
                 AND table_name = 'full_md5_llm_cache'
             );
-        """))
+        """)
+        )
         table_exists = result.scalar()
 
         if not table_exists:
-            logger.info("Cache table doesn't exist yet - will be created automatically by LangChain")
+            logger.info(
+                "Cache table doesn't exist yet - will be created automatically by LangChain"
+            )
             return
 
         # Check if problematic btree index exists
-        result = conn.execute(text("""
+        result = conn.execute(
+            text("""
             SELECT EXISTS (
                 SELECT FROM pg_indexes
                 WHERE schemaname = 'public'
                 AND tablename = 'full_md5_llm_cache'
                 AND indexname = 'ix_full_md5_llm_cache_llm'
             );
-        """))
+        """)
+        )
         btree_index_exists = result.scalar()
 
         if btree_index_exists:
@@ -62,10 +67,12 @@ def setup_cache_schema(postgres_url: str):
             logger.info("✓ Dropped btree index on llm column")
 
             # Create hash index instead
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 CREATE INDEX IF NOT EXISTS ix_full_md5_llm_cache_llm_hash
                 ON full_md5_llm_cache USING hash (llm);
-            """))
+            """)
+            )
             logger.info("✓ Created hash index on llm column")
 
             conn.commit()

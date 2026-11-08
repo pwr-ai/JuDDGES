@@ -15,7 +15,7 @@ from datasets import load_dataset
 # Import our configuration and transformation systems
 from ingestion_config_example import ConfigurationManager, DatasetConfig
 from rich.console import Console
-from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
 from sentence_transformers import SentenceTransformer
 from transformation_system_example import TransformationEngine, setup_polish_legal_transformations
 

@@ -28,15 +28,12 @@ Usage:
 import ast
 import re
 import sys
-import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
 from loguru import logger
 from rich.console import Console
-from rich.panel import Panel
 from rich.progress import Progress
 from rich.table import Table
 
@@ -203,7 +200,7 @@ class CodeExampleValidator:
 
         # Check for undefined variables (basic analysis)
         try:
-            tree = ast.parse(example.code)
+            ast.parse(example.code)
             # This is a simplified check - full execution would require isolated environment
             return True, ""
         except Exception as e:
@@ -263,7 +260,10 @@ class TestReporter:
 
         table.add_row("Total", str(total), "100%")
         table.add_row(
-            "Passed", str(passed), f"{(passed/total*100):.1f}%" if total > 0 else "0%", style="green"
+            "Passed",
+            str(passed),
+            f"{(passed/total*100):.1f}%" if total > 0 else "0%",
+            style="green",
         )
         table.add_row(
             "Failed", str(failed), f"{(failed/total*100):.1f}%" if total > 0 else "0%", style="red"

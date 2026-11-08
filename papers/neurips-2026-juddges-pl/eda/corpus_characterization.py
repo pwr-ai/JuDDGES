@@ -34,9 +34,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
@@ -79,7 +79,7 @@ FIELDS_COURT: Dict[str, str] = {
 FIELDS_NSA: Dict[str, str] = {
     "id": "judgment_id",
     "date": None,  # TODO(user): NSA Croissant exposes no plain date column;
-                   # confirm whether docket_number / judgment_id encodes year.
+    # confirm whether docket_number / judgment_id encodes year.
     "court_level": "court_type",
     "court_id": "court_name",
     "type": "judgment_type",
@@ -176,8 +176,16 @@ def _is_missing(value: Any) -> bool:
 
 
 REFUSAL_MARKERS = (
-    "i cannot", "i can't", "i am unable", "as an ai", "nie mogę", "nie jestem w stanie",
-    "brak danych", "n/a", "null", "none",
+    "i cannot",
+    "i can't",
+    "i am unable",
+    "as an ai",
+    "nie mogę",
+    "nie jestem w stanie",
+    "brak danych",
+    "n/a",
+    "null",
+    "none",
 )
 
 
@@ -510,12 +518,7 @@ def _statute_key(entry: Any) -> Optional[str]:
         s = entry.strip()
         return s[:120] if s else None
     if isinstance(entry, dict):
-        title = (
-            entry.get("title")
-            or entry.get("name")
-            or entry.get("act")
-            or entry.get("source")
-        )
+        title = entry.get("title") or entry.get("name") or entry.get("act") or entry.get("source")
         article = entry.get("article") or entry.get("art") or entry.get("artykul")
         if title and article:
             return f"art.{article} {title}"[:120]
@@ -650,22 +653,19 @@ def pseudonymization_audit(
                 by_year[year][k] += 1
 
     pd.DataFrame(
-        [{"pattern": k, "doc_count": v, "rate": v / max(len(selected), 1)} for k, v in counters.items()]
+        [
+            {"pattern": k, "doc_count": v, "rate": v / max(len(selected), 1)}
+            for k, v in counters.items()
+        ]
     ).to_csv(out_dir / "tables" / f"{dataset_key}_pseudonym_audit.csv", index=False)
 
-    pd.DataFrame(
-        [
-            {"court_level": court, **dict(c)}
-            for court, c in by_court.items()
-        ]
-    ).to_csv(out_dir / "tables" / f"{dataset_key}_pseudonym_by_court.csv", index=False)
+    pd.DataFrame([{"court_level": court, **dict(c)} for court, c in by_court.items()]).to_csv(
+        out_dir / "tables" / f"{dataset_key}_pseudonym_by_court.csv", index=False
+    )
 
-    pd.DataFrame(
-        [
-            {"year": yr, **dict(c)}
-            for yr, c in sorted(by_year.items())
-        ]
-    ).to_csv(out_dir / "tables" / f"{dataset_key}_pseudonym_by_year.csv", index=False)
+    pd.DataFrame([{"year": yr, **dict(c)} for yr, c in sorted(by_year.items())]).to_csv(
+        out_dir / "tables" / f"{dataset_key}_pseudonym_by_year.csv", index=False
+    )
 
     return {
         "sample_size": len(selected),
@@ -709,10 +709,16 @@ def cross_branch_comparison(
     overlap = set(court_tokens) & set(nsa_tokens)
     jaccard = len(overlap) / max(len(set(court_tokens) | set(nsa_tokens)), 1)
 
-    court_stats = pd.read_csv(out_dir / "tables" / "pl-court_top30_statutes.csv") \
-        if (out_dir / "tables" / "pl-court_top30_statutes.csv").exists() else pd.DataFrame()
-    nsa_stats = pd.read_csv(out_dir / "tables" / "pl-nsa_top30_statutes.csv") \
-        if (out_dir / "tables" / "pl-nsa_top30_statutes.csv").exists() else pd.DataFrame()
+    court_stats = (
+        pd.read_csv(out_dir / "tables" / "pl-court_top30_statutes.csv")
+        if (out_dir / "tables" / "pl-court_top30_statutes.csv").exists()
+        else pd.DataFrame()
+    )
+    nsa_stats = (
+        pd.read_csv(out_dir / "tables" / "pl-nsa_top30_statutes.csv")
+        if (out_dir / "tables" / "pl-nsa_top30_statutes.csv").exists()
+        else pd.DataFrame()
+    )
     statute_overlap = (
         len(set(court_stats["statute"]) & set(nsa_stats["statute"]))
         if not court_stats.empty and not nsa_stats.empty
@@ -749,7 +755,9 @@ def _save_figure(fig: plt.Figure, base: Path) -> None:
     plt.close(fig)
 
 
-def _safe(name: str, fn: Callable[..., Dict[str, Any]], *args: Any, **kwargs: Any) -> Dict[str, Any]:
+def _safe(
+    name: str, fn: Callable[..., Dict[str, Any]], *args: Any, **kwargs: Any
+) -> Dict[str, Any]:
     try:
         return fn(*args, **kwargs)
     except Exception as exc:  # noqa: BLE001
@@ -813,7 +821,9 @@ def _print_versions() -> None:
     import platform
 
     LOG.info("python=%s", platform.python_version())
-    LOG.info("numpy=%s pandas=%s matplotlib=%s", np.__version__, pd.__version__, matplotlib.__version__)
+    LOG.info(
+        "numpy=%s pandas=%s matplotlib=%s", np.__version__, pd.__version__, matplotlib.__version__
+    )
     try:
         import datasets  # type: ignore
 

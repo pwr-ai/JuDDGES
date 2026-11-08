@@ -6,14 +6,15 @@ import sys
 from pathlib import Path
 
 import requests
-import weaviate
 from loguru import logger
+
+import weaviate
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from juddges.extraction.gemini_chain import build_update_payload
+from juddges.extraction.gemini_chain import build_update_payload  # noqa: E402
 
 # Failed document IDs from ingestion_report.json
 FAILED_DOC_IDS = [
@@ -94,9 +95,7 @@ def update_weaviate_document(
             logger.info(f"✓ Successfully updated {doc_id}")
             return True
         else:
-            logger.error(
-                f"✗ Failed to update {doc_id}: {response.status_code} - {response.text}"
-            )
+            logger.error(f"✗ Failed to update {doc_id}: {response.status_code} - {response.text}")
             return False
 
     except Exception as e:

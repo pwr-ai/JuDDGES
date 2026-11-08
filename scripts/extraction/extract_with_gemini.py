@@ -21,7 +21,6 @@ import os
 from pathlib import Path
 
 from langfuse.langchain import CallbackHandler
-from loguru import logger
 from rich.console import Console
 from rich.json import JSON
 from rich.panel import Panel

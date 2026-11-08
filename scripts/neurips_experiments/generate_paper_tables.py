@@ -35,7 +35,6 @@ def latex_escape(s: str) -> str:
 def generate_annotation_validation_table(data: dict[str, Any]) -> str:
     """Generate Table: Semi-auto vs Manual annotation comparison."""
     summary = data["summary"]
-    deltas = data["per_field_deltas"]
 
     lines = [
         r"\begin{table}[h]",
@@ -56,15 +55,15 @@ def generate_annotation_validation_table(data: dict[str, Any]) -> str:
         lines.append(r"\multicolumn{4}{l}{\textit{Most inflated fields:}} \\")
         for item in data["most_inflated_fields"][:5]:
             field = latex_escape(item["field"])
-            lines.append(
-                f"\\quad {field} & -- & -- & {item['delta']:+.3f} \\\\"
-            )
+            lines.append(f"\\quad {field} & -- & -- & {item['delta']:+.3f} \\\\")
 
-    lines.extend([
-        r"\bottomrule",
-        r"\end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"\bottomrule",
+            r"\end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -75,7 +74,8 @@ def generate_field_difficulty_table(data: dict[str, Any]) -> str:
     lines = [
         r"\begin{table}[h]",
         r"\centering",
-        r"\caption{Field difficulty taxonomy: mean extraction score across all models, stratified by field type. Performance varies by %.1fx across types.}" % data["summary"]["performance_variance_ratio"],
+        r"\caption{Field difficulty taxonomy: mean extraction score across all models, stratified by field type. Performance varies by %.1fx across types.}"
+        % data["summary"]["performance_variance_ratio"],
         r"\label{tab:field_difficulty}",
         r"\begin{tabular}{lccc}",
         r"\toprule",
@@ -96,11 +96,13 @@ def generate_field_difficulty_table(data: dict[str, Any]) -> str:
             f"  {latex_escape(ftype)} & {n_fields} & {mean_score:.3f} & [{min_score:.3f}, {max_score:.3f}] \\\\"
         )
 
-    lines.extend([
-        r"\bottomrule",
-        r"\end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"\bottomrule",
+            r"\end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -111,7 +113,8 @@ def generate_cross_model_table(data: dict[str, Any]) -> str:
     lines = [
         r"\begin{table}[h]",
         r"\centering",
-        r"\caption{Cross-model agreement between Gemini~2.5~Pro and GPT-4.1 on Schema~B (16 fields, %d documents). Agreement measured by field-type-appropriate metrics.}" % data.get("sample_size", 0),
+        r"\caption{Cross-model agreement between Gemini~2.5~Pro and GPT-4.1 on Schema~B (16 fields, %d documents). Agreement measured by field-type-appropriate metrics.}"
+        % data.get("sample_size", 0),
         r"\label{tab:cross_model_agreement}",
         r"\begin{tabular}{lccc}",
         r"\toprule",
@@ -126,13 +129,15 @@ def generate_cross_model_table(data: dict[str, Any]) -> str:
         exact = item.get("exact_match_pct", 0)
         lines.append(f"  {field} & {ftype} & {agreement:.3f} & {exact:.1f}\\% \\\\")
 
-    lines.extend([
-        r"\midrule",
-        f"  \\textbf{{Overall}} & -- & \\textbf{{{data.get('overall_agreement', 0):.3f}}} & -- \\\\",
-        r"\bottomrule",
-        r"\end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"\midrule",
+            f"  \\textbf{{Overall}} & -- & \\textbf{{{data.get('overall_agreement', 0):.3f}}} & -- \\\\",
+            r"\bottomrule",
+            r"\end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -161,11 +166,13 @@ def generate_aggregation_table(data: dict[str, Any]) -> str:
             f" & {pt.get('statistic', {}).get('mean_error', 0):.3f} \\\\"
         )
 
-    lines.extend([
-        r"\bottomrule",
-        r"\end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"\bottomrule",
+            r"\end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -176,7 +183,8 @@ def generate_error_taxonomy_table(data: dict[str, Any]) -> str:
     lines = [
         r"\begin{table}[h]",
         r"\centering",
-        r"\caption{Error taxonomy: distribution of extraction error types across %d sampled errors. Interpretation and omission errors dominate.}" % data.get("total_errors_analyzed", 0),
+        r"\caption{Error taxonomy: distribution of extraction error types across %d sampled errors. Interpretation and omission errors dominate.}"
+        % data.get("total_errors_analyzed", 0),
         r"\label{tab:error_taxonomy}",
         r"\begin{tabular}{lrr}",
         r"\toprule",
@@ -185,15 +193,15 @@ def generate_error_taxonomy_table(data: dict[str, Any]) -> str:
     ]
 
     for cat, stats in dist.items():
-        lines.append(
-            f"  {latex_escape(cat)} & {stats['count']} & {stats['pct']:.1f}\\% \\\\"
-        )
+        lines.append(f"  {latex_escape(cat)} & {stats['count']} & {stats['pct']:.1f}\\% \\\\")
 
-    lines.extend([
-        r"\bottomrule",
-        r"\end{tabular}",
-        r"\end{table}",
-    ])
+    lines.extend(
+        [
+            r"\bottomrule",
+            r"\end{tabular}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 

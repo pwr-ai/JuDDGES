@@ -10,7 +10,7 @@ import json
 import os
 import random
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 # Set Weaviate connection environment variables BEFORE importing modules
 # Override docker service name with localhost for running on host
@@ -23,10 +23,10 @@ if not os.getenv("WEAVIATE_PORT"):
 if not os.getenv("WEAVIATE_GRPC_PORT"):
     os.environ["WEAVIATE_GRPC_PORT"] = "8085"
 
+from langfuse.langchain import CallbackHandler
 from loguru import logger
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from langfuse.langchain import CallbackHandler
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
 from juddges.extraction import GeminiExtractionChain
@@ -44,12 +44,10 @@ def create_comprehensive_schema() -> ExtractionSchema:
             "document_type": "string, type: 'judgment', 'tax_interpretation', or 'legal_act'",
             "title": "string, document title or generated descriptive title",
             "date_issued": "date ISO 8601 (YYYY-MM-DD), date document was issued",
-
             # High-priority augmentation fields
             "summary": "string, concise 3-5 sentence summary covering: (1) document type and issuing body, (2) main legal issue, (3) key facts, (4) decision/outcome, (5) primary legal basis",
             "thesis": "string, main legal principle or rule established by the document in 1-3 sentences",
             "keywords": "List[string], 5-15 relevant legal keywords covering legal domains, institutions, and specific concepts",
-
             # Outcome
             "outcome": """JSON object: {
                 "decision_type": "string (uwzględniono/oddalono/uchylono/pozytywne/negatywne)",
@@ -57,7 +55,6 @@ def create_comprehensive_schema() -> ExtractionSchema:
                 "awarded_amounts": [{"type": "string", "amount": number, "currency": "string", "recipient": "string"}],
                 "legal_effect": "string, practical legal consequence"
             }""",
-
             # Legal content
             "legal_references": """JSON array: [{
                 "type": "string (statute/article/case_law/regulation)",
@@ -67,21 +64,18 @@ def create_comprehensive_schema() -> ExtractionSchema:
                 "citation": "string, full citation as in document",
                 "context": "string, how reference is used"
             }]""",
-
             "legal_concepts": """JSON array: [{
                 "concept_name": "string, name of legal concept",
                 "legal_area": "string, area of law",
                 "definition_context": "string, how concept is used",
                 "relevance": "string (primary/secondary/mentioned)"
             }]""",
-
             "parties": """JSON array: [{
                 "party_type": "string (plaintiff/defendant/applicant/etc)",
                 "party_name": "string, name (anonymized if needed)",
                 "party_category": "string (natural_person/company/public_entity)",
                 "representation": "string, legal representative if available"
             }]""",
-
             # Structured content
             "legal_analysis": """JSON object: {
                 "facts_summary": "string, key factual findings",
@@ -89,7 +83,6 @@ def create_comprehensive_schema() -> ExtractionSchema:
                 "reasoning": "string, court's/authority's reasoning",
                 "conclusion": "string, final legal conclusion"
             }""",
-
             # Document-type specific fields
             "judgment_specific": """JSON object (if judgment): {
                 "court_name": "string, full court name",
@@ -99,7 +92,6 @@ def create_comprehensive_schema() -> ExtractionSchema:
                 "legal_bases": ["string, legal basis for decision"],
                 "judgment_type": "string (wyrok/postanowienie)"
             }""",
-
             "tax_interpretation_specific": """JSON object (if tax interpretation): {
                 "interpretation_type": "string (individual/general)",
                 "tax_authority": "string, issuing authority",
@@ -146,7 +138,13 @@ def sample_documents(
     try:
         response = collection.query.fetch_objects(
             limit=fetch_size,
-            return_properties=["document_id", "document_type", "full_text", "language", "document_number"],
+            return_properties=[
+                "document_id",
+                "document_type",
+                "full_text",
+                "language",
+                "document_number",
+            ],
         )
     except Exception as e:
         logger.error(f"Failed to fetch documents: {e}")
@@ -200,7 +198,6 @@ def run_extraction(
         TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         console=console,
     ) as progress:
-
         task = progress.add_task("Extracting documents...", total=len(documents))
 
         for doc in documents:
@@ -236,19 +233,19 @@ def run_extraction(
 
                 results.append(result)
 
-                logger.info(
-                    f"✓ Extracted {document_id} ({len(extracted)} fields)"
-                )
+                logger.info(f"✓ Extracted {document_id} ({len(extracted)} fields)")
 
             except Exception as e:
                 logger.error(f"✗ Failed to extract {document_id}: {e}")
-                results.append({
-                    "document_id": document_id,
-                    "document_type": doc_type_str,
-                    "extraction_status": "failed",
-                    "error": str(e),
-                    "full_text_length": len(full_text),
-                })
+                results.append(
+                    {
+                        "document_id": document_id,
+                        "document_type": doc_type_str,
+                        "extraction_status": "failed",
+                        "error": str(e),
+                        "full_text_length": len(full_text),
+                    }
+                )
 
             progress.update(task, advance=1)
 
@@ -438,7 +435,7 @@ def main():
     output_dir = Path(args.output_dir)
     save_results(documents, extraction_results, output_dir)
 
-    console.print(f"\n[bold green]✓ Extraction complete![/bold green]")
+    console.print("\n[bold green]✓ Extraction complete![/bold green]")
     console.print(f"Results saved to: {output_dir}")
 
 

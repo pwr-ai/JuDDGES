@@ -28,12 +28,15 @@ class BaseWeaviateDB(ABC):
         """Set up the database connection when entering context."""
         if self.client is None:
             weaviate_host = os.getenv("WEAVIATE_HOST", "localhost")
-            weaviate_scheme = os.getenv("WEAVIATE_SCHEME", "http")
+            # TODO: WEAVIATE_SCHEME is read but never applied to the connection (http_secure is hardcoded)
+            weaviate_scheme = os.getenv("WEAVIATE_SCHEME", "http")  # noqa: F841
 
             # Check if using public instance
             if weaviate_host not in ["localhost", "127.0.0.1", "weaviate"]:
                 # Public instance - use REST API only (no GRPC)
-                logger.info(f"Connecting to public Weaviate instance: {weaviate_host} (REST-only on port 8084)")
+                logger.info(
+                    f"Connecting to public Weaviate instance: {weaviate_host} (REST-only on port 8084)"
+                )
 
                 # Use connect_to_custom with dummy GRPC values
                 # The client will fall back to REST when GRPC is unavailable
@@ -52,7 +55,7 @@ class BaseWeaviateDB(ABC):
 
                 # Force disable GRPC by redirecting grpc_search to http_search
                 try:
-                    if hasattr(self.client, '_connection'):
+                    if hasattr(self.client, "_connection"):
                         # Store original http_search method
                         original_http_search = self.client._connection.http_search
 
@@ -60,7 +63,7 @@ class BaseWeaviateDB(ABC):
                         self.client._connection.grpc_search = original_http_search
 
                         # Also set grpc stub to None
-                        if hasattr(self.client._connection, '_grpc_stub'):
+                        if hasattr(self.client._connection, "_grpc_stub"):
                             self.client._connection._grpc_stub = None
 
                         logger.info("Disabled GRPC connection - redirected all queries to REST API")

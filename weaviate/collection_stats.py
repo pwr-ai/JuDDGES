@@ -4,6 +4,7 @@ Quick statistics script - shows how we got the collection counts.
 """
 
 import os
+
 import requests
 from rich.console import Console
 from rich.table import Table
@@ -31,10 +32,7 @@ def get_collection_count(collection_name: str) -> int:
 
     try:
         response = requests.post(
-            f"{WEAVIATE_URL}/v1/graphql",
-            json={"query": query},
-            headers=HEADERS,
-            timeout=30
+            f"{WEAVIATE_URL}/v1/graphql", json={"query": query}, headers=HEADERS, timeout=30
         )
 
         if response.status_code == 200:
@@ -58,11 +56,7 @@ def get_collection_count(collection_name: str) -> int:
 def get_schema_info(collection_name: str) -> int:
     """Get number of properties in schema."""
     try:
-        response = requests.get(
-            f"{WEAVIATE_URL}/v1/schema",
-            headers=HEADERS,
-            timeout=5
-        )
+        response = requests.get(f"{WEAVIATE_URL}/v1/schema", headers=HEADERS, timeout=5)
 
         if response.status_code == 200:
             schema = response.json()
@@ -94,11 +88,7 @@ def main():
         count = get_collection_count(collection)
         properties = get_schema_info(collection)
 
-        table.add_row(
-            collection,
-            f"{count:,}",
-            str(properties)
-        )
+        table.add_row(collection, f"{count:,}", str(properties))
 
     console.print()
     console.print(table)

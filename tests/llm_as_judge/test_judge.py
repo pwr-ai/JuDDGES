@@ -7,12 +7,15 @@ from unittest.mock import AsyncMock
 import pytest
 
 pytest.importorskip("langchain_openai", reason="langchain_openai not installed")
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI  # noqa: E402
 
-from juddges.llm_as_judge.base import EvalResults
-from juddges.llm_as_judge.data_model import PredictionLoader
-from juddges.llm_as_judge.judge import StructuredOutputJudge
-from juddges.utils.misc import save_yaml
+from juddges.llm_as_judge.base import EvalResults  # noqa: E402
+from juddges.llm_as_judge.data_model import PredictionLoader  # noqa: E402
+from juddges.llm_as_judge.judge import StructuredOutputJudge  # noqa: E402
+from juddges.utils.misc import save_yaml  # noqa: E402
+
+SYSTEM_PROMPT = "You are a judge evaluating extraction outputs."
+USER_PROMPT = "Schema: {schema}\nOutputs: {outputs}\nReference: {reference_outputs}"
 
 
 @pytest.fixture
@@ -80,6 +83,8 @@ async def test_successful_evaluation(
     judge = StructuredOutputJudge(
         client=mock_client,
         pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
         verbose=False,
     )
     results = await judge.evaluate()
@@ -104,7 +109,12 @@ async def test_predictions_with_missing_keys(
 
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.0}}
 
-    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
+    judge = StructuredOutputJudge(
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+    )
     results = await judge.evaluate()
 
     assert len(results.results) == 1
@@ -128,7 +138,12 @@ async def test_predictions_with_extra_keys(
 
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.9}}
 
-    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
+    judge = StructuredOutputJudge(
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+    )
     results = await judge.evaluate()
 
     assert len(results.results) == 1
@@ -151,7 +166,12 @@ async def test_parsing_failure_invalid_json(
 
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.0}}
 
-    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
+    judge = StructuredOutputJudge(
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+    )
     results = await judge.evaluate()
 
     assert mock_client.ainvoke.call_count == 1
@@ -170,7 +190,12 @@ async def test_parsing_failure_missing_required_keys(
     with open(pred_loader.predictions_file, "w") as f:
         f.write(invalid_file_content)
 
-    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
+    judge = StructuredOutputJudge(
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+    )
 
     with pytest.raises(ValueError, match="Predictions must contain 'answer' and 'gold' keys"):
         await judge.evaluate()
@@ -187,7 +212,12 @@ async def test_api_failure_all_requests(
 
     mock_client.ainvoke.side_effect = Exception("API completely down")
 
-    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
+    judge = StructuredOutputJudge(
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+    )
     results = await judge.evaluate()
 
     assert len(results.results) == 2
@@ -202,7 +232,12 @@ async def test_empty_predictions_file(
     with open(pred_loader.predictions_file, "w") as f:
         json.dump([], f)
 
-    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
+    judge = StructuredOutputJudge(
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+    )
     results = await judge.evaluate()
 
     assert len(results.results) == 0
@@ -227,7 +262,11 @@ async def test_concurrency_limit_respected(
     mock_client.ainvoke.return_value = {"key1": {"score": 0.8}, "key2": {"score": 0.9}}
 
     judge = StructuredOutputJudge(
-        client=mock_client, pred_loader=pred_loader, max_concurrent_calls=3
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+        max_concurrent_calls=3,
     )
 
     assert judge.max_concurrent_calls == 3
@@ -249,7 +288,12 @@ async def test_zero_scores_fallback(
 
     mock_client.ainvoke.side_effect = Exception("API error")
 
-    judge = StructuredOutputJudge(client=mock_client, pred_loader=pred_loader)
+    judge = StructuredOutputJudge(
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+    )
     results = await judge.evaluate()
 
     zero_scores = judge.get_zero_scores()
@@ -267,7 +311,11 @@ async def test_custom_max_concurrent_calls(
 
     custom_limit = 10
     judge = StructuredOutputJudge(
-        client=mock_client, pred_loader=pred_loader, max_concurrent_calls=custom_limit
+        client=mock_client,
+        pred_loader=pred_loader,
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+        max_concurrent_calls=custom_limit,
     )
 
     assert judge.max_concurrent_calls == custom_limit

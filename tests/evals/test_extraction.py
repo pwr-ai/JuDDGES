@@ -2,9 +2,9 @@ import pytest
 
 pytest.importorskip("torchmetrics", reason="torchmetrics not installed")
 
-from juddges.evals.extraction import ExtractionEvaluator
-from juddges.llm_as_judge.base import ItemEvalResult
-from juddges.llm_as_judge.data_model import PredictionLoader
+from juddges.evals.extraction import ExtractionEvaluator  # noqa: E402
+from juddges.llm_as_judge.base import ItemEvalResult  # noqa: E402
+from juddges.llm_as_judge.data_model import PredictionLoader  # noqa: E402
 
 
 @pytest.fixture

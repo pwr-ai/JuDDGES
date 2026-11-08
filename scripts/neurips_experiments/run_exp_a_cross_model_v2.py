@@ -43,8 +43,15 @@ SCHEMA_B_FIELDS = {
 }
 
 COMPARISON_FIELDS = [
-    "title", "date_issued", "summary", "thesis", "keywords",
-    "outcome", "legal_references", "legal_concepts", "parties",
+    "title",
+    "date_issued",
+    "summary",
+    "thesis",
+    "keywords",
+    "outcome",
+    "legal_references",
+    "legal_concepts",
+    "parties",
     "legal_analysis",
 ]
 
@@ -68,7 +75,10 @@ def extract_with_gpt(client: OpenAI, text: str) -> dict | None:
             response = client.chat.completions.create(
                 model=MODEL,
                 messages=[
-                    {"role": "system", "content": "You are a legal document extraction system. Return only valid JSON."},
+                    {
+                        "role": "system",
+                        "content": "You are a legal document extraction system. Return only valid JSON.",
+                    },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.1,
@@ -80,7 +90,7 @@ def extract_with_gpt(client: OpenAI, text: str) -> dict | None:
             logger.warning(f"JSON parse error attempt {attempt + 1}")
         except Exception as e:
             logger.warning(f"API error attempt {attempt + 1}: {e}")
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
     return None
 
 
@@ -177,7 +187,9 @@ def main():
 
         if (idx + 1) % BATCH_LOG_EVERY == 0:
             avg = mean(s for scores in field_agreements.values() for s in scores)
-            logger.info(f"  [{idx + 1}/{len(docs)}] avg agreement: {avg:.3f}, errors: {parse_errors}")
+            logger.info(
+                f"  [{idx + 1}/{len(docs)}] avg agreement: {avg:.3f}, errors: {parse_errors}"
+            )
 
     # Results
     logger.info(f"\n{'='*70}")

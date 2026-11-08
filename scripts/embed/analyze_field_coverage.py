@@ -128,14 +128,16 @@ def identify_llm_candidate_fields(field_stats: Dict) -> List[Dict]:
     for field, description in llm_candidate_criteria.items():
         if field in field_stats["field_stats"]:
             stats = field_stats["field_stats"][field]
-            candidates.append({
-                "field": field,
-                "description": description,
-                "coverage_percentage": stats["coverage_percentage"],
-                "empty_count": stats["empty_count"],
-                "populated_count": stats["populated_count"],
-                "type": stats["type"],
-            })
+            candidates.append(
+                {
+                    "field": field,
+                    "description": description,
+                    "coverage_percentage": stats["coverage_percentage"],
+                    "empty_count": stats["empty_count"],
+                    "populated_count": stats["populated_count"],
+                    "type": stats["type"],
+                }
+            )
 
     # Sort by coverage (lowest first = most empty = highest priority)
     candidates.sort(key=lambda x: x["coverage_percentage"])
@@ -162,12 +164,17 @@ def print_results(field_stats: Dict, llm_candidates: List[Dict]):
 
     # Sort by coverage percentage
     sorted_fields = sorted(
-        field_stats["field_stats"].items(),
-        key=lambda x: x[1]["coverage_percentage"]
+        field_stats["field_stats"].items(), key=lambda x: x[1]["coverage_percentage"]
     )
 
     for field, stats in sorted_fields:
-        coverage_color = "green" if stats["coverage_percentage"] > 50 else "yellow" if stats["coverage_percentage"] > 10 else "red"
+        coverage_color = (
+            "green"
+            if stats["coverage_percentage"] > 50
+            else "yellow"
+            if stats["coverage_percentage"] > 10
+            else "red"
+        )
         table.add_row(
             field,
             stats["type"],
@@ -219,8 +226,12 @@ def main():
 
             # Print markdown table for documentation
             console.print("\n[bold cyan]Markdown Table for Documentation:[/bold cyan]\n")
-            console.print("| Priority | Field | Description | Coverage % | Empty Count | LLM Generation Feasibility |")
-            console.print("|----------|-------|-------------|------------|-------------|---------------------------|")
+            console.print(
+                "| Priority | Field | Description | Coverage % | Empty Count | LLM Generation Feasibility |"
+            )
+            console.print(
+                "|----------|-------|-------------|------------|-------------|---------------------------|"
+            )
             for idx, candidate in enumerate(llm_candidates, 1):
                 feasibility = "High" if idx <= 3 else "Medium" if idx <= 6 else "Low"
                 console.print(

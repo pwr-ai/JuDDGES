@@ -101,10 +101,12 @@ def test_langfuse_connection():
         # Try to create a callback handler (this will validate credentials)
         console.print("[yellow]Testing Langfuse connection...[/yellow]")
 
-        handler = CallbackHandler()
+        CallbackHandler()
 
         console.print("[green]✓ Successfully connected to Langfuse[/green]")
-        console.print(f"[dim]Host: {os.getenv('LANGFUSE_HOST', 'https://cloud.langfuse.com')}[/dim]")
+        console.print(
+            f"[dim]Host: {os.getenv('LANGFUSE_HOST', 'https://cloud.langfuse.com')}[/dim]"
+        )
         console.print(f"[dim]Public Key: {os.getenv('LANGFUSE_PUBLIC_KEY', '')[:20]}...[/dim]")
 
         return True
@@ -113,7 +115,9 @@ def test_langfuse_connection():
         console.print("\n[yellow]Check your credentials:[/yellow]")
         console.print("  - LANGFUSE_PUBLIC_KEY should start with 'pk-lf-'")
         console.print("  - LANGFUSE_SECRET_KEY should start with 'sk-lf-'")
-        console.print(f"  - LANGFUSE_HOST should be accessible: {os.getenv('LANGFUSE_HOST', 'N/A')}")
+        console.print(
+            f"  - LANGFUSE_HOST should be accessible: {os.getenv('LANGFUSE_HOST', 'N/A')}"
+        )
         return False
 
 
@@ -189,6 +193,7 @@ def test_extraction_with_langfuse():
         console.print("\n[bold green]✓ Extraction successful![/bold green]")
         console.print("\n[bold]Extracted Data:[/bold]")
         from rich.json import JSON
+
         console.print(JSON.from_data(result, indent=2))
 
         # Flush Langfuse to ensure trace is sent
@@ -206,6 +211,7 @@ def test_extraction_with_langfuse():
     except Exception as e:
         console.print(f"\n[red]✗ Extraction failed: {e}[/red]")
         import traceback
+
         console.print(f"[dim]{traceback.format_exc()}[/dim]")
         return False
 
@@ -234,7 +240,9 @@ def test_multiple_traces():
         ("Judgment 3", "Wyrok Sądu Apelacyjnego w Gdańsku z dnia 2024-03-10"),
     ]
 
-    console.print(f"\n[yellow]Processing {len(judgments)} judgments with session: {session_id}[/yellow]")
+    console.print(
+        f"\n[yellow]Processing {len(judgments)} judgments with session: {session_id}[/yellow]"
+    )
 
     try:
         for i, (name, text) in enumerate(judgments, 1):
@@ -261,9 +269,9 @@ def test_multiple_traces():
             handler.langfuse.flush()
 
         console.print(f"\n[bold green]✓ All {len(judgments)} extractions completed![/bold green]")
-        console.print(f"\n[bold]View session in Langfuse:[/bold]")
+        console.print("\n[bold]View session in Langfuse:[/bold]")
         console.print(f"  Session ID: {session_id}")
-        console.print(f"  Look for traces with tags: ['batch', 'test']")
+        console.print("  Look for traces with tags: ['batch', 'test']")
 
         return True
 
@@ -274,11 +282,11 @@ def test_multiple_traces():
 
 def show_langfuse_dashboard_guide():
     """Show guide for viewing traces in Langfuse dashboard."""
-    console.print("\n" + "="*60)
+    console.print("\n" + "=" * 60)
     console.print("[bold cyan]Viewing Traces in Langfuse Dashboard[/bold cyan]")
-    console.print("="*60)
+    console.print("=" * 60)
 
-    langfuse_host = os.getenv('LANGFUSE_HOST', 'https://cloud.langfuse.com')
+    langfuse_host = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
 
     console.print(f"\n1. Open Langfuse: {langfuse_host}")
     console.print("\n2. Navigate to your project")
@@ -365,9 +373,9 @@ def main():
         results["multiple"] = test_multiple_traces()
 
     # Summary
-    console.print("\n\n" + "="*60)
+    console.print("\n\n" + "=" * 60)
     console.print("[bold]Test Summary[/bold]")
-    console.print("="*60 + "\n")
+    console.print("=" * 60 + "\n")
 
     for name, passed in results.items():
         status = "[green]✓ PASS[/green]" if passed else "[red]✗ FAIL[/red]"

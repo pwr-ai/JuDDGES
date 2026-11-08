@@ -38,9 +38,7 @@ def check_factual_state_coverage(db: WeaviateLegalDocumentsDatabase) -> dict:
     while offset < total_count:
         try:
             response = collection.query.fetch_objects(
-                limit=batch_size,
-                offset=offset,
-                return_properties=["document_id", "factual_state"]
+                limit=batch_size, offset=offset, return_properties=["document_id", "factual_state"]
             )
 
             for obj in response.objects:
@@ -81,11 +79,17 @@ def main():
 
             # Print results
             console.print("\n[bold cyan]Factual State Field Coverage[/bold cyan]\n")
-            console.print(f"[bold]Total documents in collection:[/bold] {stats['total_documents']:,}")
+            console.print(
+                f"[bold]Total documents in collection:[/bold] {stats['total_documents']:,}"
+            )
             console.print(f"[bold]Documents checked:[/bold] {stats['documents_checked']:,}")
-            console.print(f"[green]Documents with factual_state:[/green] {stats['populated_count']:,}")
+            console.print(
+                f"[green]Documents with factual_state:[/green] {stats['populated_count']:,}"
+            )
             console.print(f"[red]Documents without factual_state:[/red] {stats['empty_count']:,}")
-            console.print(f"[yellow]Coverage percentage:[/yellow] {stats['coverage_percentage']:.2f}%")
+            console.print(
+                f"[yellow]Coverage percentage:[/yellow] {stats['coverage_percentage']:.2f}%"
+            )
 
         except Exception as e:
             logger.error(f"Error during analysis: {e}")

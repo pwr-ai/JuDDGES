@@ -5,9 +5,9 @@ Usage:
     python scripts/dataset/import_extractions_to_postgres.py
 """
 
+import importlib.util
 import json
 from pathlib import Path
-from uuid import uuid4
 
 import typer
 from dotenv import load_dotenv
@@ -20,10 +20,8 @@ ROOT_PATH = Path(__file__).parent.parent.parent
 DATA_PATH = ROOT_PATH / "data"
 
 # Import ExtractionStorage directly to avoid __init__.py dependencies
-import importlib.util
 spec = importlib.util.spec_from_file_location(
-    "extraction_storage",
-    ROOT_PATH / "juddges" / "extraction" / "extraction_storage.py"
+    "extraction_storage", ROOT_PATH / "juddges" / "extraction" / "extraction_storage.py"
 )
 extraction_storage_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(extraction_storage_module)

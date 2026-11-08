@@ -98,13 +98,15 @@ def load_all_results(results_dir: Path) -> list[dict[str, Any]]:
         if not agg_scores:
             continue
 
-        entries.append({
-            "model": scores_file.parent.name,
-            "dataset": scores_file.parent.parent.name,
-            "eval_type": scores_file.stem.replace("scores_", ""),
-            "schema": schema,
-            "scores": agg_scores,
-        })
+        entries.append(
+            {
+                "model": scores_file.parent.name,
+                "dataset": scores_file.parent.parent.name,
+                "eval_type": scores_file.stem.replace("scores_", ""),
+                "schema": schema,
+                "scores": agg_scores,
+            }
+        )
 
     return entries
 
@@ -143,11 +145,13 @@ def main(
                     all_fields[key]["scores_by_model"][model] = score
 
     # Aggregate by field type
-    type_analysis = defaultdict(lambda: {
-        "fields": [],
-        "all_scores": [],
-        "per_model_scores": defaultdict(list),
-    })
+    type_analysis = defaultdict(
+        lambda: {
+            "fields": [],
+            "all_scores": [],
+            "per_model_scores": defaultdict(list),
+        }
+    )
 
     for key, fdata in all_fields.items():
         ftype = fdata["field_type"]
@@ -191,21 +195,25 @@ def main(
     for key, fdata in all_fields.items():
         scores = list(fdata["scores_by_model"].values())
         if scores:
-            field_difficulty.append({
-                "field": key,
-                "field_type": fdata["field_type"],
-                "mean_score": round(mean(scores), 4),
-                "n_models": len(scores),
-                "best_model": max(fdata["scores_by_model"], key=fdata["scores_by_model"].get),
-                "best_score": round(max(scores), 4),
-                "worst_score": round(min(scores), 4),
-                "variance": round(max(scores) - min(scores), 4),
-            })
+            field_difficulty.append(
+                {
+                    "field": key,
+                    "field_type": fdata["field_type"],
+                    "mean_score": round(mean(scores), 4),
+                    "n_models": len(scores),
+                    "best_model": max(fdata["scores_by_model"], key=fdata["scores_by_model"].get),
+                    "best_score": round(max(scores), 4),
+                    "worst_score": round(min(scores), 4),
+                    "variance": round(max(scores) - min(scores), 4),
+                }
+            )
     field_difficulty.sort(key=lambda x: x["mean_score"])
 
     # Performance variance ratio (max type mean / min type mean)
     type_means = [ts["overall"]["mean"] for ts in type_stats.values() if ts["overall"]["mean"] > 0]
-    variance_ratio = max(type_means) / min(type_means) if type_means and min(type_means) > 0 else float("inf")
+    variance_ratio = (
+        max(type_means) / min(type_means) if type_means and min(type_means) > 0 else float("inf")
+    )
 
     results = {
         "experiment": "field_difficulty",
@@ -227,8 +235,11 @@ def main(
         "easiest_fields": field_difficulty[-10:],
         "schema_composition": {
             dataset: {
-                ftype: sum(1 for f in all_fields.values()
-                           if f["dataset"] == dataset and f["field_type"] == ftype)
+                ftype: sum(
+                    1
+                    for f in all_fields.values()
+                    if f["dataset"] == dataset and f["field_type"] == ftype
+                )
                 for ftype in FIELD_TYPES
             }
             for dataset in set(f["dataset"] for f in all_fields.values())
@@ -249,13 +260,15 @@ def main(
     print(f"{'-'*52}")
     for ftype, data in difficulty_ranking:
         o = data["overall"]
-        print(f"{ftype:<18} {data['num_fields']:>6} {o['mean']:>8.3f} {o['min']:>8.3f} {o['max']:>8.3f}")
+        print(
+            f"{ftype:<18} {data['num_fields']:>6} {o['mean']:>8.3f} {o['min']:>8.3f} {o['max']:>8.3f}"
+        )
 
-    print(f"\nTop 5 HARDEST fields:")
+    print("\nTop 5 HARDEST fields:")
     for f in field_difficulty[:5]:
         print(f"  {f['field']:<45} {f['mean_score']:.3f} ({f['field_type']})")
 
-    print(f"\nTop 5 EASIEST fields:")
+    print("\nTop 5 EASIEST fields:")
     for f in field_difficulty[-5:]:
         print(f"  {f['field']:<45} {f['mean_score']:.3f} ({f['field_type']})")
 

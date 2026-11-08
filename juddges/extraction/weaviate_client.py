@@ -8,8 +8,9 @@ import os
 from typing import Any, Dict, List, Optional
 
 import requests
-import weaviate.util
 from loguru import logger
+
+import weaviate.util
 
 
 class WeaviateRestClient:
@@ -115,8 +116,8 @@ class WeaviateRestClient:
         if sort_by:
             if use_cursor:
                 logger.warning(
-                    f"Sort requires offset pagination (cursor pagination doesn't support sorting). "
-                    f"Switching to offset pagination (max 10K limit applies)."
+                    "Sort requires offset pagination (cursor pagination doesn't support sorting). "
+                    "Switching to offset pagination (max 10K limit applies)."
                 )
                 use_cursor = False
 
@@ -252,9 +253,13 @@ class WeaviateRestClient:
                 if cursor:
                     if skipped_count < skip_documents:
                         if iteration % 50 == 0:  # Log every 50th iteration to reduce noise
-                            logger.info(f"Skipping chunk {iteration}: limit={current_limit}, cursor={cursor[:20]}... (skipped: {skipped_count}/{skip_documents})")
+                            logger.info(
+                                f"Skipping chunk {iteration}: limit={current_limit}, cursor={cursor[:20]}... (skipped: {skipped_count}/{skip_documents})"
+                            )
                     else:
-                        logger.info(f"Fetching chunk {iteration}: limit={current_limit}, cursor={cursor[:20]}...")
+                        logger.info(
+                            f"Fetching chunk {iteration}: limit={current_limit}, cursor={cursor[:20]}..."
+                        )
                 else:
                     logger.info(f"Fetching chunk {iteration}: limit={current_limit} (initial)")
 
@@ -280,8 +285,12 @@ class WeaviateRestClient:
                 # If we're in skip phase, just count and don't add to results
                 if skipped_count < skip_documents:
                     skipped_count += len(documents)
-                    if iteration % 50 == 0 or skipped_count >= skip_documents:  # Log progress periodically
-                        logger.info(f"Skipped {len(documents)} documents (total skipped: {skipped_count}/{skip_documents})")
+                    if (
+                        iteration % 50 == 0 or skipped_count >= skip_documents
+                    ):  # Log progress periodically
+                        logger.info(
+                            f"Skipped {len(documents)} documents (total skipped: {skipped_count}/{skip_documents})"
+                        )
                 else:
                     all_documents.extend(documents)
                     logger.info(f"Fetched {len(documents)} documents (total: {len(all_documents)})")
@@ -302,7 +311,9 @@ class WeaviateRestClient:
                 logger.error(f"Failed to fetch chunk at iteration {iteration}: {e}")
                 raise
 
-        logger.info(f"Fetched {len(all_documents)} total documents from Weaviate using cursor pagination")
+        logger.info(
+            f"Fetched {len(all_documents)} total documents from Weaviate using cursor pagination"
+        )
 
         # Filter documents with non-empty full_text
         valid_docs = [
@@ -572,10 +583,12 @@ class WeaviateRestClient:
                     else:
                         failed += 1
                         error_msg = item_result.get("result", {}).get("errors", {})
-                        errors.append({
-                            "document_id": item_result.get("id", "unknown"),
-                            "error": str(error_msg),
-                        })
+                        errors.append(
+                            {
+                                "document_id": item_result.get("id", "unknown"),
+                                "error": str(error_msg),
+                            }
+                        )
             else:
                 # Assume all successful if no detailed result
                 successful = len(batch_objects)
@@ -584,20 +597,24 @@ class WeaviateRestClient:
             # Batch failed - mark all as failed
             failed = len(batch_objects)
             for obj in batch_objects:
-                errors.append({
-                    "document_id": obj.get("id", "unknown"),
-                    "error": f"Batch API error: {e}",
-                    "status_code": e.response.status_code if e.response else None,
-                })
+                errors.append(
+                    {
+                        "document_id": obj.get("id", "unknown"),
+                        "error": f"Batch API error: {e}",
+                        "status_code": e.response.status_code if e.response else None,
+                    }
+                )
             logger.error(f"Batch API request failed: {e}")
 
         except Exception as e:
             failed = len(batch_objects)
             for obj in batch_objects:
-                errors.append({
-                    "document_id": obj.get("id", "unknown"),
-                    "error": f"Batch processing error: {e}",
-                })
+                errors.append(
+                    {
+                        "document_id": obj.get("id", "unknown"),
+                        "error": f"Batch processing error: {e}",
+                    }
+                )
             logger.error(f"Batch processing failed: {e}")
 
         return successful, failed, errors

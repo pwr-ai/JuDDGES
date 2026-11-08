@@ -10,7 +10,6 @@ This script analyzes extraction logs and database records to identify:
 
 import argparse
 import re
-from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -23,6 +22,7 @@ console = Console()
 
 try:
     from juddges.extraction import ExtractionStorage
+
     HAS_DB = True
 except ImportError:
     HAS_DB = False
@@ -55,7 +55,10 @@ def parse_log_file(log_file: Path) -> Dict:
         "rate_limit": re.compile(r"rate.?limit|\b429\b", re.IGNORECASE),
         "timeout": re.compile(r"timeout|timed.?out", re.IGNORECASE),
         # Server errors: match HTTP status codes, not in timestamps or IDs
-        "server_error": re.compile(r"(?:status|code|error).*?(?:500|503|502)|\b(?:500|503|502)\b.*?(?:error|failed)", re.IGNORECASE),
+        "server_error": re.compile(
+            r"(?:status|code|error).*?(?:500|503|502)|\b(?:500|503|502)\b.*?(?:error|failed)",
+            re.IGNORECASE,
+        ),
         "retry": re.compile(r"retry|retrying|attempt \d+", re.IGNORECASE),
         "error": re.compile(r"ERROR|CRITICAL|Failed|Exception", re.IGNORECASE),
     }
@@ -69,21 +72,25 @@ def parse_log_file(log_file: Path) -> Dict:
                     if "429" in line:
                         stats["429_errors"] += 1
                     if len(stats["error_examples"]) < 10:
-                        stats["error_examples"].append({
-                            "type": "rate_limit",
-                            "line": line_num,
-                            "message": line.strip()[:200],
-                        })
+                        stats["error_examples"].append(
+                            {
+                                "type": "rate_limit",
+                                "line": line_num,
+                                "message": line.strip()[:200],
+                            }
+                        )
 
                 # Check for timeouts
                 if patterns["timeout"].search(line):
                     stats["timeouts"] += 1
                     if len(stats["error_examples"]) < 10:
-                        stats["error_examples"].append({
-                            "type": "timeout",
-                            "line": line_num,
-                            "message": line.strip()[:200],
-                        })
+                        stats["error_examples"].append(
+                            {
+                                "type": "timeout",
+                                "line": line_num,
+                                "message": line.strip()[:200],
+                            }
+                        )
 
                 # Check for server errors
                 if patterns["server_error"].search(line):
@@ -93,11 +100,13 @@ def parse_log_file(log_file: Path) -> Dict:
                     if "500" in line:
                         stats["500_errors"] += 1
                     if len(stats["error_examples"]) < 10:
-                        stats["error_examples"].append({
-                            "type": "server_error",
-                            "line": line_num,
-                            "message": line.strip()[:200],
-                        })
+                        stats["error_examples"].append(
+                            {
+                                "type": "server_error",
+                                "line": line_num,
+                                "message": line.strip()[:200],
+                            }
+                        )
 
                 # Check for retries
                 if patterns["retry"].search(line):
@@ -114,9 +123,7 @@ def parse_log_file(log_file: Path) -> Dict:
 
 
 def check_database_errors(
-    storage: "ExtractionStorage",
-    run_id: Optional[str] = None,
-    hours: int = 24
+    storage: "ExtractionStorage", run_id: Optional[str] = None, hours: int = 24
 ) -> Dict:
     """Check database for extraction errors.
 
@@ -180,9 +187,7 @@ def check_database_errors(
 
 
 def get_error_timeline(
-    storage: "ExtractionStorage",
-    run_id: Optional[str] = None,
-    hours: int = 24
+    storage: "ExtractionStorage", run_id: Optional[str] = None, hours: int = 24
 ) -> List[Dict]:
     """Get timeline of errors over time.
 
@@ -263,7 +268,9 @@ def display_log_results(log_file: Path, stats: Dict):
     table.add_column("Status", style="white")
 
     # Rate limits
-    rate_limit_status = "[red]⚠ DETECTED[/red]" if stats["rate_limits"] > 0 else "[green]✓ None[/green]"
+    rate_limit_status = (
+        "[red]⚠ DETECTED[/red]" if stats["rate_limits"] > 0 else "[green]✓ None[/green]"
+    )
     table.add_row("Rate Limiting (429)", str(stats["rate_limits"]), rate_limit_status)
 
     # Timeouts
@@ -271,7 +278,9 @@ def display_log_results(log_file: Path, stats: Dict):
     table.add_row("Timeouts", str(stats["timeouts"]), timeout_status)
 
     # Server errors
-    server_status = "[red]⚠ DETECTED[/red]" if stats["server_errors"] > 0 else "[green]✓ None[/green]"
+    server_status = (
+        "[red]⚠ DETECTED[/red]" if stats["server_errors"] > 0 else "[green]✓ None[/green]"
+    )
     table.add_row("Server Errors (5xx)", str(stats["server_errors"]), server_status)
 
     # Retries
@@ -298,7 +307,7 @@ def display_database_results(db_stats: Dict, timeline: List[Dict]):
         db_stats: Database statistics
         timeline: Error timeline data
     """
-    console.print(f"\n[bold cyan]Database Analysis (Last 24 hours)[/bold cyan]\n")
+    console.print("\n[bold cyan]Database Analysis (Last 24 hours)[/bold cyan]\n")
 
     if not db_stats:
         console.print("[yellow]No database statistics available[/yellow]")
@@ -319,22 +328,22 @@ def display_database_results(db_stats: Dict, timeline: List[Dict]):
     table.add_row(
         "Rate Limit Errors",
         str(db_stats.get("rate_limit_errors", 0)),
-        calc_pct(db_stats.get("rate_limit_errors", 0))
+        calc_pct(db_stats.get("rate_limit_errors", 0)),
     )
     table.add_row(
         "Timeout Errors",
         str(db_stats.get("timeout_errors", 0)),
-        calc_pct(db_stats.get("timeout_errors", 0))
+        calc_pct(db_stats.get("timeout_errors", 0)),
     )
     table.add_row(
         "Server Errors",
         str(db_stats.get("server_errors", 0)),
-        calc_pct(db_stats.get("server_errors", 0))
+        calc_pct(db_stats.get("server_errors", 0)),
     )
     table.add_row(
         "Retried Documents",
         str(db_stats.get("retried_docs", 0)),
-        calc_pct(db_stats.get("retried_docs", 0))
+        calc_pct(db_stats.get("retried_docs", 0)),
     )
 
     console.print(table)
@@ -369,16 +378,11 @@ def provide_recommendations(log_stats: Dict, db_stats: Dict):
     console.print("\n[bold cyan]Recommendations:[/bold cyan]\n")
 
     has_rate_limits = (
-        log_stats.get("rate_limits", 0) > 0 or
-        db_stats.get("rate_limit_errors", 0) > 0
+        log_stats.get("rate_limits", 0) > 0 or db_stats.get("rate_limit_errors", 0) > 0
     )
-    has_timeouts = (
-        log_stats.get("timeouts", 0) > 0 or
-        db_stats.get("timeout_errors", 0) > 0
-    )
+    has_timeouts = log_stats.get("timeouts", 0) > 0 or db_stats.get("timeout_errors", 0) > 0
     has_server_errors = (
-        log_stats.get("server_errors", 0) > 0 or
-        db_stats.get("server_errors", 0) > 0
+        log_stats.get("server_errors", 0) > 0 or db_stats.get("server_errors", 0) > 0
     )
 
     if has_rate_limits:
@@ -456,7 +460,9 @@ def main():
             console.print(f"[red]Log file not found: {args.log_file}[/red]")
     elif Path(args.log_dir).exists():
         # Find most recent log file
-        log_files = sorted(Path(args.log_dir).glob("*.log"), key=lambda p: p.stat().st_mtime, reverse=True)
+        log_files = sorted(
+            Path(args.log_dir).glob("*.log"), key=lambda p: p.stat().st_mtime, reverse=True
+        )
         if log_files:
             log_path = log_files[0]
             console.print(f"[dim]Analyzing most recent log: {log_path}[/dim]")

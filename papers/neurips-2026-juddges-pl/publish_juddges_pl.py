@@ -27,7 +27,7 @@ HERE = Path(__file__).parent
 
 DATA_GLOBS = {
     "pl-court": "data/court-*.parquet",
-    "pl-nsa":   "data/nsa-*.parquet",
+    "pl-nsa": "data/nsa-*.parquet",
 }
 
 
@@ -125,9 +125,9 @@ def build_readme() -> str:
     yaml_lines: list[str] = []
     for cfg, glob in DATA_GLOBS.items():
         yaml_lines.append(f"- config_name: {cfg}")
-        yaml_lines.append(f"  data_files:")
-        yaml_lines.append(f"  - split: train")
-        yaml_lines.append(f"    path: \"{glob}\"")
+        yaml_lines.append("  data_files:")
+        yaml_lines.append("  - split: train")
+        yaml_lines.append(f'    path: "{glob}"')
     configs_yaml = "\n".join(yaml_lines)
 
     frontmatter = (
@@ -135,7 +135,7 @@ def build_readme() -> str:
         "license: cc-by-4.0\n"
         "language:\n"
         "- pl\n"
-        "pretty_name: \"JuDDGES-pl: Polish Court Judgment Corpus for Civil-Law Legal NLP\"\n"
+        'pretty_name: "JuDDGES-pl: Polish Court Judgment Corpus for Civil-Law Legal NLP"\n'
         "tags:\n"
         "- legal\n"
         "- polish\n"
@@ -197,8 +197,12 @@ def validate() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true", help="build README locally, do not upload")
-    parser.add_argument("--validate", action="store_true", help="skip create/upload; only validate loading")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="build README locally, do not upload"
+    )
+    parser.add_argument(
+        "--validate", action="store_true", help="skip create/upload; only validate loading"
+    )
     args = parser.parse_args()
 
     if args.validate:

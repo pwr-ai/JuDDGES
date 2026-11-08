@@ -1,5 +1,7 @@
+import os
 import unittest
 
+import pytest
 from transformers import AutoTokenizer
 
 from juddges.preprocessing.context_truncator import ContextTruncator, ContextTruncatorTiktoken
@@ -12,6 +14,12 @@ class TestContextTruncator(unittest.TestCase):
         model_id = "mistralai/Mistral-7B-Instruct-v0.2"
         self._check(model_id, 120)
 
+    # meta-llama is a gated repo: needs an HF token with granted access (provided in CI via secrets)
+    @pytest.mark.requires_network
+    @pytest.mark.skipif(
+        not (os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")),
+        reason="HF_TOKEN / HUGGING_FACE_HUB_TOKEN not set (gated meta-llama repo)",
+    )
     def test_llama3(self):
         model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
         self._check(model_id, 120)

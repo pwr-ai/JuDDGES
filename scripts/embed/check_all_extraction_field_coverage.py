@@ -516,7 +516,7 @@ def main():
     else:
         client = WeaviateRestClient.from_env()
 
-    console.print(f"\n[cyan]Configuration:[/cyan]")
+    console.print("\n[cyan]Configuration:[/cyan]")
     console.print(f"  - Weaviate: {client.host}:{client.port}")
     console.print(f"  - Fields to check: {len(fields_to_check)}")
     console.print(f"  - Batch size: {args.batch_size}")
@@ -542,7 +542,9 @@ def main():
         print_coverage_report(report)
 
     except requests.exceptions.ConnectionError as e:
-        console.print(f"\n[bold red]Connection Error: Could not connect to Weaviate at {client.base_url}[/bold red]")
+        console.print(
+            f"\n[bold red]Connection Error: Could not connect to Weaviate at {client.base_url}[/bold red]"
+        )
         console.print("[yellow]Make sure Weaviate is running and accessible.[/yellow]")
         logger.error(f"Connection error: {e}")
         sys.exit(1)

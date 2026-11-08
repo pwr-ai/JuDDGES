@@ -10,16 +10,14 @@ traceability, supporting:
 
 import json
 import os
-import time
 from contextlib import contextmanager
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID, uuid4
 
 from loguru import logger
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 
 class ExtractionStorage:
@@ -150,7 +148,9 @@ class ExtractionStorage:
                     "vertex_location": vertex_location,
                     "temperature": temperature,
                     "prompt_template": prompt_template,
-                    "extraction_schema": json.dumps(extraction_schema) if extraction_schema else None,
+                    "extraction_schema": json.dumps(extraction_schema)
+                    if extraction_schema
+                    else None,
                     "sample_size": sample_size,
                     "batch_size": batch_size,
                     "max_workers": max_workers,
@@ -298,9 +298,7 @@ class ExtractionStorage:
                         failed += 1
 
                 except Exception as e:
-                    logger.error(
-                        f"Failed to save result for {result.get('document_id')}: {e}"
-                    )
+                    logger.error(f"Failed to save result for {result.get('document_id')}: {e}")
                     failed += 1
 
         logger.info(
@@ -582,9 +580,7 @@ class ExtractionStorage:
             logger.info(f"Found {len(document_ids)} processed document IDs")
             return document_ids
 
-    def export_to_jsonl(
-        self, run_id: UUID, output_path: str, include_full_text: bool = True
-    ):
+    def export_to_jsonl(self, run_id: UUID, output_path: str, include_full_text: bool = True):
         """Export extraction results to JSONL file.
 
         Args:
@@ -607,9 +603,7 @@ class ExtractionStorage:
                 FROM extraction_results
                 WHERE run_id = :run_id
                 ORDER BY extracted_at
-            """.format(
-                "full_text," if include_full_text else ""
-            )
+            """.format("full_text," if include_full_text else "")
 
             result = session.execute(text(query), {"run_id": run_id})
 

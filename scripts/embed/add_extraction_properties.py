@@ -5,16 +5,16 @@ Add extracted_factual_state and extracted_legal_state properties to LegalDocumen
 This script adds new properties needed for storing LLM-extracted information.
 """
 
-import os
 import sys
+
 from dotenv import load_dotenv
+from loguru import logger
 from rich.console import Console
 from rich.panel import Panel
-from loguru import logger
 
+import weaviate.classes.config as wvcc
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
 from juddges.settings import ROOT_PATH
-import weaviate.classes.config as wvcc
 
 load_dotenv(ROOT_PATH / ".env", override=True)
 

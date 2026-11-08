@@ -30,9 +30,18 @@ from juddges.utils.misc import save_json
 
 # Polish month names for date parsing
 PL_MONTHS = {
-    "stycznia": "01", "lutego": "02", "marca": "03", "kwietnia": "04",
-    "maja": "05", "czerwca": "06", "lipca": "07", "sierpnia": "08",
-    "września": "09", "października": "10", "listopada": "11", "grudnia": "12",
+    "stycznia": "01",
+    "lutego": "02",
+    "marca": "03",
+    "kwietnia": "04",
+    "maja": "05",
+    "czerwca": "06",
+    "lipca": "07",
+    "sierpnia": "08",
+    "września": "09",
+    "października": "10",
+    "listopada": "11",
+    "grudnia": "12",
 }
 
 # Date patterns: "15 stycznia 2024 r.", "2024-01-15", "15.01.2024"
@@ -40,9 +49,7 @@ DATE_PATTERNS = [
     re.compile(r"(\d{4})-(\d{2})-(\d{2})"),
     re.compile(r"(\d{1,2})\.(\d{2})\.(\d{4})"),
     re.compile(
-        r"(\d{1,2})\s+("
-        + "|".join(PL_MONTHS.keys())
-        + r")\s+(\d{4})\s*r?\.",
+        r"(\d{1,2})\s+(" + "|".join(PL_MONTHS.keys()) + r")\s+(\d{4})\s*r?\.",
         re.IGNORECASE,
     ),
 ]
@@ -50,12 +57,23 @@ DATE_PATTERNS = [
 # Keywords for boolean/enum fields (Polish)
 BOOLEAN_KEYWORDS = {
     "Tak": [
-        "tak", "prawda", "potwierdza", "stwierdza się", "uwzględniono",
-        "zasądzono", "orzeczono", "ustalono",
+        "tak",
+        "prawda",
+        "potwierdza",
+        "stwierdza się",
+        "uwzględniono",
+        "zasądzono",
+        "orzeczono",
+        "ustalono",
     ],
     "Nie": [
-        "nie", "brak", "oddalono", "odmówiono", "nie stwierdzono",
-        "nie uwzględniono", "nie wykazano",
+        "nie",
+        "brak",
+        "oddalono",
+        "odmówiono",
+        "nie stwierdzono",
+        "nie uwzględniono",
+        "nie wykazano",
     ],
 }
 
@@ -103,8 +121,12 @@ def extract_enum(text: str, choices: list[str], field_name: str) -> str | None:
 def extract_legal_references(text: str) -> list[str]:
     """Extract legal provision references from text."""
     patterns = [
-        re.compile(r"[Aa]rt\.?\s*\d+[a-z]?(?:\s*§\s*\d+)?(?:\s*(?:ust|pkt|lit)\.\s*\d+)*\s*[Kk]\.?[Cc]\.?"),
-        re.compile(r"[Aa]rt\.?\s*\d+[a-z]?(?:\s*§\s*\d+)?(?:\s*(?:ust|pkt|lit)\.\s*\d+)*\s*[Kk]\.?[Pp]\.?[Cc]\.?"),
+        re.compile(
+            r"[Aa]rt\.?\s*\d+[a-z]?(?:\s*§\s*\d+)?(?:\s*(?:ust|pkt|lit)\.\s*\d+)*\s*[Kk]\.?[Cc]\.?"
+        ),
+        re.compile(
+            r"[Aa]rt\.?\s*\d+[a-z]?(?:\s*§\s*\d+)?(?:\s*(?:ust|pkt|lit)\.\s*\d+)*\s*[Kk]\.?[Pp]\.?[Cc]\.?"
+        ),
         re.compile(r"[Aa]rt\.?\s*\d+\s+ustawy"),
         re.compile(r"§\s*\d+\s+(?:ust\.?\s*\d+)?"),
     ]
@@ -115,7 +137,9 @@ def extract_legal_references(text: str) -> list[str]:
     return sorted(refs)
 
 
-def extract_string_section(text: str, section_keywords: list[str], max_chars: int = 500) -> str | None:
+def extract_string_section(
+    text: str, section_keywords: list[str], max_chars: int = 500
+) -> str | None:
     """Extract text following a section header keyword."""
     text_lower = text.lower()
     for keyword in section_keywords:
@@ -125,7 +149,7 @@ def extract_string_section(text: str, section_keywords: list[str], max_chars: in
             # Skip whitespace and punctuation after header
             while start < len(text) and text[start] in " :\n\t":
                 start += 1
-            return text[start:start + max_chars].strip()
+            return text[start : start + max_chars].strip()
     return None
 
 
@@ -182,18 +206,10 @@ def _get_section_keywords(field_name: str) -> list[str]:
 
 
 def main(
-    dataset: str = typer.Option(
-        "pl-swiss-franc-loans", help="Dataset name"
-    ),
-    data_dir: Path = typer.Option(
-        ..., help="Directory with test documents (text files or JSON)"
-    ),
-    schema_path: Path = typer.Option(
-        None, help="Path to schema YAML. Auto-detected if None."
-    ),
-    output_dir: Path = typer.Option(
-        ..., help="Output directory for predictions.json"
-    ),
+    dataset: str = typer.Option("pl-swiss-franc-loans", help="Dataset name"),
+    data_dir: Path = typer.Option(..., help="Directory with test documents (text files or JSON)"),
+    schema_path: Path = typer.Option(None, help="Path to schema YAML. Auto-detected if None."),
+    output_dir: Path = typer.Option(..., help="Output directory for predictions.json"),
 ):
     """Run rule-based extraction baseline."""
     # Auto-detect schema
@@ -251,10 +267,12 @@ def main(
         # Extract
         extracted = extract_fields_rule_based(text, schema)
 
-        predictions.append({
-            "answer": json.dumps(extracted, ensure_ascii=False),
-            "gold": item.get("gold", json.dumps(extracted, ensure_ascii=False)),
-        })
+        predictions.append(
+            {
+                "answer": json.dumps(extracted, ensure_ascii=False),
+                "gold": item.get("gold", json.dumps(extracted, ensure_ascii=False)),
+            }
+        )
 
     # Save in standard predictions format
     output_dir.mkdir(parents=True, exist_ok=True)

@@ -31,7 +31,6 @@ from loguru import logger
 
 from juddges.evals.metrics import (
     evaluate_date,
-    evaluate_enum,
     evaluate_list_greedy,
     evaluate_string_rouge,
 )
@@ -105,7 +104,10 @@ For complex fields (outcome, legal_references, etc.) return JSON objects/arrays.
         model=model,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Extract structured information from this legal document:\n\n{text[:15000]}"},
+            {
+                "role": "user",
+                "content": f"Extract structured information from this legal document:\n\n{text[:15000]}",
+            },
         ],
         temperature=0.1,
         response_format={"type": "json_object"},
@@ -165,15 +167,9 @@ def main(
         "JuDDGES/pl-court-raw-enriched",
         help="HuggingFace enriched dataset name",
     ),
-    sample_size: int = typer.Option(
-        1000, help="Number of documents to sample"
-    ),
-    gpt_model: str = typer.Option(
-        "gpt-4.1", help="GPT model name"
-    ),
-    skip_extraction: bool = typer.Option(
-        False, help="Skip GPT extraction, load from cache"
-    ),
+    sample_size: int = typer.Option(1000, help="Number of documents to sample"),
+    gpt_model: str = typer.Option("gpt-4.1", help="GPT model name"),
+    skip_extraction: bool = typer.Option(False, help="Skip GPT extraction, load from cache"),
     cache_dir: Path = typer.Option(
         "results/neurips/exp4_cache/",
         help="Directory to cache GPT extractions",
@@ -195,14 +191,15 @@ def main(
 
     # Filter to documents with Gemini extractions
     has_extraction = [
-        i for i in range(len(ds))
-        if ds[i].get("factual_state") is not None
-        or ds[i].get("extracted_summary") is not None
+        i
+        for i in range(len(ds))
+        if ds[i].get("factual_state") is not None or ds[i].get("extracted_summary") is not None
     ]
     logger.info(f"Documents with Gemini extractions: {len(has_extraction)}")
 
     # Sample
     import random
+
     random.seed(42)
     sample_indices = random.sample(has_extraction, min(sample_size, len(has_extraction)))
     logger.info(f"Sampled {len(sample_indices)} documents")
@@ -270,8 +267,12 @@ def main(
     for field, agreements in per_field_agreements.items():
         field_summary[field] = {
             "mean_agreement": round(mean(agreements), 4),
-            "high_agreement_pct": round(sum(1 for a in agreements if a > 0.8) / len(agreements) * 100, 1),
-            "exact_match_pct": round(sum(1 for a in agreements if a == 1.0) / len(agreements) * 100, 1),
+            "high_agreement_pct": round(
+                sum(1 for a in agreements if a > 0.8) / len(agreements) * 100, 1
+            ),
+            "exact_match_pct": round(
+                sum(1 for a in agreements if a == 1.0) / len(agreements) * 100, 1
+            ),
             "n_compared": len(agreements),
             "field_type": SCHEMA_B_FIELDS[field]["type"],
         }
@@ -304,7 +305,9 @@ def main(
     print(f"\n{'Field':<35} {'Agreement':>10} {'Exact%':>8} {'Type':>10}")
     print(f"{'-'*65}")
     for field, data in ranked:
-        print(f"{field:<35} {data['mean_agreement']:>10.4f} {data['exact_match_pct']:>7.1f}% {data['field_type']:>10}")
+        print(
+            f"{field:<35} {data['mean_agreement']:>10.4f} {data['exact_match_pct']:>7.1f}% {data['field_type']:>10}"
+        )
 
 
 if __name__ == "__main__":

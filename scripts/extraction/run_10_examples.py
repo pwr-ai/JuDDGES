@@ -365,7 +365,7 @@ def main():
 
     # Show Langfuse dashboard info
     console.print("\n[bold green]✓ All extractions traced in Langfuse![/bold green]")
-    console.print(f"\n[bold]View in Langfuse Dashboard:[/bold]")
+    console.print("\n[bold]View in Langfuse Dashboard:[/bold]")
     console.print(f"  URL: {os.getenv('LANGFUSE_HOST', 'https://cloud.langfuse.com')}")
     console.print(f"  Session: {session_id}")
     console.print("\n[dim]Filter by session ID to see all 10 extractions together[/dim]")
@@ -374,7 +374,9 @@ def main():
     if successful:
         console.print("\n[bold]Extraction Quality Summary:[/bold]")
         dates_extracted = sum(
-            1 for r in successful if r["result"].get("verdict_date") and r["result"]["verdict_date"] != ""
+            1
+            for r in successful
+            if r["result"].get("verdict_date") and r["result"]["verdict_date"] != ""
         )
         courts_extracted = sum(
             1 for r in successful if r["result"].get("court") and r["result"]["court"] != ""

@@ -7,9 +7,9 @@ import pytest
 
 pytest.importorskip("langchain_google_vertexai", reason="langchain_google_vertexai not installed")
 
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage  # noqa: E402
 
-from juddges.extraction.gemini_chain import (
+from juddges.extraction.gemini_chain import (  # noqa: E402
     DocumentType,
     ExtractionSchema,
     GeminiExtractionChain,
@@ -110,7 +110,7 @@ class TestGeminiExtractionChain:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_path = Path(tmpdir) / "test_cache.db"
-            chain = GeminiExtractionChain(
+            GeminiExtractionChain(
                 model_name="gemini-2.5-flash",
                 cache_path=str(cache_path),
             )
@@ -129,7 +129,10 @@ class TestGeminiExtractionChain:
             language="polish",
             additional_instructions="",
         )
-        assert "court judgments" in prompt_template.lower() or "legal decisions" in prompt_template.lower()
+        assert (
+            "court judgments" in prompt_template.lower()
+            or "legal decisions" in prompt_template.lower()
+        )
 
     @patch("juddges.extraction.gemini_chain.ChatGoogleGenerativeAI")
     def test_build_prompt_for_tax_interpretation(self, mock_llm_class):
@@ -194,7 +197,7 @@ class TestGeminiExtractionChain:
         schema = ExtractionSchema(fields={"field": "string"}, language="polish")
 
         long_text = "x" * 200000  # Longer than default max
-        result = chain.extract(
+        chain.extract(
             document_type=DocumentType.JUDGMENT,
             text=long_text,
             schema=schema,
