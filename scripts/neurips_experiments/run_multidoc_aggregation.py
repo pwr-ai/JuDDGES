@@ -122,7 +122,8 @@ def evaluate_subsample(
         # Compare: avg keywords
         if ground_truth["avg_keywords"] > 0:
             metrics["avg_keywords_rel_error"].append(
-                abs(sub_gt["avg_keywords"] - ground_truth["avg_keywords"]) / ground_truth["avg_keywords"]
+                abs(sub_gt["avg_keywords"] - ground_truth["avg_keywords"])
+                / ground_truth["avg_keywords"]
             )
 
         # Compare: outcome distribution (top-3 KL divergence proxy)
@@ -131,10 +132,13 @@ def evaluate_subsample(
         total_gt = sum(gt_outcomes.values()) or 1
         total_sub = sum(sub_outcomes.values()) or 1
         all_keys = set(gt_outcomes) | set(sub_outcomes)
-        dist_error = sum(
-            abs(gt_outcomes.get(k, 0) / total_gt - sub_outcomes.get(k, 0) / total_sub)
-            for k in all_keys
-        ) / 2  # Total variation distance
+        dist_error = (
+            sum(
+                abs(gt_outcomes.get(k, 0) / total_gt - sub_outcomes.get(k, 0) / total_sub)
+                for k in all_keys
+            )
+            / 2
+        )  # Total variation distance
         metrics["outcome_tvd"].append(dist_error)
 
         # Compare: year distribution
@@ -143,10 +147,13 @@ def evaluate_subsample(
         total_gt_y = sum(gt_years.values()) or 1
         total_sub_y = sum(sub_years.values()) or 1
         all_years = set(gt_years) | set(sub_years)
-        year_tvd = sum(
-            abs(gt_years.get(y, 0) / total_gt_y - sub_years.get(y, 0) / total_sub_y)
-            for y in all_years
-        ) / 2
+        year_tvd = (
+            sum(
+                abs(gt_years.get(y, 0) / total_gt_y - sub_years.get(y, 0) / total_sub_y)
+                for y in all_years
+            )
+            / 2
+        )
         metrics["year_tvd"].append(year_tvd)
 
     # Aggregate trial results
@@ -186,9 +193,11 @@ def main():
     logger.info("Computing ground truth on full dataset...")
     ground_truth = compute_ground_truth(data)
 
-    logger.info(f"Ground truth stats:")
+    logger.info("Ground truth stats:")
     logger.info(f"  Year distribution: {dict(list(ground_truth['count_by_year'].items())[:5])}...")
-    logger.info(f"  Outcome distribution: {dict(list(ground_truth['outcome_distribution'].items())[:5])}...")
+    logger.info(
+        f"  Outcome distribution: {dict(list(ground_truth['outcome_distribution'].items())[:5])}..."
+    )
     logger.info(f"  Thesis coverage: {ground_truth['thesis_coverage']:.3f}")
     logger.info(f"  Factual state coverage: {ground_truth['factual_state_coverage']:.3f}")
     logger.info(f"  Avg keywords: {ground_truth['avg_keywords']:.1f}")

@@ -37,7 +37,9 @@ MAX_RETRIES = 3
 
 def build_prompt(template: str, text: str, schema: dict) -> str:
     """Render the production template. Schema is passed as YAML, as in production."""
-    return template.format(schema=yaml.dump(schema, allow_unicode=True, sort_keys=False), context=text)
+    return template.format(
+        schema=yaml.dump(schema, allow_unicode=True, sort_keys=False), context=text
+    )
 
 
 def extract_with_gpt(client, prompt: str, temperature: float) -> dict | None:
@@ -93,7 +95,9 @@ def main(
 
     if dry_run:
         prompt = build_prompt(template, ds_test[0]["context"], schema)
-        logger.info(f"Rendered prompt: {len(prompt)} chars (document {len(ds_test[0]['context'])} chars)")
+        logger.info(
+            f"Rendered prompt: {len(prompt)} chars (document {len(ds_test[0]['context'])} chars)"
+        )
         print(prompt[:1500])
         print("\n...[truncated for display only]...\n")
         return
@@ -127,20 +131,30 @@ def main(
             scores_fresh_vs_orig[field].append(s_fo)
             scores_fresh_vs_human[field].append(s_fh)
             scores_orig_vs_human[field].append(s_oh)
-            doc_scores[field] = {"fresh_vs_orig": s_fo, "fresh_vs_human": s_fh, "orig_vs_human": s_oh}
+            doc_scores[field] = {
+                "fresh_vs_orig": s_fo,
+                "fresh_vs_human": s_fh,
+                "orig_vs_human": s_oh,
+            }
 
         results.append({"idx": idx, "scores": doc_scores})
 
         if (i + 1) % 10 == 0:
             avg_fo = mean(s for sc in scores_fresh_vs_orig.values() for s in sc)
             avg_fh = mean(s for sc in scores_fresh_vs_human.values() for s in sc)
-            logger.info(f"  [{i + 1}/{len(indices)}] Fresh-Orig: {avg_fo:.3f}  Fresh-Human: {avg_fh:.3f}  errors: {parse_errors}")
+            logger.info(
+                f"  [{i + 1}/{len(indices)}] Fresh-Orig: {avg_fo:.3f}  Fresh-Human: {avg_fh:.3f}  errors: {parse_errors}"
+            )
 
     summary = {}
     print(f"\n{'Field':<35} {'Fresh-Orig':>11} {'Fresh-Hum':>11} {'Orig-Hum':>11}")
     print("-" * 72)
     for field in schema:
-        fo, fh, oh = scores_fresh_vs_orig[field], scores_fresh_vs_human[field], scores_orig_vs_human[field]
+        fo, fh, oh = (
+            scores_fresh_vs_orig[field],
+            scores_fresh_vs_human[field],
+            scores_orig_vs_human[field],
+        )
         if fo:
             summary[field] = {
                 "fresh_vs_orig": {"mean": mean(fo), "std": stdev(fo) if len(fo) > 1 else 0},
@@ -155,7 +169,9 @@ def main(
         "orig_vs_human": mean(s for sc in scores_orig_vs_human.values() for s in sc),
     }
     print("-" * 72)
-    print(f"{'OVERALL':<35} {overall['fresh_vs_orig']:>11.3f} {overall['fresh_vs_human']:>11.3f} {overall['orig_vs_human']:>11.3f}")
+    print(
+        f"{'OVERALL':<35} {overall['fresh_vs_orig']:>11.3f} {overall['fresh_vs_human']:>11.3f} {overall['orig_vs_human']:>11.3f}"
+    )
 
     output = {
         "model": MODEL,
@@ -169,8 +185,12 @@ def main(
         "overall": overall,
         "per_field": summary,
     }
-    (OUTPUT_DIR / "validation_summary.json").write_text(json.dumps(output, indent=2, ensure_ascii=False))
-    (OUTPUT_DIR / "per_doc_results.json").write_text(json.dumps(results, indent=2, ensure_ascii=False))
+    (OUTPUT_DIR / "validation_summary.json").write_text(
+        json.dumps(output, indent=2, ensure_ascii=False)
+    )
+    (OUTPUT_DIR / "per_doc_results.json").write_text(
+        json.dumps(results, indent=2, ensure_ascii=False)
+    )
     logger.info(f"Wrote {OUTPUT_DIR}/validation_summary.json")
 
 

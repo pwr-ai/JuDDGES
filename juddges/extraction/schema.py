@@ -35,7 +35,6 @@ Examples:
 - "III SA/Wa 1234/23" (wojewódzki sąd administracyjny)
 - "0114-KDIP2-1.4010.123.2023.1.AB" (indywidualna interpretacja podatkowa)
 - "I CSK 456/22" (Sąd Najwyższy)""",
-
             "document_type": """string, type of legal document.
 ENUM (exact values only):
 - "judgment" (wyrok sądu)
@@ -46,7 +45,6 @@ Examples:
 - judgment: wyrok sądu cywilnego, administracyjnego, karnego
 - tax_interpretation: indywidualna lub ogólna interpretacja podatkowa
 - legal_act: ustawa, rozporządzenie""",
-
             "title": """string, document title or generated descriptive title.
 Should be concise (max 200 characters) but informative.
 
@@ -58,7 +56,6 @@ Examples:
 
 If no title in document, generate based on:
 (1) document type, (2) court/authority, (3) main legal issue""",
-
             "date_issued": """date ISO 8601 (YYYY-MM-DD), date when document was officially issued.
 
 Examples:
@@ -67,7 +64,6 @@ Examples:
 
 Look for phrases: "z dnia", "wydany dnia", "orzekł dnia"
 Use YYYY-MM-DD format always, leave empty if date not found""",
-
             # ====================================================================
             # HIGH-PRIORITY AUGMENTATION FIELDS (3 fields)
             # ====================================================================
@@ -93,7 +89,6 @@ Stanowisko wnioskodawcy zostało uznane za prawidłowe - usługi podlegają opod
 Podstawa prawna: art. 28b ustawy o VAT oraz art. 44 Dyrektywy 2006/112/WE."
 
 Must be factual, comprehensive, in Polish""",
-
             "thesis": """string, main legal principle, rule, or legal conclusion established by the document (1-3 sentences).
 This is the key legal finding - the "teza prawna".
 
@@ -106,7 +101,6 @@ Examples:
   odpowiadającej wykorzystaniu pojazdu do działalności gospodarczej."
 
 Should state the legal rule/principle clearly and concisely, in Polish""",
-
             "keywords": """List[string], 5-15 relevant legal keywords covering:
 - Legal domains (prawo cywilne, VAT, CIT, etc.)
 - Legal institutions (Sąd Najwyższy, WSA, KIS)
@@ -118,7 +112,6 @@ Examples:
 ["CIT", "koszty uzyskania przychodów", "samochód służbowy", "ewidencja przebiegu pojazdu", "art. 15 ustawy o CIT"]
 
 All keywords in Polish""",
-
             # ====================================================================
             # NEW FIELDS: FACTUAL AND LEGAL CONTEXT (2 fields)
             # ====================================================================
@@ -151,7 +144,6 @@ Przychody w 2023 r. wyniosły 450.000 PLN, z czego eksport usług stanowił 270.
 
 Look for sections: "Stan faktyczny", "Ustalenia faktyczne", "Okoliczności faktyczne sprawy"
 Extract complete narrative maintaining chronology and all relevant quantitative data""",
-
             "legal_state": """string, legal framework and provisions forming the basis for reasoning/decision (STAN PRAWNY).
 
 In JUDGMENTS: Applicable statutes (with specific articles), regulations, case law, legal principles used by court.
@@ -190,7 +182,6 @@ podatnika jest miejsce, w którym podatnik będący usługobiorcą posiada siedz
 
 Look for sections: "Stan prawny", "Podstawa prawna", "Przepisy prawne", "Uzasadnienie prawne"
 Extract all cited legal acts maintaining hierarchical structure""",
-
             # ====================================================================
             # OUTCOME (1 field with enumeration)
             # ====================================================================
@@ -240,19 +231,16 @@ Example (tax interpretation):
   "legal_effect": "Wnioskodawca nie jest zobowiązany do rozliczania VAT w Polsce od usług świadczonych
                    dla kontrahentów unijnych. Zastosowanie procedury odwrotnego obciążenia."
 }""",
-
             # ====================================================================
             # LEGAL CONTENT (3 fields)
             # ====================================================================
             "legal_references": """JSON array of legal citations (extract 5-15 most important)""",
             "legal_concepts": """JSON array of legal concepts (extract 3-10 key concepts)""",
             "parties": """JSON array of parties involved (all parties with roles)""",
-
             # ====================================================================
             # STRUCTURED CONTENT (1 field)
             # ====================================================================
             "legal_analysis": """JSON object with structured legal reasoning""",
-
             # ====================================================================
             # DOCUMENT-TYPE SPECIFIC FIELDS (2 fields)
             # ====================================================================

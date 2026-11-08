@@ -28,8 +28,7 @@ import typer
 from loguru import logger
 
 from juddges.evals.extraction import ExtractionEvaluator
-from juddges.llm_as_judge.base import EvalResults
-from juddges.llm_as_judge.data_model import ParsedPredictions, PredictionLoader
+from juddges.llm_as_judge.data_model import PredictionLoader
 from juddges.utils.misc import save_json
 
 
@@ -130,9 +129,7 @@ def main(
 
     # --- Evaluate on MANUAL annotations ---
     logger.info("Evaluating on manual-only annotations...")
-    manual_predictions = load_manual_annotations(
-        manual_annotations_path, all_predictions
-    )
+    manual_predictions = load_manual_annotations(manual_annotations_path, all_predictions)
 
     if len(manual_predictions) == 0:
         logger.error("No predictions matched manual annotations! Check ID fields.")
@@ -161,12 +158,14 @@ def main(
     for field, field_deltas in deltas.items():
         for metric, data in field_deltas.items():
             if data["delta"] > 0.01:
-                inflation_ranking.append({
-                    "field": field,
-                    "metric": metric,
-                    "delta": data["delta"],
-                    "inflation_pct": data["inflation_pct"],
-                })
+                inflation_ranking.append(
+                    {
+                        "field": field,
+                        "metric": metric,
+                        "delta": data["delta"],
+                        "inflation_pct": data["inflation_pct"],
+                    }
+                )
     inflation_ranking.sort(key=lambda x: x["delta"], reverse=True)
 
     results = {
@@ -190,14 +189,16 @@ def main(
 
     # Print summary
     print(f"\n{'='*60}")
-    print(f"ANNOTATION VALIDATION RESULTS")
+    print("ANNOTATION VALIDATION RESULTS")
     print(f"{'='*60}")
     print(f"Semi-auto annotations ({parsed_semi.num_items} docs): {semi_overall:.4f}")
     print(f"Manual annotations ({parsed_manual.num_items} docs):   {manual_overall:.4f}")
     print(f"Delta (bias):                              {semi_overall - manual_overall:+.4f}")
-    print(f"\nTop 5 most inflated fields:")
+    print("\nTop 5 most inflated fields:")
     for item in inflation_ranking[:5]:
-        print(f"  {item['field']}.{item['metric']}: {item['delta']:+.4f} ({item['inflation_pct']:+.1f}%)")
+        print(
+            f"  {item['field']}.{item['metric']}: {item['delta']:+.4f} ({item['inflation_pct']:+.1f}%)"
+        )
 
 
 if __name__ == "__main__":

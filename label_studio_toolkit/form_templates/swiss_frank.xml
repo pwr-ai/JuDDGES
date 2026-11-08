@@ -165,7 +165,7 @@
                   <Choice value="Sąd Okręgowy" />
                   <Choice value="Sąd Apelacyjny" />
                    </Choices>
-                
+
                  <Header value="Jeśli okręgowy" />
                 <Text name="typ_okregowy_desc" value="Jaki okregowy" />
                 <Choices name="typ_okregowy" toName="text" choice="single">

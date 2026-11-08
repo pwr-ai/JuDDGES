@@ -12,10 +12,9 @@ except ImportError:
     DocumentType = None  # type: ignore[assignment, misc]
     ExtractionSchema = None  # type: ignore[assignment, misc]
 
+# Batch processing
+from juddges.extraction.batch_processor import BatchProcessor
 from juddges.extraction.extraction_storage import ExtractionStorage
-
-# Schema definitions
-from juddges.extraction.schema import create_polish_legal_schema
 
 # Field mapping and transformations
 from juddges.extraction.field_mapping import (
@@ -24,8 +23,11 @@ from juddges.extraction.field_mapping import (
     build_update_payload,
 )
 
-# Weaviate client
-from juddges.extraction.weaviate_client import WeaviateRestClient
+# Ingestion service
+from juddges.extraction.ingestion import WeaviateIngestionService
+
+# Schema definitions
+from juddges.extraction.schema import create_polish_legal_schema
 
 # Statistics and reporting
 from juddges.extraction.statistics import (
@@ -40,11 +42,8 @@ from juddges.extraction.statistics import (
     save_ingestion_report,
 )
 
-# Batch processing
-from juddges.extraction.batch_processor import BatchProcessor
-
-# Ingestion service
-from juddges.extraction.ingestion import WeaviateIngestionService
+# Weaviate client
+from juddges.extraction.weaviate_client import WeaviateRestClient
 
 __all__ = [
     # Core

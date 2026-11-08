@@ -10,15 +10,12 @@ This script:
 """
 
 import argparse
-from pathlib import Path
 
 from loguru import logger
 from rich.console import Console
-from rich.progress import track
 
 from juddges.data.dataset_mapper import DatasetToWeaviateMapper
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
-
 
 console = Console()
 
@@ -96,15 +93,15 @@ def main():
             id_field = "id"
             secondary_id_field = secondary_id_field or "docker_number"
         else:
-            logger.error(
-                "Could not auto-detect ID field. Please specify --id-field explicitly."
-            )
+            logger.error("Could not auto-detect ID field. Please specify --id-field explicitly.")
             return
 
     logger.info(f"Using ID field: {id_field}, secondary: {secondary_id_field}")
 
     # Connect to Weaviate
-    console.print(f"[bold blue]Connecting to Weaviate at {args.weaviate_host}:{args.weaviate_port}...")
+    console.print(
+        f"[bold blue]Connecting to Weaviate at {args.weaviate_host}:{args.weaviate_port}..."
+    )
     db = WeaviateLegalDocumentsDatabase(
         host=args.weaviate_host,
         port=args.weaviate_port,
@@ -145,7 +142,9 @@ def main():
         return
 
     # Update documents
-    console.print(f"\n[bold blue]Updating documents with raw_content from field '{args.raw_content_field}'...")
+    console.print(
+        f"\n[bold blue]Updating documents with raw_content from field '{args.raw_content_field}'..."
+    )
     updated_count = mapper.update_raw_content_from_dataset(
         raw_content_field=args.raw_content_field,
         batch_size=args.batch_size,

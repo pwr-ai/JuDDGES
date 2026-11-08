@@ -61,10 +61,10 @@ from rich.progress import (
 )
 from rich.table import Table
 from sklearn.preprocessing import normalize
-from weaviate.classes.query import Filter
 
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
 from juddges.settings import VectorName
+from weaviate.classes.query import Filter
 
 
 def stream_documents_with_missing_coords(
@@ -92,7 +92,9 @@ def stream_documents_with_missing_coords(
         # OPTIMIZED: Use Weaviate filter with offset/limit pagination
         # Note: Weaviate's 'after' cursor is incompatible with filters, so we use offset/limit
         console.print("[dim]Using filter-based query for missing coordinates...[/dim]")
-        missing_filter = Filter.by_property("x").is_none(True) | Filter.by_property("y").is_none(True)
+        missing_filter = Filter.by_property("x").is_none(True) | Filter.by_property("y").is_none(
+            True
+        )
 
         # Use offset/limit pagination with filters
         offset = 0
@@ -273,7 +275,7 @@ def main():
 
     # Display configuration
     mode = "Test Mode (Sample)" if args.test_mode else "Production Mode (All Documents)"
-    config_text = f"[bold blue]Apply UMAP to Missing Coordinates[/bold blue]\n\n"
+    config_text = "[bold blue]Apply UMAP to Missing Coordinates[/bold blue]\n\n"
     config_text += f"Mode: {mode}\n"
     config_text += f"Model Path: {model_path}\n"
     config_text += f"Collection: {args.collection}\n"

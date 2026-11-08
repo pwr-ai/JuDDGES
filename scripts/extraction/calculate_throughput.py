@@ -119,10 +119,12 @@ def analyze_extraction_directory(directory: Path) -> List[Dict]:
             results = parse_extraction_results(result_file)
             stats = calculate_throughput_from_results(results)
 
-            analyses.append({
-                "file": result_file.name,
-                "stats": stats,
-            })
+            analyses.append(
+                {
+                    "file": result_file.name,
+                    "stats": stats,
+                }
+            )
 
         except Exception as e:
             logger.error(f"Failed to analyze {result_file.name}: {e}")
@@ -169,9 +171,7 @@ def display_throughput_table(analyses: List[Dict]):
 
 
 def estimate_completion_time(
-    remaining_docs: int,
-    current_rate: float,
-    success_rate: float = 100.0
+    remaining_docs: int, current_rate: float, success_rate: float = 100.0
 ) -> Dict:
     """Estimate completion time based on current throughput.
 
@@ -282,7 +282,7 @@ def main():
 
     # Estimate completion time if requested
     if args.estimate:
-        console.print(f"\n[bold cyan]Completion Time Estimate[/bold cyan]")
+        console.print("\n[bold cyan]Completion Time Estimate[/bold cyan]")
         console.print(f"Remaining documents: {args.estimate:,}")
         console.print(f"Current rate: {avg_rate:.2f} docs/min")
         console.print(f"Expected success rate: {args.success_rate:.1f}%")
@@ -292,7 +292,7 @@ def main():
         if estimates["eta_minutes"] == float("inf"):
             console.print("\n[red]Cannot estimate - no processing rate available[/red]")
         else:
-            console.print(f"\n[yellow]Estimated Time:[/yellow]")
+            console.print("\n[yellow]Estimated Time:[/yellow]")
             console.print(f"  • {estimates['eta_minutes']:.1f} minutes")
             console.print(f"  • {estimates['eta_hours']:.1f} hours")
             console.print(f"  • {estimates['eta_days']:.2f} days")

@@ -16,7 +16,6 @@ import yaml
 from datasets import load_dataset
 from loguru import logger
 
-
 # Court name patterns
 COURT_PATTERN = re.compile(
     r"(?:Crown Court at |Crown Court, |Southwark Crown Court|"
@@ -26,9 +25,18 @@ COURT_PATTERN = re.compile(
 
 # Date pattern: "22 January 2003", "2003-01-22", "22/01/2003"
 EN_MONTHS = {
-    "january": "01", "february": "02", "march": "03", "april": "04",
-    "may": "05", "june": "06", "july": "07", "august": "08",
-    "september": "09", "october": "10", "november": "11", "december": "12",
+    "january": "01",
+    "february": "02",
+    "march": "03",
+    "april": "04",
+    "may": "05",
+    "june": "06",
+    "july": "07",
+    "august": "08",
+    "september": "09",
+    "october": "10",
+    "november": "11",
+    "december": "12",
 }
 DATE_PATTERN = re.compile(
     r"(\d{1,2})\s+(" + "|".join(EN_MONTHS.keys()) + r")\s+(\d{4})",
@@ -79,7 +87,10 @@ def extract_enum_list(text: str, choices: list[str]) -> list[str]:
 def extract_offences(text: str) -> list[str]:
     """Extract offence descriptions using keyword patterns."""
     patterns = [
-        re.compile(r"(?:convicted of|guilty of|charged with)\s+(.{10,80}?)(?:\.|,|;|\band\b)", re.IGNORECASE),
+        re.compile(
+            r"(?:convicted of|guilty of|charged with)\s+(.{10,80}?)(?:\.|,|;|\band\b)",
+            re.IGNORECASE,
+        ),
         re.compile(r"count\s*\d+[:\s]+(.{10,80}?)(?:\.|,|;)", re.IGNORECASE),
     ]
     offences = set()

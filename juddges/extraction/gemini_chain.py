@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import Any, Literal, Optional
 
 import langchain
-from langchain.output_parsers.json import parse_json_markdown
-from langchain_community.cache import SQLAlchemyCache, SQLAlchemyMd5Cache, SQLiteCache
+from langchain_community.cache import SQLAlchemyMd5Cache, SQLiteCache
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableSequence
@@ -440,15 +439,14 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
             }
 
             # Check for specific API errors
-            if hasattr(e, 'code'):
+            if hasattr(e, "code"):
                 error_details["http_code"] = e.code
-            if hasattr(e, 'status_code'):
+            if hasattr(e, "status_code"):
                 error_details["status_code"] = e.status_code
 
             # Log detailed error
             logger.error(
-                f"Extraction failed: {error_type} - {str(e)} | "
-                f"Details: {error_details}"
+                f"Extraction failed: {error_type} - {str(e)} | " f"Details: {error_details}"
             )
             raise
 
@@ -520,9 +518,9 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
             }
 
             # Check for specific API errors
-            if hasattr(e, 'code'):
+            if hasattr(e, "code"):
                 error_details["http_code"] = e.code
-            if hasattr(e, 'status_code'):
+            if hasattr(e, "status_code"):
                 error_details["status_code"] = e.status_code
             if "429" in str(e):
                 error_details["likely_cause"] = "Rate limit exceeded"
@@ -532,7 +530,6 @@ Format response as valid JSON, ensuring all schema fields are included. Return O
                 error_details["likely_cause"] = "Request timeout"
 
             logger.error(
-                f"Batch extraction failed: {error_type} - {str(e)} | "
-                f"Details: {error_details}"
+                f"Batch extraction failed: {error_type} - {str(e)} | " f"Details: {error_details}"
             )
             raise

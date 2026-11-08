@@ -9,6 +9,7 @@ Usage:
     python scripts/dataset/enrich_hf_with_extractions.py --all
 """
 
+import importlib.util
 from pathlib import Path
 from typing import Any, Optional
 
@@ -25,10 +26,8 @@ ROOT_PATH = Path(__file__).parent.parent.parent
 DATA_PATH = ROOT_PATH / "data"
 
 # Import ExtractionStorage directly to avoid __init__.py dependencies
-import importlib.util
 spec = importlib.util.spec_from_file_location(
-    "extraction_storage",
-    ROOT_PATH / "juddges" / "extraction" / "extraction_storage.py"
+    "extraction_storage", ROOT_PATH / "juddges" / "extraction" / "extraction_storage.py"
 )
 extraction_storage_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(extraction_storage_module)
@@ -139,9 +138,9 @@ def enrich_parquet_shard(
 
     # Prepare extractions for join
     join_columns = ["document_id", "document_number"] + available_fields
-    extractions_for_join = extractions_df.select([
-        pl.col(c) for c in join_columns if c in extractions_df.columns
-    ])
+    extractions_for_join = extractions_df.select(
+        [pl.col(c) for c in join_columns if c in extractions_df.columns]
+    )
 
     # Primary join: by document_id = id_field (unique on document_id)
     primary_cols = ["document_id"] + [pl.col(f).alias(f"{f}_primary") for f in available_fields]
@@ -156,8 +155,12 @@ def enrich_parquet_shard(
 
     # Secondary join: by document_number = secondary_field (for rows that didn't match)
     # Deduplicate on document_number to avoid creating extra rows
-    secondary_cols = ["document_number"] + [pl.col(f).alias(f"{f}_secondary") for f in available_fields]
-    secondary_extractions = extractions_for_join.select(secondary_cols).unique(subset=["document_number"])
+    secondary_cols = ["document_number"] + [
+        pl.col(f).alias(f"{f}_secondary") for f in available_fields
+    ]
+    secondary_extractions = extractions_for_join.select(secondary_cols).unique(
+        subset=["document_number"]
+    )
 
     enriched_df = enriched_df.join(
         secondary_extractions,
@@ -168,18 +171,19 @@ def enrich_parquet_shard(
 
     # Coalesce: prefer primary match, fallback to secondary for each field
     coalesce_exprs = [
-        pl.coalesce([f"{f}_primary", f"{f}_secondary"]).alias(f)
-        for f in available_fields
+        pl.coalesce([f"{f}_primary", f"{f}_secondary"]).alias(f) for f in available_fields
     ]
-    drop_cols = [f"{f}_primary" for f in available_fields] + [f"{f}_secondary" for f in available_fields]
+    drop_cols = [f"{f}_primary" for f in available_fields] + [
+        f"{f}_secondary" for f in available_fields
+    ]
 
     enriched_df = enriched_df.with_columns(coalesce_exprs).drop(drop_cols)
 
     # Validate
-    assert len(enriched_df) == original_count, f"Row count mismatch! {len(enriched_df)} != {original_count}"
-    assert all(
-        col in enriched_df.columns for col in original_columns
-    ), f"Missing original columns!"
+    assert (
+        len(enriched_df) == original_count
+    ), f"Row count mismatch! {len(enriched_df)} != {original_count}"
+    assert all(col in enriched_df.columns for col in original_columns), "Missing original columns!"
 
     # Ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -201,7 +205,11 @@ def enrich_parquet_shard(
 
     # Calculate overall coverage based on factual_state
     if "factual_state" in enriched_df.columns:
-        factual_coverage = stats.get("factual_state_matched", 0) / original_count * 100 if original_count > 0 else 0
+        factual_coverage = (
+            stats.get("factual_state_matched", 0) / original_count * 100
+            if original_count > 0
+            else 0
+        )
         stats["coverage_pct"] = round(factual_coverage, 2)
 
     return stats

@@ -23,7 +23,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import weaviate
 from dotenv import load_dotenv
 from loguru import logger
 from rich.console import Console
@@ -36,6 +35,8 @@ from rich.progress import (
     TimeElapsedColumn,
     TimeRemainingColumn,
 )
+
+import weaviate
 
 console = Console()
 
@@ -65,7 +66,9 @@ def get_client() -> weaviate.WeaviateClient:
         grpc_host=WEAVIATE_HOST,
         grpc_port=WEAVIATE_GRPC_PORT,
         grpc_secure=False,
-        auth_credentials=weaviate.auth.AuthApiKey(api_key=WEAVIATE_API_KEY) if WEAVIATE_API_KEY else None,
+        auth_credentials=weaviate.auth.AuthApiKey(api_key=WEAVIATE_API_KEY)
+        if WEAVIATE_API_KEY
+        else None,
         skip_init_checks=False,
     )
     return client
@@ -238,7 +241,7 @@ def main():
 
     collections = COLLECTIONS if args.collection == "all" else [args.collection]
 
-    console.print(f"\n[bold cyan]Weaviate GRPC Dump (Fast!)[/bold cyan]")
+    console.print("\n[bold cyan]Weaviate GRPC Dump (Fast!)[/bold cyan]")
     console.print("=" * 60)
     console.print(f"Host: {WEAVIATE_HOST}")
     console.print(f"HTTP Port: {WEAVIATE_PORT}")
@@ -291,7 +294,9 @@ def main():
         if hours >= 1:
             console.print(f"[bold green]✓ Dump completed in {hours:.1f} hours[/bold green]")
         else:
-            console.print(f"[bold green]✓ Dump completed in {total_elapsed/60:.1f} minutes[/bold green]")
+            console.print(
+                f"[bold green]✓ Dump completed in {total_elapsed/60:.1f} minutes[/bold green]"
+            )
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")

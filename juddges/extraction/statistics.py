@@ -276,6 +276,8 @@ def display_ingestion_results(stats: IngestionStatistics):
     if stats.errors:
         console.print(f"\n[red]Errors ({len(stats.errors)}):[/red]")
         for error in stats.errors[:5]:  # Show first 5 errors
-            console.print(f"  • {error.get('document_id', 'unknown')}: {error.get('error', 'Unknown error')}")
+            console.print(
+                f"  • {error.get('document_id', 'unknown')}: {error.get('error', 'Unknown error')}"
+            )
         if len(stats.errors) > 5:
             console.print(f"  ... and {len(stats.errors) - 5} more errors")

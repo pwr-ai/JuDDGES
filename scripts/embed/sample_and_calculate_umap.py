@@ -179,7 +179,7 @@ def save_sampled_data(
     Returns:
         Path to saved parquet file
     """
-    console.print(f"[bold cyan]Saving sampled data to parquet...[/bold cyan]")
+    console.print("[bold cyan]Saving sampled data to parquet...[/bold cyan]")
 
     # Flatten the strata_docs into a list
     all_docs = []
@@ -524,10 +524,10 @@ def main():
     config_text = "[bold blue]UMAP Sampling and Calculation[/bold blue]\n\n"
 
     if args.apply_saved_model:
-        config_text += f"Mode: Apply saved UMAP model\n"
+        config_text += "Mode: Apply saved UMAP model\n"
         config_text += f"Model Path: {args.apply_saved_model}\n"
     else:
-        config_text += f"Mode: Sample and fit new UMAP\n"
+        config_text += "Mode: Sample and fit new UMAP\n"
         config_text += f"Sample Size: {args.sample_size} per stratum\n"
         config_text += f"UMAP n_neighbors: {args.n_neighbors}\n"
         config_text += f"UMAP min_dist: {args.min_dist}\n"
@@ -591,9 +591,7 @@ def main():
                         continue
 
                     # Save sampled data
-                    parquet_path = save_sampled_data(
-                        strata_docs, output_dir, collection_name, console
-                    )
+                    save_sampled_data(strata_docs, output_dir, collection_name, console)
 
                     # Extract vectors for UMAP
                     all_docs = []
@@ -616,7 +614,13 @@ def main():
 
                     # Update Weaviate
                     successful, failed = update_weaviate_batch(
-                        db, collection_name, uuids, coords, args.batch_size, console, args.max_workers
+                        db,
+                        collection_name,
+                        uuids,
+                        coords,
+                        args.batch_size,
+                        console,
+                        args.max_workers,
                     )
 
                     # Summary

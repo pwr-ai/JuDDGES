@@ -45,10 +45,7 @@ def check_property_coverage(db: WeaviateLegalDocumentsDatabase, sample_size: int
     while offset < max_offset:
         try:
             # Fetch batch of documents
-            response = collection.query.fetch_objects(
-                limit=batch_size,
-                offset=offset
-            )
+            response = collection.query.fetch_objects(limit=batch_size, offset=offset)
 
             for obj in response.objects:
                 documents_checked += 1
@@ -113,7 +110,9 @@ def print_results(stats: Dict):
     console.print("\n[bold cyan]Property Coverage Analysis[/bold cyan]\n")
     console.print(f"[bold]Total documents in collection:[/bold] {stats['total_documents']:,}")
     console.print(f"[bold]Sample size analyzed:[/bold] {stats['sample_size']:,}")
-    console.print(f"[dim]Note: Sample limited to 10,000 documents due to Weaviate offset limit[/dim]\n")
+    console.print(
+        "[dim]Note: Sample limited to 10,000 documents due to Weaviate offset limit[/dim]\n"
+    )
 
     # Create table
     table = Table(show_header=True, header_style="bold magenta")
@@ -124,10 +123,7 @@ def print_results(stats: Dict):
     table.add_column("Coverage %", justify="right", style="yellow", width=12)
 
     # Sort by coverage percentage (ascending) to show most empty fields first
-    sorted_fields = sorted(
-        stats["field_stats"].items(),
-        key=lambda x: x[1]["coverage_percentage"]
-    )
+    sorted_fields = sorted(stats["field_stats"].items(), key=lambda x: x[1]["coverage_percentage"])
 
     for field, field_stat in sorted_fields:
         coverage_pct = field_stat["coverage_percentage"]
@@ -179,12 +175,11 @@ def print_results(stats: Dict):
 
     # Highlight extremely sparse fields (< 1% coverage)
     sparse_fields = [
-        field for field, stat in stats["field_stats"].items()
-        if stat["coverage_percentage"] < 1.0
+        field for field, stat in stats["field_stats"].items() if stat["coverage_percentage"] < 1.0
     ]
 
     if sparse_fields:
-        console.print(f"\n[bold red]Very sparse properties (< 1% coverage):[/bold red]")
+        console.print("\n[bold red]Very sparse properties (< 1% coverage):[/bold red]")
         for field in sparse_fields:
             stat = stats["field_stats"][field]
             console.print(

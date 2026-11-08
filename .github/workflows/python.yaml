@@ -46,6 +46,9 @@ jobs:
           fi
 
       - name: Lint
+        env:
+          # no-commit-to-branch only guards local commits; docs hooks run in docs-quality-checks.yaml
+          SKIP: no-commit-to-branch,markdownlint-cli2,cspell,test-doc-code-examples
         run: make check
 
   python-test:

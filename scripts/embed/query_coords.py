@@ -18,8 +18,8 @@ Usage:
         print(f"Documents with coords: {count}")
 """
 
-from typing import List, Dict
-from weaviate.classes.query import Filter
+from typing import Dict, List
+
 from rich.console import Console
 from rich.table import Table
 
@@ -136,7 +136,7 @@ def main():
             docs = get_documents_with_coordinates(db, collection_name, limit=5)
 
             if not docs:
-                console.print(f"[yellow]No documents with coordinates found[/yellow]")
+                console.print("[yellow]No documents with coordinates found[/yellow]")
                 continue
 
             # Create table
@@ -194,7 +194,9 @@ def main():
             console.print(summary)
 
             if without_coords_count == 0:
-                console.print(f"[green]✓ All documents in {collection_name} have coordinates![/green]")
+                console.print(
+                    f"[green]✓ All documents in {collection_name} have coordinates![/green]"
+                )
             else:
                 console.print(
                     f"[yellow]⚠ {without_coords_count:,} documents in {collection_name} are missing coordinates[/yellow]"

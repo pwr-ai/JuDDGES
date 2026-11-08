@@ -33,7 +33,12 @@ def main():
 
     # Check environment
     console.print("\n[bold]Checking environment...[/bold]")
-    required_vars = ["GOOGLE_API_KEY", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST"]
+    required_vars = [
+        "GOOGLE_API_KEY",
+        "LANGFUSE_PUBLIC_KEY",
+        "LANGFUSE_SECRET_KEY",
+        "LANGFUSE_HOST",
+    ]
     missing = [var for var in required_vars if not os.getenv(var)]
 
     if missing:
@@ -119,7 +124,7 @@ def main():
         console.print(JSON.from_data(result, indent=2))
 
         console.print("\n[bold green]✓ Test completed successfully![/bold green]")
-        console.print(f"\n[bold]View trace in Langfuse:[/bold]")
+        console.print("\n[bold]View trace in Langfuse:[/bold]")
         console.print(f"  {os.getenv('LANGFUSE_HOST')}")
         console.print("\n[dim]Look for the most recent trace in your dashboard[/dim]")
 

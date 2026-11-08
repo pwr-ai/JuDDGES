@@ -26,9 +26,8 @@ import random
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import mean, stdev
-from typing import Any, Callable
+from typing import Any
 
-import polars as pl
 import typer
 from loguru import logger
 
@@ -41,121 +40,163 @@ def define_aggregation_queries() -> list[dict[str, Any]]:
 
     # --- Counting queries (20) ---
     for year in range(2018, 2025):
-        queries.append({
-            "id": f"count_year_{year}",
+        queries.append(
+            {
+                "id": f"count_year_{year}",
+                "type": "count",
+                "question": f"How many judgments were issued in {year}?",
+                "field": "extracted_date_issued",
+                "filter": lambda row, y=year: (row.get("extracted_date_issued") or "").startswith(
+                    str(y)
+                ),
+            }
+        )
+
+    queries.append(
+        {
+            "id": "count_with_summary",
             "type": "count",
-            "question": f"How many judgments were issued in {year}?",
-            "field": "extracted_date_issued",
-            "filter": lambda row, y=year: (
-                row.get("extracted_date_issued") or ""
-            ).startswith(str(y)),
-        })
+            "question": "How many documents have a non-empty summary?",
+            "field": "extracted_summary",
+            "filter": lambda row: bool(row.get("extracted_summary")),
+        }
+    )
 
-    queries.append({
-        "id": "count_with_summary",
-        "type": "count",
-        "question": "How many documents have a non-empty summary?",
-        "field": "extracted_summary",
-        "filter": lambda row: bool(row.get("extracted_summary")),
-    })
+    queries.append(
+        {
+            "id": "count_with_thesis",
+            "type": "count",
+            "question": "How many documents have a thesis?",
+            "field": "extracted_thesis",
+            "filter": lambda row: bool(row.get("extracted_thesis")),
+        }
+    )
 
-    queries.append({
-        "id": "count_with_thesis",
-        "type": "count",
-        "question": "How many documents have a thesis?",
-        "field": "extracted_thesis",
-        "filter": lambda row: bool(row.get("extracted_thesis")),
-    })
-
-    queries.append({
-        "id": "count_with_factual_state",
-        "type": "count",
-        "question": "How many documents have factual_state extracted?",
-        "field": "factual_state",
-        "filter": lambda row: bool(row.get("factual_state")),
-    })
+    queries.append(
+        {
+            "id": "count_with_factual_state",
+            "type": "count",
+            "question": "How many documents have factual_state extracted?",
+            "field": "factual_state",
+            "filter": lambda row: bool(row.get("factual_state")),
+        }
+    )
 
     # --- Proportion queries (20) ---
     outcome_types = [
-        "uwzgledniono_w_calosci", "uwzgledniono_w_czesci", "oddalono",
-        "umorzono", "uchylono", "uchylono_i_przekazano", "zmieniono",
-        "utrzymano_w_mocy", "odrzucono",
+        "uwzgledniono_w_calosci",
+        "uwzgledniono_w_czesci",
+        "oddalono",
+        "umorzono",
+        "uchylono",
+        "uchylono_i_przekazano",
+        "zmieniono",
+        "utrzymano_w_mocy",
+        "odrzucono",
     ]
     for ot in outcome_types:
-        queries.append({
-            "id": f"proportion_outcome_{ot}",
-            "type": "proportion",
-            "question": f"What proportion of judgments have outcome '{ot}'?",
-            "field": "extracted_outcome",
-            "filter": lambda row, o=ot: o in str(row.get("extracted_outcome", "")),
-        })
+        queries.append(
+            {
+                "id": f"proportion_outcome_{ot}",
+                "type": "proportion",
+                "question": f"What proportion of judgments have outcome '{ot}'?",
+                "field": "extracted_outcome",
+                "filter": lambda row, o=ot: o in str(row.get("extracted_outcome", "")),
+            }
+        )
 
     # Document type proportions
     for dt in ["judgment", "tax_interpretation", "legal_act"]:
-        queries.append({
-            "id": f"proportion_doctype_{dt}",
-            "type": "proportion",
-            "question": f"What proportion are {dt}s?",
-            "field": "document_type",
-            "filter": lambda row, d=dt: str(row.get("document_type", "")).lower() == d.lower()
-            or d in str(row.get("extracted_outcome", "")),
-        })
+        queries.append(
+            {
+                "id": f"proportion_doctype_{dt}",
+                "type": "proportion",
+                "question": f"What proportion are {dt}s?",
+                "field": "document_type",
+                "filter": lambda row, d=dt: str(row.get("document_type", "")).lower() == d.lower()
+                or d in str(row.get("extracted_outcome", "")),
+            }
+        )
 
     # --- Distribution queries (20) ---
-    queries.append({
-        "id": "dist_keywords_top10",
-        "type": "distribution",
-        "question": "What are the top 10 most frequent keywords?",
-        "field": "extracted_keywords",
-        "aggregator": "top_keywords",
-    })
+    queries.append(
+        {
+            "id": "dist_keywords_top10",
+            "type": "distribution",
+            "question": "What are the top 10 most frequent keywords?",
+            "field": "extracted_keywords",
+            "aggregator": "top_keywords",
+        }
+    )
 
-    queries.append({
-        "id": "dist_outcomes",
-        "type": "distribution",
-        "question": "Distribution of decision types",
-        "field": "extracted_outcome",
-        "aggregator": "outcome_distribution",
-    })
+    queries.append(
+        {
+            "id": "dist_outcomes",
+            "type": "distribution",
+            "question": "Distribution of decision types",
+            "field": "extracted_outcome",
+            "aggregator": "outcome_distribution",
+        }
+    )
 
     for year in range(2019, 2025):
-        queries.append({
-            "id": f"dist_monthly_{year}",
-            "type": "temporal",
-            "question": f"Monthly document count in {year}",
-            "field": "extracted_date_issued",
-            "aggregator": "monthly_counts",
-            "params": {"year": year},
-        })
+        queries.append(
+            {
+                "id": f"dist_monthly_{year}",
+                "type": "temporal",
+                "question": f"Monthly document count in {year}",
+                "field": "extracted_date_issued",
+                "aggregator": "monthly_counts",
+                "params": {"year": year},
+            }
+        )
 
     # --- Text length queries (20) ---
     for field in ["extracted_summary", "extracted_thesis", "factual_state", "legal_state"]:
-        queries.append({
-            "id": f"avg_length_{field}",
-            "type": "statistic",
-            "question": f"Average character length of {field}",
-            "field": field,
-            "aggregator": "avg_length",
-        })
-        queries.append({
-            "id": f"median_length_{field}",
-            "type": "statistic",
-            "question": f"Median character length of {field}",
-            "field": field,
-            "aggregator": "median_length",
-        })
+        queries.append(
+            {
+                "id": f"avg_length_{field}",
+                "type": "statistic",
+                "question": f"Average character length of {field}",
+                "field": field,
+                "aggregator": "avg_length",
+            }
+        )
+        queries.append(
+            {
+                "id": f"median_length_{field}",
+                "type": "statistic",
+                "question": f"Median character length of {field}",
+                "field": field,
+                "aggregator": "median_length",
+            }
+        )
 
     # Fill to ~100 with keyword co-occurrence queries
-    for kw in ["kredyt frankowy", "klauzule abuzywne", "VAT", "CIT", "prawo cywilne",
-                "Sąd Najwyższy", "TSUE", "konsument", "nieważność", "odszkodowanie",
-                "apelacja", "kasacja"]:
-        queries.append({
-            "id": f"count_keyword_{kw.replace(' ', '_')}",
-            "type": "count",
-            "question": f"How many documents mention keyword '{kw}'?",
-            "field": "extracted_keywords",
-            "filter": lambda row, k=kw: k.lower() in str(row.get("extracted_keywords", "")).lower(),
-        })
+    for kw in [
+        "kredyt frankowy",
+        "klauzule abuzywne",
+        "VAT",
+        "CIT",
+        "prawo cywilne",
+        "Sąd Najwyższy",
+        "TSUE",
+        "konsument",
+        "nieważność",
+        "odszkodowanie",
+        "apelacja",
+        "kasacja",
+    ]:
+        queries.append(
+            {
+                "id": f"count_keyword_{kw.replace(' ', '_')}",
+                "type": "count",
+                "question": f"How many documents mention keyword '{kw}'?",
+                "field": "extracted_keywords",
+                "filter": lambda row, k=kw: k.lower()
+                in str(row.get("extracted_keywords", "")).lower(),
+            }
+        )
 
     return queries[:100]  # Cap at 100
 
@@ -197,8 +238,16 @@ def execute_distribution_query(
         outcomes = []
         for row in data:
             outcome_str = str(row.get("extracted_outcome", ""))
-            for ot in ["uwzgledniono_w_calosci", "uwzgledniono_w_czesci", "oddalono",
-                        "umorzono", "uchylono", "zmieniono", "utrzymano_w_mocy", "odrzucono"]:
+            for ot in [
+                "uwzgledniono_w_calosci",
+                "uwzgledniono_w_czesci",
+                "oddalono",
+                "umorzono",
+                "uchylono",
+                "zmieniono",
+                "utrzymano_w_mocy",
+                "odrzucono",
+            ]:
                 if ot in outcome_str:
                     outcomes.append(ot)
                     break
@@ -277,12 +326,8 @@ def main(
         "JuDDGES/pl-court-raw-enriched",
         help="HuggingFace enriched dataset",
     ),
-    max_docs: int = typer.Option(
-        0, help="Max documents to load (0 = all)"
-    ),
-    n_trials: int = typer.Option(
-        10, help="Number of random subsample trials per size"
-    ),
+    max_docs: int = typer.Option(0, help="Max documents to load (0 = all)"),
+    n_trials: int = typer.Option(10, help="Number of random subsample trials per size"),
     output: Path = typer.Option(
         "results/neurips/exp5_multidoc_aggregation.json",
     ),
@@ -370,9 +415,7 @@ def main(
                 }
                 for qtype, errors in type_errors.items()
             },
-            "overall_mean_error": round(
-                mean([mean(e) for e in per_query_errors.values()]), 4
-            ),
+            "overall_mean_error": round(mean([mean(e) for e in per_query_errors.values()]), 4),
         }
 
     results = {
@@ -384,10 +427,7 @@ def main(
         "subsample_sizes": subsample_sizes,
         "scale_results": scale_results,
         "ground_truth_summary": {
-            qid: (
-                round(gt, 4) if isinstance(gt, (int, float))
-                else f"dict({len(gt)} keys)"
-            )
+            qid: (round(gt, 4) if isinstance(gt, (int, float)) else f"dict({len(gt)} keys)")
             for qid, gt in list(ground_truth.items())[:20]
         },
     }

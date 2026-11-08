@@ -204,7 +204,7 @@ def enrich_dataset(
         ds = ds.add_column(col_name, col_values)
 
     # Print statistics
-    console.print(f"\n[bold green]Enrichment complete![/bold green]")
+    console.print("\n[bold green]Enrichment complete![/bold green]")
     console.print(f"  Total documents: {total_count:,}")
     console.print(f"  With extractions: {matched_count:,}")
     console.print(f"  Coverage: {100 * matched_count / total_count:.1f}%")
@@ -240,7 +240,7 @@ def push_to_huggingface(
     )
 
     # Now push the dataset
-    console.print(f"[dim]Uploading dataset...[/dim]")
+    console.print("[dim]Uploading dataset...[/dim]")
     dataset.push_to_hub(
         repo_id,
         private=private,

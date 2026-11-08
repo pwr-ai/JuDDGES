@@ -66,7 +66,10 @@ def extract_with_gpt(client: OpenAI, text: str, schema: dict) -> dict | None:
             response = client.chat.completions.create(
                 model=MODEL,
                 messages=[
-                    {"role": "system", "content": "You are a legal document extraction system. Return only valid JSON."},
+                    {
+                        "role": "system",
+                        "content": "You are a legal document extraction system. Return only valid JSON.",
+                    },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.1,
@@ -78,16 +81,21 @@ def extract_with_gpt(client: OpenAI, text: str, schema: dict) -> dict | None:
             logger.warning(f"JSON parse error attempt {attempt + 1}")
         except Exception as e:
             logger.warning(f"API error attempt {attempt + 1}: {e}")
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
     return None
 
 
 def score_field(pred_val, gold_val) -> float:
-    if pred_val == "None": pred_val = None
-    if gold_val == "None": gold_val = None
-    if pred_val is None and gold_val is None: return 1.0
-    if pred_val is None or gold_val is None: return 0.0
-    if str(pred_val).strip().lower() == str(gold_val).strip().lower(): return 1.0
+    if pred_val == "None":
+        pred_val = None
+    if gold_val == "None":
+        gold_val = None
+    if pred_val is None and gold_val is None:
+        return 1.0
+    if pred_val is None or gold_val is None:
+        return 0.0
+    if str(pred_val).strip().lower() == str(gold_val).strip().lower():
+        return 1.0
     return 0.0
 
 
@@ -105,16 +113,16 @@ def main():
 
     indices = list(range(min(SAMPLE_SIZE, len(ds_test))))
 
-    scores_fresh_vs_orig = defaultdict(list)   # (a) vs (b)
+    scores_fresh_vs_orig = defaultdict(list)  # (a) vs (b)
     scores_fresh_vs_human = defaultdict(list)  # (a) vs (c)
-    scores_orig_vs_human = defaultdict(list)   # (b) vs (c)
+    scores_orig_vs_human = defaultdict(list)  # (b) vs (c)
     parse_errors = 0
     results = []
 
     for i, idx in enumerate(indices):
         text = ds_test[idx]["context"]
-        orig_gold = json.loads(ds_test[idx]["output"])       # (b) original GPT-4.1
-        human_gold = json.loads(ds_annotated[idx]["output"]) # (c) human-reviewed
+        orig_gold = json.loads(ds_test[idx]["output"])  # (b) original GPT-4.1
+        human_gold = json.loads(ds_annotated[idx]["output"])  # (c) human-reviewed
 
         # (a) Fresh extraction
         fresh = extract_with_gpt(client, text, schema)
@@ -136,7 +144,11 @@ def main():
             scores_fresh_vs_human[field].append(s_fh)
             scores_orig_vs_human[field].append(s_oh)
 
-            doc_scores[field] = {"fresh_vs_orig": s_fo, "fresh_vs_human": s_fh, "orig_vs_human": s_oh}
+            doc_scores[field] = {
+                "fresh_vs_orig": s_fo,
+                "fresh_vs_human": s_fh,
+                "orig_vs_human": s_oh,
+            }
 
         results.append({"idx": idx, "scores": doc_scores})
 
@@ -144,7 +156,9 @@ def main():
             avg_fo = mean(s for sc in scores_fresh_vs_orig.values() for s in sc)
             avg_fh = mean(s for sc in scores_fresh_vs_human.values() for s in sc)
             avg_oh = mean(s for sc in scores_orig_vs_human.values() for s in sc)
-            logger.info(f"  [{i+1}/{len(indices)}] Fresh↔Orig: {avg_fo:.3f}  Fresh↔Human: {avg_fh:.3f}  Orig↔Human: {avg_oh:.3f}  errors: {parse_errors}")
+            logger.info(
+                f"  [{i+1}/{len(indices)}] Fresh↔Orig: {avg_fo:.3f}  Fresh↔Human: {avg_fh:.3f}  Orig↔Human: {avg_oh:.3f}  errors: {parse_errors}"
+            )
 
     # Aggregate
     logger.info(f"\n{'='*80}")

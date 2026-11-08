@@ -6,11 +6,11 @@ import os
 os.environ["WEAVIATE_HOST"] = os.getenv("WWEAVIATE_URL", "83.238.160.206")
 os.environ["WEAVIATE_PORT"] = "8080"
 
-from loguru import logger
-from rich.console import Console
-from rich.table import Table
+from loguru import logger  # noqa: E402
+from rich.console import Console  # noqa: E402
+from rich.table import Table  # noqa: E402
 
-from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
+from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase  # noqa: E402
 
 
 def main() -> None:
@@ -46,7 +46,8 @@ def main() -> None:
         # Documents with both x and y
         with_both_response = collection.aggregate.over_all(
             total_count=True,
-            filters=wq.Filter.by_property("x").is_none(False) & wq.Filter.by_property("y").is_none(False),
+            filters=wq.Filter.by_property("x").is_none(False)
+            & wq.Filter.by_property("y").is_none(False),
         )
         with_both = with_both_response.total_count
 
@@ -104,7 +105,9 @@ def main() -> None:
         if missing_coords == 0:
             console.print("\n[green]✓ All documents have UMAP coordinates set![/green]")
         else:
-            console.print(f"\n[yellow]⚠ {missing_coords} documents are missing UMAP coordinates[/yellow]")
+            console.print(
+                f"\n[yellow]⚠ {missing_coords} documents are missing UMAP coordinates[/yellow]"
+            )
 
 
 if __name__ == "__main__":

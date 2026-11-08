@@ -32,10 +32,7 @@ def run_graphql_query(query: str, description: str):
 
     try:
         response = requests.post(
-            f"{WEAVIATE_URL}/v1/graphql",
-            json={"query": query},
-            headers=HEADERS,
-            timeout=30
+            f"{WEAVIATE_URL}/v1/graphql", json={"query": query}, headers=HEADERS, timeout=30
         )
 
         if response.status_code == 200:
@@ -43,7 +40,7 @@ def run_graphql_query(query: str, description: str):
 
             # Check for GraphQL errors
             if "errors" in data:
-                console.print(f"[red]GraphQL Errors:[/red]")
+                console.print("[red]GraphQL Errors:[/red]")
                 for error in data["errors"]:
                     console.print(f"  • {error.get('message', 'Unknown error')}")
                 return None
@@ -265,14 +262,14 @@ def query_6_aggregate_stats():
             # Country distribution
             country_data = agg[0].get("country", {})
             if country_data:
-                console.print(f"\n  [cyan]Top Countries:[/cyan]")
+                console.print("\n  [cyan]Top Countries:[/cyan]")
                 for item in country_data.get("topOccurrences", []):
                     console.print(f"    • {item['value']}: {item['occurs']:,} documents")
 
             # Language distribution
             language_data = agg[0].get("language", {})
             if language_data:
-                console.print(f"\n  [cyan]Top Languages:[/cyan]")
+                console.print("\n  [cyan]Top Languages:[/cyan]")
                 for item in language_data.get("topOccurrences", []):
                     console.print(f"    • {item['value']}: {item['occurs']:,} documents")
 
@@ -369,7 +366,7 @@ def main():
     console.print("[bold magenta]  Weaviate Example Queries[/bold magenta]")
     console.print("[bold magenta]═══════════════════════════════════════[/bold magenta]")
 
-    console.print(f"\n[bold]Configuration:[/bold]")
+    console.print("\n[bold]Configuration:[/bold]")
     console.print(f"  URL: {WEAVIATE_URL}")
     console.print(f"  API Key: {'*' * (len(WEAVIATE_API_KEY) - 4) + WEAVIATE_API_KEY[-4:]}")
 

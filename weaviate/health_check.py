@@ -12,10 +12,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import requests
-import weaviate
-from loguru import logger
 from rich.console import Console
 from rich.table import Table
+
+import weaviate
 
 console = Console()
 
@@ -125,10 +125,7 @@ def test_collection_counts():
             """
 
             response = requests.post(
-                f"{WEAVIATE_URL}/v1/graphql",
-                json={"query": query},
-                headers=headers,
-                timeout=10
+                f"{WEAVIATE_URL}/v1/graphql", json={"query": query}, headers=headers, timeout=10
             )
 
             if response.status_code == 200:
@@ -196,6 +193,7 @@ def test_grpc_connection():
     try:
         # Parse URL to extract host and determine if HTTPS
         from urllib.parse import urlparse
+
         parsed_url = urlparse(WEAVIATE_URL)
         host = parsed_url.hostname or "localhost"
         is_https = parsed_url.scheme == "https"
@@ -235,7 +233,7 @@ def test_grpc_connection():
             grpc_port=grpc_port,
             grpc_secure=is_https,
             auth_credentials=auth_config,
-            skip_init_checks=False
+            skip_init_checks=False,
         )
 
         # Test connection
@@ -255,7 +253,9 @@ def test_grpc_connection():
                 sample_collection = list(collections.keys())[0]
                 collection = client.collections.get(sample_collection)
                 result = collection.aggregate.over_all(total_count=True)
-                console.print(f"  Sample query on '{sample_collection}': {result.total_count} objects")
+                console.print(
+                    f"  Sample query on '{sample_collection}': {result.total_count} objects"
+                )
 
             client.close()
             return True
@@ -270,9 +270,13 @@ def test_grpc_connection():
 
         # Check if this is a DNS address issue
         if is_https and not parsed_url.port:
-            console.print("\n  [yellow]Note:[/yellow] gRPC may not be accessible through the nginx proxy.")
+            console.print(
+                "\n  [yellow]Note:[/yellow] gRPC may not be accessible through the nginx proxy."
+            )
             console.print("  gRPC typically works only via localhost or direct IP connections.")
-            console.print("  For production use, consider exposing gRPC on a separate port/subdomain")
+            console.print(
+                "  For production use, consider exposing gRPC on a separate port/subdomain"
+            )
             console.print("  or use REST API for external connections.")
 
         return False
@@ -289,13 +293,14 @@ def test_docker_services():
             ["docker", "compose", "ps", "--format", "json"],
             capture_output=True,
             text=True,
-            cwd=Path(__file__).parent
+            cwd=Path(__file__).parent,
         )
 
         if result.returncode == 0:
             import json
+
             services = []
-            for line in result.stdout.strip().split('\n'):
+            for line in result.stdout.strip().split("\n"):
                 if line:
                     services.append(json.loads(line))
 
@@ -350,17 +355,17 @@ Examples:
 
   # Test with custom URL
   python test_weaviate_connection.py --url https://legal-ai-weaviate.augustyniak.ai
-        """
+        """,
     )
     parser.add_argument(
         "--url",
         default=os.getenv("WEAVIATE_URL", "https://legal-ai-weaviate.augustyniak.ai"),
-        help="Weaviate URL (default: DNS from docker-compose.yaml or WEAVIATE_URL env var)"
+        help="Weaviate URL (default: DNS from docker-compose.yaml or WEAVIATE_URL env var)",
     )
     parser.add_argument(
         "--api-key",
         default=os.getenv("WEAVIATE_API_KEY", ""),
-        help="Weaviate API key (default: WEAVIATE_API_KEY env var)"
+        help="Weaviate API key (default: WEAVIATE_API_KEY env var)",
     )
     return parser.parse_args()
 
@@ -378,12 +383,12 @@ def main():
     console.print("[bold magenta]  Weaviate Setup Test Suite[/bold magenta]")
     console.print("[bold magenta]═══════════════════════════════════════[/bold magenta]")
 
-    console.print(f"\n[bold]Configuration:[/bold]")
+    console.print("\n[bold]Configuration:[/bold]")
     console.print(f"  URL: {WEAVIATE_URL}")
     if WEAVIATE_API_KEY:
         console.print(f"  API Key: {'*' * (len(WEAVIATE_API_KEY) - 4) + WEAVIATE_API_KEY[-4:]}")
     else:
-        console.print(f"  API Key: [yellow]Not provided[/yellow]")
+        console.print("  API Key: [yellow]Not provided[/yellow]")
 
     results = {
         "REST Connection": test_connection(),

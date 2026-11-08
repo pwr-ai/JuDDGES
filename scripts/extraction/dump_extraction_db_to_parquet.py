@@ -19,8 +19,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
 from dotenv import load_dotenv
 from loguru import logger
 from rich.console import Console
@@ -182,7 +180,9 @@ def dump_table_to_parquet(
                 chunk_num += 1
                 progress.update(task, completed=offset)
 
-        logger.info(f"  Saved {chunk_num} files, total size: {stats['size_bytes'] / 1024 / 1024:.2f} MB")
+        logger.info(
+            f"  Saved {chunk_num} files, total size: {stats['size_bytes'] / 1024 / 1024:.2f} MB"
+        )
 
     return stats
 
@@ -224,13 +224,13 @@ def main():
         )
     )
 
-    console.print(f"\n[cyan]Configuration:[/cyan]")
+    console.print("\n[cyan]Configuration:[/cyan]")
     console.print(f"  - Output directory: {output_dir}")
     console.print(f"  - Chunk size: {args.chunk_size:,}")
 
     # Connect to database
     conn_string = get_db_connection_string()
-    logger.info(f"Connecting to PostgreSQL...")
+    logger.info("Connecting to PostgreSQL...")
 
     try:
         engine = create_engine(conn_string)
@@ -282,13 +282,13 @@ def main():
     total_size = sum(s.get("size_bytes", 0) for s in all_stats)
     total_files = sum(len(s.get("files", [])) for s in all_stats)
 
-    console.print(f"[cyan]Summary:[/cyan]")
+    console.print("[cyan]Summary:[/cyan]")
     console.print(f"  - Output directory: {output_dir}")
     console.print(f"  - Total rows: {total_rows:,}")
     console.print(f"  - Total files: {total_files}")
     console.print(f"  - Total size: {total_size / 1024 / 1024:.2f} MB")
 
-    console.print(f"\n[cyan]Tables backed up:[/cyan]")
+    console.print("\n[cyan]Tables backed up:[/cyan]")
     for stats in all_stats:
         if "error" in stats:
             console.print(f"  - {stats['table']}: [red]FAILED - {stats['error']}[/red]")
@@ -307,6 +307,7 @@ def main():
     }
 
     import json
+
     metadata_file = output_dir / "backup_metadata.json"
     with open(metadata_file, "w") as f:
         json.dump(metadata, f, indent=2, default=str)

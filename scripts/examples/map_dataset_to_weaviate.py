@@ -71,9 +71,7 @@ def main():
 
     # Example 4: Update Weaviate documents with raw_content from dataset
     logger.info("\n=== Example 4: Update raw_content from dataset (dry run) ===")
-    logger.info(
-        "To update Weaviate documents with raw_content, uncomment the following line:"
-    )
+    logger.info("To update Weaviate documents with raw_content, uncomment the following line:")
     logger.info("# updated_count = mapper.update_raw_content_from_dataset(")
     logger.info("#     raw_content_field='text',  # Field in dataset with raw text")
     logger.info("#     batch_size=100,")
@@ -95,7 +93,9 @@ def main():
 
     logger.info(f"Enriched {len(enriched_docs)} documents")
     if enriched_docs:
-        logger.info(f"Enriched fields: {[k for k in enriched_docs[0].keys() if k.startswith('dataset_')]}")
+        logger.info(
+            f"Enriched fields: {[k for k in enriched_docs[0].keys() if k.startswith('dataset_')]}"
+        )
 
     logger.info("\n=== Done ===")
 

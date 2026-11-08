@@ -29,7 +29,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import numpy as np
 import pyarrow.parquet as pq
 import requests
 from dotenv import load_dotenv
@@ -47,7 +46,6 @@ from rich.progress import (
 
 import weaviate
 import weaviate.classes.config as wvc
-
 from juddges.settings import TEXT_EMBEDDING_DIM, TEXT_EMBEDDING_MODEL, VectorName
 
 # Load environment
@@ -63,7 +61,11 @@ DOC_CHUNKS_PARQUET = NAS_BACKUP_DIR / "DocumentChunks_20260107_211151.parquet"
 
 WEAVIATE_HOST = os.getenv("WEAVIATE_HOST", "localhost")
 WEAVIATE_PORT = int(os.getenv("WEAVIATE_PORT", "8084"))
-WEAVIATE_GRPC_PORT = 8085 if WEAVIATE_HOST in ("localhost", "127.0.0.1") else int(os.getenv("WEAVIATE_GRPC_PORT", "8085"))
+WEAVIATE_GRPC_PORT = (
+    8085
+    if WEAVIATE_HOST in ("localhost", "127.0.0.1")
+    else int(os.getenv("WEAVIATE_GRPC_PORT", "8085"))
+)
 WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "")
 
 BATCH_SIZE = 2048
@@ -91,7 +93,9 @@ def get_client() -> weaviate.WeaviateClient:
     )
 
 
-def recreate_collections(client: weaviate.WeaviateClient, collections: list[str] | None = None) -> None:
+def recreate_collections(
+    client: weaviate.WeaviateClient, collections: list[str] | None = None
+) -> None:
     """Delete and recreate specified collections with BQ."""
     targets = collections or ["LegalDocuments", "DocumentChunks"]
     for name in targets:
@@ -131,18 +135,90 @@ def _create_legal_documents_collection(client: weaviate.WeaviateClient) -> None:
             stopwords_preset=wvc.StopwordsPreset.EN,
         ),
         properties=[
-            wvc.Property(name="document_id", data_type=wvc.DataType.TEXT, index_filterable=True, index_searchable=False, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
-            wvc.Property(name="full_text", data_type=wvc.DataType.TEXT, index_searchable=True, tokenization=wvc.Tokenization.WORD, skip_vectorization=True),
-            wvc.Property(name="title", data_type=wvc.DataType.TEXT, index_searchable=True, tokenization=wvc.Tokenization.WORD, skip_vectorization=True),
-            wvc.Property(name="summary", data_type=wvc.DataType.TEXT, index_searchable=True, tokenization=wvc.Tokenization.WORD, skip_vectorization=True),
-            wvc.Property(name="document_type", data_type=wvc.DataType.TEXT, index_filterable=True, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
-            wvc.Property(name="language", data_type=wvc.DataType.TEXT, index_filterable=True, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
-            wvc.Property(name="country", data_type=wvc.DataType.TEXT, index_filterable=True, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
-            wvc.Property(name="court_name", data_type=wvc.DataType.TEXT, index_filterable=True, skip_vectorization=True),
-            wvc.Property(name="date_issued", data_type=wvc.DataType.TEXT, index_filterable=True, skip_vectorization=True),
-            wvc.Property(name="document_number", data_type=wvc.DataType.TEXT, index_filterable=True, index_searchable=True, tokenization=wvc.Tokenization.WORD, skip_vectorization=True),
-            wvc.Property(name="source", data_type=wvc.DataType.TEXT, index_filterable=True, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
-            wvc.Property(name="processing_status", data_type=wvc.DataType.TEXT, index_filterable=True, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
+            wvc.Property(
+                name="document_id",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                index_searchable=False,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="full_text",
+                data_type=wvc.DataType.TEXT,
+                index_searchable=True,
+                tokenization=wvc.Tokenization.WORD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="title",
+                data_type=wvc.DataType.TEXT,
+                index_searchable=True,
+                tokenization=wvc.Tokenization.WORD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="summary",
+                data_type=wvc.DataType.TEXT,
+                index_searchable=True,
+                tokenization=wvc.Tokenization.WORD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="document_type",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="language",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="country",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="court_name",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="date_issued",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="document_number",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                index_searchable=True,
+                tokenization=wvc.Tokenization.WORD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="source",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="processing_status",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
         ],
     )
     logger.info("Created LegalDocuments collection with BQ")
@@ -172,13 +248,54 @@ def _create_document_chunks_collection(client: weaviate.WeaviateClient) -> None:
             stopwords_preset=wvc.StopwordsPreset.EN,
         ),
         properties=[
-            wvc.Property(name="document_id", data_type=wvc.DataType.TEXT, index_filterable=True, index_searchable=False, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
-            wvc.Property(name="chunk_id", data_type=wvc.DataType.INT, index_filterable=True, skip_vectorization=True),
-            wvc.Property(name="chunk_text", data_type=wvc.DataType.TEXT, index_searchable=True, tokenization=wvc.Tokenization.WORD, skip_vectorization=True),
-            wvc.Property(name="document_type", data_type=wvc.DataType.TEXT, index_filterable=True, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
-            wvc.Property(name="language", data_type=wvc.DataType.TEXT, index_filterable=True, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
-            wvc.Property(name="position", data_type=wvc.DataType.INT, index_filterable=True, skip_vectorization=True),
-            wvc.Property(name="segment_type", data_type=wvc.DataType.TEXT, index_filterable=True, tokenization=wvc.Tokenization.FIELD, skip_vectorization=True),
+            wvc.Property(
+                name="document_id",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                index_searchable=False,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="chunk_id",
+                data_type=wvc.DataType.INT,
+                index_filterable=True,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="chunk_text",
+                data_type=wvc.DataType.TEXT,
+                index_searchable=True,
+                tokenization=wvc.Tokenization.WORD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="document_type",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="language",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="position",
+                data_type=wvc.DataType.INT,
+                index_filterable=True,
+                skip_vectorization=True,
+            ),
+            wvc.Property(
+                name="segment_type",
+                data_type=wvc.DataType.TEXT,
+                index_filterable=True,
+                tokenization=wvc.Tokenization.FIELD,
+                skip_vectorization=True,
+            ),
         ],
     )
     logger.info("Created DocumentChunks collection with BQ")
@@ -204,10 +321,11 @@ def ingest_collection(
     if limit:
         total_rows = min(total_rows, limit)
 
-    console.print(f"\n[bold]{collection_name}[/bold]: {total_rows:,} objects from {parquet_path.name}")
+    console.print(
+        f"\n[bold]{collection_name}[/bold]: {total_rows:,} objects from {parquet_path.name}"
+    )
 
     count = 0
-    pending_batches = []
 
     def _parse_row(row, columns):
         """Parse a parquet row into (uuid, props, text)."""
@@ -221,7 +339,14 @@ def ingest_collection(
             if isinstance(val, str) and val.startswith("["):
                 try:
                     parsed = json.loads(val)
-                    if isinstance(parsed, list) and col not in ("keywords", "judges", "legal_bases", "references", "tags", "cited_references"):
+                    if isinstance(parsed, list) and col not in (
+                        "keywords",
+                        "judges",
+                        "legal_bases",
+                        "references",
+                        "tags",
+                        "cited_references",
+                    ):
                         val = json.dumps(parsed, ensure_ascii=False)
                     else:
                         val = parsed
@@ -275,7 +400,9 @@ def ingest_collection(
                     continue
 
                 # Submit batch for async embed+insert
-                future = executor.submit(_flush_batch, collection, list(batch_objects), list(batch_texts))
+                future = executor.submit(
+                    _flush_batch, collection, list(batch_objects), list(batch_texts)
+                )
                 futures.append((future, len(batch_texts)))
 
                 # Collect completed futures periodically
@@ -306,9 +433,7 @@ def _embed_via_tei(texts: list[str], truncate_dim: int = TEXT_EMBEDDING_DIM) -> 
     global TEI_SESSION
     if TEI_SESSION is None:
         TEI_SESSION = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(
-            pool_connections=4, pool_maxsize=4, max_retries=3
-        )
+        adapter = requests.adapters.HTTPAdapter(pool_connections=4, pool_maxsize=4, max_retries=3)
         TEI_SESSION.mount("http://", adapter)
 
     for attempt in range(5):
@@ -326,8 +451,10 @@ def _embed_via_tei(texts: list[str], truncate_dim: int = TEXT_EMBEDDING_DIM) -> 
                 return [emb[:truncate_dim] for emb in full_embeddings]
             return full_embeddings
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-            wait = 2 ** attempt
-            logger.warning(f"TEI request failed (attempt {attempt + 1}/5): {e}. Retrying in {wait}s...")
+            wait = 2**attempt
+            logger.warning(
+                f"TEI request failed (attempt {attempt + 1}/5): {e}. Retrying in {wait}s..."
+            )
             time.sleep(wait)
             # Reset session on connection errors
             TEI_SESSION = None
@@ -366,8 +493,12 @@ def main():
     parser = argparse.ArgumentParser(description="Re-ingest Weaviate with new embedding model")
     parser.add_argument("--limit", type=int, help="Limit number of documents per collection")
     parser.add_argument("--skip-recreate", action="store_true", help="Skip collection recreation")
-    parser.add_argument("--collection", choices=["LegalDocuments", "DocumentChunks", "all"], default="all")
-    parser.add_argument("--tei-url", type=str, default=None, help="TEI server URL (default: http://localhost:8082)")
+    parser.add_argument(
+        "--collection", choices=["LegalDocuments", "DocumentChunks", "all"], default="all"
+    )
+    parser.add_argument(
+        "--tei-url", type=str, default=None, help="TEI server URL (default: http://localhost:8082)"
+    )
     args = parser.parse_args()
 
     global TEI_URL
@@ -376,7 +507,7 @@ def main():
 
     console.print(f"\n[bold cyan]Weaviate Re-ingestion with {TEXT_EMBEDDING_MODEL}[/bold cyan]")
     console.print(f"Embedding dim: {TEXT_EMBEDDING_DIM} (Matryoshka truncation)")
-    console.print(f"Binary Quantization: enabled")
+    console.print("Binary Quantization: enabled")
     if args.limit:
         console.print(f"Limit: {args.limit:,} per collection")
 
@@ -395,7 +526,7 @@ def main():
         console.print(f"[green]TEI server OK[/green] (output dim: {len(test_emb[0])})")
     except Exception as e:
         console.print(f"[red]TEI server not available:[/red] {e}")
-        console.print(f"Start it with: docker compose up -d embedding-server")
+        console.print("Start it with: docker compose up -d embedding-server")
         sys.exit(1)
 
     # Connect to Weaviate
@@ -428,7 +559,9 @@ def main():
 
         elapsed = time.time() - start_time
         rate = total_ingested / elapsed if elapsed > 0 else 0
-        console.print(f"\n[bold green]Done![/bold green] {total_ingested:,} objects in {elapsed/60:.1f} min ({rate:.0f} obj/sec)")
+        console.print(
+            f"\n[bold green]Done![/bold green] {total_ingested:,} objects in {elapsed/60:.1f} min ({rate:.0f} obj/sec)"
+        )
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")

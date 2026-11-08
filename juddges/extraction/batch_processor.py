@@ -6,14 +6,14 @@ of documents using ThreadPoolExecutor with progress tracking.
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from juddges.extraction.gemini_chain import DocumentType, ExtractionSchema, GeminiExtractionChain
 from juddges.extraction.extraction_storage import ExtractionStorage
+from juddges.extraction.gemini_chain import DocumentType, ExtractionSchema, GeminiExtractionChain
 
 console = Console()
 
@@ -167,13 +167,15 @@ class BatchProcessor:
                 doc_type = DocumentType.JUDGMENT
 
             batch_texts.append(full_text)
-            batch_metadata.append({
-                "document_id": document_id,
-                "document_type": doc_type,
-                "doc_type_str": doc_type_str,
-                "full_text_length": len(full_text),
-                "language": doc.get("language", "unknown"),
-            })
+            batch_metadata.append(
+                {
+                    "document_id": document_id,
+                    "document_type": doc_type,
+                    "doc_type_str": doc_type_str,
+                    "full_text_length": len(full_text),
+                    "language": doc.get("language", "unknown"),
+                }
+            )
 
         # Get document type for batch
         batch_doc_type = batch_metadata[0]["document_type"]
@@ -320,6 +322,7 @@ class BatchProcessor:
         if not self.show_progress:
             # Return a dummy context manager that does nothing
             from contextlib import nullcontext
+
             return nullcontext()
 
         return Progress(

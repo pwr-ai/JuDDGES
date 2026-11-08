@@ -70,7 +70,9 @@ class RedisTaskGenerator:
         self.task_size = task_size
 
         # Connect to Redis with authentication support
-        logger.info(f"Connecting to Redis: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}")
+        logger.info(
+            f"Connecting to Redis: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}"
+        )
 
         try:
             self.redis_client = redis.from_url(
@@ -82,10 +84,10 @@ class RedisTaskGenerator:
             # Test connection
             self.redis_client.ping()
             logger.info("Successfully connected to Redis")
-        except redis.exceptions.AuthenticationError as e:
+        except redis.exceptions.AuthenticationError:
             logger.error(
-                f"Redis authentication failed. Please ensure REDIS_URL includes password: "
-                f"redis://:YOUR_PASSWORD@host:port/db"
+                "Redis authentication failed. Please ensure REDIS_URL includes password: "
+                "redis://:YOUR_PASSWORD@host:port/db"
             )
             raise
         except Exception as e:
@@ -139,7 +141,7 @@ class RedisTaskGenerator:
             run_name=run_name,
         )
 
-        console.print(f"\n[bold cyan]Redis Task Generator[/bold cyan]")
+        console.print("\n[bold cyan]Redis Task Generator[/bold cyan]")
         console.print(f"Run ID: {run_id}")
         console.print(f"Target documents: {max_documents:,}")
         console.print(f"Task size: {self.task_size} documents per task")
@@ -150,9 +152,9 @@ class RedisTaskGenerator:
             console.print(f"Search queries: {', '.join(search_queries)}")
             console.print(f"Search mode: {search_mode}")
         else:
-            console.print(f"Search queries: [yellow]None (fetching ALL documents)[/yellow]")
+            console.print("Search queries: [yellow]None (fetching ALL documents)[/yellow]")
         if force_cursor:
-            console.print(f"[yellow]Force cursor: enabled (bypassing 10K limit)[/yellow]")
+            console.print("[yellow]Force cursor: enabled (bypassing 10K limit)[/yellow]")
         console.print()
 
         # Step 1: Fetch document IDs from Weaviate
@@ -197,7 +199,7 @@ class RedisTaskGenerator:
             }
 
         # Step 4: Generate Redis tasks
-        console.print(f"\n[cyan]Step 4:[/cyan] Generating Redis tasks...")
+        console.print("\n[cyan]Step 4:[/cyan] Generating Redis tasks...")
         num_tasks = (len(remaining_ids) + self.task_size - 1) // self.task_size
 
         tasks_generated = 0
@@ -277,7 +279,7 @@ class RedisTaskGenerator:
 
         if not search_queries:
             # Fetch ALL documents
-            console.print(f"  Fetching ALL documents (no search filter)")
+            console.print("  Fetching ALL documents (no search filter)")
             doc_ids = self._fetch_documents_batch(
                 search_query=None,
                 document_type_filter=document_type_filter,

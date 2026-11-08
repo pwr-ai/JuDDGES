@@ -9,7 +9,6 @@ from typing import Any, Dict, Set
 
 from loguru import logger
 
-
 # Field mapping from extraction schema to Weaviate properties
 # All properties already exist in Weaviate - no need for "extracted_" prefix!
 # NOTE: document_number, document_type, and date_issued are excluded as they're always already valid

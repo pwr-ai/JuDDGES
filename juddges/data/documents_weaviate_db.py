@@ -16,14 +16,13 @@ from loguru import logger
 
 import weaviate
 import weaviate.classes.config as wvcc
-from weaviate.classes.config import ReferenceProperty
 from juddges.data.base_weaviate_db import BaseWeaviateDB
 from juddges.data.schemas import (
     DocumentChunk,
     LegalDocument,
 )
 from juddges.settings import VectorName
-
+from weaviate.classes.config import ReferenceProperty
 
 # Polish stopwords for BM25 - common words that don't add search value
 POLISH_STOPWORDS = [

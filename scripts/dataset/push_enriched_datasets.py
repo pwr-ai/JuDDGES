@@ -255,14 +255,16 @@ def push_dataset(
     # Check/create repo
     try:
         api.repo_info(repo_id=repo_id, repo_type="dataset")
-        console.print(f"  [green]Repository exists[/green]")
+        console.print("  [green]Repository exists[/green]")
     except RepositoryNotFoundError:
         if create_if_missing:
             console.print(f"  [yellow]Creating new repository: {repo_id}[/yellow]")
             if not dry_run:
                 create_repo(repo_id=repo_id, repo_type="dataset", private=False)
         else:
-            console.print(f"[red]  Error: Repository does not exist and create_if_missing=False[/red]")
+            console.print(
+                "[red]  Error: Repository does not exist and create_if_missing=False[/red]"
+            )
             return False
 
     # Generate README

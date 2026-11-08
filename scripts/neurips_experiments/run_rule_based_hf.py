@@ -21,9 +21,18 @@ from loguru import logger
 # Polish date/keyword resources
 # ---------------------------------------------------------------------------
 PL_MONTHS = {
-    "stycznia": "01", "lutego": "02", "marca": "03", "kwietnia": "04",
-    "maja": "05", "czerwca": "06", "lipca": "07", "sierpnia": "08",
-    "września": "09", "października": "10", "listopada": "11", "grudnia": "12",
+    "stycznia": "01",
+    "lutego": "02",
+    "marca": "03",
+    "kwietnia": "04",
+    "maja": "05",
+    "czerwca": "06",
+    "lipca": "07",
+    "sierpnia": "08",
+    "września": "09",
+    "października": "10",
+    "listopada": "11",
+    "grudnia": "12",
 }
 
 DATE_PATTERNS = [
@@ -45,8 +54,16 @@ COURT_NAMES = {
 
 # Apelacja name dictionary
 APELACJA_NAMES = [
-    "białostocka", "gdańska", "katowicka", "krakowska", "lubelska",
-    "łódzka", "poznańska", "rzeszowska", "szczecińska", "warszawska",
+    "białostocka",
+    "gdańska",
+    "katowicka",
+    "krakowska",
+    "lubelska",
+    "łódzka",
+    "poznańska",
+    "rzeszowska",
+    "szczecińska",
+    "warszawska",
     "wrocławska",
 ]
 
@@ -89,7 +106,9 @@ def extract_apelacja(text: str) -> str | None:
     return None
 
 
-def extract_boolean(text: str, positive_keywords: list[str], negative_keywords: list[str]) -> str | None:
+def extract_boolean(
+    text: str, positive_keywords: list[str], negative_keywords: list[str]
+) -> str | None:
     """Simple keyword-based boolean extraction."""
     text_lower = text.lower()
     pos = sum(1 for kw in positive_keywords if kw in text_lower)
@@ -131,7 +150,7 @@ def extract_section(text: str, keywords: list[str], max_chars: int = 300) -> str
             start = idx + len(kw)
             while start < len(text) and text[start] in " :\n\t":
                 start += 1
-            return text[start:start + max_chars].strip()
+            return text[start : start + max_chars].strip()
     return None
 
 
@@ -157,9 +176,17 @@ def extract_fields(text: str, schema: dict) -> dict:
 
         # Instancja
         elif field_name == "instancja_sadu":
-            if "odwoławczy" in text.lower() or "ii instancj" in text.lower() or "apelacyjn" in text.lower():
+            if (
+                "odwoławczy" in text.lower()
+                or "ii instancj" in text.lower()
+                or "apelacyjn" in text.lower()
+            ):
                 result[field_name] = "Sąd odwoławczy"
-            elif "i instancj" in text.lower() or "rejonow" in text.lower() or "okręgow" in text.lower():
+            elif (
+                "i instancj" in text.lower()
+                or "rejonow" in text.lower()
+                or "okręgow" in text.lower()
+            ):
                 result[field_name] = "Sąd I instancji"
             else:
                 result[field_name] = None
@@ -178,7 +205,10 @@ def extract_fields(text: str, schema: dict) -> dict:
             # Field-specific keywords
             field_kw_map = {
                 "podstawa_prawna_podana": (["podstaw", "art."], ["brak podstaw"]),
-                "modyfikacje_powodztwa": (["modyfikacj", "zmian", "rozszerzeni"], ["bez modyfikacji"]),
+                "modyfikacje_powodztwa": (
+                    ["modyfikacj", "zmian", "rozszerzeni"],
+                    ["bez modyfikacji"],
+                ),
                 "wspoluczestnictwo_powodowe": (["współuczestni", "powodów", "powódki"], []),
                 "wspoluczestnictwo_pozwanego": (["współpozwan"], []),
                 "wczesniejsze_skargi_do_rzecznika": (["rzecznik", "skargi"], []),
@@ -302,7 +332,9 @@ def main():
     print("-" * 70)
     for field_name, metrics in fields_sorted:
         field_type = schema[field_name].get("type", "string")
-        print(f"{field_name:<45} {metrics['accuracy']:>8.3f} {int(metrics['correct']):>8} {metrics['n']:>6}  [{field_type}]")
+        print(
+            f"{field_name:<45} {metrics['accuracy']:>8.3f} {int(metrics['correct']):>8} {metrics['n']:>6}  [{field_type}]"
+        )
     print("-" * 70)
     print(f"{'OVERALL':<45} {results['overall']:>8.4f}")
 

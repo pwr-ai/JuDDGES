@@ -15,7 +15,6 @@ from typing import Dict, List
 import redis
 from loguru import logger
 from rich.console import Console
-from rich.live import Live
 from rich.table import Table
 
 console = Console()
@@ -107,9 +106,7 @@ def check_worker_stats(redis_url: str, worker_stats_key: str = "worker_stats") -
 
 
 def monitor_queue_rate(
-    redis_url: str,
-    queue_name: str = "extraction_queue",
-    duration_seconds: int = 60
+    redis_url: str, queue_name: str = "extraction_queue", duration_seconds: int = 60
 ) -> Dict:
     """Monitor queue consumption rate.
 
@@ -214,7 +211,6 @@ def display_worker_stats(workers: List[Dict]):
         success = worker.get("documents_extracted", 0)
         failed = worker.get("documents_failed", 0)
         rate = worker.get("docs_per_min", 0)
-        last_update = worker.get("last_update", "unknown")
 
         # Determine status
         if rate > 10:
@@ -368,7 +364,9 @@ def main():
 
     if args.live:
         # Live monitoring mode
-        console.print(f"\n[cyan]Starting live health monitoring (refresh every {args.refresh}s)...[/cyan]")
+        console.print(
+            f"\n[cyan]Starting live health monitoring (refresh every {args.refresh}s)...[/cyan]"
+        )
         console.print("[dim]Press Ctrl+C to stop[/dim]\n")
 
         try:

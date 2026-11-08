@@ -20,11 +20,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-import weaviate
 from dotenv import load_dotenv
 from loguru import logger
 from rich.console import Console
 from rich.table import Table
+
+import weaviate
 
 console = Console()
 
@@ -35,7 +36,11 @@ load_dotenv(Path(__file__).parent.parent / ".env", override=False)
 WEAVIATE_HOST = os.getenv("WEAVIATE_HOST", "localhost")
 WEAVIATE_PORT = int(os.getenv("WEAVIATE_PORT", "8084"))
 # Docker maps host 8085 -> container 50051; env may have the container port
-WEAVIATE_GRPC_PORT = 8085 if WEAVIATE_HOST in ("localhost", "127.0.0.1") else int(os.getenv("WEAVIATE_GRPC_PORT", "8085"))
+WEAVIATE_GRPC_PORT = (
+    8085
+    if WEAVIATE_HOST in ("localhost", "127.0.0.1")
+    else int(os.getenv("WEAVIATE_GRPC_PORT", "8085"))
+)
 WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "")
 BACKUP_PATH = Path("/mnt/readynas/datasets/legal-ai-weaviate/native-backups")
 
@@ -78,7 +83,7 @@ def create_backup(client: weaviate.WeaviateClient, backup_id: str) -> None:
         wait_for_completion=True,
     )
 
-    console.print(f"\n[bold green]Backup completed![/bold green]")
+    console.print("\n[bold green]Backup completed![/bold green]")
     console.print(f"  Backup ID: {backup_id}")
     console.print(f"  Status: {result.status}")
 
@@ -99,7 +104,7 @@ def restore_backup(client: weaviate.WeaviateClient, backup_id: str) -> None:
         sys.exit(1)
 
     console.print(f"\n[bold yellow]Restoring backup:[/bold yellow] {backup_id}")
-    console.print(f"[yellow]WARNING: This will overwrite existing collections![/yellow]")
+    console.print("[yellow]WARNING: This will overwrite existing collections![/yellow]")
     console.print(f"Path: {backup_dir}")
 
     confirm = input("\nType 'yes' to confirm restore: ")
@@ -115,7 +120,7 @@ def restore_backup(client: weaviate.WeaviateClient, backup_id: str) -> None:
         wait_for_completion=True,
     )
 
-    console.print(f"\n[bold green]Restore completed![/bold green]")
+    console.print("\n[bold green]Restore completed![/bold green]")
     console.print(f"  Status: {result.status}")
 
 

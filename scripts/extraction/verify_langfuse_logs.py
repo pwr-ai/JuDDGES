@@ -141,7 +141,7 @@ def main():
     console.print("  • Extracted structured data")
 
     # Show recent session
-    console.print(f"\n[bold]Most Recent Session:[/bold]")
+    console.print("\n[bold]Most Recent Session:[/bold]")
     console.print(f"  Session ID: batch_extraction_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     console.print(f"  View at: {langfuse_host}/sessions")
 

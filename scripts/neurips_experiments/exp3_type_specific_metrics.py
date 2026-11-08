@@ -108,20 +108,20 @@ def find_result_dirs(results_dir: Path) -> list[dict[str, Any]]:
             config_file = scores_file.parent.parent / "config.yaml"
 
         if config_file.exists():
-            found.append({
-                "scores_file": scores_file,
-                "config_file": config_file,
-                "model": scores_file.parent.name,
-                "dataset": scores_file.parent.parent.name,
-                "eval_type": scores_file.stem.replace("scores_", ""),
-            })
+            found.append(
+                {
+                    "scores_file": scores_file,
+                    "config_file": config_file,
+                    "model": scores_file.parent.name,
+                    "dataset": scores_file.parent.parent.name,
+                    "eval_type": scores_file.stem.replace("scores_", ""),
+                }
+            )
     return found
 
 
 def main(
-    results_dir: Path = typer.Argument(
-        ..., help="Root results directory"
-    ),
+    results_dir: Path = typer.Argument(..., help="Root results directory"),
     output: Path = typer.Option(
         "results/neurips/exp3_type_metrics.json",
         help="Output path",
@@ -187,10 +187,12 @@ def main(
                 primary = type_data["score"]["mean"]
             else:
                 continue
-            comparison[dataset][ftype].append({
-                "model": model,
-                "score": primary,
-            })
+            comparison[dataset][ftype].append(
+                {
+                    "model": model,
+                    "score": primary,
+                }
+            )
 
     output_data = {
         "experiment": "type_specific_metrics",

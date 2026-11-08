@@ -95,9 +95,7 @@ def load_embeddings_from_parquet(
     Returns:
         Tuple of (uuids, embeddings) where embeddings is a numpy array
     """
-    console.print(
-        f"[bold cyan]Loading embeddings from {embeddings_dir}...[/bold cyan]"
-    )
+    console.print(f"[bold cyan]Loading embeddings from {embeddings_dir}...[/bold cyan]")
 
     # Load dataset from parquet files
     dataset = load_dataset("parquet", data_dir=str(embeddings_dir), split="train")
@@ -326,18 +324,18 @@ def save_coordinates(
     console.print(f"[bold cyan]Saving coordinates to {output_path}...[/bold cyan]")
 
     # Create DataFrame with UUIDs and coordinates
-    df = pl.DataFrame({
-        "uuid": uuids,
-        "x": coordinates[:, 0].tolist(),
-        "y": coordinates[:, 1].tolist(),
-    })
+    df = pl.DataFrame(
+        {
+            "uuid": uuids,
+            "x": coordinates[:, 0].tolist(),
+            "y": coordinates[:, 1].tolist(),
+        }
+    )
 
     # Save to parquet
     df.write_parquet(output_path)
 
-    console.print(
-        f"[green]✓[/green] Saved {len(uuids)} coordinates to {output_path}"
-    )
+    console.print(f"[green]✓[/green] Saved {len(uuids)} coordinates to {output_path}")
 
 
 def load_coordinates(
@@ -361,9 +359,7 @@ def load_coordinates(
     uuids = df["uuid"].to_list()
     coordinates = np.column_stack([df["x"].to_numpy(), df["y"].to_numpy()])
 
-    console.print(
-        f"[green]✓[/green] Loaded {len(uuids)} coordinates from {input_path}"
-    )
+    console.print(f"[green]✓[/green] Loaded {len(uuids)} coordinates from {input_path}")
 
     return uuids, coordinates
 
@@ -535,7 +531,9 @@ Examples:
 
             # Mode 2: Calculate from embeddings
             else:
-                assert embeddings_base_dir is not None, "embeddings_base_dir must be set when calculating"
+                assert (
+                    embeddings_base_dir is not None
+                ), "embeddings_base_dir must be set when calculating"
 
                 # Determine embeddings subdirectory based on collection type
                 if collection_name == "DocumentChunks":
@@ -593,7 +591,9 @@ Examples:
                     stats.documents_updated = successful
                     stats.failed_updates = failed
             else:
-                console.print("[bold yellow]Skipping Weaviate update (--skip-update flag)[/bold yellow]")
+                console.print(
+                    "[bold yellow]Skipping Weaviate update (--skip-update flag)[/bold yellow]"
+                )
 
             # Display statistics
             console.print("")

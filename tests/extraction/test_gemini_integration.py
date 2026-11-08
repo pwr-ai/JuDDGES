@@ -8,14 +8,13 @@ Skip with: pytest tests/extraction/ -k "not integration"
 """
 
 import os
-from pathlib import Path
 
 import pytest
 
 pytest.importorskip("langchain_google_vertexai", reason="langchain_google_vertexai not installed")
 
-from juddges.extraction import GeminiExtractionChain
-from juddges.extraction.gemini_chain import DocumentType, ExtractionSchema
+from juddges.extraction import GeminiExtractionChain  # noqa: E402
+from juddges.extraction.gemini_chain import DocumentType, ExtractionSchema  # noqa: E402
 
 # Mark all tests in this file as integration tests
 pytestmark = pytest.mark.integration
@@ -94,9 +93,7 @@ def test_requires_api_key(api_key_available):
         pytest.skip("GOOGLE_API_KEY not set - skipping integration test")
 
 
-@pytest.mark.skipif(
-    not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set"
-)
+@pytest.mark.skipif(not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set")
 def test_extract_judgment_with_real_api(chain, judgment_schema, sample_judgment):
     """Test extraction with real Gemini API call."""
     result = chain.extract(
@@ -123,9 +120,7 @@ def test_extract_judgment_with_real_api(chain, judgment_schema, sample_judgment)
         assert len(result["court"]) > 0
 
 
-@pytest.mark.skipif(
-    not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set"
-)
+@pytest.mark.skipif(not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set")
 def test_caching_works(chain, judgment_schema, sample_judgment):
     """Test that caching reduces API calls."""
     import time
@@ -156,9 +151,7 @@ def test_caching_works(chain, judgment_schema, sample_judgment):
     assert second_call_time < first_call_time * 0.5
 
 
-@pytest.mark.skipif(
-    not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set"
-)
+@pytest.mark.skipif(not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set")
 def test_batch_extract_real(chain, judgment_schema):
     """Test batch extraction with real API."""
     texts = [
@@ -199,9 +192,7 @@ def test_extract_with_langfuse(chain, judgment_schema, sample_judgment):
     # (Would need to query Langfuse API to fully verify, but at least it shouldn't error)
 
 
-@pytest.mark.skipif(
-    not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set"
-)
+@pytest.mark.skipif(not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set")
 def test_empty_text_handling(chain, judgment_schema):
     """Test handling of empty or minimal text."""
     result = chain.extract(
@@ -214,9 +205,7 @@ def test_empty_text_handling(chain, judgment_schema):
     assert isinstance(result, dict)
 
 
-@pytest.mark.skipif(
-    not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set"
-)
+@pytest.mark.skipif(not os.getenv("GOOGLE_API_KEY"), reason="GOOGLE_API_KEY not set")
 def test_tax_interpretation_extraction(chain):
     """Test extraction from tax interpretation document."""
     schema = ExtractionSchema(

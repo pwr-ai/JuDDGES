@@ -3,7 +3,6 @@
 
 from rich.console import Console
 from rich.table import Table
-from weaviate.classes.query import Filter
 
 from juddges.data.documents_weaviate_db import WeaviateLegalDocumentsDatabase
 
@@ -24,7 +23,7 @@ def main():
 
             # Sample documents to check for missing coordinates
             # Since filtering by null state isn't indexed, we'll sample and check
-            console.print(f"[dim]Sampling documents to check coordinates...[/dim]")
+            console.print("[dim]Sampling documents to check coordinates...[/dim]")
 
             sample_size = min(10000, total_docs)
             missing_count = 0
@@ -53,7 +52,9 @@ def main():
             coverage_pct = (with_coords / total_docs * 100) if total_docs > 0 else 0
 
             # Summary table
-            summary = Table(title=f"Coordinates Coverage - {collection_name} (sampled {checked:,} docs)")
+            summary = Table(
+                title=f"Coordinates Coverage - {collection_name} (sampled {checked:,} docs)"
+            )
             summary.add_column("Metric", style="cyan")
             summary.add_column("Count", style="magenta", justify="right")
             summary.add_column("Percentage", style="green", justify="right")

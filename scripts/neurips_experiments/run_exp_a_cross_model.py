@@ -12,7 +12,6 @@ Usage:
 """
 
 import json
-import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -21,8 +20,6 @@ from statistics import mean, stdev
 from datasets import load_dataset
 from loguru import logger
 from openai import OpenAI
-
-import yaml
 
 # ---------------------------------------------------------------------------
 # Config
@@ -36,9 +33,7 @@ BATCH_LOG_EVERY = 50
 
 def build_prompt(text: str, schema_fields: dict) -> str:
     """Build extraction prompt with Schema B."""
-    fields_desc = "\n".join(
-        f"- {name}: {desc[:200]}" for name, desc in schema_fields.items()
-    )
+    fields_desc = "\n".join(f"- {name}: {desc[:200]}" for name, desc in schema_fields.items())
     return f"""Extract the following fields from this Polish legal document.
 Return ONLY a valid JSON object with these fields:
 
@@ -67,7 +62,10 @@ def extract_with_gpt(client: OpenAI, text: str, schema_fields: dict) -> dict | N
             response = client.chat.completions.create(
                 model=MODEL,
                 messages=[
-                    {"role": "system", "content": "You are a legal document extraction system. Return only valid JSON."},
+                    {
+                        "role": "system",
+                        "content": "You are a legal document extraction system. Return only valid JSON.",
+                    },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.1,
@@ -80,7 +78,7 @@ def extract_with_gpt(client: OpenAI, text: str, schema_fields: dict) -> dict | N
             logger.warning(f"JSON parse error on attempt {attempt + 1}")
         except Exception as e:
             logger.warning(f"API error on attempt {attempt + 1}: {e}")
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
 
     return None
 
@@ -144,8 +142,15 @@ def main():
     # Load Schema B field definitions from extraction schema module description
     # These match the extracted_ columns in pl-court-raw-enriched
     schema_b_fields = [
-        "title", "date_issued", "summary", "thesis", "keywords",
-        "outcome", "legal_references", "legal_concepts", "parties",
+        "title",
+        "date_issued",
+        "summary",
+        "thesis",
+        "keywords",
+        "outcome",
+        "legal_references",
+        "legal_concepts",
+        "parties",
         "legal_analysis",
     ]
     schema_fields = {
@@ -179,8 +184,9 @@ def main():
     results = []
     field_agreements = defaultdict(list)
     parse_errors = 0
-    total_input_tokens = 0
-    total_output_tokens = 0
+    # TODO: token counters are initialised but never accumulated/reported
+    total_input_tokens = 0  # noqa: F841
+    total_output_tokens = 0  # noqa: F841
 
     for idx, doc in enumerate(docs):
         text = doc.get("content") or doc.get("excerpt") or ""
@@ -205,18 +211,20 @@ def main():
             field_agreements[field].append(comparison["score"])
             doc_agreement[field] = comparison
 
-        results.append({
-            "doc_idx": idx,
-            "gpt_extraction": gpt_result,
-            "gemini_extraction": gemini_result,
-            "field_agreement": doc_agreement,
-        })
+        results.append(
+            {
+                "doc_idx": idx,
+                "gpt_extraction": gpt_result,
+                "gemini_extraction": gemini_result,
+                "field_agreement": doc_agreement,
+            }
+        )
 
         if (idx + 1) % BATCH_LOG_EVERY == 0:
-            avg_so_far = mean(
-                score for scores in field_agreements.values() for score in scores
+            avg_so_far = mean(score for scores in field_agreements.values() for score in scores)
+            logger.info(
+                f"  [{idx + 1}/{len(docs)}] avg agreement: {avg_so_far:.3f}, errors: {parse_errors}"
             )
-            logger.info(f"  [{idx + 1}/{len(docs)}] avg agreement: {avg_so_far:.3f}, errors: {parse_errors}")
 
     # Aggregate results
     logger.info(f"\n{'='*70}")
