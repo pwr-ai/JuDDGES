@@ -1,0 +1,117 @@
+# Weaviate v2 stack for court judgments: Weaviate 1.40 + mmlw-retrieval-e5-large served by HuggingFace TEI.
+# Runs side by side with the legacy stack in ../docker-compose.yaml (separate project name,
+# ports and volumes), so the old instance stays untouched while the new one is ingested.
+#
+#   cp .env.example .env   # fill in API keys
+#   docker compose up -d
+#
+# See docs/how-to/infrastructure/deploy-weaviate-v2.md
+
+name: juddges_weaviate_v2
+
+services:
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.40.2
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8080'
+      - --scheme
+      - http
+    depends_on:
+      embeddings:
+        condition: service_healthy
+    ports:
+      - ${WEAVIATE_BIND:-127.0.0.1}:${WEAVIATE_HTTP_PORT:-8110}:8080
+      - ${WEAVIATE_BIND:-127.0.0.1}:${WEAVIATE_GRPC_PORT:-50061}:50051
+    volumes:
+      - weaviate_v2_data:/var/lib/weaviate
+      - ${WEAVIATE_BACKUP_DIR:-./backups}:/var/lib/weaviate-backups
+    env_file: .env
+    environment:
+      - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+      - PERSISTENCE_LSM_ACCESS_STRATEGY=mmap
+      - CLUSTER_HOSTNAME=juddges-weaviate-v2
+      - RAFT_BOOTSTRAP_EXPECT=1
+      # Vectors are computed outside Weaviate (TEI), only the backup module is needed
+      - DEFAULT_VECTORIZER_MODULE=none
+      - ENABLE_MODULES=backup-filesystem
+      - BACKUP_FILESYSTEM_PATH=/var/lib/weaviate-backups
+      # Safety net only: collections set their quantizer explicitly in the schema.
+      # RQ 4-bit = ~8x smaller in-RAM vectors, no measurable nDCG loss vs fp32 on our
+      # judgments (docs/explanation/embedding-and-quantization.md), no training step.
+      - DEFAULT_QUANTIZATION=${DEFAULT_QUANTIZATION:-rq-4}
+      - QUERY_DEFAULTS_LIMIT=25
+      - QUERY_MAXIMUM_RESULTS=10000
+      - DISK_USE_READONLY_PERCENTAGE=95
+      - ASYNC_INDEXING=true
+      - GOMEMLIMIT=${WEAVIATE_GOMEMLIMIT:-100GiB}
+      - GOGC=100
+      - BATCH_DELETE_TIMEOUT=10m
+      - BATCH_UPDATE_TIMEOUT=10m
+      - PROMETHEUS_MONITORING_ENABLED=true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/v1/.well-known/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: ${WEAVIATE_CPUS:-32}
+          memory: ${WEAVIATE_MEMORY:-128G}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # sdadas/mmlw-retrieval-e5-large dense embeddings (1024 dims, 512 token context).
+  # TEI adds no prompts: clients must prefix "query: " to queries and "passage: " to chunks,
+  # and chunk to <=480 tokens (BGE-M3 tokenizer) with 64 overlap.
+  # Image tag "86-" targets Ampere sm_86 (RTX 3090 / A5000); use "hopper-" or plain "1.9.4" on other GPUs.
+  embeddings:
+    image: ghcr.io/huggingface/text-embeddings-inference:86-1.9.4
+    command:
+      - --model-id
+      - ${EMBEDDING_MODEL:-sdadas/mmlw-retrieval-e5-large}
+      - --max-client-batch-size
+      - '256'
+      - --max-batch-tokens
+      - '131072'
+      - --auto-truncate
+    ports:
+      - ${WEAVIATE_BIND:-127.0.0.1}:${EMBEDDINGS_PORT:-8111}:80
+    volumes:
+      - embedding_v2_model_cache:/data
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:80/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: '16G'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['${EMBEDDINGS_GPU:-0}']
+              capabilities: [gpu]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  weaviate_v2_data:
+  embedding_v2_model_cache:
