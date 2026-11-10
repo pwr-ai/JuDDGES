@@ -1,6 +1,7 @@
-import json
 import os
 import sys
+import time
+from pathlib import Path
 from pprint import pformat
 
 import hydra
@@ -11,13 +12,21 @@ from omegaconf import DictConfig
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
 
+try:  # vLLM >= 0.11
+    from vllm.sampling_params import StructuredOutputsParams
+except ImportError:  # vLLM 0.9.x
+    StructuredOutputsParams = None
+    from vllm.sampling_params import GuidedDecodingParams
+
 from juddges.config import PredictInfoExtractionConfig
 from juddges.data.dataset_factory import get_dataset
 from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.formatters import ConversationFormatter
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
+from juddges.utils.json_schema import ie_schema_to_json_schema
 from juddges.utils.misc import save_yaml
+from juddges.utils.run_record import write_json_atomic, write_run_record
 
 torch.set_float32_matmul_precision("high")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -31,6 +40,7 @@ logger.info(f"NUM_GPUS: {NUM_GPUS}, CUDA_VISIBLE_DEVICES: {os.getenv('CUDA_VISIB
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="predict_vllm.yaml")
 @torch.inference_mode()
 def main(cfg: DictConfig) -> None:
+    start_time = time.time()
     config = PredictInfoExtractionConfig(**resolve_config(cfg))
     logger.info(f"config:\n{pformat(config.model_dump())}")
 
@@ -43,28 +53,45 @@ def main(cfg: DictConfig) -> None:
         sys.exit(1)
 
     ds = get_dataset(config.dataset.name, config.split)
+    if config.max_docs is not None:
+        ds = ds.select(range(min(config.max_docs, len(ds))))
+        logger.warning(f"max_docs={config.max_docs}: using only the first {len(ds)} documents")
 
     assert config.generate_kwargs.keys()
-    params = SamplingParams(**config.generate_kwargs)
+    json_schema = ie_schema_to_json_schema(config.ie_schema) if config.guided_json else None
+    if StructuredOutputsParams is not None:
+        constraint = {
+            "structured_outputs": StructuredOutputsParams(json=json_schema) if json_schema else None
+        }
+    else:
+        constraint = {
+            "guided_decoding": GuidedDecodingParams(json=json_schema) if json_schema else None
+        }
+    params = SamplingParams(**config.generate_kwargs, seed=config.random_seed, **constraint)
 
     llm = LLM(
         model=config.llm.name,
         dtype="bfloat16",
         enable_lora=config.llm.should_load_adapter,
+        max_lora_rank=config.max_lora_rank,
         max_num_seqs=config.llm.batch_size,
         pipeline_parallel_size=NUM_GPUS if config.parallel == "pipeline" else 1,
         tensor_parallel_size=NUM_GPUS if config.parallel == "tensor" else 1,
         seed=config.random_seed,
         enable_prefix_caching=True,
         max_model_len=config.max_model_len,
+        quantization=config.quantization,
+        gpu_memory_utilization=config.gpu_memory_utilization,
     )
 
+    adapter_path = None
     if config.llm.should_load_adapter:
-        logger.info("Loading LoRA adapter")
+        adapter_path = config.llm.adapter_path_or_first_ckpt_path
+        logger.info(f"Loading LoRA adapter from {adapter_path}")
         lora_request = LoRARequest(
             lora_name="sft_adapter",
             lora_int_id=1,
-            lora_path=str(config.llm.adapter_path_or_first_ckpt_path),
+            lora_path=str(adapter_path),
         )
     else:
         lora_request = None
@@ -74,8 +101,6 @@ def main(cfg: DictConfig) -> None:
         config=config,
         llm=llm,
     )
-    assert config.generate_kwargs.pop("do_sample")
-    assert not config.generate_kwargs
 
     outputs = llm.chat(
         messages=ds[ConversationFormatter.MESSAGES_FIELD],
@@ -96,11 +121,37 @@ def main(cfg: DictConfig) -> None:
         for ans, gold in zip(outputs, ds["output"])
     ]
 
+    num_length = sum(r["finish_reason"] == "length" for r in results)
+    logger.info(
+        f"finish_reason=length: {num_length}/{len(results)} ({num_length / max(len(results), 1):.1%})"
+    )
+
     save_yaml(config.model_dump(), config.config_file)
+    # run record first, predictions.json last: its presence marks a complete run
+    write_run_record(
+        output_dir=config.output_dir,
+        config=config.model_dump(),
+        seed=config.random_seed,
+        model_name=config.llm.name,
+        split_files={config.split: Path(config.dataset.name) / f"{config.split}.json"},
+        start_time=start_time,
+        adapter_path=adapter_path,
+        extra={"guided_decoding_backend": _guided_decoding_backend(llm, config.guided_json)},
+    )
 
     logger.info(f"Saving results to {config.predictions_file}")
-    with open(config.predictions_file, "w") as f:
-        json.dump(results, f, indent="\t", ensure_ascii=False)
+    write_json_atomic(results, config.predictions_file, indent="\t", ensure_ascii=False)
+
+
+def _guided_decoding_backend(llm: LLM, guided_json: bool) -> str | None:
+    if not guided_json:
+        return None
+    engine = llm.llm_engine
+    decoding_config = getattr(engine, "decoding_config", None)
+    if decoding_config is not None:
+        return getattr(decoding_config, "guided_decoding_backend", None)
+    structured = getattr(getattr(engine, "vllm_config", None), "structured_outputs_config", None)
+    return getattr(structured, "backend", None)
 
 
 def prepare_and_save_dataset_for_prediction(

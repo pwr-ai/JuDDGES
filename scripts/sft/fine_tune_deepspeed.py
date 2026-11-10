@@ -4,6 +4,7 @@ The script is purposed to run on a single node with multiple GPUs.
 """
 
 import os
+import time
 from pathlib import Path
 from pprint import pformat
 
@@ -33,6 +34,7 @@ from juddges.preprocessing.context_truncator import ContextTruncator
 from juddges.preprocessing.formatters import ConversationFormatter
 from juddges.settings import CONFIG_PATH
 from juddges.utils.config import resolve_config
+from juddges.utils.run_record import write_run_record
 
 NUM_PROC = int(os.getenv("NUM_PROC", 1))
 
@@ -41,6 +43,7 @@ state = PartialState()
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_PATH), config_name="peft_fine_tuning.yaml")
 def main(cfg: DictConfig) -> None:
+    start_time = time.time()
     cfg_dict = resolve_config(cfg)
     config = FineTuningConfig(**cfg_dict)
 
@@ -61,6 +64,9 @@ def main(cfg: DictConfig) -> None:
         )
 
         dataset = load_dataset(config.dataset.name, split="train", num_proc=NUM_PROC)
+        if config.max_train_docs is not None:
+            dataset = dataset.select(range(min(config.max_train_docs, len(dataset))))
+            logger.warning(f"max_train_docs={config.max_train_docs}: training on {len(dataset)} documents")
         dataset = prepare_dataset(
             dataset=dataset,
             tokenizer=model_pack.tokenizer,
@@ -76,8 +82,19 @@ def main(cfg: DictConfig) -> None:
         num_proc=NUM_PROC,
     )
     trainer.train()
+    trainer.save_model()  # final adapter, otherwise only intermediate checkpoint-* dirs exist
 
     state.wait_for_everyone()
+
+    if state.is_main_process:
+        write_run_record(
+            output_dir=output_dir,
+            config=config.model_dump(),
+            seed=config.training_args["seed"],
+            model_name=config.llm.name,
+            split_files={"train": Path(config.dataset.name) / "train.json"},
+            start_time=start_time,
+        )
 
 
 def prepare_dataset(

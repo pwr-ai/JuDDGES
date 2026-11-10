@@ -1,0 +1,16 @@
+# @package _global_
+# LoRA SFT on an ASUS Ascent GX10 (NVIDIA GB10, 121 GB unified memory). Usage: +profile=<this file name>
+# bf16 base (no quantization), r=16/alpha=32, packing off + context truncation on.
+llm:
+  use_4bit: false
+  use_unsloth: false # fine_tune_deepspeed.py does not support unsloth
+# prompt + context + target JSON; the truncator shortens the context only, never the target
+max_context_size: 16384
+truncate_context: true
+training_args:
+  packing: false
+peft_args:
+  r: 16
+  lora_alpha: 32
+output_dir: data/experiments/peft-fine-tune/${hydra:runtime.choices.llm}/${hydra:runtime.choices.dataset}/${hydra:runtime.choices.prompt}/${hydra:runtime.choices.ie_schema}/seed_${training_args.seed}
+run_name: ${hydra:runtime.choices.llm}_${hydra:runtime.choices.dataset}_${hydra:runtime.choices.prompt}_${hydra:runtime.choices.ie_schema}_seed_${training_args.seed}_fine_tune

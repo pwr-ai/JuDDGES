@@ -1,0 +1,9 @@
+# @package _global_
+# vLLM inference on an ASUS Ascent GX10 (NVIDIA GB10, 121 GB unified memory). Usage: +profile=<this file name>
+# bf16 weights, no quantization: the LoRA adapter of the SFT run is applied on the bf16 base.
+quantization: null
+llm:
+  batch_size: 32 # vLLM max_num_seqs; the default of 1 would decode one document at a time
+# prompt + context + output budget; must stay identical for zero-shot and fine-tuned runs
+max_model_len: 16384
+gpu_memory_utilization: 0.75

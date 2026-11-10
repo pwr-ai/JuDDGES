@@ -109,3 +109,65 @@ def test_load_config_predict(llm: str, dataset: str, prompt: str, ie_schema: str
     cfg_dict = resolve_config(raw_cfg)
     del cfg_dict["hydra"]
     PredictInfoExtractionConfig(**cfg_dict)
+
+
+@pytest.mark.parametrize("llm", ["bielik_11b_v23_instruct", "llama_3.1_8b_instruct"])
+def test_load_config_sft_24gb_profile(llm: str):
+    with initialize(version_base=None, config_path="../configs", job_name="test"):
+        raw_cfg = compose(
+            config_name="peft_fine_tuning",
+            overrides=[
+                f"llm={llm}",
+                "dataset=pl_court_swiss_franc_loans",
+                "prompt=info_extraction_annotated_json",
+                "ie_schema=swiss_franc_loans",
+                f"+profile={llm}_sft_24gb",
+                "training_args.seed=997",
+                "hydra.run.dir=.",
+                "hydra.job.num=1",
+            ],
+            return_hydra_config=True,
+        )
+        HydraConfig.instance().set_config(raw_cfg)
+    cfg_dict = resolve_config(raw_cfg)
+    del cfg_dict["hydra"]
+    config = FineTuningConfig(**cfg_dict)
+
+    assert config.llm.use_4bit
+    assert config.peft_args["r"] == 16 and config.peft_args["lora_alpha"] == 32
+    assert config.training_args["packing"] is False and config.truncate_context
+    assert config.training_args["seed"] == 997
+    assert config.output_dir.name == "seed_997"
+    assert "seed_997" in config.run_name
+
+
+@pytest.mark.parametrize("llm", ["bielik_11b_v23_instruct", "llama_3.1_8b_instruct"])
+@pytest.mark.parametrize("profile", [True, False])
+def test_load_config_predict_24gb_profile(llm: str, profile: bool):
+    overrides = [f"+profile={llm}_predict_24gb"] if profile else []
+    with initialize(version_base=None, config_path="../configs", job_name="test"):
+        raw_cfg = compose(
+            config_name="predict_vllm",
+            overrides=[
+                f"llm={llm}",
+                "dataset=pl_court_swiss_franc_loans",
+                "prompt=info_extraction_annotated_json",
+                "ie_schema=swiss_franc_loans",
+                "random_seed=42",
+                "split=annotated",
+                "guided_json=true",
+                *overrides,
+                "hydra.run.dir=.",
+                "hydra.job.num=1",
+            ],
+            return_hydra_config=True,
+        )
+        HydraConfig.instance().set_config(raw_cfg)
+    cfg_dict = resolve_config(raw_cfg)
+    del cfg_dict["hydra"]
+    config = PredictInfoExtractionConfig(**cfg_dict)
+
+    assert config.guided_json
+    # without the profile the old behaviour is kept
+    assert (config.quantization == "bitsandbytes") is profile
+    assert (config.max_model_len == 8192) is profile

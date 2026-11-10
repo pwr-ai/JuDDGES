@@ -27,6 +27,11 @@ generate_kwargs:
 split: ???
 random_seed: ???
 max_model_len: null # by default inferred from model config, but sometimes rope scaling is advised anyway
+guided_json: false # constrain decoding to the JSON schema built from ie_schema
+quantization: null # vLLM in-flight quantization, e.g. 'bitsandbytes'
+gpu_memory_utilization: 0.9 # vLLM default
+max_lora_rank: 16 # must be >= peft r of the adapter
+max_docs: null # only the first max_docs documents (smoke tests)
 parallel: null # either 'tensor' or 'pipeline' (former for DDP-like, latter for pipeline parallelism)
 
 hydra:

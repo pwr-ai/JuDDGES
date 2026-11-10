@@ -104,11 +104,14 @@ def main(
             num_parsing_errors += 1
 
     judge = LLMJudge(structured_llm, max_concurrent_calls=max_concurrent_calls)
-    results = asyncio.run(
-        judge.evaluate_batch(
-            schema,
-            outputs,
-            reference_outputs,
+    # keep the zero scores of documents with parsing errors (results is not overwritten)
+    results.update(
+        asyncio.run(
+            judge.evaluate_batch(
+                schema,
+                outputs,
+                reference_outputs,
+            )
         )
     )
 
@@ -121,6 +124,8 @@ def main(
             "total_docs": len(data),
             "num_parsing_errors": num_parsing_errors,
         },
+        # older files averaged over parsed documents only; summarize_metrics refuses them
+        "parse_errors_scored_as_zero": True,
         "aggregated_results": aggregated_results,
         "all_results": results,
     }
