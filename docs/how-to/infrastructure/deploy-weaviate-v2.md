@@ -133,8 +133,9 @@ another TEI:
 | Embedding (TEI, batch 64) | ~217 passages/s |
 | Import into Weaviate | ~2 470 chunks/s |
 
-At ~18 chunks per judgment, the full pl-court-raw (~437k judgments) is ~8M chunks. Embedding
-it takes ~10 h on that GPU, so chunking must run in parallel processes to keep up.
+That sample was biased towards judgments with a thesis (~18 chunks per judgment). The full
+pl-court-raw (~437k judgments) averages ~15 chunks per judgment, ~6.5M chunks, and takes ~8.6 h
+to embed (see the full-dataset section below). Chunking must run in parallel processes to keep up.
 
 ## Ingest a whole dataset (streaming, resumable)
 
@@ -176,8 +177,8 @@ python scripts/weaviate_v2/ingest_full.py --dataset pl-nsa --unit-rows 100 --lim
 After every unit the log has a line like this:
 
 ```text
-unit train_00_of_9.parquet:0:1000 done: 1000 judgments, 16318 chunks, 90 theses, 0 empty | 72.2s,
-227.3 passages/s, chunk wait 0.0s | run: 2 units, 29885 chunks, 203 chunks/s, 434 units left, ETA 8.3 h
+unit train_00_of_9.parquet:0:3000 done: 1000 judgments, 15180 chunks, 60 theses, 0 empty | 65.7s,
+232.0 passages/s, chunk wait 0.0s | run: 2 units, 29800 chunks, 207 chunks/s, 434 units left, ETA 8.7 h
 ```
 
 Interpret the per-unit fields as follows:
@@ -241,7 +242,7 @@ Measured on 2026-11-12, with TEI on the RTX 3090:
 
 Embedding is the bottleneck. On a synthetic benchmark, raising TEI concurrency beyond 2 to 4
 requests did not help: the GPU was already at 100 %, and 8 × 128 got `429` responses. The full
-pl-court-raw run takes about 8 h.
+pl-court-raw run takes about 8.6 h.
 
 ## Stop / remove
 
