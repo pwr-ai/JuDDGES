@@ -136,6 +136,113 @@ another TEI:
 At ~18 chunks per judgment, the full pl-court-raw (~437k judgments) is ~8M chunks. Embedding
 it takes ~10 h on that GPU, so chunking must run in parallel processes to keep up.
 
+## Ingest a whole dataset (streaming, resumable)
+
+`scripts/weaviate_v2/ingest_full.py` ingests all of `JuDDGES/pl-court-raw` or `JuDDGES/pl-nsa`
+from the local HF cache (`--download` fetches missing files). The pipeline lives in
+`juddges/data/weaviate_v2/stream.py`:
+
+- **Units.** The work is cut into units of `--unit-rows` rows (default 1000) of one parquet row
+  group, keyed `file:row_group:start`. Only one unit is read at a time, together with the
+  columns the mapping needs, so the dataset is never held in memory.
+- **Checkpoint.** Finished units go to a JSON checkpoint, by default
+  `.context/weaviate_v2/ingest_<dataset>.json`. Re-running the same command skips them. The
+  checkpoint stores `dataset` and `unit_rows` and refuses another `--unit-rows`, because the
+  unit keys would not match.
+- **Failures.** A unit that raises, for example when TEI is still failing after 5 retries, is
+  recorded under `failed` and is not checkpointed. So is a unit whose Weaviate batch reports
+  failed objects or references. The next run retries it. After 3 failed units in a row the run
+  stops, because the infrastructure is probably down. The exit code is 1 when any unit failed.
+- **Pipeline.** A process pool (`--workers`, default 6) chunks the next unit while the current
+  one is embedded. TEI gets `--embed-batch` passages per request (default 128), with
+  `--embed-concurrency` requests in flight (default 4). Each response goes straight into a
+  Weaviate batch.
+- **Order of writes.** Theses are embedded and the unit's judgments are imported and flushed
+  before its chunks. Weaviate 1.40 rejects a chunk whose `parent_judgment` does not exist yet.
+- **Empty texts.** Rows with an empty text are skipped and counted (`empty` in the log).
+
+```bash
+export WEAVIATE_V2_API_KEY=<key from .env>
+# smoke run: two units
+python scripts/weaviate_v2/ingest_full.py --dataset pl-court-raw --limit-units 2
+# full run (same command resumes)
+python scripts/weaviate_v2/ingest_full.py --dataset pl-court-raw \
+  --log-file .context/weaviate_v2/ingest_pl-court-raw.log
+# NSA sample of ~200 judgments, own checkpoint so a later full run can use 1000-row units
+python scripts/weaviate_v2/ingest_full.py --dataset pl-nsa --unit-rows 100 --limit-units 2 \
+  --checkpoint .context/weaviate_v2/ingest_pl-nsa.smoke.json
+```
+
+After every unit the log has a line like this:
+
+```text
+unit train_00_of_9.parquet:0:1000 done: 1000 judgments, 16318 chunks, 90 theses, 0 empty | 72.2s,
+227.3 passages/s, chunk wait 0.0s | run: 2 units, 29885 chunks, 203 chunks/s, 434 units left, ETA 8.3 h
+```
+
+Interpret the per-unit fields as follows:
+
+- `chunk wait` is how long embedding waited for the chunking pool. If it stays above 0 after
+  the first unit, add `--workers`.
+- The ETA is the remaining units times the average time per unit in this run.
+
+### Running it in Docker
+
+Run the ingester in a named container, with `--restart on-failure:3` so failed units are retried
+automatically. The command is the usual `uv run` runner with `-d --name v2-ingest-plcourt` added:
+
+- Mount the repository at `/w` with `PYTHONPATH=/w`.
+- Mount the HF cache at `/hf` with `HF_HUB_CACHE=/hf` and `HF_HUB_OFFLINE=1`.
+- Pass `--env-file weaviate/v2/.env.runtime` and `--network host`.
+
+```bash
+docker logs -f v2-ingest-plcourt 2>&1 | grep -E "unit .* (done|failed)"   # progress
+tail -f .context/weaviate_v2/ingest_pl-court-raw.log
+docker stop v2-ingest-plcourt          # stop; the current unit is redone on resume
+docker start v2-ingest-plcourt         # resume with the same command
+```
+
+The container runs as root, so the checkpoint and log under `.context/weaviate_v2/` are owned
+by root.
+
+### Dataset mapping
+
+**pl-court-raw.** The rows map to properties through `judgment_properties`, and `full_text` is
+the chunk text. Naive dates are stored as UTC midnight.
+
+**pl-nsa (CBOSA).** The rows map through `nsa_judgment_properties`:
+
+| Property | Value |
+|---|---|
+| `source` | `nsa` |
+| `source_url` | `https://orzeczenia.nsa.gov.pl` + `judgment_id` |
+| `court_type` | `administrative_court` |
+| `judgment_type` | Only the kind of decision: `Wyrok`, `Postanowienie` or `Uchwała`. The court is in `court_name`. |
+| `outcome` | Built from `decision`. |
+| `extracted_legal_bases` | `link` becomes `address`, `article` becomes `art`, and `law` becomes `title`. `isap_id` is the `id` query parameter of `link`. `text` is `journal` + `article`. |
+| `date_issued` | The Warsaw calendar day, stored as UTC midnight. Converting to UTC instead would move it to the previous day. |
+
+`submission_date` is the filing date and is not stored as `publication_date`.
+
+The chunk text is `full_text` without its leading `TEZY` section (`nsa_chunk_text`):
+
+- `full_text` is TEZY + SENTENCJA + UZASADNIENIE + ZDANIE ODRĘBNE. It also covers rows whose
+  sections were not split into separate columns.
+- The thesis is dropped because it has its own vector. Keeping it in a chunk would let thesis
+  queries match it verbatim.
+- A document that consists only of a thesis keeps its full text.
+
+Measured on 2026-11-12, with TEI on the RTX 3090:
+
+| Run | Judgments | Chunks | Time | Throughput |
+|---|---|---|---|---|
+| pl-court-raw smoke, 2 × 1000 rows | 2000 | 29 885 | 148 s | ~227 passages/s, GPU at 100 % |
+| pl-nsa smoke, 2 × 100 rows | 200 | 1 946 | 20 s | ~10 chunks/judgment |
+
+Embedding is the bottleneck. On a synthetic benchmark, raising TEI concurrency beyond 2 to 4
+requests did not help: the GPU was already at 100 %, and 8 × 128 got `429` responses. The full
+pl-court-raw run takes about 8 h.
+
 ## Stop / remove
 
 ```bash
