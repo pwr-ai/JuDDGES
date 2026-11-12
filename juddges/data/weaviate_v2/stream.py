@@ -158,41 +158,52 @@ def plan_units(files: Sequence[str], unit_rows: int) -> list[Unit]:
     return units
 
 
-def _row_group_slices(pf: pq.ParquetFile, rg: int, size: int, columns: Sequence[str]):
-    """Consecutive `size`-row tables of a row group, re-sliced from `iter_batches` output."""
+def _row_group_ranges(
+    pf: pq.ParquetFile, rg: int, ranges: Sequence[tuple[int, int]], columns: Sequence[str]
+) -> Iterator[pa.Table]:
+    """Tables of the `(start, num_rows)` ranges (ascending) of a row group, read in one pass."""
+    batches = pf.iter_batches(
+        batch_size=max(n for _, n in ranges), row_groups=[rg], columns=list(columns)
+    )
     buffer: list[pa.RecordBatch] = []
-    buffered = 0
-    for batch in pf.iter_batches(batch_size=size, row_groups=[rg], columns=list(columns)):
-        buffer.append(batch)
-        buffered += batch.num_rows
-        while buffered >= size:
-            table = pa.Table.from_batches(buffer)
-            yield table.slice(0, size)
-            rest = table.slice(size)
-            buffer, buffered = rest.to_batches(), rest.num_rows
-    if buffered:
-        yield pa.Table.from_batches(buffer)
+    buffer_start = buffered = 0  # row offset of the buffer's first row, rows in the buffer
+    for start, num_rows in ranges:
+        while buffer_start + buffered < start + num_rows:
+            batch = next(batches, None)
+            if batch is None:
+                break
+            buffer.append(batch)
+            buffered += batch.num_rows
+        if not buffer:
+            raise RuntimeError(f"row group {rg} has no rows at {start}")
+        table = pa.Table.from_batches(buffer)
+        yield table.slice(start - buffer_start, num_rows)
+        rest = table.slice(start - buffer_start + num_rows)
+        buffer, buffer_start, buffered = rest.to_batches(), start + num_rows, rest.num_rows
 
 
 def iter_units(
     units: Sequence[Unit], columns: Sequence[str], skip: Callable[[Unit], bool]
 ) -> Iterator[tuple[Unit, list[dict[str, Any]]]]:
-    """Rows of every unit not skipped; row groups whose units are all skipped are not read."""
+    """Rows of every unit not skipped, read row group by row group.
+
+    Each unit gets the rows at its own `start`, also when earlier units of the row group are not
+    listed (a resume passes only the pending ones). Fully skipped row groups are not read.
+    """
     by_group: dict[tuple[str, int], list[Unit]] = {}
     for u in units:
         by_group.setdefault((u.file, u.row_group), []).append(u)
     for (f, rg), group in by_group.items():
-        if all(skip(u) for u in group):
+        todo = sorted((u for u in group if not skip(u)), key=lambda u: u.start)
+        if not todo:
             continue
-        pf = pq.ParquetFile(f)
-        size = group[0].num_rows
-        for unit, table in zip(group, _row_group_slices(pf, rg, size, columns)):
+        ranges = [(u.start, u.num_rows) for u in todo]
+        for unit, table in zip(todo, _row_group_ranges(pq.ParquetFile(f), rg, ranges, columns)):
             if table.num_rows != unit.num_rows:
                 raise RuntimeError(
                     f"{unit.key}: read {table.num_rows} rows, planned {unit.num_rows}"
                 )
-            if not skip(unit):
-                yield unit, table.to_pylist()
+            yield unit, table.to_pylist()
 
 
 # --- checkpoint ----------------------------------------------------------------------------

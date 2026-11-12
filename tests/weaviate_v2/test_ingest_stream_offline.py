@@ -134,6 +134,17 @@ def test_units_slice_row_groups(tmp_path):
     assert [r["judgment_id"] for r in read[1][1]] == ["j6", "j7", "j8", "j9"]
 
 
+def test_units_read_their_own_rows_when_earlier_units_are_not_listed(tmp_path):
+    # a resume passes only the pending units; slices must still line up with `start`
+    path = _parquet(tmp_path, 10, row_group_size=10)
+    units = plan_units([path], unit_rows=4)
+    read = list(iter_units(units[1:], ["judgment_id"], skip=lambda u: False))
+    assert [(u.start, [r["judgment_id"] for r in rows]) for u, rows in read] == [
+        (4, ["j4", "j5", "j6", "j7"]),
+        (8, ["j8", "j9"]),
+    ]
+
+
 def test_checkpoint_persists_and_refuses_another_unit_size(tmp_path):
     path = tmp_path / "ckpt.json"
     ckpt = Checkpoint(path, dataset="pl-nsa", unit_rows=100)
