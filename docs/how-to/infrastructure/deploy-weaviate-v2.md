@@ -100,6 +100,42 @@ docker stop wv-schema-test
 - **Disk.** Weaviate keeps the uncompressed vectors on disk for rescoring.
   Quantization reduces RAM, not disk.
 
+## Ingest a sample and search it
+
+`scripts/weaviate_v2/ingest_sample.py` loads judgments from `JuDDGES/pl-court-raw`, chunks them
+exactly like the embedding evaluation (480 tokens, 64 overlap, BGE-M3 tokenizer), embeds chunks
+and theses through the TEI container and imports them into `Judgments` and `JudgmentChunks`.
+It refuses to run if TEI serves any model other than `sdadas/mmlw-retrieval-e5-large`.
+Object ids are deterministic, so a re-run overwrites instead of duplicating.
+
+```bash
+export WEAVIATE_V2_API_KEY=<key from .env>
+# 1000 random judgments that have a thesis, plus optional extra ids (one judgment_id per line)
+python scripts/weaviate_v2/ingest_sample.py --n 1000 --extra-ids ids.txt --stats-out stats.json
+
+# hybrid search over chunks, aggregated to judgments by best chunk (MaxP)
+python scripts/weaviate_v2/search.py query "nieważność umowy kredytu indeksowanego do CHF"
+
+# thesis -> judgment retrieval over what is ingested, for several hybrid alphas
+python scripts/weaviate_v2/search.py eval --n 300 --alphas 0,0.25,0.5,1
+```
+
+The library code is `juddges/data/weaviate_v2/ingest.py` (mapping, chunking, TEI client) and
+`juddges/data/weaviate_v2/search.py` (`search_judgments`). The `eval` command searches
+`JudgmentChunks` only, because the `thesis` vector on `Judgments` would return the answer.
+
+On the first sample (1050 judgments, 18 991 chunks, 2026-11-12), with the A5000 shared with
+another TEI:
+
+| Stage | Throughput |
+|---|---|
+| Chunking (one process) | ~14 judgments/s |
+| Embedding (TEI, batch 64) | ~217 passages/s |
+| Import into Weaviate | ~2 470 chunks/s |
+
+At ~18 chunks per judgment, the full pl-court-raw (~437k judgments) is ~8M chunks. Embedding
+it takes ~10 h on that GPU, so chunking must run in parallel processes to keep up.
+
 ## Stop / remove
 
 ```bash
