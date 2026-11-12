@@ -1,13 +1,16 @@
-"""Turn `JuDDGES/pl-court-raw` rows into v2 objects: chunks, properties and TEI vectors.
+"""Turn `JuDDGES/pl-court-raw` and `JuDDGES/pl-nsa` rows into v2 objects: chunks, properties
+and TEI vectors.
 
 Chunking matches the embedding evaluation (`scripts/embedding_eval/build_dataset.py`, config
 `c512`): a `RecursiveCharacterTextSplitter` over the BGE-M3 tokenizer with `CHUNK_TOKENS` /
 `CHUNK_OVERLAP_TOKENS`. Passages and queries get the mmlw-e5 prefixes; TEI adds none itself.
 """
 
+import re
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 from loguru import logger
@@ -130,6 +133,107 @@ def chunk_properties(
     props = {f: judgment.get(f) for f in CHUNK_FILTER_FIELDS}
     props.update(chunk_text=chunk_text, judgment_id=judgment["judgment_id"], chunk_idx=chunk_idx)
     return _clean(props, _CHUNK_NAMES)
+
+
+NSA_URL = "https://orzeczenia.nsa.gov.pl"
+# end of the leading "TEZY" section: the next section header after a blank-line gap
+_NSA_AFTER_THESIS = re.compile(r"\n\n\n(?=SENTENCJA|UZASADNIENIE|ZDANIE ODR)")
+
+
+def _local_day_as_utc(value: Any) -> datetime | None:
+    """Calendar day of an aware timestamp as UTC midnight.
+
+    NSA dates are midnight Europe/Warsaw; converting them to UTC would move them to the previous
+    day, while pl-court-raw days are stored as UTC midnight. Keeping the local day makes date
+    filters agree across both sources.
+    """
+    if not isinstance(value, datetime):
+        return None
+    return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
+
+
+def _isap_id(link: str | None) -> str | None:
+    if not link:
+        return None
+    return (parse_qs(urlparse(link).query).get("id") or [None])[0]
+
+
+def _nsa_legal_basis(basis: Mapping[str, Any]) -> dict[str, str]:
+    text = " ".join(x for x in (basis.get("journal"), basis.get("article")) if x)
+    mapped = {
+        "address": basis.get("link"),
+        "art": basis.get("article"),
+        "isap_id": _isap_id(basis.get("link")),
+        "text": text or None,
+        "title": basis.get("law"),
+    }
+    return {k: str(v) for k, v in mapped.items() if v}
+
+
+def nsa_judgment_properties(row: Mapping[str, Any], ingested_at: datetime) -> dict[str, Any]:
+    """`Judgments` properties of a `JuDDGES/pl-nsa` row (CBOSA: NSA and the WSA courts).
+
+    - `court_type` is normalized to `administrative_court` (pl-court-raw: `ordinary_court`).
+    - `judgment_type` keeps only the kind of decision (`Wyrok`, `Postanowienie`, `Uchwała`);
+      the court part of e.g. "Wyrok WSA w Opolu" is already in `court_name`.
+    - `submission_date` is the filing date, not a publication date, so `publication_date` stays
+      empty. `decision` (list) becomes `outcome`.
+    - `finality`, `judge_rapporteur`, `case_type_description`, `challenged_authority`,
+      `related_docket_numbers`, `official_collection`, `glosa_information` and the per-section
+      texts have no `Judgments` property and are not stored.
+    """
+    bases = [_nsa_legal_basis(b) for b in (row.get("extracted_legal_bases") or [])]
+    bases = [b for b in bases if b]
+    judgment_type = (row.get("judgment_type") or "").split(" ", 1)[0] or None
+    props: dict[str, Any] = {
+        "judgment_id": row.get("judgment_id"),
+        "document_number": row.get("docket_number"),
+        "source": "nsa",
+        "source_id": row.get("judgment_id"),
+        "source_url": NSA_URL + row["judgment_id"] if row.get("judgment_id") else None,
+        "document_type": "judgment",
+        "language": "pl",
+        "country": row.get("country") or "Poland",
+        "court_type": "administrative_court",
+        "judgment_type": judgment_type,
+        "outcome": "; ".join(d for d in (row.get("decision") or []) if d) or None,
+        "court_name": row.get("court_name"),
+        "date_issued": _local_day_as_utc(row.get("judgment_date")),
+        "ingestion_date": _as_utc(ingested_at),
+        "full_text": row.get("full_text"),
+        "thesis": row.get("thesis"),
+        "keywords": row.get("keywords"),
+        "presiding_judge": row.get("presiding_judge"),
+        "judges": row.get("judges"),
+        "legal_bases": [b["text"] for b in bases if b.get("text")],
+        "extracted_legal_bases": bases or None,
+    }
+    for name in ("keywords", "judges"):
+        if props[name] is not None:
+            props[name] = [str(x) for x in props[name] if x]
+    return _clean(props, _JUDGMENT_NAMES)
+
+
+def nsa_chunk_text(row: Mapping[str, Any]) -> str:
+    """Text to chunk for an NSA judgment: `full_text` without its leading "TEZY" section.
+
+    `full_text` is "TEZY" (thesis, ~2% of rows) + "SENTENCJA" + "UZASADNIENIE" + "ZDANIE
+    ODRĘBNE", and unlike the `sentence` + `reasons_for_judgment` columns it also covers rows
+    whose sections were not split out. The thesis is dropped because it is stored and embedded
+    separately (`thesis` vector); leaving it in a chunk would let thesis queries match it
+    verbatim. A document that is only a thesis keeps it, so it is still searchable.
+    """
+    text = row.get("full_text") or ""
+    if text.startswith("TEZY"):
+        parts = _NSA_AFTER_THESIS.split(text, maxsplit=1)
+        if len(parts) == 2 and parts[1].strip():
+            return parts[1]
+    return text
+
+
+def court_chunk_text(row: Mapping[str, Any]) -> str:
+    """Text to chunk for a pl-court-raw judgment (its thesis is a separate column)."""
+    return row.get("full_text") or ""
 
 
 def batched(items: Sequence[Any], size: int) -> Iterator[Sequence[Any]]:
