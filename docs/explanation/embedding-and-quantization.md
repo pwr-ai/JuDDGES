@@ -1,3 +1,5 @@
+<!-- cspell:words umowna kary umownej -->
+
 # Embedding model and vector quantization for Polish judgments
 
 This page explains which embedding model, chunk size, dimensionality, Weaviate
@@ -114,6 +116,11 @@ What these numbers show:
   so these numbers likely overstate the advantage of BM25 for free-form user
   questions.
 - **BM25 and hybrid are slow.** Their p95 latency is 300-450 ms at 2.2M chunks.
+- **BM25 does not handle Polish inflection.** `chunk_text` has no stemming, so two forms
+  of a short query ("kara umowna" / "kary umownej") share only about 2.5% of their top-10
+  judgments at α=0.25. A lemma field fixes that, but a measured rollout did not clear
+  its quality gate; α stays 0.25. See [Polish lemmatization for
+  BM25](polish-lemmatization-bm25.md).
 
 ### Storage for the full corpus (3M judgments)
 
