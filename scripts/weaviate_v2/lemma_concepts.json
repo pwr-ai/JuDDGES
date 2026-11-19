@@ -1,0 +1,730 @@
+{
+ "kredyt_indeksowany": {
+  "tags": [
+   "kredyt indeksowany do waluty obcej",
+   "kredyt denominowany",
+   "kredyt walutowy"
+  ],
+  "forms": [
+   "kredyt indeksowany",
+   "kredytu indeksowanego",
+   "kredyty indeksowane"
+  ]
+ },
+ "klauzula_niedozwolona": {
+  "tags": [
+   "klauzule niedozwolone",
+   "klauzule abuzywne"
+  ],
+  "forms": [
+   "klauzula niedozwolona",
+   "klauzuli niedozwolonej",
+   "klauzule niedozwolone"
+  ]
+ },
+ "kara_umowna": {
+  "tags": [
+   "kary umowne",
+   "kara umowna"
+  ],
+  "forms": [
+   "kara umowna",
+   "kary umownej",
+   "kar umownych"
+  ]
+ },
+ "zachowek": {
+  "tags": [
+   "zachowek"
+  ],
+  "forms": [
+   "zachowek",
+   "zachowku",
+   "zachowkiem"
+  ]
+ },
+ "zasiedzenie": {
+  "tags": [
+   "zasiedzenie"
+  ],
+  "forms": [
+   "zasiedzenie",
+   "zasiedzenia",
+   "zasiedzeniem"
+  ]
+ },
+ "podwyzszenie_alimentow": {
+  "tags": [
+   "podwyższenie alimentów"
+  ],
+  "forms": [
+   "podwyższenie alimentów",
+   "podwyższenia alimentów",
+   "podwyższeniu alimentów"
+  ]
+ },
+ "eksmisja": {
+  "tags": [
+   "eksmisja"
+  ],
+  "forms": [
+   "eksmisja",
+   "eksmisji",
+   "eksmisję"
+  ]
+ },
+ "sluzebnosc_przesylu": {
+  "tags": [
+   "służebność przesyłu"
+  ],
+  "forms": [
+   "służebność przesyłu",
+   "służebności przesyłu",
+   "służebnością przesyłu"
+  ]
+ },
+ "skarga_paulianska": {
+  "tags": [
+   "skarga pauliańska"
+  ],
+  "forms": [
+   "skarga pauliańska",
+   "skargi pauliańskiej",
+   "skargą pauliańską"
+  ]
+ },
+ "bezpodstawne_wzbogacenie": {
+  "tags": [
+   "bezpodstawne wzbogacenie"
+  ],
+  "forms": [
+   "bezpodstawne wzbogacenie",
+   "bezpodstawnego wzbogacenia",
+   "bezpodstawnym wzbogaceniu"
+  ]
+ },
+ "nienalezne_swiadczenie": {
+  "tags": [
+   "nienależne świadczenie"
+  ],
+  "forms": [
+   "nienależne świadczenie",
+   "nienależnego świadczenia",
+   "nienależne świadczenia"
+  ]
+ },
+ "podzial_majatku": {
+  "tags": [
+   "podział majątku wspólnego"
+  ],
+  "forms": [
+   "podział majątku wspólnego",
+   "podziału majątku wspólnego",
+   "podziałem majątku wspólnego"
+  ]
+ },
+ "weksel": {
+  "tags": [
+   "weksel"
+  ],
+  "forms": [
+   "weksel",
+   "weksla",
+   "weksle"
+  ]
+ },
+ "potracenie": {
+  "tags": [
+   "potrącenie"
+  ],
+  "forms": [
+   "potrącenie",
+   "potrącenia",
+   "potrąceniem"
+  ]
+ },
+ "zabojstwo": {
+  "tags": [
+   "zabójstwo"
+  ],
+  "forms": [
+   "zabójstwo",
+   "zabójstwa",
+   "zabójstwem"
+  ]
+ },
+ "kradziez_z_wlamaniem": {
+  "tags": [
+   "kradzież z włamaniem"
+  ],
+  "forms": [
+   "kradzież z włamaniem",
+   "kradzieży z włamaniem",
+   "kradzieże z włamaniem"
+  ]
+ },
+ "rozboj": {
+  "tags": [
+   "rozbój"
+  ],
+  "forms": [
+   "rozbój",
+   "rozboju",
+   "rozboje"
+  ]
+ },
+ "oszustwo": {
+  "tags": [
+   "oszustwo"
+  ],
+  "forms": [
+   "oszustwo",
+   "oszustwa",
+   "oszustwem"
+  ]
+ },
+ "przywlaszczenie": {
+  "tags": [
+   "przywłaszczenie"
+  ],
+  "forms": [
+   "przywłaszczenie",
+   "przywłaszczenia",
+   "przywłaszczeniem"
+  ]
+ },
+ "paserstwo": {
+  "tags": [
+   "paserstwo"
+  ],
+  "forms": [
+   "paserstwo",
+   "paserstwa",
+   "paserstwem"
+  ]
+ },
+ "emerytura_pomostowa": {
+  "tags": [
+   "emerytura pomostowa"
+  ],
+  "forms": [
+   "emerytura pomostowa",
+   "emerytury pomostowej",
+   "emerytur pomostowych"
+  ]
+ },
+ "kapital_poczatkowy": {
+  "tags": [
+   "kapitał początkowy"
+  ],
+  "forms": [
+   "kapitał początkowy",
+   "kapitału początkowego",
+   "kapitałem początkowym"
+  ]
+ },
+ "zasilek_chorobowy": {
+  "tags": [
+   "zasiłek chorobowy"
+  ],
+  "forms": [
+   "zasiłek chorobowy",
+   "zasiłku chorobowego",
+   "zasiłki chorobowe"
+  ]
+ },
+ "renta_rodzinna": {
+  "tags": [
+   "renta rodzinna"
+  ],
+  "forms": [
+   "renta rodzinna",
+   "renty rodzinnej",
+   "rent rodzinnych"
+  ]
+ },
+ "renta_socjalna": {
+  "tags": [
+   "renta socjalna"
+  ],
+  "forms": [
+   "renta socjalna",
+   "renty socjalnej",
+   "rentę socjalną"
+  ]
+ },
+ "umowa_o_dzielo": {
+  "tags": [
+   "umowa o dzieło"
+  ],
+  "forms": [
+   "umowa o dzieło",
+   "umowy o dzieło",
+   "umów o dzieło"
+  ]
+ },
+ "roboty_budowlane": {
+  "tags": [
+   "umowa o roboty budowlane"
+  ],
+  "forms": [
+   "umowa o roboty budowlane",
+   "umowy o roboty budowlane",
+   "umów o roboty budowlane"
+  ]
+ },
+ "rekojmia": {
+  "tags": [
+   "rękojmia"
+  ],
+  "forms": [
+   "rękojmia",
+   "rękojmi",
+   "rękojmię"
+  ]
+ },
+ "uzytkowanie_wieczyste": {
+  "tags": [
+   "użytkowanie wieczyste"
+  ],
+  "forms": [
+   "użytkowanie wieczyste",
+   "użytkowania wieczystego",
+   "użytkowaniu wieczystym"
+  ]
+ },
+ "hipoteka": {
+  "tags": [
+   "hipoteka"
+  ],
+  "forms": [
+   "hipoteka",
+   "hipoteki",
+   "hipoteką"
+  ]
+ },
+ "testament": {
+  "tags": [
+   "testament"
+  ],
+  "forms": [
+   "testament",
+   "testamentu",
+   "testamenty"
+  ]
+ },
+ "dzial_spadku": {
+  "tags": [
+   "dział spadku"
+  ],
+  "forms": [
+   "dział spadku",
+   "działu spadku",
+   "działem spadku"
+  ]
+ },
+ "zniesienie_wspolwlasnosci": {
+  "tags": [
+   "zniesienie współwłasności"
+  ],
+  "forms": [
+   "zniesienie współwłasności",
+   "zniesienia współwłasności",
+   "zniesieniu współwłasności"
+  ]
+ },
+ "odwolanie_darowizny": {
+  "tags": [
+   "odwołanie darowizny"
+  ],
+  "forms": [
+   "odwołanie darowizny",
+   "odwołania darowizny",
+   "odwołaniu darowizny"
+  ]
+ },
+ "zadatek": {
+  "tags": [
+   "zadatek"
+  ],
+  "forms": [
+   "zadatek",
+   "zadatku",
+   "zadatkiem"
+  ]
+ },
+ "dozywocie": {
+  "tags": [
+   "dożywocie"
+  ],
+  "forms": [
+   "dożywocie",
+   "dożywocia",
+   "dożywociem"
+  ]
+ },
+ "leasing": {
+  "tags": [
+   "leasing"
+  ],
+  "forms": [
+   "leasing",
+   "leasingu",
+   "leasingiem"
+  ]
+ },
+ "poreczenie": {
+  "tags": [
+   "poręczenie"
+  ],
+  "forms": [
+   "poręczenie",
+   "poręczenia",
+   "poręczeniem"
+  ]
+ },
+ "wypadek_przy_pracy": {
+  "tags": [
+   "wypadek przy pracy"
+  ],
+  "forms": [
+   "wypadek przy pracy",
+   "wypadku przy pracy",
+   "wypadki przy pracy"
+  ]
+ },
+ "przywrocenie_do_pracy": {
+  "tags": [
+   "przywrócenie do pracy"
+  ],
+  "forms": [
+   "przywrócenie do pracy",
+   "przywrócenia do pracy",
+   "przywróceniu do pracy"
+  ]
+ },
+ "wypowiedzenie_umowy_o_prace": {
+  "tags": [
+   "wypowiedzenie umowy o pracę"
+  ],
+  "forms": [
+   "wypowiedzenie umowy o pracę",
+   "wypowiedzenia umowy o pracę",
+   "wypowiedzeniu umowy o pracę"
+  ]
+ },
+ "swiadectwo_pracy": {
+  "tags": [
+   "świadectwo pracy"
+  ],
+  "forms": [
+   "świadectwo pracy",
+   "świadectwa pracy",
+   "świadectwem pracy"
+  ]
+ },
+ "odprawa_pieniezna": {
+  "tags": [
+   "odprawa pieniężna"
+  ],
+  "forms": [
+   "odprawa pieniężna",
+   "odprawy pieniężnej",
+   "odprawę pieniężną"
+  ]
+ },
+ "blad_lekarski": {
+  "tags": [
+   "błąd lekarski"
+  ],
+  "forms": [
+   "błąd lekarski",
+   "błędu lekarskiego",
+   "błędy lekarskie"
+  ]
+ },
+ "nieuczciwa_konkurencja": {
+  "tags": [
+   "nieuczciwa konkurencja"
+  ],
+  "forms": [
+   "nieuczciwa konkurencja",
+   "nieuczciwej konkurencji",
+   "nieuczciwą konkurencją"
+  ]
+ },
+ "dobra_osobiste": {
+  "tags": [
+   "dobra osobiste"
+  ],
+  "forms": [
+   "dobra osobiste",
+   "dóbr osobistych",
+   "dobrach osobistych"
+  ]
+ },
+ "wyrok_laczny": {
+  "tags": [
+   "wyrok łączny"
+  ],
+  "forms": [
+   "wyrok łączny",
+   "wyroku łącznego",
+   "wyroki łączne"
+  ]
+ },
+ "kara_laczna": {
+  "tags": [
+   "kara łączna"
+  ],
+  "forms": [
+   "kara łączna",
+   "kary łącznej",
+   "karę łączną"
+  ]
+ },
+ "przedawnienie_roszczen": {
+  "tags": [
+   "przedawnienie roszczeń"
+  ],
+  "forms": [
+   "przedawnienie roszczeń",
+   "przedawnienia roszczeń",
+   "przedawnieniu roszczeń"
+  ]
+ },
+ "pojazd_zastepczy": {
+  "tags": [
+   "najem pojazdu zastępczego"
+  ],
+  "forms": [
+   "najem pojazdu zastępczego",
+   "najmu pojazdu zastępczego",
+   "najmie pojazdów zastępczych"
+  ]
+ },
+ "wspolnota_mieszkaniowa": {
+  "tags": [
+   "wspólnota mieszkaniowa",
+   "uchwały wspólnoty mieszkaniowej"
+  ],
+  "forms": [
+   "wspólnota mieszkaniowa",
+   "wspólnoty mieszkaniowej",
+   "wspólnoty mieszkaniowe"
+  ]
+ },
+ "przelew_wierzytelnosci": {
+  "tags": [
+   "przelew wierzytelności",
+   "cesja"
+  ],
+  "forms": [
+   "przelew wierzytelności",
+   "przelewu wierzytelności",
+   "przelewem wierzytelności"
+  ]
+ },
+ "bezumowne_korzystanie": {
+  "tags": [
+   "bezumowne korzystanie",
+   "wynagrodzenie za bezumowne korzystanie"
+  ],
+  "forms": [
+   "bezumowne korzystanie",
+   "bezumownego korzystania",
+   "bezumownym korzystaniu"
+  ]
+ },
+ "odpowiedzialnosc_czlonka_zarzadu": {
+  "tags": [
+   "odpowiedzialność członka zarządu"
+  ],
+  "forms": [
+   "odpowiedzialność członka zarządu",
+   "odpowiedzialności członka zarządu",
+   "odpowiedzialność członków zarządu"
+  ]
+ },
+ "ochrona_zwierzat": {
+  "tags": [
+   "ochrona zwierząt"
+  ],
+  "forms": [
+   "ochrona zwierząt",
+   "ochrony zwierząt",
+   "ochronie zwierząt"
+  ]
+ },
+ "zaliczka_alimentacyjna": {
+  "tags": [
+   "zaliczka alimentacyjna"
+  ],
+  "forms": [
+   "zaliczka alimentacyjna",
+   "zaliczki alimentacyjnej",
+   "zaliczki alimentacyjne"
+  ]
+ },
+ "dodatek_mieszkaniowy": {
+  "tags": [
+   "dodatki mieszkaniowe"
+  ],
+  "forms": [
+   "dodatek mieszkaniowy",
+   "dodatku mieszkaniowego",
+   "dodatki mieszkaniowe"
+  ]
+ },
+ "podatek_rolny": {
+  "tags": [
+   "podatek rolny"
+  ],
+  "forms": [
+   "podatek rolny",
+   "podatku rolnego",
+   "podatkiem rolnym"
+  ]
+ },
+ "podatek_od_spadkow": {
+  "tags": [
+   "podatek od spadków i darowizn"
+  ],
+  "forms": [
+   "podatek od spadków i darowizn",
+   "podatku od spadków i darowizn",
+   "podatkiem od spadków i darowizn"
+  ]
+ },
+ "ochrona_danych_osobowych": {
+  "tags": [
+   "ochrona danych osobowych"
+  ],
+  "forms": [
+   "ochrona danych osobowych",
+   "ochrony danych osobowych",
+   "ochronie danych osobowych"
+  ]
+ },
+ "zabytki": {
+  "tags": [
+   "zabytki"
+  ],
+  "forms": [
+   "zabytek",
+   "zabytku",
+   "zabytki"
+  ]
+ },
+ "komunalizacja_mienia": {
+  "tags": [
+   "komunalizacja mienia"
+  ],
+  "forms": [
+   "komunalizacja mienia",
+   "komunalizacji mienia",
+   "komunalizację mienia"
+  ]
+ },
+ "rozgraniczenie_nieruchomosci": {
+  "tags": [
+   "rozgraniczenie nieruchomości",
+   "rozgraniczenie"
+  ],
+  "forms": [
+   "rozgraniczenie nieruchomości",
+   "rozgraniczenia nieruchomości",
+   "rozgraniczeniu nieruchomości"
+  ]
+ },
+ "scalanie_gruntow": {
+  "tags": [
+   "scalanie gruntów"
+  ],
+  "forms": [
+   "scalanie gruntów",
+   "scalania gruntów",
+   "scaleniu gruntów"
+  ]
+ },
+ "obywatelstwo": {
+  "tags": [
+   "obywatelstwo"
+  ],
+  "forms": [
+   "obywatelstwo",
+   "obywatelstwa",
+   "obywatelstwem"
+  ]
+ },
+ "zolnierze_zawodowi": {
+  "tags": [
+   "żołnierze zawodowi"
+  ],
+  "forms": [
+   "żołnierz zawodowy",
+   "żołnierza zawodowego",
+   "żołnierze zawodowi"
+  ]
+ },
+ "podatek_od_srodkow_transportowych": {
+  "tags": [
+   "podatek od środków transportowych"
+  ],
+  "forms": [
+   "podatek od środków transportowych",
+   "podatku od środków transportowych",
+   "podatkiem od środków transportowych"
+  ]
+ },
+ "zamowienia_publiczne": {
+  "tags": [
+   "zamówienia publiczne"
+  ],
+  "forms": [
+   "zamówienie publiczne",
+   "zamówienia publicznego",
+   "zamówieniach publicznych"
+  ]
+ },
+ "oplata_targowa": {
+  "tags": [
+   "opłata targowa"
+  ],
+  "forms": [
+   "opłata targowa",
+   "opłaty targowej",
+   "opłatę targową"
+  ]
+ },
+ "podatek_lesny": {
+  "tags": [
+   "podatek leśny"
+  ],
+  "forms": [
+   "podatek leśny",
+   "podatku leśnego",
+   "podatkiem leśnym"
+  ]
+ },
+ "reforma_rolna": {
+  "tags": [
+   "reforma rolna"
+  ],
+  "forms": [
+   "reforma rolna",
+   "reformy rolnej",
+   "reformą rolną"
+  ]
+ },
+ "pozwolenie_na_bron": {
+  "tags": [
+   "broń i materiały wybuchowe"
+  ],
+  "forms": [
+   "pozwolenie na broń",
+   "pozwolenia na broń",
+   "pozwoleń na broń"
+  ]
+ }
+}
