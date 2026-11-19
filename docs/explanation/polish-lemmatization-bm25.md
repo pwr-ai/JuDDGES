@@ -131,7 +131,8 @@ The table below gives paired differences over the 72 concepts (bootstrap 95% CI)
 - **Indexing both fields scores best, but brings the form sensitivity back.** It reaches the
   best nDCG (0.31), yet overlap falls back to 0.26-0.28.
 - **Lemma BM25 is slower on long queries.** Thesis p95 rises from 307 to 455 ms on the subset,
-  because lemma posting lists are longer. On the full corpus, thesis p95 is already about 2.5 s.
+  likely because lemma posting lists are longer (not measured). On the full corpus, thesis
+  p95 is already about 2.5 s.
 
 ## Decision
 
